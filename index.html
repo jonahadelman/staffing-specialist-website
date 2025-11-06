@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Staffing Specialist — Elite RPO & Talent Acquisition</title>
+  <meta name="description" content="Elite RPO and Talent Acquisition partner. Build world‑class teams with speed, precision, and accountability. The Staffing Specialist delivers outcomes, not excuses." />
+  <meta property="og:title" content="The Staffing Specialist — Elite RPO & Talent Acquisition" />
+  <meta property="og:description" content="Build world‑class teams with speed, precision, and accountability." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#0b1020" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%90%B8%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root{
+      --bg:#0b1020;        /* deep navy */
+      --card:#111831;      /* darker card */
+      --muted:#7a87a5;     /* muted text */
+      --text:#e8f0ff;      /* main text */
+      --teal:#00ffd1;      /* accent */
+      --aqua:#18e3ff;      /* secondary accent */
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 70% -10%, rgba(24,227,255,.12), transparent 60%),
+                  radial-gradient(1000px 500px at -10% 20%, rgba(0,255,209,.12), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      line-height:1.5;
+    }
+    a{color:var(--teal);text-decoration:none}
+    a:hover{opacity:.85}
+    .container{max-width:1200px;margin:0 auto;padding:0 24px}
+    header{position:sticky;top:0;z-index:50;background:linear-gradient(to bottom, rgba(11,16,32,.85), rgba(11,16,32,.55));backdrop-filter: blur(8px);border-bottom:1px solid rgba(255,255,255,.06)}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+    .brand{display:flex;align-items:center;gap:14px}
+    .logo{width:42px;height:42px;filter: drop-shadow(0 6px 18px rgba(0,255,209,.25))}
+    .brand h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.4px}
+    .nav a{margin-left:20px;font-size:14px;color:#d8e3ff}
+    .btn{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--teal),#34ffd1);color:#05201a;padding:12px 18px;border-radius:999px;font-weight:700;box-shadow:0 10px 30px rgba(0,255,209,.25);border:0;cursor:pointer}
+    .btn.secondary{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.12)}
+
+    /* hero */
+    .hero{padding:86px 0 48px;position:relative;overflow:hidden}
+    .hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:36px;align-items:center}
+    .kicker{color:var(--teal);font-weight:800;letter-spacing:.18em;text-transform:uppercase;font-size:12px}
+    .hero h2{font-size:46px;line-height:1.05;margin:.4rem 0 1rem;font-weight:900}
+    .hero p{font-size:18px;color:#c9d6ff;max-width:680px}
+    .statbar{display:flex;gap:18px;flex-wrap:wrap;margin:26px 0}
+    .stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);padding:14px 18px;border-radius:12px}
+    .stat strong{font-size:20px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+    /* sections */
+    section{padding:72px 0}
+    .grid{display:grid;gap:20px}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    .grid.cols-2{grid-template-columns:repeat(2,1fr)}
+    @media (max-width: 900px){
+      .hero-grid{grid-template-columns:1fr}
+      .grid.cols-3{grid-template-columns:1fr}
+      .grid.cols-2{grid-template-columns:1fr}
+      .hero h2{font-size:36px}
+    }
+    h3{font-size:28px;margin:0 0 16px}
+    .muted{color:var(--muted)}
+
+    /* icon circle */
+    .icn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,rgba(0,255,209,.12),rgba(24,227,255,.12));border:1px solid rgba(255,255,255,.08)}
+
+    /* testimonial */
+    .quote{font-size:18px}
+    .quote footer{margin-top:10px;color:var(--muted)}
+
+    /* form */
+    form{display:grid;gap:12px}
+    input,select,textarea{background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 14px;color:var(--text);outline:none;font-family:inherit;font-size:14px}
+    input::placeholder,textarea::placeholder{color:#7f8db2}
+    textarea{min-height:120px;resize:vertical}
+
+    .footer{padding:32px 0;border-top:1px solid rgba(255,255,255,.08);color:#b9c6ff}
+
+    /* subtle entrance */
+    [data-animate]{opacity:0;transform: translateY(16px);transition: all .7s ease}
+    [data-animate].in{opacity:1;transform:none}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <!-- Inline SVG Lion/S mark (no external assets) -->
+        <svg class="logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="The Staffing Specialist logo">
+          <defs>
+            <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0%" stop-color="#00ffd1"/>
+              <stop offset="100%" stop-color="#18e3ff"/>
+            </linearGradient>
+          </defs>
+          <circle cx="100" cy="100" r="92" fill="none" stroke="url(#g)" stroke-width="10" opacity=".35"/>
+          <path d="M128 54c-16 0-26 6-36 20-9 12-13 26-13 41 0 12 5 18 14 18 7 0 11-5 13-15 1-7 3-12 7-18 7-9 17-15 33-18-7 11-10 20-10 28 0 12 7 20 19 20 16 0 28-13 28-31 0-25-22-45-55-45z" fill="url(#g)"/>
+          <path d="M62 145c14 12 33 19 54 19 20 0 40-7 54-19-14 28-41 45-73 45s-59-17-73-45c9 8 22 15 38 18z" fill="url(#g)" opacity=".25"/>
+        </svg>
+        <h1>The Staffing Specialist</h1>
+      </div>
+      <nav>
+        <a href="#services">Services</a>
+        <a href="#process">Process</a>
+        <a href="#results">Results</a>
+        <a href="#contact" class="btn">Get Talent Now</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="kicker">Elite RPO • Executive Search • High‑Velocity Hiring</div>
+          <h2>Build world‑class teams with <span style="background:linear-gradient(90deg,var(--teal),var(--aqua));-webkit-background-clip:text;background-clip:text;color:transparent">speed, precision, and accountability</span>.</h2>
+          <p>We deliver outcomes, not excuses. From VC‑backed startups to global med‑device leaders, The Staffing Specialist plugs in as your on‑demand talent engine — architecting funnels, closing top performers, and hitting headcount goals without drama.</p>
+          <div class="statbar">
+            <div class="stat card"><strong>14‑21 days</strong><div class="muted">Avg. time‑to‑hire</div></div>
+            <div class="stat card"><strong>92%</strong><div class="muted">Offer acceptance rate</div></div>
+            <div class="stat card"><strong>3x</strong><div class="muted">Pipeline lift in 30 days</div></div>
+          </div>
+          <div>
+            <a href="#contact" class="btn">Start a Search</a>
+            <a href="#services" class="btn secondary">See How We Work</a>
+          </div>
+        </div>
+        <div class="card" style="padding:22px">
+          <h3 style="margin-top:0">Immediate Hiring Needs?</h3>
+          <p class="muted" style="margin-top:6px">Tell us your roles and timeline — we'll propose a plan within 24 hours.</p>
+          <form id="quickform">
+            <input name="name" placeholder="Your name" required />
+            <input name="email" placeholder="Work email" type="email" required />
+            <input name="company" placeholder="Company" />
+            <textarea name="roles" placeholder="Roles to fill &amp; target start dates" required></textarea>
+            <button class="btn" type="submit">Request Proposal</button>
+            <div id="form-msg" class="muted" style="margin-top:8px"></div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section id="services">
+      <div class="container">
+        <h3>What We Do</h3>
+        <p class="muted">Full‑stack recruitment services engineered for outcomes.</p>
+        <div class="grid cols-3" style="margin-top:18px">
+          <div class="card" style="padding:20px">
+            <div class="icn">🔎</div>
+            <h4>Embedded RPO</h4>
+            <p class="muted">Plug‑in talent ops: req intake, sourcing, interview design, slate reviews, close strategy — fully embedded with your team.</p>
+          </div>
+          <div class="card" style="padding:20px">
+            <div class="icn">🎯</div>
+            <h4>Executive &amp; Niche Search</h4>
+            <p class="muted">Precision hunts for leadership and hard‑to‑fill roles in med‑device, biotech, software, and GTM.</p>
+          </div>
+          <div class="card" style="padding:20px">
+            <div class="icn">⚙️</div>
+            <h4>Systems &amp; Playbooks</h4>
+            <p class="muted">ATS calibration, interview training, scorecards, compensation alignment, and offer frameworks that convert.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROCESS -->
+    <section id="process">
+      <div class="container">
+        <h3>How We Win</h3>
+        <div class="grid cols-3" style="margin-top:18px">
+          <div class="card" style="padding:20px"><h4>01 • Discovery</h4><p class="muted">Deep intake with hiring leaders. Success profile, competencies, and narrative set on day one.</p></div>
+          <div class="card" style="padding:20px"><h4>02 • Sourcing Engine</h4><p class="muted">Outbound, referrals, and programmatic reach. We build warmed slates — not cold lists.</p></div>
+          <div class="card" style="padding:20px"><h4>03 • Selection</h4><p class="muted">Structured interviews, scorecards, and working sessions to predict performance — not just pedigree.</p></div>
+          <div class="card" style="padding:20px"><h4>04 • Closing</h4><p class="muted">Comp strategy, stakeholder alignment, and candidate commitment — 92% offer acceptance.</p></div>
+          <div class="card" style="padding:20px"><h4>05 • Onboarding</h4><p class="muted">30‑60‑90 plans tied to measurable outcomes. No hand‑offs, only hand‑holds.</p></div>
+          <div class="card" style="padding:20px"><h4>06 • Reporting</h4><p class="muted">Weekly dashboards: funnel health, cycle time, and risk flags. Radical transparency.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTS / TESTIMONIALS -->
+    <section id="results">
+      <div class="container">
+        <h3>Proven Results</h3>
+        <div class="grid cols-3" style="margin-top:18px">
+          <div class="card" style="padding:22px">
+            <div class="quote">"Headcount plan hit 100% — and our quality bar went up. The offer close rate shocked us."
+              <footer>— VP, Med‑Device R&amp;D</footer>
+            </div>
+          </div>
+          <div class="card" style="padding:22px">
+            <div class="quote">"From chaos to cadence in two weeks. Real partnership — not transactional recruiting."
+              <footer>— COO, HealthTech</footer>
+            </div>
+          </div>
+          <div class="card" style="padding:22px">
+            <div class="quote">"They brought a repeatable system and then trained our team to sustain it."
+              <footer>— Head of People, SaaS</footer>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENGAGEMENT MODELS -->
+    <section>
+      <div class="container">
+        <h3>Engagement Models</h3>
+        <div class="grid cols-3" style="margin-top:18px">
+          <div class="card" style="padding:20px">
+            <h4>Embedded RPO</h4>
+            <p class="muted">Monthly retainer. Owns reqs end‑to‑end. Perfect for scale‑ups and transformations.</p>
+          </div>
+          <div class="card" style="padding:20px">
+            <h4>Executive Search</h4>
+            <p class="muted">C‑suite and Director+ with milestone‑based fees and guaranteed delivery.</p>
+          </div>
+          <div class="card" style="padding:20px">
+            <h4>Project Sprints</h4>
+            <p class="muted">30/60‑day blitz to build pipeline, clean process, and land critical hires fast.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <div class="container grid cols-2">
+        <div>
+          <h3>Let's build your team.</h3>
+          <p class="muted">Tell us what success looks like and we'll get to work within 24 hours.</p>
+          <ul class="muted">
+            <li>• Dedicated lead partner (no handoffs)</li>
+            <li>• Weekly reporting &amp; executive updates</li>
+            <li>• Flexible pricing — aligned to outcomes</li>
+          </ul>
+        </div>
+        <div class="card" style="padding:22px">
+          <form id="contactform">
+            <input name="company" placeholder="Company" required />
+            <input name="name" placeholder="Your name" required />
+            <input name="email" placeholder="Work email" type="email" required />
+            <select name="engagement">
+              <option value="RPO">Embedded RPO</option>
+              <option value="Executive Search">Executive Search</option>
+              <option value="Project Sprint">Project Sprint</option>
+              <option value="Other">Other</option>
+            </select>
+            <textarea name="message" placeholder="Roles, locations, timeline"></textarea>
+            <button class="btn" type="submit">Request a Call</button>
+            <div id="contact-msg" class="muted" style="margin-top:8px"></div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container" style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div>&copy; <span id="y"></span> The Staffing Specialist • Talent. Precision. Partnership.</div>
+      <div class="muted">Boston, MA • jonah@thestaffingspecialist.com • 603‑401‑2901</div>
+    </div>
+  </footer>
+
+  <script>
+    // simple in-view animation
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
+    },{threshold:.12});
+    document.querySelectorAll('[data-animate], section .card, .stat').forEach(el=>io.observe(el));
+
+    // form handlers (replace with your endpoint / Formspree when ready)
+    function fakePost(form){
+      return new Promise(r=>setTimeout(()=>r({ok:true}),900));
+    }
+    document.getElementById('quickform').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const msg = document.getElementById('form-msg');
+      msg.textContent = 'Submitting…';
+      const res = await fakePost(e.target);
+      msg.textContent = res.ok ? 'Thanks — proposal on the way within 24 hours.' : 'Something went wrong. Try again.';
+      e.target.reset();
+    });
+    document.getElementById('contactform').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const msg = document.getElementById('contact-msg');
+      msg.textContent = 'Scheduling…';
+      const res = await fakePost(e.target);
+      msg.textContent = res.ok ? 'Thanks — we'll reach out to schedule a call.' : 'Something went wrong. Try again.';
+      e.target.reset();
+    });
+
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
