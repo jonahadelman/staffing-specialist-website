@@ -272,35 +272,61 @@
     </div>
   </footer>
 
-  <script>
-    // simple in-view animation
-    const io = new IntersectionObserver((entries)=>{
-      entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
-    },{threshold:.12});
-    document.querySelectorAll('[data-animate], section .card, .stat').forEach(el=>io.observe(el));
+   <script>
+    // === Simple in-view animation ===
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) e.target.classList.add("in");
+      });
+    }, { threshold: 0.12 });
+    document
+      .querySelectorAll("[data-animate], section .card, .stat")
+      .forEach((el) => io.observe(el));
 
-    // form handlers (replace with your endpoint / Formspree when ready)
-    function fakePost(form){
-      return new Promise(r=>setTimeout(()=>r({ok:true}),900));
+    // === Formspree integration for Request Proposal + Contact ===
+    async function submitFormspree(form, msgEl) {
+      msgEl.textContent = "Submitting…";
+      try {
+        const res = await fetch(form.action, {
+          method: "POST",
+          headers: { Accept: "application/json" },
+          body: new FormData(form),
+        });
+        if (res.ok) {
+          msgEl.textContent = "✅ Thanks — we’ll be in touch within 24 hours.";
+          form.reset();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          msgEl.textContent =
+            data?.errors?.[0]?.message ||
+            "⚠️ Something went wrong. Try again.";
+        }
+      } catch {
+        msgEl.textContent = "🚫 Network error. Please try again.";
+      }
     }
-    document.getElementById('quickform').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const msg = document.getElementById('form-msg');
-      msg.textContent = 'Submitting…';
-      const res = await fakePost(e.target);
-      msg.textContent = res.ok ? 'Thanks — proposal on the way within 24 hours.' : 'Something went wrong. Try again.';
-      e.target.reset();
-    });
-    document.getElementById('contactform').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const msg = document.getElementById('contact-msg');
-      msg.textContent = 'Scheduling…';
-      const res = await fakePost(e.target);
-      msg.textContent = res.ok ? 'Thanks — we'll reach out to schedule a call.' : 'Something went wrong. Try again.';
-      e.target.reset();
-    });
 
-    document.getElementById('y').textContent = new Date().getFullYear();
+    // === Connect both forms to Formspree ===
+    const quick = document.getElementById("quickform");
+    const quickMsg = document.getElementById("form-msg");
+    if (quick)
+      quick.addEventListener("submit", (e) => {
+        e.preventDefault();
+        quick.action = "https://formspree.io/f/meopyzlk";
+        submitFormspree(quick, quickMsg);
+      });
+
+    const contact = document.getElementById("contactform");
+    const contactMsg = document.getElementById("contact-msg");
+    if (contact)
+      contact.addEventListener("submit", (e) => {
+        e.preventDefault();
+        contact.action = "https://formspree.io/f/meopyzlk";
+        submitFormspree(contact, contactMsg);
+      });
+
+    // === Footer year auto-update ===
+    document.getElementById("y").textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
