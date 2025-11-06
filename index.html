@@ -147,13 +147,22 @@ header .btn.btn-black:hover { color: #000 !important; opacity:.85; }
 .founder-cta:hover{opacity:.9}
 .founder-side{text-align:center;}
 .founder-avatar{
-  width:120px;height:120px;border-radius:50%;
+  width:120px;
+  height:120px;
+  border-radius:50%;
   border:1px solid rgba(255,255,255,.15);
-  display:inline-grid;place-items:center;
+  display:inline-grid;
+  place-items:center;
   background:linear-gradient(135deg, rgba(0,255,209,.12), rgba(24,227,255,.12));
   margin-bottom:14px;
   box-shadow:0 12px 36px rgba(0,0,0,.25);
-  font-size:48px;
+  overflow:hidden;
+}
+.founder-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:50%;
 }
 .founder-quote{font-size:16px;color:#c9d6ff;margin-top:8px}
 
@@ -217,7 +226,9 @@ header .btn.btn-black:hover { color: #000 !important; opacity:.85; }
 
         <div class="founder-side">
           <!-- Simple avatar placeholder; replace with a headshot if you want -->
-          <div class="founder-avatar">JA</div>
+         <div class="founder-avatar">
+  <img src="jonah.jpg" alt="Jonah Adelman" />
+</div>
           <div class="founder-card">
             <div class="muted" style="font-size:14px;margin-bottom:6px;">Founder, Principal Talent Strategist</div>
             <div class="founder-quote">“Speed, precision, and radical transparency — that’s how we win your market.”</div>
