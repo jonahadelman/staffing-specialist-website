@@ -78,6 +78,89 @@ header .btn.btn-black:hover { color: #000 !important; opacity:.85; }
     /* testimonial */
     .quote{font-size:18px}
     .quote footer{margin-top:10px;color:var(--muted)}
+/* === Founder section === */
+.founder-band{
+  position: relative;
+  background:
+    radial-gradient(600px 220px at 10% 10%, rgba(24,227,255,.10), transparent 60%),
+    radial-gradient(700px 260px at 90% 40%, rgba(0,255,209,.10), transparent 65%),
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+  border-top:1px solid rgba(255,255,255,.06);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  padding: 80px 0;
+}
+.founder-wrap{
+  display:grid;
+  grid-template-columns: 1.2fr .8fr;
+  gap:32px;
+  align-items:center;
+}
+.founder-eyebrow{
+  color:var(--teal);
+  font-weight:800;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  font-size:12px;
+}
+.founder-title{
+  font-size:34px;
+  line-height:1.15;
+  margin:.35rem 0 1rem;
+  font-weight:900;
+}
+.founder-sub{
+  color:#c9d6ff;
+  font-size:18px;
+  margin:0 0 16px;
+}
+.founder-card{
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:22px;
+}
+.founder-badges{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:14px 0 4px;
+}
+.badge{
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.04);
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:12px;
+  color:#dfe7ff;
+}
+.founder-cta{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  background:transparent;
+  border:1px solid rgba(255,255,255,.18);
+  padding:12px 16px;
+  border-radius:999px;
+  font-weight:700;
+}
+.founder-cta:hover{opacity:.9}
+.founder-side{text-align:center;}
+.founder-avatar{
+  width:120px;height:120px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.15);
+  display:inline-grid;place-items:center;
+  background:linear-gradient(135deg, rgba(0,255,209,.12), rgba(24,227,255,.12));
+  margin-bottom:14px;
+  box-shadow:0 12px 36px rgba(0,0,0,.25);
+  font-size:48px;
+}
+.founder-quote{font-size:16px;color:#c9d6ff;margin-top:8px}
+
+@media (max-width: 900px){
+  .founder-wrap{grid-template-columns:1fr}
+  .founder-title{font-size:28px}
+}
 
     /* form */
     form{display:grid;gap:12px}
@@ -103,10 +186,46 @@ header .btn.btn-black:hover { color: #000 !important; opacity:.85; }
         <a href="#services">Services</a>
         <a href="#process">Process</a>
         <a href="#results">Results</a>
+       <a href="#founder">Founder</a>
         <a href="#contact" class="btn btn-black">Get Talent Now</a>
       </nav>
     </div>
   </header>
+    <!-- ABOUT THE FOUNDER -->
+    <section id="founder" class="founder-band">
+      <div class="container founder-wrap">
+        <div>
+          <div class="founder-eyebrow">About the Founder</div>
+          <h3 class="founder-title">Built by a recruiter who outworks everyone.</h3>
+          <p class="founder-sub">
+            <strong>Jonah Adelman</strong> is the engine behind <em>The Staffing Specialist</em> — a performance-driven RPO built on urgency, precision, and accountability.
+            After seven years leading talent at <strong>Werfen</strong> and delivering 200+ hires plus contractor programs,
+            Jonah’s playbooks turn headcount plans into business outcomes.
+          </p>
+          <div class="founder-badges">
+            <span class="badge">14–21 day time-to-hire</span>
+            <span class="badge">92% offer acceptance</span>
+            <span class="badge">Executive &amp; niche roles</span>
+            <span class="badge">Full-stack TA ops</span>
+          </div>
+          <p class="founder-sub" style="margin-top:10px">
+            “I don’t ship cold lists — I deliver warmed, qualified slates and close them. No drama, just results.”
+          </p>
+          <p style="margin-top:16px">
+            <a class="founder-cta" href="https://www.linkedin.com/in/jonahadelman1" target="_blank" rel="noopener">🔗 Connect with Jonah on LinkedIn</a>
+          </p>
+        </div>
+
+        <div class="founder-side">
+          <!-- Simple avatar placeholder; replace with a headshot if you want -->
+          <div class="founder-avatar">JA</div>
+          <div class="founder-card">
+            <div class="muted" style="font-size:14px;margin-bottom:6px;">Founder, Principal Talent Strategist</div>
+            <div class="founder-quote">“Speed, precision, and radical transparency — that’s how we win your market.”</div>
+          </div>
+        </div>
+      </div>
+    </section>
 
   <main>
     <!-- HERO -->
