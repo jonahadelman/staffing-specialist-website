@@ -825,5 +825,375 @@
     function openMobNav(){ document.getElementById('mob-nav').classList.add('open'); document.body.style.overflow='hidden'; }
     function closeMobNav(){ document.getElementById('mob-nav').classList.remove('open'); document.body.style.overflow=''; }
   </script>
+
+<!-- ═══════════════ COMPENSATION WIDGET ═══════════════ -->
+<style>
+  /* ── Bubble trigger ── */
+  #comp-bubble {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 999;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #00ffd1, #18e3ff);
+    color: #05201a;
+    padding: 13px 20px 13px 14px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: -.1px;
+    box-shadow: 0 8px 32px rgba(0,255,209,.4), 0 2px 8px rgba(0,0,0,.3);
+    transition: all .2s;
+    border: none;
+    font-family: inherit;
+    animation: bubblePulse 3s ease-in-out infinite;
+  }
+  #comp-bubble:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 12px 40px rgba(0,255,209,.5); animation: none; }
+  #comp-bubble .bubble-icon { width: 32px; height: 32px; border-radius: 50%; background: rgba(5,32,26,.15); display: grid; place-items: center; font-size: 16px; flex-shrink: 0; }
+  #comp-bubble .bubble-text { display: flex; flex-direction: column; gap: 1px; }
+  #comp-bubble .bubble-label { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; opacity: .7; }
+  #comp-bubble .bubble-main { font-size: 13px; font-weight: 800; }
+  @keyframes bubblePulse {
+    0%,100% { box-shadow: 0 8px 32px rgba(0,255,209,.4), 0 2px 8px rgba(0,0,0,.3); }
+    50% { box-shadow: 0 8px 48px rgba(0,255,209,.65), 0 2px 8px rgba(0,0,0,.3); }
+  }
+
+  /* ── Modal overlay ── */
+  #comp-modal {
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(5,8,18,.85);
+    backdrop-filter: blur(8px);
+    display: none; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  #comp-modal.open { display: flex; }
+
+  /* ── Modal card ── */
+  .cm-card {
+    background: linear-gradient(180deg, #0f1628, #0b1020);
+    border: 1px solid rgba(0,255,209,.2);
+    border-radius: 24px;
+    width: 100%; max-width: 560px;
+    box-shadow: 0 40px 100px rgba(0,0,0,.6), 0 0 0 1px rgba(0,255,209,.08);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Glow top */
+  .cm-card::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: 50%; transform: translateX(-50%);
+    width: 300px; height: 120px;
+    background: radial-gradient(ellipse, rgba(0,255,209,.15), transparent 70%);
+    pointer-events: none;
+  }
+
+  .cm-header {
+    padding: 22px 24px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    display: flex; align-items: flex-start; justify-content: space-between;
+  }
+  .cm-header-left { display: flex; align-items: center; gap: 12px; }
+  .cm-logo { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg,rgba(0,255,209,.15),rgba(24,227,255,.1)); border: 1px solid rgba(0,255,209,.25); display: grid; place-items: center; font-size: 18px; }
+  .cm-title { font-size: 16px; font-weight: 800; color: #e8f0ff; letter-spacing: -.2px; }
+  .cm-sub { font-size: 11px; color: #7a87a5; margin-top: 2px; }
+  .cm-close { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); color: #7a87a5; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 16px; display: grid; place-items: center; transition: all .15s; flex-shrink: 0; }
+  .cm-close:hover { background: rgba(255,255,255,.12); color: #fff; }
+
+  /* Mode toggle */
+  .cm-modes {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; padding: 16px 24px 0;
+  }
+  .cm-mode-btn {
+    padding: 12px 10px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.03); transition: all .15s; text-align: center;
+  }
+  .cm-mode-btn.active { background: rgba(0,255,209,.08); border-color: rgba(0,255,209,.3); }
+  .cm-mode-btn .mode-icon { font-size: 20px; margin-bottom: 5px; }
+  .cm-mode-btn .mode-title { font-size: 12px; font-weight: 700; color: #e8f0ff; margin-bottom: 3px; }
+  .cm-mode-btn .mode-desc { font-size: 10px; color: #5a6a8a; line-height: 1.4; }
+  .cm-mode-btn.active .mode-title { color: #00ffd1; }
+  .cm-mode-btn.active .mode-desc { color: #7a9a8a; }
+
+  /* Input area */
+  .cm-body { padding: 16px 24px 20px; }
+  .cm-textarea {
+    width: 100%; min-height: 130px; background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.08); border-radius: 12px;
+    padding: 14px; color: #e8f0ff; font-family: inherit; font-size: 13px;
+    line-height: 1.6; resize: none; outline: none; transition: border .15s;
+    box-sizing: border-box;
+  }
+  .cm-textarea:focus { border-color: rgba(0,255,209,.3); }
+  .cm-textarea::placeholder { color: #3a4a5a; }
+
+  .cm-analyze-btn {
+    width: 100%; margin-top: 10px;
+    background: linear-gradient(135deg, #00ffd1, #18e3ff);
+    color: #05201a; border: none; padding: 14px;
+    border-radius: 12px; font-weight: 800; font-size: 14px;
+    cursor: pointer; transition: all .2s; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .cm-analyze-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,255,209,.35); }
+  .cm-analyze-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+  /* Result */
+  .cm-result {
+    margin: 0 24px 20px;
+    background: linear-gradient(135deg, rgba(0,255,209,.04), rgba(24,227,255,.02));
+    border: 1px solid rgba(0,255,209,.15);
+    border-radius: 16px; overflow: hidden; display: none;
+  }
+  .cm-result.show { display: block; }
+  .cm-result-header {
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid rgba(0,255,209,.1);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .cm-result-label { font-size: 10px; font-weight: 700; color: #00ffd1; text-transform: uppercase; letter-spacing: .1em; }
+  .cm-result-body { padding: 16px 18px; }
+
+  /* Salary bar — Kelly Blue Book style */
+  .salary-range {
+    display: flex; align-items: flex-end; gap: 4px; margin: 12px 0;
+  }
+  .salary-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .salary-bar { width: 100%; border-radius: 4px 4px 0 0; transition: height .5s ease; }
+  .salary-val { font-size: 13px; font-weight: 700; font-family: 'DM Mono', monospace; }
+  .salary-lbl { font-size: 9px; color: #5a6a8a; text-transform: uppercase; letter-spacing: .06em; }
+  .salary-target { font-size: 28px; font-weight: 900; color: #00ffd1; letter-spacing: -1px; margin: 4px 0 2px; }
+  .salary-target-lbl { font-size: 11px; color: #7a87a5; }
+
+  .cm-insights { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+  .cm-insight { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #c9d6ff; line-height: 1.5; }
+  .cm-insight-dot { width: 5px; height: 5px; border-radius: 50%; background: #00ffd1; margin-top: 5px; flex-shrink: 0; }
+
+  .cm-disclaimer { padding: 10px 18px; font-size: 10px; color: #3a4a5a; border-top: 1px solid rgba(255,255,255,.04); }
+
+  .cm-thinking { display: flex; align-items: center; gap: 10px; padding: 20px; font-size: 13px; color: #7a87a5; }
+  .cm-spinner { width: 16px; height: 16px; border: 2px solid rgba(0,255,209,.2); border-top-color: #00ffd1; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<!-- Bubble trigger -->
+<button id="comp-bubble" onclick="openCompModal()">
+  <div class="bubble-icon">💰</div>
+  <div class="bubble-text">
+    <span class="bubble-label">Free Tool</span>
+    <span class="bubble-main">Ask Jonah — Comp Intel</span>
+  </div>
+</button>
+
+<!-- Modal -->
+<div id="comp-modal">
+  <div class="cm-card">
+    <div class="cm-header">
+      <div class="cm-header-left">
+        <div class="cm-logo">💰</div>
+        <div>
+          <div class="cm-title">Compensation Intelligence</div>
+          <div class="cm-sub">Powered by The Staffing Specialist · Real market data</div>
+        </div>
+      </div>
+      <button class="cm-close" onclick="closeCompModal()">✕</button>
+    </div>
+
+    <!-- Mode toggle -->
+    <div class="cm-modes">
+      <div class="cm-mode-btn active" id="cm-mode-candidate" onclick="setCompMode('candidate')">
+        <div class="mode-icon">🙋</div>
+        <div class="mode-title">Know Your Worth</div>
+        <div class="mode-desc">Paste your resume or background — find out what the market pays for your experience today.</div>
+      </div>
+      <div class="cm-mode-btn" id="cm-mode-company" onclick="setCompMode('company')">
+        <div class="mode-icon">🏢</div>
+        <div class="mode-title">What The Market Pays</div>
+        <div class="mode-desc">Paste a job description — see what companies are actually paying for this role right now.</div>
+      </div>
+    </div>
+
+    <div class="cm-body">
+      <textarea class="cm-textarea" id="comp-input" placeholder="Paste your resume, LinkedIn profile, or background here...&#10;&#10;Include: current title, years of experience, location, key skills — the more you share, the more accurate the analysis."></textarea>
+      <button class="cm-analyze-btn" id="comp-analyze-btn" onclick="runCompAnalysis()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Analyze Market Value
+      </button>
+    </div>
+
+    <div class="cm-result" id="comp-result">
+      <div class="cm-result-header">
+        <div class="cm-result-label" id="comp-result-label">Market Analysis</div>
+        <div style="font-size:10px;color:#3a4a5a;" id="comp-result-role"></div>
+      </div>
+      <div class="cm-result-body">
+        <div id="comp-thinking" class="cm-thinking" style="display:none;">
+          <div class="cm-spinner"></div>
+          Analyzing market data...
+        </div>
+        <div id="comp-output"></div>
+      </div>
+      <div class="cm-disclaimer">AI-generated estimate based on current market data. Actual compensation varies by company, industry, and negotiation. Contact Jonah for a precise assessment.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let compMode = 'candidate';
+
+function openCompModal() {
+  document.getElementById('comp-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeCompModal() {
+  document.getElementById('comp-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.getElementById('comp-modal').addEventListener('click', function(e) {
+  if(e.target === this) closeCompModal();
+});
+
+function setCompMode(mode) {
+  compMode = mode;
+  document.getElementById('cm-mode-candidate').classList.toggle('active', mode==='candidate');
+  document.getElementById('cm-mode-company').classList.toggle('active', mode==='company');
+  const ta = document.getElementById('comp-input');
+  const btn = document.getElementById('comp-analyze-btn');
+  if(mode === 'candidate') {
+    ta.placeholder = 'Paste your resume, LinkedIn profile, or background here...
+
+Include: current title, years of experience, location, key skills — the more you share, the more accurate the analysis.';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Know Your Worth';
+  } else {
+    ta.placeholder = 'Paste the full job description here...
+
+Include: title, responsibilities, requirements, location, and any salary range mentioned — for the most accurate market analysis.';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Analyze Market Pay';
+  }
+  document.getElementById('comp-result').classList.remove('show');
+  ta.value = '';
+}
+
+async function runCompAnalysis() {
+  const txt = document.getElementById('comp-input').value.trim();
+  if(!txt || txt.length < 30) { alert('Please paste more detail for an accurate analysis.'); return; }
+
+  const btn = document.getElementById('comp-analyze-btn');
+  btn.disabled = true;
+  document.getElementById('comp-result').classList.add('show');
+  document.getElementById('comp-thinking').style.display = 'flex';
+  document.getElementById('comp-output').innerHTML = '';
+  document.getElementById('comp-result').scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  const prompt = compMode === 'candidate'
+    ? `You are a compensation expert and staffing specialist with deep knowledge of current US salary data across all industries. Analyze this candidate's background and provide a precise compensation analysis.
+
+CANDIDATE BACKGROUND:
+${txt}
+
+Respond ONLY in this exact JSON format (no markdown):
+{"role":"Identified role title","location":"Identified location or National if unclear","low":75000,"mid":95000,"high":120000,"currency":"USD","insights":["Specific insight about their market value","Key factor driving their comp","One actionable tip to maximize their comp","Market trend affecting this role"],"market_trend":"Up / Stable / Down","demand":"High / Medium / Low","note":"One sentence on their competitive position"}`
+    : `You are a compensation expert and staffing specialist with deep knowledge of current US salary data. Analyze this job description and provide market compensation data for this role.
+
+JOB DESCRIPTION:
+${txt}
+
+Respond ONLY in this exact JSON format (no markdown):
+{"role":"Job title from the description","location":"Location from the description or National if unclear","low":75000,"mid":95000,"high":120000,"currency":"USD","insights":["What top candidates in this market actually demand","Key comp drivers for this role","What competitors are paying for similar talent","One insight on how to attract top talent for this role"],"market_trend":"Up / Stable / Down","demand":"High / Medium / Low","note":"One sentence on the hiring market for this role"}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 600,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+
+    if(data.error) {
+      document.getElementById('comp-output').innerHTML = `<div style="color:#ff6b6b;font-size:13px;padding:8px 0;">Analysis unavailable — <a href="#contact" onclick="closeCompModal()" style="color:#00ffd1;">contact Jonah directly</a> for a manual comp analysis.</div>`;
+      document.getElementById('comp-thinking').style.display = 'none';
+      btn.disabled = false;
+      return;
+    }
+
+    const raw = (data.content||[]).map(b=>b.text||'').join('');
+    const r = JSON.parse(raw.replace(/```json|```/g,'').trim());
+
+    const trendColor = r.market_trend==='Up' ? '#22d47a' : r.market_trend==='Down' ? '#ff6b6b' : '#f5a623';
+    const demandColor = r.demand==='High' ? '#22d47a' : r.demand==='Low' ? '#ff6b6b' : '#f5a623';
+    const fmt = (n) => '$' + Math.round(n/1000) + 'K';
+    const barH = [60, 85, 100]; // low mid high bar heights %
+
+    document.getElementById('comp-result-label').textContent = compMode==='candidate' ? '🙋 Your Market Value' : '🏢 Market Pay Analysis';
+    document.getElementById('comp-result-role').textContent = r.role + (r.location ? ' · ' + r.location : '');
+
+    document.getElementById('comp-output').innerHTML = `
+      <div style="text-align:center;margin-bottom:4px;">
+        <div class="salary-target">${fmt(r.mid)}</div>
+        <div class="salary-target-lbl">${compMode==='candidate' ? 'Your market value target' : 'Midpoint market rate'}</div>
+      </div>
+
+      <!-- Bar chart -->
+      <div class="salary-range" style="height:80px;align-items:flex-end;margin:14px 0;">
+        <div class="salary-col">
+          <div class="salary-val" style="color:#5a7a6a;">${fmt(r.low)}</div>
+          <div class="salary-bar" style="height:50px;background:rgba(0,255,209,.2);"></div>
+          <div class="salary-lbl">Floor</div>
+        </div>
+        <div class="salary-col">
+          <div class="salary-val" style="color:#00ffd1;">${fmt(r.mid)}</div>
+          <div class="salary-bar" style="height:70px;background:rgba(0,255,209,.6);"></div>
+          <div class="salary-lbl">Target</div>
+        </div>
+        <div class="salary-col">
+          <div class="salary-val" style="color:#18e3ff;">${fmt(r.high)}</div>
+          <div class="salary-bar" style="height:58px;background:rgba(24,227,255,.35);"></div>
+          <div class="salary-lbl">Ceiling</div>
+        </div>
+      </div>
+
+      <!-- Market signals -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:9px;color:#3a4a5a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Market Trend</div>
+          <div style="font-size:14px;font-weight:700;color:${trendColor};">${r.market_trend === 'Up' ? '↑ ' : r.market_trend === 'Down' ? '↓ ' : '→ '}${r.market_trend}</div>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:9px;color:#3a4a5a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Talent Demand</div>
+          <div style="font-size:14px;font-weight:700;color:${demandColor};">${r.demand}</div>
+        </div>
+      </div>
+
+      <div style="background:rgba(0,255,209,.04);border:1px solid rgba(0,255,209,.1);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#c9d6ff;line-height:1.5;">
+        ${r.note}
+      </div>
+
+      <div class="cm-insights">
+        ${(r.insights||[]).map(i=>`<div class="cm-insight"><div class="cm-insight-dot"></div><span>${i}</span></div>`).join('')}
+      </div>
+
+      <div style="margin-top:16px;text-align:center;">
+        <a href="#contact" onclick="closeCompModal()" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#00ffd1,#18e3ff);color:#05201a;padding:11px 22px;border-radius:999px;font-weight:700;font-size:13px;text-decoration:none;">
+          Talk to Jonah About This Role →
+        </a>
+      </div>`;
+
+    document.getElementById('comp-thinking').style.display = 'none';
+  } catch(e) {
+    document.getElementById('comp-output').innerHTML = `<div style="color:#ff6b6b;font-size:13px;">Analysis failed. <a href="#contact" onclick="closeCompModal()" style="color:#00ffd1;">Contact Jonah directly</a> for a manual analysis.</div>`;
+    document.getElementById('comp-thinking').style.display = 'none';
+  }
+  btn.disabled = false;
+}
+</script>
 </body>
 </html>
