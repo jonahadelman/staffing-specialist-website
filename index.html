@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Staffing Specialist | Built by Jonah Adelman — Elite RPO Recruiting for High-Growth Companies</title>
+  <meta name="description" content="Elite RPO and Talent Acquisition partner. Build world‑class teams with speed, precision, and accountability. The Staffing Specialist delivers outcomes, not excuses." />
+  <meta property="og:title" content="The Staffing Specialist — Elite RPO & Talent Acquisition" />
+  <meta property="og:description" content="Build world‑class teams with speed, precision, and accountability." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#0b1020" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E🦁%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#111831;
+      --muted:#7a87a5;
+      --text:#e8f0ff;
+      --teal:#00ffd1;
+      --aqua:#18e3ff;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 70% -10%, rgba(24,227,255,.12), transparent 60%),
+                  radial-gradient(1000px 500px at -10% 20%, rgba(0,255,209,.12), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      line-height:1.5;
+    }
+    a{color:var(--teal);text-decoration:none}
+    a:hover{opacity:.85}
+    .container{max-width:1200px;margin:0 auto;padding:0 24px}
+    header{position:sticky;top:0;z-index:50;background:linear-gradient(to bottom, rgba(11,16,32,.85), rgba(11,16,32,.55));backdrop-filter: blur(8px);border-bottom:1px solid rgba(255,255,255,.06)}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+    .brand{display:flex;align-items:center;gap:14px}
+    .logo{width:42px;height:42px;filter: drop-shadow(0 6px 18px rgba(0,255,209,.25))}
+    .brand h1{font-size:21px;margin:0;font-weight:800;letter-spacing:-.3px;background:linear-gradient(90deg,#ffffff 60%,#00ffd1);-webkit-background-clip:text;background-clip:text;color:transparent;}
+    .nav a{margin-left:16px;font-size:13px;color:#8899bb;transition:color .15s;}.nav a:hover{color:#fff;opacity:1;}
+    .btn{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--teal),#34ffd1);color:#05201a;padding:12px 18px;border-radius:999px;font-weight:700;box-shadow:0 10px 30px rgba(0,255,209,.25);border:0;cursor:pointer}
+    .btn.secondary{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.12)}
+    .btn.btn-black { color: #000 !important; }
+    header .btn.btn-black:hover { color: #000 !important; opacity:.85; }
+
+    /* hero */
+    .hero{padding:86px 0 48px;position:relative;overflow:hidden}
+    .hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:36px;align-items:center}
+    .kicker{color:var(--teal);font-weight:800;letter-spacing:.18em;text-transform:uppercase;font-size:12px}
+    .hero h2{font-size:46px;line-height:1.05;margin:.4rem 0 1rem;font-weight:900}
+    .hero p{font-size:18px;color:#c9d6ff;max-width:680px}
+    .statbar{display:flex;gap:18px;flex-wrap:wrap;margin:26px 0}
+    .stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);padding:14px 18px;border-radius:12px}
+    .stat strong{font-size:20px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+    section{padding:72px 0}
+    .grid{display:grid;gap:20px}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    .grid.cols-2{grid-template-columns:repeat(2,1fr)}
+    @media (max-width: 900px){
+      .hero-grid{grid-template-columns:1fr}
+      .grid.cols-3{grid-template-columns:1fr}
+      .grid.cols-2{grid-template-columns:1fr}
+      .hero h2{font-size:36px}
+      .talentbase-grid{grid-template-columns:1fr !important}
+      .founder-wrap{grid-template-columns:1fr}
+      .founder-title{font-size:28px}
+    }
+    h3{font-size:28px;margin:0 0 16px}
+    .muted{color:var(--muted)}
+    .icn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,rgba(0,255,209,.12),rgba(24,227,255,.12));border:1px solid rgba(255,255,255,.08)}
+    .quote{font-size:18px}
+    .quote footer{margin-top:10px;color:var(--muted)}
+
+    /* === TALENTBASE SECTION === */
+    .talentbase-band{
+      position:relative;
+      background:
+        radial-gradient(800px 300px at 80% 50%, rgba(124,106,247,.12), transparent 60%),
+        radial-gradient(600px 250px at 10% 80%, rgba(0,255,209,.08), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border-top:1px solid rgba(255,255,255,.06);
+      border-bottom:1px solid rgba(255,255,255,.06);
+      padding:80px 0;
+    }
+    .talentbase-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:40px;
+      align-items:center;
+    }
+    .talentbase-eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:rgba(124,106,247,.15);
+      border:1px solid rgba(124,106,247,.3);
+      padding:5px 14px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:#a89dff;
+      margin-bottom:16px;
+    }
+    .talentbase-headline{
+      font-size:36px;
+      font-weight:900;
+      line-height:1.1;
+      margin:0 0 16px;
+    }
+    .talentbase-sub{
+      font-size:17px;
+      color:#c9d6ff;
+      margin-bottom:24px;
+      line-height:1.6;
+    }
+    .talentbase-features{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-bottom:28px;
+    }
+    .tb-feature{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      font-size:14px;
+      color:#c9d6ff;
+    }
+    .tb-check{
+      width:18px;height:18px;border-radius:50%;
+      background:rgba(0,255,209,.15);
+      border:1px solid rgba(0,255,209,.3);
+      display:grid;place-items:center;
+      flex-shrink:0;margin-top:2px;
+      font-size:10px;color:var(--teal);
+    }
+    .tb-launch-btn{
+      display:inline-flex;
+      align-items:center;
+      gap:12px;
+      background:linear-gradient(135deg, #7c6af7, #9d8fff);
+      color:#fff;
+      padding:14px 24px;
+      border-radius:999px;
+      font-weight:700;
+      font-size:15px;
+      box-shadow:0 10px 30px rgba(124,106,247,.35);
+      border:0;
+      cursor:pointer;
+      text-decoration:none;
+      transition:all .2s;
+    }
+    .tb-launch-btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 14px 36px rgba(124,106,247,.45);
+      opacity:1;
+    }
+    .tb-launch-btn svg{width:16px;height:16px;}
+    .tb-note{font-size:12px;color:var(--muted);margin-top:10px;}
+    .talentbase-mockup{
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid rgba(124,106,247,.25);
+      border-radius:20px;
+      overflow:hidden;
+      box-shadow:0 20px 60px rgba(0,0,0,.4), 0 0 0 1px rgba(124,106,247,.15);
+    }
+    .tb-mock-bar{
+      background:rgba(124,106,247,.12);
+      border-bottom:1px solid rgba(124,106,247,.2);
+      padding:10px 16px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .tb-mock-dot{width:8px;height:8px;border-radius:50%;}
+    .tb-mock-title{font-size:12px;color:#a89dff;font-weight:600;margin-left:4px;}
+    .tb-mock-body{padding:16px;}
+    .tb-mock-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+    .tb-mock-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;}
+    .tb-mock-stat-label{font-size:9px;color:#5a5a7a;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+    .tb-mock-stat-val{font-size:18px;font-weight:700;letter-spacing:-1px;}
+    .tb-mock-row{display:flex;align-items:center;gap:8px;padding:7px 8px;background:rgba(255,255,255,.03);border-radius:7px;margin-bottom:5px;}
+    .tb-mock-av{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:9px;font-weight:700;flex-shrink:0;}
+    .tb-mock-name{font-size:11px;font-weight:500;flex:1;}
+    .tb-mock-badge{font-size:9px;padding:2px 6px;border-radius:8px;white-space:nowrap;}
+    .tb-mock-score{font-size:11px;font-weight:700;font-family:monospace;margin-left:4px;}
+
+    /* founder */
+    .founder-band{
+      position:relative;
+      background:
+        radial-gradient(600px 220px at 10% 10%, rgba(24,227,255,.10), transparent 60%),
+        radial-gradient(700px 260px at 90% 40%, rgba(0,255,209,.10), transparent 65%),
+        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border-top:1px solid rgba(255,255,255,.06);
+      border-bottom:1px solid rgba(255,255,255,.06);
+      padding:80px 0;
+    }
+    .founder-wrap{display:grid;grid-template-columns:1.2fr .8fr;gap:32px;align-items:center;}
+    .founder-eyebrow{color:var(--teal);font-weight:800;letter-spacing:.18em;text-transform:uppercase;font-size:12px;}
+    .founder-title{font-size:34px;line-height:1.15;margin:.35rem 0 1rem;font-weight:900;}
+    .founder-sub{color:#c9d6ff;font-size:18px;margin:0 0 16px;}
+    .founder-card{background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;}
+    .founder-badges{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:14px 0 4px;text-align:center;}
+    .badge{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);padding:8px 12px;border-radius:999px;font-size:12px;color:#dfe7ff;}
+    .founder-cta{display:inline-flex;align-items:center;gap:10px;background:transparent;border:1px solid rgba(255,255,255,.18);padding:12px 16px;border-radius:999px;font-weight:700;}
+    .founder-cta:hover{opacity:.9}
+    .founder-side{text-align:center;}
+    .founder-avatar{width:120px;height:120px;border-radius:50%;border:1px solid rgba(255,255,255,.15);display:inline-grid;place-items:center;background:linear-gradient(135deg, rgba(0,255,209,.12), rgba(24,227,255,.12));margin-bottom:14px;box-shadow:0 12px 36px rgba(0,0,0,.25);overflow:hidden;}
+    .founder-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+    .founder-quote{font-size:16px;color:#c9d6ff;margin-top:8px}
+
+    form{display:grid;gap:12px}
+    input,select,textarea{background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 14px;color:var(--text);outline:none;font-family:inherit;font-size:14px}
+    input::placeholder,textarea::placeholder{color:#7f8db2}
+    textarea{min-height:120px;resize:vertical}
+    .footer{padding:32px 0;border-top:1px solid rgba(255,255,255,.08);color:#b9c6ff}
+    [data-animate]{opacity:0;transform:translateY(16px);transition:all .7s ease}
+    [data-animate].in{opacity:1;transform:none}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand" style="flex-direction:column;align-items:flex-start;gap:3px;">
+        <h1>The Staffing Specialist</h1>
+        <div style="display:flex;align-items:center;gap:7px;">
+          <span style="font-size:10px;color:var(--teal);font-weight:700;letter-spacing:.04em;">&ldquo;Recruitment Perfected.&rdquo;</span>
+          <span style="font-size:10px;color:#8899bb;letter-spacing:.04em;font-weight:500;">&mdash; Jack &amp; Suzy Welch</span>
+        </div>
+      </div>
+      <nav>
+        <a href="#services">Services</a>
+        <a href="#process">Process</a>
+        <a href="#results">Results</a>
+        <a href="HappyHunting.html" target="_blank">Happy Hunting</a>
+        <a href="TalentBase_TheStaffingSpecialist.html" target="_blank">TalentBase</a>
+        <a href="#founder">Founder</a>
+        <a href="#contact" class="btn btn-black">Get Talent Now</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="kicker">Elite RPO • Executive Search • High‑Velocity Hiring</div>
+          <h2>Build world‑class teams with <span style="background:linear-gradient(90deg,var(--teal),var(--aqua));-webkit-background-clip:text;background-clip:text;color:transparent">speed, precision, and accountability</span>.</h2>
+          <p>We deliver outcomes, not excuses. From VC‑backed startups to global med‑device leaders, The Staffing Specialist plugs in as your on‑demand talent engine, architecting funnels, closing top performers, and hitting headcount goals without drama.</p>
+          <div class="statbar">
+            <div class="stat card"><strong>14‑28 days</strong><div class="muted">Avg. time‑to‑hire</div></div>
+            <div class="stat card"><strong>92%</strong><div class="muted">Offer acceptance rate</div></div>
+            <div class="stat card"><strong>3x</strong><div class="muted">Pipeline lift in 30 days</div></div>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <a href="#contact" class="btn">Start a Search</a>
+            <a href="#services" class="btn secondary">See How We Work</a>
+          </div>
+        </div>
+        <div class="card" style="padding:22px">
+          <h3 style="margin-top:0">Immediate Hiring Needs?</h3>
+          <p class="muted" style="margin-top:6px">Tell us your roles and timeline — we'll propose a plan within 24 hours.</p>
+          <form id="quickform">
+            <input name="name" placeholder="Your name" required />
+            <input name="email" placeholder="Work email" type="email" required />
+            <input name="company" placeholder="Company" />
+            <textarea name="roles" placeholder="Roles to fill &amp; target start dates" required></textarea>
+            <button class="btn" type="submit">Request Proposal</button>
+            <div id="form-msg" class="muted" style="margin-top:8px"></div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section id="services">
+      <div class="container">
+        <h3>What We Do</h3>
+        <p class="muted">Full‑stack recruitment services engineered for outcomes.</p>
+        <div class="grid cols-3" style="margin-top:18px">
+          <div class="card" style="padding:20px">
+            <div class="icn">🔎</div>
+            <h4>Embedded RPO</h4>
+            <p class="muted">Plug‑in talent ops: req intake, sourcing, interview design, slate reviews, close strategy, fully embedded with your team.</p>
+          </div>
+          <div class="card" style="padding:20px">
+            <div class="icn">🎯</div>
+            <h4>Executive &amp; Niche Search</h4>
+            <p class="muted">Precision hunts for leadership and hard‑to‑fill roles in med‑device, biotech, software, and GTM.</p>
+          </div>
+          <div class="card" style="padding:20px">
+            <div class="icn">⚙️</div>
+            <h4>Systems &amp; Playbooks</h4>
+            <p class="muted">ATS calibration, interview training, scorecards, compensation alignment, and offer frameworks that convert.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROCESS -->
+    <section id="process">
+      <div class="container">
+        <h3>How We Win</h3>
+        <div class="grid cols-3" style="margin-top:18px">
+          <div class="card" style="padding:20px"><h4>01 • Discovery</h4><p class="muted">Deep intake with hiring leaders. Success profile, competencies, and narrative set on day one.</p></div>
+          <div class="card" style="padding:20px"><h4>02 • Sourcing Engine</h4><p class="muted">Outbound, referrals, and programmatic reach. We build warmed slates, not cold lists.</p></div>
+          <div class="card" style="padding:20px"><h4>03 • Selection</h4><p class="muted">Structured interviews, scorecards, and working sessions to predict performance, not just pedigree.</p></div>
+          <div class="card" style="padding:20px"><h4>04 • Closing</h4><p class="muted">Comp strategy, stakeholder alignment, and candidate commitment, 92% offer acceptance.</p></div>
+          <div class="card" style="padding:20px"><h4>05 • Onboarding</h4><p class="muted">30‑60‑90 plans tied to measurable outcomes. No hand‑offs, only hand‑holds.</p></div>
+          <div class="card" style="padding:20px"><h4>06 • Reporting</h4><p class="muted">Weekly dashboards: funnel health, cycle time, and risk flags. Radical transparency.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="results">
+      <div class="container">
+        <h3>What They're Saying</h3>
+        <p class="muted" style="margin-bottom:8px;">Unsolicited. Unfiltered. Real.</p>
+
+        <!-- Jack & Suzy Welch + stat bar -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0 20px;">
+          <div class="card" style="padding:22px;border-color:rgba(0,255,209,.2);background:linear-gradient(135deg,rgba(0,255,209,.04),rgba(24,227,255,.02));">
+            <div style="font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:10px;">Jack &amp; Suzy Welch</div>
+            <div class="quote" style="font-size:20px;font-weight:700;color:#e8f0ff;">&ldquo;Recruitment Perfected.&rdquo;</div>
+            <div style="margin-top:8px;font-size:12px;color:var(--muted);">Jack Welch &amp; Suzy Welch &mdash; Legendary Business Leaders</div>
+          </div>
+          <div class="card" style="padding:22px;border-color:rgba(0,255,209,.2);background:linear-gradient(135deg,rgba(0,255,209,.04),rgba(24,227,255,.02));">
+            <div style="font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:10px;">Glassdoor Review &mdash; Director of Benefits Candidate</div>
+            <div class="quote" style="font-size:15px;">&ldquo;The lead recruiter Jonah was so passionate about his company when he recruited me that I had to at least check it out&hellip; when my son finishes his MBA, Jonah will be getting his resume. Thank you for such a great experience!&rdquo;</div>
+            <div style="margin-top:8px;font-size:12px;color:var(--muted);">Anonymous &mdash; Bedford, MA &mdash; Glassdoor &bull; Positive Experience</div>
+          </div>
+        </div>
+
+        <!-- ROI stats bar -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;">
+          <div class="stat card" style="text-align:center;">
+            <strong style="font-size:22px;background:linear-gradient(90deg,var(--teal),var(--aqua));-webkit-background-clip:text;background-clip:text;color:transparent;">$10M+</strong>
+            <div class="muted" style="font-size:11px;margin-top:4px;">Saved in staffing fees for a global medical device company</div>
+          </div>
+          <div class="stat card" style="text-align:center;">
+            <strong style="font-size:22px;color:var(--teal);">1,500+</strong>
+            <div class="muted" style="font-size:11px;margin-top:4px;">Hires facilitated for a single global client</div>
+          </div>
+          <div class="stat card" style="text-align:center;">
+            <strong style="font-size:22px;color:var(--teal);">&lt;35 days</strong>
+            <div class="muted" style="font-size:11px;margin-top:4px;">Average time-to-fill over 7-year engagement</div>
+          </div>
+          <div class="stat card" style="text-align:center;">
+            <strong style="font-size:22px;color:var(--teal);">~$4,500</strong>
+            <div class="muted" style="font-size:11px;margin-top:4px;">Cost per hire (vs. $15K+ industry avg)</div>
+          </div>
+        </div>
+
+        <!-- Testimonials grid -->
+        <div class="grid cols-3" style="margin-top:8px;">
+          <div class="card" style="padding:22px;">
+            <div class="quote">&ldquo;You said you&rsquo;ll impress me, and you really did. Thanks!&rdquo;
+              <footer>&mdash; Vice President of Finance</footer>
+            </div>
+          </div>
+          <div class="card" style="padding:22px;">
+            <div class="quote">&ldquo;A quick note to thank you for all your extraordinary efforts here on the recruiting front. To say that you&rsquo;ve been an immense help to us here in Legal would be an understatement. Ed and I are both very grateful.&rdquo;
+              <footer>&mdash; Vice President &amp; General Counsel</footer>
+            </div>
+          </div>
+          <div class="card" style="padding:22px;">
+            <div class="quote">&ldquo;I look forward to seeing the great work of you and your army of talented staff. Bar is high&hellip; I can&rsquo;t thank you enough. What you have done is well recognized.&rdquo;
+              <footer>&mdash; Senior Director of Service &amp; Support</footer>
+            </div>
+          </div>
+          <div class="card" style="padding:22px;">
+            <div class="quote">&ldquo;One thing I have really enjoyed about moving into this role is the close collaboration with you. Our team is and will continue to be, all the better for your insights and partnership.&rdquo;
+              <footer>&mdash; R&amp;D Manager</footer>
+            </div>
+          </div>
+          <div class="card" style="padding:22px;">
+            <div class="quote">&ldquo;Two happy dances in two weeks! WOW! Congratulations Jonah and THANK YOU, THANK YOU, for ALL your very hard work!&rdquo;
+              <footer>&mdash; Director, WW Communications</footer>
+            </div>
+          </div>
+          <div class="card" style="padding:22px;">
+            <div class="quote">&ldquo;Thank you for all your support this year helping to build the HWE team. Love your positivity &mdash; you are a pleasure to work with!&rdquo;
+              <footer>&mdash; Senior Director of Hardware Engineering</footer>
+            </div>
+          </div>
+          <div class="card" style="padding:22px;">
+            <div class="quote">&ldquo;The best Recruiter I have ever worked with!&rdquo;
+              <footer>&mdash; Human Resources Business Partner</footer>
+            </div>
+          </div>
+          <div class="card" style="padding:22px;">
+            <div class="quote">&ldquo;Started here this week and just wanted to reach out one more time and thank you for finding me a few months ago! Awesome people &amp; projects here.&rdquo;
+              <footer>&mdash; Principal Engineer (placed candidate)</footer>
+            </div>
+          </div>
+          <div class="card" style="padding:22px;">
+            <div class="quote">&ldquo;Regardless of outcome, this was a great candidate experience so far. Quick, informative, &amp; responsive. The process was obviously designed!&rdquo;
+              <footer>&mdash; Candidate (unsolicited feedback)</footer>
+            </div>
+          </div>
+          <div class="card" style="padding:22px;">
+            <div class="quote">&ldquo;You and I are 100% on the same page which is great and really rewarding from the collaboration standpoint.&rdquo;
+              <footer>&mdash; Director, R&amp;D Reagents</footer>
+            </div>
+          </div>
+          <div class="card" style="padding:22px;">
+            <div class="quote">&ldquo;I cannot thank you enough for all the effort you have placed in getting this done. I am extremely excited to be joining you!&rdquo;
+              <footer>&mdash; Senior Buyer (placed candidate)</footer>
+            </div>
+          </div>
+          <div class="card" style="padding:22px;">
+            <div class="quote">&ldquo;We interviewed the candidate, and all liked him, and I would like to make him an offer. Great job, Jonah! You need to get him!&rdquo;
+              <footer>&mdash; Senior Program Manager</footer>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ENGAGEMENT MODELS -->
+    <section>
+      <div class="container">
+        <h3>Engagement Models</h3>
+        <div class="grid cols-3" style="margin-top:18px">
+          <div class="card" style="padding:20px">
+            <h4>Embedded RPO</h4>
+            <p class="muted">Monthly retainer. Owns reqs end‑to‑end. Perfect for scale‑ups and transformations.</p>
+          </div>
+          <div class="card" style="padding:20px">
+            <h4>Executive Search</h4>
+            <p class="muted">C‑suite and Director+ with milestone‑based fees and guaranteed delivery.</p>
+          </div>
+          <div class="card" style="padding:20px">
+            <h4>Project Sprints</h4>
+            <p class="muted">30/60‑day blitz to build pipeline, clean process, and land critical hires fast.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ═══════════════ HAPPY HUNTING SECTION ═══════════════ -->
+    <section id="happyhunting" style="padding:72px 0;border-top:1px solid rgba(255,255,255,.06);">
+      <div class="container">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;">
+          <div>
+            <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,77,0,.12);border:1px solid rgba(255,77,0,.25);padding:5px 14px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#ff6520;margin-bottom:16px;">
+              <span>🎯</span> Free Tool
+            </div>
+            <h2 style="font-size:36px;font-weight:900;line-height:1.1;margin:0 0 16px;letter-spacing:-.3px;">Happy Hunting — <span style="background:linear-gradient(90deg,#ff4d00,#ff8c42);-webkit-background-clip:text;background-clip:text;color:transparent;">decode any staffing firm posting in 10 seconds.</span></h2>
+            <p style="font-size:17px;color:#c9d6ff;margin-bottom:24px;line-height:1.6;">Every staffing firm posting is a company that already proven they will write a check to a recruiter. Happy Hunting reveals the end client, hiring manager, and gives you a ready-to-send pitch instantly.</p>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;">
+              <div style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#c9d6ff;"><div style="width:18px;height:18px;border-radius:50%;background:rgba(255,77,0,.15);border:1px solid rgba(255,77,0,.3);display:grid;place-items:center;flex-shrink:0;margin-top:2px;font-size:10px;color:#ff4d00;">✓</div><div><strong>Decode the client</strong> — AI identifies the real end company hidden behind the staffing firm posting</div></div>
+              <div style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#c9d6ff;"><div style="width:18px;height:18px;border-radius:50%;background:rgba(255,77,0,.15);border:1px solid rgba(255,77,0,.3);display:grid;place-items:center;flex-shrink:0;margin-top:2px;font-size:10px;color:#ff4d00;">✓</div><div><strong>Find the hiring manager</strong> — get the exact title and LinkedIn search to reach the decision maker</div></div>
+              <div style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#c9d6ff;"><div style="width:18px;height:18px;border-radius:50%;background:rgba(255,77,0,.15);border:1px solid rgba(255,77,0,.3);display:grid;place-items:center;flex-shrink:0;margin-top:2px;font-size:10px;color:#ff4d00;">✓</div><div><strong>Ready-to-send pitch</strong> — generates your outreach message and fee justification automatically</div></div>
+            </div>
+            <a href="HappyHunting.html" target="_blank" style="display:inline-flex;align-items:center;gap:12px;background:linear-gradient(135deg,#ff4d00,#ff6520);color:#fff;padding:14px 24px;border-radius:999px;font-weight:700;font-size:15px;box-shadow:0 10px 30px rgba(255,77,0,.35);text-decoration:none;">
+              Launch Happy Hunting &#8599;
+            </a>
+            <div style="font-size:12px;color:#7a87a5;margin-top:10px;">Access code required. Contact Jonah to get yours.</div>
+          </div>
+          <div style="background:#0d0d0d;border:1px solid #2a1a0a;border-radius:16px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.6);">
+            <!-- Window bar -->
+            <div style="background:#1a0e06;border-bottom:1px solid #2a1a0a;padding:12px 16px;display:flex;align-items:center;gap:7px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:#ff5f57;flex-shrink:0;"></div>
+              <div style="width:10px;height:10px;border-radius:50%;background:#febc2e;flex-shrink:0;"></div>
+              <div style="width:10px;height:10px;border-radius:50%;background:#28c840;flex-shrink:0;"></div>
+              <div style="font-size:12px;color:#ff6520;font-weight:700;margin-left:8px;font-family:'DM Mono',monospace;letter-spacing:.02em;">Happy Hunting — Decoder</div>
+            </div>
+            <div style="padding:20px;display:flex;flex-direction:column;gap:12px;">
+              <!-- Input label -->
+              <div style="font-size:10px;font-weight:700;color:#3a3a3a;text-transform:uppercase;letter-spacing:.1em;">Staffing Firm Posting Detected</div>
+              <!-- Input box -->
+              <div style="background:#111;border:1px solid #222;border-radius:8px;padding:12px 14px;">
+                <div style="font-size:13px;color:#666;font-family:'DM Mono',monospace;line-height:1.6;">Senior Software Engineer &nbsp;·&nbsp; Remote &nbsp;·&nbsp; $140–160K</div>
+                <div style="font-size:12px;color:#444;font-family:'DM Mono',monospace;margin-top:3px;">Posted by: CyberCoders &nbsp;·&nbsp; 2 days ago</div>
+              </div>
+              <!-- Results label -->
+              <div style="font-size:10px;font-weight:700;color:#ff4d00;text-transform:uppercase;letter-spacing:.1em;margin-top:4px;">AI Decoded Results</div>
+              <!-- End client -->
+              <div style="background:#130800;border:1px solid #3a1800;border-radius:8px;padding:13px 14px;">
+                <div style="font-size:10px;font-weight:700;color:#ff6520;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">End Client</div>
+                <div style="font-size:15px;font-weight:700;color:#ffffff;letter-spacing:-.2px;">Acme Technologies Inc.</div>
+                <div style="font-size:12px;color:#886655;margin-top:3px;">Series B &nbsp;·&nbsp; FinTech &nbsp;·&nbsp; Austin, TX</div>
+              </div>
+              <!-- Hiring manager -->
+              <div style="background:#111;border:1px solid #222;border-radius:8px;padding:13px 14px;">
+                <div style="font-size:10px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Hiring Manager Target</div>
+                <div style="font-size:14px;color:#e0e0e0;font-weight:500;">VP Engineering or Director of Engineering</div>
+              </div>
+              <!-- Pitch -->
+              <div style="background:#130800;border:1px solid #3a1800;border-radius:8px;padding:13px 14px;">
+                <div style="font-size:10px;font-weight:700;color:#ff6520;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Ready-to-Send Pitch &nbsp;✓</div>
+                <div style="font-size:13px;color:#cc8855;line-height:1.6;">"Hi [Name], I noticed you are scaling your engineering team and wanted to reach out directly about a candidate who could be a perfect fit..."</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ TALENTBASE SECTION ═══════════════ -->
+    <section id="talentbase" class="talentbase-band">
+      <div class="container">
+        <div class="talentbase-grid">
+          <div>
+            <div class="talentbase-eyebrow">
+              <span>⚡</span> Exclusive Tool
+            </div>
+            <h2 class="talentbase-headline">Meet TalentBase — the ATS <span style="background:linear-gradient(90deg,#7c6af7,#9d8fff);-webkit-background-clip:text;background-clip:text;color:transparent;">built by recruiters, for recruiters.</span></h2>
+            <p class="talentbase-sub">We built the tool we always wished existed. TalentBase combines AI-powered candidate matching, boolean search, resume parsing, and pipeline management — all in one fast, no-fluff interface.</p>
+            <div class="talentbase-features">
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>AI Match</strong> — paste a job description and instantly rank every candidate by fit score with pros, cons, and skill gaps</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>Resume Upload</strong> — drop a PDF or DOCX and AI auto-fills the full candidate profile in seconds</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>Boolean Search</strong> — real boolean logic: <code style="font-size:12px;color:#a89dff;">"PMO" AND ("FDA" OR "IVD") NOT "Junior"</code></div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>Kanban Pipeline</strong> — visual board across every hiring stage with one-click candidate advancement</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>Analytics Dashboard</strong> — hiring funnel, source of hire, time-to-fill, and pipeline health at a glance</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>Export to CSV</strong> — your data, always portable, no lock-in</div></div>
+            </div>
+            <a href="TalentBase_TheStaffingSpecialist.html" target="_blank" class="tb-launch-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Launch TalentBase
+            </a>
+            <div class="tb-note">Free to use. Bring your own Anthropic API key to unlock AI features (~$5 gets you hundreds of searches).</div>
+          </div>
+
+          <!-- MOCKUP -->
+          <div class="talentbase-mockup">
+            <div class="tb-mock-bar">
+              <div class="tb-mock-dot" style="background:#ff5f57;"></div>
+              <div class="tb-mock-dot" style="background:#febc2e;"></div>
+              <div class="tb-mock-dot" style="background:#28c840;"></div>
+              <div class="tb-mock-title">TalentBase — The Staffing Specialists</div>
+            </div>
+            <div class="tb-mock-body">
+              <div class="tb-mock-stat-row">
+                <div class="tb-mock-stat"><div class="tb-mock-stat-label">Candidates</div><div class="tb-mock-stat-val" style="color:#9d8fff;">24</div></div>
+                <div class="tb-mock-stat"><div class="tb-mock-stat-label">Open Jobs</div><div class="tb-mock-stat-val" style="color:#00ffd1;">6</div></div>
+                <div class="tb-mock-stat"><div class="tb-mock-stat-label">Interviewing</div><div class="tb-mock-stat-val" style="color:#f5a623;">8</div></div>
+              </div>
+              <div style="font-size:9px;color:#5a5a7a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-weight:600;">AI Match Results — Sr. Program Manager</div>
+              <div class="tb-mock-row">
+                <div style="font-size:10px;color:#7c6af7;font-weight:700;width:16px;">1</div>
+                <div class="tb-mock-av" style="background:#7c6af720;color:#9d8fff;">SJ</div>
+                <div class="tb-mock-name">Sarah Johnson</div>
+                <div class="tb-mock-badge" style="background:#22d47a12;color:#22d47a;border:1px solid #22d47a30;">Strong Fit</div>
+                <div class="tb-mock-score" style="color:#22d47a;">94</div>
+              </div>
+              <div class="tb-mock-row">
+                <div style="font-size:10px;color:#22d47a;font-weight:700;width:16px;">2</div>
+                <div class="tb-mock-av" style="background:#14d4c412;color:#14d4c4;">JC</div>
+                <div class="tb-mock-name">James Carter</div>
+                <div class="tb-mock-badge" style="background:#22d47a12;color:#22d47a;border:1px solid #22d47a30;">Strong Fit</div>
+                <div class="tb-mock-score" style="color:#22d47a;">88</div>
+              </div>
+              <div class="tb-mock-row">
+                <div style="font-size:10px;color:#14d4c4;font-weight:700;width:16px;">3</div>
+                <div class="tb-mock-av" style="background:#f5a62312;color:#f5a623;">RT</div>
+                <div class="tb-mock-name">Rachel Torres</div>
+                <div class="tb-mock-badge" style="background:#14d4c412;color:#14d4c4;border:1px solid #14d4c430;">Good Fit</div>
+                <div class="tb-mock-score" style="color:#14d4c4;">76</div>
+              </div>
+              <div class="tb-mock-row">
+                <div style="font-size:10px;color:#f5a623;font-weight:700;width:16px;">4</div>
+                <div class="tb-mock-av" style="background:#b06af712;color:#b06af7;">DP</div>
+                <div class="tb-mock-name">Daniel Park</div>
+                <div class="tb-mock-badge" style="background:#f5a62312;color:#f5a623;border:1px solid #f5a62330;">Potential</div>
+                <div class="tb-mock-score" style="color:#f5a623;">61</div>
+              </div>
+              <div style="margin-top:10px;padding:8px 10px;background:rgba(124,106,247,.08);border:1px solid rgba(124,106,247,.2);border-radius:8px;font-size:10px;color:#a89dff;">
+                ✦ Boolean: "Program Manager" AND ("FDA" OR "IVD") AND "NPI"
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOUNDER -->
+    <section id="founder" class="founder-band">
+      <div class="container" style="max-width:800px; text-align:center;">
+        <div>
+          <div class="founder-eyebrow">About the Founder</div>
+          <h3 class="founder-title">Built by a recruiter who outworks everyone.</h3>
+          <p class="founder-sub">
+            <strong>Founder and Former Owner of Agency-Leads.com</strong> and <strong>Founder of Mate4Life AI</strong>, Jonah Adelman is an early AI visionary and the engine behind <em>The Staffing Specialist</em>, a performance-driven RPO redefining how elite organizations scale through people. Known for his relentless urgency, precision, and accountability, Jonah has transformed recruiting into a strategic growth weapon for companies that demand results, not excuses.
+          </p>
+          <p class="founder-sub">
+            Having collaborated directly with top corporate executives, including legendary leaders Jack and Suzy Welch, Jonah brings boardroom-level strategy to every engagement. His proprietary systems fuse human expertise with AI-powered automation, aligning talent, execution, and profitability to turn hiring into a measurable business advantage.
+          </p>
+          <p class="founder-sub">
+            For organizations serious about building high-performance teams and dominating their markets, <strong>Jonah Adelman</strong> isn't just a recruiter, he's the architect of talent-driven success.
+          </p>
+          <div class="founder-badges">
+            <span class="badge">14–28 day time-to-hire</span>
+            <span class="badge">92% offer acceptance</span>
+            <span class="badge">Executive &amp; niche roles</span>
+            <span class="badge">Full-stack TA ops</span>
+          </div>
+          <p class="founder-sub" style="margin-top:10px">
+            "I don't deliver lists, I deliver outcomes. Every candidate represents a strategy, not a guess."
+          </p>
+          <p style="margin-top:16px">
+            <a class="founder-cta" href="https://www.linkedin.com/in/jonahadelman1" target="_blank" rel="noopener">
+              🔗 Connect with Jonah on LinkedIn
+            </a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ═══════════════ JONAH STORY SECTION ═══════════════ -->
+    <section id="founder" style="padding:80px 0;border-top:1px solid rgba(255,255,255,.06);position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:radial-gradient(900px 400px at 30% 50%, rgba(0,255,209,.05), transparent 60%),radial-gradient(700px 300px at 80% 80%, rgba(24,227,255,.05), transparent 60%);pointer-events:none;"></div>
+      <div class="container" style="position:relative;">
+
+        <!-- Section label -->
+        <div style="text-align:center;margin-bottom:56px;">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,255,209,.08);border:1px solid rgba(0,255,209,.2);padding:5px 16px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#00ffd1;margin-bottom:14px;">The Human Behind The Work</div>
+          <h2 style="font-size:38px;font-weight:900;letter-spacing:-.5px;line-height:1.1;margin:0;">There can only be one.</h2>
+        </div>
+
+        <!-- Story text - full width -->
+        <div style="max-width:820px;margin:0 auto;">
+          <div style="padding-top:8px;">
+            <h3 style="font-size:26px;font-weight:800;line-height:1.2;margin:0 0 24px;letter-spacing:-.3px;">I started The Staffing Specialist at a point in my career where I had already achieved everything I thought I wanted.</h3>
+
+            <div style="display:flex;flex-direction:column;gap:16px;font-size:16px;color:#c9d6ff;line-height:1.75;">
+              <p>I had built and sold two companies, worked with top executives including Jack and Suzy Welch, found success in an industry I loved, and could have continued on that path. Instead, I made a different decision.</p>
+              <p>I wanted to get back to the ground floor, inside a company, where I could just be a recruiter. Not a CEO, not removed from the work. Just a recruiter. Okay, maybe <em style="color:#00ffd1;font-style:normal;font-weight:600;">"the recruiter."</em></p>
+              <p>What I didn't expect was what came next. I found a completely new level of energy, purpose, and love for what I do.</p>
+
+              <!-- Pull quote -->
+              <div style="border-left:3px solid #00ffd1;padding:16px 20px;background:rgba(0,255,209,.04);border-radius:0 10px 10px 0;margin:8px 0;">
+                <p style="font-size:17px;font-weight:500;color:#e8f0ff;margin:0;line-height:1.6;">"When I partner with a company, I'm all in. I want to feel like the company is mine, because that's when the work is at its best."</p>
+              </div>
+
+              <p>I don't operate on contingency. I don't believe in retained search models where there's distance from the outcome. When you get that version of me, you get a recruiter who will not stop until the role is filled — and filled with someone who makes the company better.</p>
+              <p>No transactions. No fee-per-hire. Just a recruiter on a mission, with a purpose to be part of something special.</p>
+              <p>My success has never come from tactics alone. It comes from genuinely caring: about the company, about the people, about the mission we're all building toward.</p>
+
+              <!-- ROI moment -->
+              <div style="background:linear-gradient(135deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px 22px;">
+                <p style="font-size:15px;color:#e8f0ff;font-weight:500;margin:0 0 8px;">Over the last 7 years, I've walked the halls and seen the faces of people I've hired — people who are now leading teams, driving innovation, and shaping the future of the business.</p>
+                <p style="font-size:14px;color:#7a87a5;margin:0;font-style:italic;">That's the real ROI. That's the part I'm most proud of.</p>
+              </div>
+
+              <p style="font-size:16px;color:#e8f0ff;font-weight:500;">If you ever have the chance to work with me, you will know very quickly that I am the recruiter who truly never stops recruiting.</p>
+              <p style="font-size:15px;color:#00ffd1;font-weight:600;">Grateful.</p>
+            </div>
+
+            <!-- CTA -->
+            <div style="margin-top:32px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+              <a href="#contact" class="btn">Work With Jonah</a>
+              <a href="https://www.linkedin.com/in/jonahadelman1" target="_blank" rel="noopener" class="btn secondary">LinkedIn ↗</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <div class="container grid cols-2">
+        <div>
+          <h3>Let's build your dream team.</h3>
+          <p class="muted">Tell us what success looks like and we'll get to work within 24 hours.</p>
+          <ul class="muted">
+            <li>Dedicated lead partner (no handoffs)</li>
+            <li>Weekly reporting &amp; executive updates</li>
+            <li>Flexible pricing — aligned to outcomes</li>
+          </ul>
+        </div>
+        <div class="card" style="padding:22px">
+          <form id="contactform">
+            <input name="company" placeholder="Company" required />
+            <input name="name" placeholder="Your name" required />
+            <input name="email" placeholder="Work email" type="email" required />
+            <select name="engagement">
+              <option value="RPO">Embedded RPO</option>
+              <option value="Executive Search">Executive Search</option>
+              <option value="Project Sprint">Project Sprint</option>
+              <option value="Other">Other</option>
+            </select>
+            <textarea name="message" placeholder="Roles, locations, timeline"></textarea>
+            <button class="btn" type="submit">Request a Call</button>
+            <div id="contact-msg" class="muted" style="margin-top:8px"></div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container" style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div>&copy; <span id="y"></span> The Staffing Specialist • Talent. Precision. Partnership.</div>
+      <div class="muted">Boston, MA • jonah@thestaffingspecialist.com • linkedin.com/in/jonahadelman1 • 603.401.2901</div>
+    </div>
+  </footer>
+
+  <script>
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add("in"); });
+    }, { threshold: 0.12 });
+    document.querySelectorAll("[data-animate], section .card, .stat").forEach((el) => io.observe(el));
+
+    async function submitFormspree(form, msgEl) {
+      msgEl.textContent = "Submitting…";
+      try {
+        const res = await fetch(form.action, { method: "POST", headers: { Accept: "application/json" }, body: new FormData(form) });
+        if (res.ok) { msgEl.textContent = "✅ Thanks — we'll be in touch within 24 hours."; form.reset(); }
+        else { const data = await res.json().catch(() => ({})); msgEl.textContent = data?.errors?.[0]?.message || "⚠️ Something went wrong. Try again."; }
+      } catch { msgEl.textContent = "🚫 Network error. Please try again."; }
+    }
+
+    const quick = document.getElementById("quickform");
+    const quickMsg = document.getElementById("form-msg");
+    if (quick) quick.addEventListener("submit", (e) => { e.preventDefault(); quick.action = "https://formspree.io/f/meopyzlk"; submitFormspree(quick, quickMsg); });
+
+    const contact = document.getElementById("contactform");
+    const contactMsg = document.getElementById("contact-msg");
+    if (contact) contact.addEventListener("submit", (e) => { e.preventDefault(); contact.action = "https://formspree.io/f/meopyzlk"; submitFormspree(contact, contactMsg); });
+
+    document.getElementById("y").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
