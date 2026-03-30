@@ -1054,16 +1054,17 @@
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+
 let compMode = 'candidate';
 
-function openCompModal() {
+window.openCompModal = function() {
   document.getElementById('comp-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
-  // Restore saved key
   const saved = localStorage.getItem('comp_api_key');
   if(saved) document.getElementById('comp-api-key').value = saved;
 }
-function closeCompModal() {
+window.closeCompModal = function() {
   document.getElementById('comp-modal').classList.remove('open');
   document.body.style.overflow = '';
 }
@@ -1071,7 +1072,7 @@ document.getElementById('comp-modal').addEventListener('click', function(e) {
   if(e.target === this) closeCompModal();
 });
 
-function setCompMode(mode) {
+window.setCompMode = function(mode) {
   compMode = mode;
   document.getElementById('cm-mode-candidate').classList.toggle('active', mode==='candidate');
   document.getElementById('cm-mode-company').classList.toggle('active', mode==='company');
@@ -1092,7 +1093,7 @@ Include: title, responsibilities, requirements, location, and any salary range m
   ta.value = '';
 }
 
-async function runCompAnalysis() {
+async window.runCompAnalysis = async function() {
   const txt = document.getElementById('comp-input').value.trim();
   if(!txt || txt.length < 30) { alert('Please paste more detail for an accurate analysis.'); return; }
 
@@ -1224,6 +1225,8 @@ Respond ONLY in this exact JSON format (no markdown):
   }
   btn.disabled = false;
 }
+
+}); // DOMContentLoaded
 </script>
 </body>
 </html>
