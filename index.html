@@ -1020,6 +1020,16 @@
 
     <div class="cm-body">
       <textarea class="cm-textarea" id="comp-input" placeholder="Paste your resume, LinkedIn profile, or background here...&#10;&#10;Include: current title, years of experience, location, key skills — the more you share, the more accurate the analysis."></textarea>
+      <div style="margin-top:10px;">
+        <input id="comp-api-key" type="password"
+          placeholder="Anthropic API key (sk-ant-...)"
+          style="width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;color:#e8f0ff;font-family:inherit;font-size:12px;outline:none;box-sizing:border-box;"
+          oninput="if(this.value.startsWith('sk-'))localStorage.setItem('comp_api_key',this.value)"
+        />
+        <div style="font-size:10px;color:#3a4a5a;margin-top:5px;">
+          Get your free key at <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:#00ffd1;">console.anthropic.com</a> · Key is saved in your browser
+        </div>
+      </div>
       <button class="cm-analyze-btn" id="comp-analyze-btn" onclick="runCompAnalysis()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         Analyze Market Value
@@ -1049,6 +1059,9 @@ let compMode = 'candidate';
 function openCompModal() {
   document.getElementById('comp-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
+  // Restore saved key
+  const saved = localStorage.getItem('comp_api_key');
+  if(saved) document.getElementById('comp-api-key').value = saved;
 }
 function closeCompModal() {
   document.getElementById('comp-modal').classList.remove('open');
@@ -1107,9 +1120,26 @@ Respond ONLY in this exact JSON format (no markdown):
 {"role":"Job title from the description","location":"Location from the description or National if unclear","low":75000,"mid":95000,"high":120000,"currency":"USD","insights":["What top candidates in this market actually demand","Key comp drivers for this role","What competitors are paying for similar talent","One insight on how to attract top talent for this role"],"market_trend":"Up / Stable / Down","demand":"High / Medium / Low","note":"One sentence on the hiring market for this role"}`;
 
   try {
+    const apiKey = document.getElementById('comp-api-key').value.trim() || localStorage.getItem('comp_api_key') || '';
+    if(!apiKey) {
+      document.getElementById('comp-thinking').style.display = 'none';
+      document.getElementById('comp-output').innerHTML = '<div style="color:#f5a623;font-size:13px;padding:8px 0;">Please enter your Anthropic API key above to use this feature.</div>';
+      document.getElementById('comp-result').classList.add('show');
+      btn.disabled = false;
+      return;
+    }
+    // Pre-fill key field if loaded from storage
+    if(!document.getElementById('comp-api-key').value && apiKey) {
+      document.getElementById('comp-api-key').value = apiKey;
+    }
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 600,
