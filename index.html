@@ -879,7 +879,11 @@
 
 <button id="cw-bubble" onclick="cwOpen()">
   <span style="font-size:18px;">💰</span>
-  <span>Ask Jonah — Comp Intel</span>
+  <div style="display:flex;flex-direction:column;align-items:flex-start;gap:1px;">
+    <span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.7;">Free Tool</span>
+    <span style="font-size:13px;font-weight:800;">Compensation Intelligence</span>
+    <span style="font-size:9px;opacity:.65;font-weight:600;">Know your worth · What the market pays</span>
+  </div>
 </button>
 
 <div id="cw-overlay" onclick="if(event.target===this)cwClose()">
@@ -904,8 +908,30 @@
       </div>
     </div>
     <div class="cw-body">
-      <textarea class="cw-ta" id="cw-ta" placeholder="Paste your resume or LinkedIn profile here...&#10;&#10;Include your title, years of experience, location, and key skills for the most accurate result."></textarea>
-      <input class="cw-key" id="cw-key" type="password" placeholder="Anthropic API key (sk-ant-...)" />
+      <!-- Input mode tabs -->
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <button id="cw-tab-paste" onclick="cwTab('paste')" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(0,255,209,.3);background:rgba(0,255,209,.08);color:#00ffd1;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">✏️ Paste Text</button>
+        <button id="cw-tab-upload" onclick="cwTab('upload')" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#7a87a5;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">📄 Upload File</button>
+      </div>
+      <!-- Paste panel -->
+      <div id="cw-panel-paste">
+        <textarea class="cw-ta" id="cw-ta" placeholder="Paste your resume or LinkedIn profile here...&#10;&#10;Include your title, years of experience, location, and key skills for the most accurate result."></textarea>
+      </div>
+      <!-- Upload panel -->
+      <div id="cw-panel-upload" style="display:none;">
+        <div id="cw-dropzone" onclick="document.getElementById('cw-file').click()"
+          ondragover="event.preventDefault();this.style.borderColor='#00ffd1';"
+          ondragleave="this.style.borderColor='rgba(255,255,255,.1)';"
+          ondrop="event.preventDefault();this.style.borderColor='rgba(255,255,255,.1)';cwHandleFile(event.dataTransfer.files[0]);"
+          style="border:2px dashed rgba(255,255,255,.1);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:border-color .2s;">
+          <div style="font-size:28px;margin-bottom:8px;">📄</div>
+          <div style="font-size:13px;font-weight:700;color:#e8f0ff;margin-bottom:4px;">Drop your resume here</div>
+          <div style="font-size:11px;color:#5a6a8a;">or click to browse · PDF or TXT</div>
+          <div id="cw-file-name" style="margin-top:10px;font-size:12px;color:#00ffd1;display:none;"></div>
+        </div>
+        <input type="file" id="cw-file" accept=".pdf,.txt,.doc,.docx" style="display:none;" onchange="cwHandleFile(this.files[0])"/>
+      </div>
+      <input class="cw-key" id="cw-key" type="password" placeholder="Anthropic API key (sk-ant-...)" style="margin-top:10px;"/>
       <div class="cw-keylbl">Free key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> · Saved in your browser after first use</div>
       <button class="cw-btn" id="cw-btn" onclick="cwRun()">
         <span>⚡</span><span id="cw-btn-txt">Analyze Market Value</span>
@@ -917,6 +943,46 @@
 
 <script>
 var _cwMode = 'candidate';
+var _cwTab = 'paste';
+var _cwFileText = '';
+
+function cwTab(t) {
+  _cwTab = t;
+  _cwFileText = '';
+  document.getElementById('cw-panel-paste').style.display = t==='paste' ? '' : 'none';
+  document.getElementById('cw-panel-upload').style.display = t==='upload' ? '' : 'none';
+  var pb = document.getElementById('cw-tab-paste');
+  var ub = document.getElementById('cw-tab-upload');
+  pb.style.background = t==='paste' ? 'rgba(0,255,209,.08)' : 'rgba(255,255,255,.03)';
+  pb.style.borderColor = t==='paste' ? 'rgba(0,255,209,.3)' : 'rgba(255,255,255,.08)';
+  pb.style.color = t==='paste' ? '#00ffd1' : '#7a87a5';
+  ub.style.background = t==='upload' ? 'rgba(0,255,209,.08)' : 'rgba(255,255,255,.03)';
+  ub.style.borderColor = t==='upload' ? 'rgba(0,255,209,.3)' : 'rgba(255,255,255,.08)';
+  ub.style.color = t==='upload' ? '#00ffd1' : '#7a87a5';
+}
+
+function cwHandleFile(file) {
+  if(!file) return;
+  var nameEl = document.getElementById('cw-file-name');
+  nameEl.textContent = '📎 ' + file.name + ' — reading...';
+  nameEl.style.display = 'block';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    if(file.name.toLowerCase().endsWith('.pdf')) {
+      // For PDF, we'll send as base64 to Claude
+      _cwFileText = '__PDF__' + e.target.result.split(',')[1];
+      nameEl.textContent = '✓ ' + file.name + ' ready to analyze';
+    } else {
+      _cwFileText = e.target.result;
+      nameEl.textContent = '✓ ' + file.name + ' ready to analyze';
+    }
+  };
+  if(file.name.toLowerCase().endsWith('.pdf')) {
+    reader.readAsDataURL(file);
+  } else {
+    reader.readAsText(file);
+  }
+}
 
 function cwOpen() {
   document.getElementById('cw-overlay').classList.add('on');
@@ -944,7 +1010,8 @@ function cwMode(m) {
 }
 
 async function cwRun() {
-  var txt = document.getElementById('cw-ta').value.trim();
+  var txt = _cwTab === 'upload' ? _cwFileText : document.getElementById('cw-ta').value.trim();
+  if(_cwTab === 'upload' && !txt) { alert('Please upload a file first.'); return; }
   var keyEl = document.getElementById('cw-key');
   var key = keyEl.value.trim() || localStorage.getItem('cw_key') || '';
   if(!txt) { alert('Please paste your resume or job description first.'); return; }
@@ -974,7 +1041,10 @@ async function cwRun() {
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 500,
-        messages: [{ role: 'user', content: prompt }]
+        messages: [{ role: 'user', content: txt.startsWith('__PDF__') ? [
+          {type:'document',source:{type:'base64',media_type:'application/pdf',data:txt.replace('__PDF__','')}},
+          {type:'text',text:prompt.split('\n\n').slice(0,-1).join('\n\n')}
+        ] : prompt }]
       })
     });
     var d = await r.json();
