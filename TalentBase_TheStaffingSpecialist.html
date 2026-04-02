@@ -7,48 +7,50 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 :root{
-  --bg:#09090f;--bg2:#111119;--bg3:#18181f;--bg4:#21212b;--bg5:#2a2a36;
-  --border:#25253a;--border2:#31314a;--border3:#3d3d58;
-  --text:#f0f0fa;--text2:#b8b8d8;--text3:#aaaac8;--text4:#9999bb;
-  --accent:#6558d4;--accent2:#8878e0;--accent-dim:#6558d420;--accent-border:#6558d440;
-  --green:#2ea862;--green-bg:#3dbd7212;--green-border:#3dbd7230;
-  --amber:#f5a623;--amber-bg:#f5a62312;--amber-border:#f5a62330;
-  --red:#f04f4f;--red-bg:#f04f4f12;--red-border:#f04f4f30;
-  --blue:#4f9cf0;--blue-bg:#4f9cf012;--blue-border:#4f9cf030;
-  --teal:#259e95;--teal-bg:#2aada312;--teal-border:#2aada330;
-  --purple:#8878e0;--purple-bg:#8878e012;--purple-border:#8878e030;
-  --r:8px;--r-sm:5px;--r-lg:12px;--r-xl:16px;
+  /* V3: Pure slate, blue-500 only accent, zero gradients, zero blur */
+  --bg:#0f1117;--bg2:#161b22;--bg3:#1c2230;--bg4:#242d3d;--bg5:#2d3748;
+  --border:#1e2433;--border2:#263044;--border3:#334155;
+  --text:#e2e8f0;--text2:#cbd5e1;--text3:#94a3b8;--text4:#64748b;
+  --accent:#3b82f6;--accent2:#60a5fa;--accent-dim:rgba(59,130,246,.1);--accent-border:rgba(59,130,246,.3);
+  --green:#22c55e;--green-bg:rgba(34,197,94,.08);--green-border:rgba(34,197,94,.25);
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,.08);--amber-border:rgba(245,158,11,.25);
+  --red:#ef4444;--red-bg:rgba(239,68,68,.08);--red-border:rgba(239,68,68,.25);
+  --blue:#3b82f6;--blue-bg:rgba(59,130,246,.08);--blue-border:rgba(59,130,246,.25);
+  --teal:#14b8a6;--teal-bg:rgba(20,184,166,.08);--teal-border:rgba(20,184,166,.25);
+  --purple:#8b5cf6;--purple-bg:rgba(139,92,246,.08);--purple-border:rgba(139,92,246,.25);
+  --r:6px;--r-sm:5px;--r-lg:10px;--r-xl:12px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;overflow:hidden;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;}
-::-webkit-scrollbar{width:3px;height:3px;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;letter-spacing:.01em;}
+::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+::-webkit-scrollbar-thumb{background:var(--border3);border-radius:2px;}
 input,select,textarea,button{font-family:'DM Sans',sans-serif;}
 a{color:var(--text3);text-decoration:none;}
 
 /* ── APP SHELL ── */
 .app{display:flex;height:100vh;}
-.sidebar{width:210px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar{width:210px;background:var(--bg2);border-right:1px solid var(--border2);display:flex;flex-direction:column;flex-shrink:0;}
 .main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;}
 
 /* ── SIDEBAR ── */
-.logo{padding:18px 16px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
-.logo-mark{width:30px;height:30px;background:var(--accent);border-radius:8px;display:grid;place-items:center;flex-shrink:0;}
-.logo-mark svg{width:16px;height:16px;}
+.logo{padding:16px 14px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border2);}
+.logo-mark{width:28px;height:28px;background:var(--accent);border-radius:6px;display:grid;place-items:center;flex-shrink:0;}
+.logo-mark svg{width:15px;height:15px;}
 .logo-text{line-height:1.2;}
-.logo-name{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-.3px;}
-.logo-byline{font-size:11px;color:var(--text3);}
-.nav{flex:1;padding:8px;overflow-y:auto;}
-.nav-section-label{font-size:11px;font-weight:600;color:#8888aa;text-transform:uppercase;letter-spacing:.08em;padding:12px 8px 5px;}
-.ni{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--r-sm);cursor:pointer;color:#aaaacc;font-size:12.5px;transition:all .12s;margin-bottom:1px;border:1px solid transparent;user-select:none;}
-.ni:hover{background:var(--bg3);color:var(--text);}
-.ni.on{background:var(--accent-dim);color:var(--text3);border-color:var(--accent-border);}
-.ni svg{width:14px;height:14px;flex-shrink:0;opacity:.7;}
-.ni.on svg{opacity:1;}
-.ni-badge{margin-left:auto;font-size:11px;color:#9999bb;font-family:'DM Mono',monospace;background:var(--bg4);padding:1px 5px;border-radius:8px;}
-.ni.on .ni-badge{background:var(--accent-dim);color:var(--text3);}
+.logo-name{font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.2px;}
+.logo-byline{font-size:11px;color:var(--text4);}
+.nav{flex:1;padding:6px;overflow-y:auto;}
+.nav-section-label{font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:14px 8px 4px;}
+.ni{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:var(--r-sm);cursor:pointer;color:var(--text3);font-size:13px;font-weight:400;transition:all .1s;margin-bottom:1px;border:1px solid transparent;user-select:none;}
+.ni:hover{background:var(--bg3);color:var(--text2);}
+.ni.on{background:var(--accent-dim);color:var(--text);border-color:var(--accent-border);font-weight:500;}
+.ni svg{width:14px;height:14px;flex-shrink:0;opacity:.5;}
+.ni:hover svg{opacity:.8;}
+.ni.on svg{opacity:1;color:var(--accent2);}
+.ni-badge{margin-left:auto;font-size:11px;color:var(--text4);font-family:'DM Mono',monospace;background:var(--bg4);padding:1px 6px;border-radius:10px;}
+.ni.on .ni-badge{background:var(--accent-dim);color:var(--accent2);}
 /* ── WORKSPACE SETTINGS CSS ── */
 .ws-tab{background:none;border:none;color:var(--text4);font-size:12px;font-weight:500;padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit;}
 .ws-tab.on{color:var(--text);border-bottom-color:var(--accent);font-weight:600;}
@@ -58,7 +60,7 @@ a{color:var(--text3);text-decoration:none;}
 .ws-label{font-size:11px;color:var(--text4);margin-bottom:4px;font-weight:500;}
 .ws-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px 10px;font-size:13px;color:var(--text);outline:none;font-family:inherit;box-sizing:border-box;}
 .ws-input:focus{border-color:var(--accent);}
-.ws-divider{height:1px;background:var(--border);margin:24px 0;}
+.ws-divider{height:1px;background:var(--border2);margin:20px 0;}
 .ws-trust-row{display:flex;align-items:flex-start;gap:12px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;}
 .ws-trust-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
 .ws-trust-sub{font-size:11px;color:var(--text4);margin-top:2px;line-height:1.5;}
@@ -67,244 +69,254 @@ a{color:var(--text3);text-decoration:none;}
 .ws-stage-row{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px 10px;}
 .ws-stage-handle{color:var(--text4);cursor:grab;font-size:14px;}
 .ws-user-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;margin-bottom:6px;}
-.sidebar-bottom{padding:10px;border-top:1px solid var(--border);}
+.sidebar-bottom{padding:8px;border-top:1px solid var(--border2);}
 .api-box{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:9px 10px;}
 .api-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
-.api-label{font-size:11px;color:#aaaacc;font-weight:500;}
+.api-label{font-size:11px;color:var(--text3);font-weight:500;}
 .api-dot{width:6px;height:6px;border-radius:50%;background:var(--red);transition:background .3s;}
 .api-dot.ok{background:var(--green);}
-.api-field{width:100%;background:transparent;border:none;outline:none;font-family:'DM Mono',monospace;font-size:10.5px;color:var(--text2);padding:0;}
-.api-field::placeholder{color:#8888aa;}
-.api-hint{font-size:11px;color:#8888aa;margin-top:4px;}
-.api-hint a{color:var(--text3);font-size:11px;}
+.api-field{width:100%;background:transparent;border:none;outline:none;font-family:'DM Mono',monospace;font-size:10.5px;color:var(--text3);padding:0;}
+.api-field::placeholder{color:var(--text4);}
+.api-hint{font-size:10px;color:var(--text4);margin-top:4px;line-height:1.4;}
+.api-hint a{color:var(--text3);font-size:10px;}
 
 /* ── TOPBAR ── */
-.topbar{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;}
-.topbar-title{font-size:15px;font-weight:600;letter-spacing:-.3px;}
-.topbar-sub{font-size:11px;color:#aaaacc;margin-left:6px;}
+.topbar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border2);background:var(--bg2);flex-shrink:0;}
+.topbar-title{font-size:15px;font-weight:600;letter-spacing:-.3px;color:var(--text);}
+.topbar-sub{font-size:12px;color:var(--text4);margin-left:4px;}
 .tb-spacer{flex:1;}
 .search-box{position:relative;}
-.search-box input{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:6px 10px 6px 30px;font-size:12px;color:var(--text);outline:none;width:280px;transition:all .15s;}
-.search-box input:focus{border-color:var(--accent-border);background:var(--bg4);width:340px;}
-.search-box input::placeholder{color:#7777aa;}
-.search-box svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:13px;height:13px;opacity:.35;}
+.search-box input{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 10px 7px 32px;font-size:13px;color:var(--text);outline:none;width:300px;transition:all .15s;}
+.search-box input:focus{border-color:var(--accent-border);background:var(--bg);width:360px;}
+.search-box input::placeholder{color:var(--text4);}
+.search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--text4);}
 
 /* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;font-size:12px;font-weight:500;border-radius:var(--r-sm);cursor:pointer;border:1px solid transparent;transition:all .12s;white-space:nowrap;font-family:'DM Sans',sans-serif;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;font-size:13px;font-weight:500;border-radius:var(--r-sm);cursor:pointer;border:1px solid transparent;transition:all .1s;white-space:nowrap;font-family:'DM Sans',sans-serif;}
 .btn svg{width:13px;height:13px;flex-shrink:0;}
-.btn-primary{background:var(--accent);color:var(--text);border-color:var(--accent);}
-.btn-primary:hover{background:var(--accent2);border-color:var(--text3);}
-.btn-ghost{background:transparent;color:#ccccee;border-color:var(--border2);}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn-primary:hover{background:var(--accent2);border-color:var(--accent2);}
+.btn-ghost{background:transparent;color:var(--text2);border-color:var(--border3);}
 .btn-ghost:hover{background:var(--bg3);color:var(--text);border-color:var(--border3);}
-.btn-sm{padding:4px 9px;font-size:11px;}
-.btn-xs{padding:3px 7px;font-size:11px;}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.btn-xs{padding:3px 8px;font-size:11px;}
 .btn-green{background:var(--green-bg);color:var(--green);border-color:var(--green-border);}
-.btn-green:hover{background:var(--green)20;}
+.btn-green:hover{background:rgba(34,197,94,.15);}
 .btn-red{background:var(--red-bg);color:var(--red);border-color:var(--red-border);}
-.btn-icon{width:28px;height:28px;padding:0;justify-content:center;}
+.btn-icon{width:30px;height:30px;padding:0;justify-content:center;}
 
 /* ── VIEWS ── */
 .view{display:none;flex-direction:column;flex:1;overflow:hidden;}
 .view.on{display:flex;}
 
 /* ── BADGES / TAGS ── */
-.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:10px;font-size:10.5px;font-weight:500;white-space:nowrap;}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap;letter-spacing:.01em;}
 .badge-new{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);}
 .badge-screening{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border);}
 .badge-interviewing{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
 .badge-offer{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-border);}
 .badge-hired{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
 .badge-rejected{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
-.badge-onhold{background:var(--bg4);color:var(--text3);border:1px solid var(--border2);}
-.tag{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10.5px;background:var(--bg4);color:var(--text3);border:1px solid var(--border2);margin:2px;}
+.badge-onhold{background:var(--bg4);color:var(--text3);border:1px solid var(--border3);}
+.tag{display:inline-flex;align-items:center;padding:3px 8px;border-radius:4px;font-size:11px;background:var(--bg4);color:var(--text3);border:1px solid var(--border2);margin:2px;}
 .tag-match{background:var(--green-bg);color:var(--green);border-color:var(--green-border);}
 .tag-miss{background:var(--red-bg);color:var(--red);border-color:var(--red-border);}
 
 /* ── FORM ELEMENTS ── */
-.field{margin-bottom:11px;}
-.field label{display:block;font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:500;}
-.field input,.field select,.field textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 10px;font-size:12px;color:var(--text);outline:none;font-family:'DM Sans',sans-serif;transition:border .12s;}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent-border);background:var(--bg4);}
-.field input::placeholder,.field textarea::placeholder{color:#8888aa;}
-.field textarea{resize:vertical;min-height:70px;line-height:1.5;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12px;color:var(--text3);margin-bottom:5px;font-weight:500;}
+.field input,.field select,.field textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:8px 11px;font-size:13px;color:var(--text);outline:none;font-family:'DM Sans',sans-serif;transition:border .1s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);background:var(--bg4);}
+.field input::placeholder,.field textarea::placeholder{color:var(--text4);}
+.field textarea{resize:vertical;min-height:70px;line-height:1.6;}
 .field select option{background:var(--bg3);}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .field-hint{font-size:11px;color:var(--text4);margin-top:3px;}
 
 /* ── MODAL ── */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;z-index:1000;backdrop-overflow-y:auto;padding:20px;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;z-index:1000;padding:20px;overflow-y:auto;}
 .overlay.on{display:flex;align-items:flex-start;justify-content:center;}
-.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-xl);padding:24px;width:100%;max-width:560px;margin:auto;position:relative;}
+.modal{background:var(--bg2);border:1px solid var(--border3);border-radius:var(--r-xl);padding:24px;width:100%;max-width:560px;margin:auto;position:relative;}
 .modal-lg{max-width:720px;}
-.modal h2{font-size:16px;font-weight:600;letter-spacing:-.3px;margin-bottom:18px;}
-.modal-close{position:absolute;top:16px;right:16px;width:26px;height:26px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);cursor:pointer;display:grid;place-items:center;color:var(--text3);}
+.modal h2{font-size:17px;font-weight:600;letter-spacing:-.3px;margin-bottom:18px;color:var(--text);}
+.modal-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:6px;background:var(--bg4);border:1px solid var(--border2);cursor:pointer;display:grid;place-items:center;color:var(--text3);}
 .modal-close:hover{background:var(--bg5);color:var(--text);}
-.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid var(--border);}
-.drop-zone{border:1.5px dashed var(--border2);border-radius:var(--r-lg);padding:24px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg3);margin-bottom:14px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border2);}
+.drop-zone{border:1.5px dashed var(--border3);border-radius:var(--r-lg);padding:28px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg3);margin-bottom:14px;}
 .drop-zone:hover,.drop-zone.drag{border-color:var(--accent);background:var(--accent-dim);}
-.drop-zone-icon{font-size:24px;margin-bottom:6px;opacity:.5;}
-.drop-zone-text{font-size:12px;color:var(--text2);}
+.drop-zone-icon{font-size:26px;margin-bottom:8px;opacity:.5;}
+.drop-zone-text{font-size:13px;color:var(--text2);}
 .drop-zone-sub{font-size:11px;color:var(--text4);margin-top:3px;}
-.parse-msg{padding:8px 12px;border-radius:var(--r-sm);font-size:12px;margin-bottom:12px;display:none;}
+.parse-msg{padding:9px 12px;border-radius:var(--r-sm);font-size:13px;margin-bottom:12px;display:none;}
 .parse-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
 .parse-loading{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);}
 .parse-err{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
-.divider-text{display:flex;align-items:center;gap:10px;color:var(--text4);font-size:11px;margin:12px 0;}
-.divider-text::before,.divider-text::after{content:'';flex:1;height:1px;background:var(--border);}
+.divider-text{display:flex;align-items:center;gap:10px;color:var(--text4);font-size:12px;margin:12px 0;}
+.divider-text::before,.divider-text::after{content:'';flex:1;height:1px;background:var(--border2);}
 
 /* ── DASHBOARD ── */
-.dash-scroll{flex:1;overflow-y:auto;padding:18px;}
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
-.stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;}
-.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-weight:600;}
-.stat-value{font-size:26px;font-weight:600;letter-spacing:-1px;line-height:1.1;}
-.stat-delta{font-size:10.5px;color:var(--text3);margin-top:3px;}
+.dash-scroll{flex:1;overflow-y:auto;padding:16px 20px;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+/* Stat blocks: clean, high-contrast, no softness */
+.stat{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:16px 18px;border-left:3px solid var(--border3);}
+.stat:nth-child(1){border-left-color:var(--blue);}
+.stat:nth-child(2){border-left-color:var(--amber);}
+.stat:nth-child(3){border-left-color:var(--purple);}
+.stat:nth-child(4){border-left-color:var(--green);}
+.stat-label{font-size:11px;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:700;}
+.stat-value{font-size:32px;font-weight:700;letter-spacing:-2px;line-height:1;color:var(--text);}
+.stat-delta{font-size:11px;color:var(--text4);margin-top:6px;}
 .stat-delta .up{color:var(--green);}
 .stat-delta .dn{color:var(--red);}
-.panels-row{display:grid;grid-template-columns:1.4fr 1fr;gap:10px;margin-bottom:14px;}
-.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;}
+/* Pipeline dominant row */
+.pipeline-full-row{margin-bottom:12px;}
+.panels-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:16px;}
 .panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.panel-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
-.pipeline-stages{display:flex;gap:6px;}
-.pipe-col{flex:1;background:var(--bg3);border-radius:var(--r-sm);padding:10px 8px;text-align:center;}
-.pipe-col-name{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
-.pipe-col-num{font-size:22px;font-weight:600;letter-spacing:-1px;}
-.pipe-col-bar{height:2px;border-radius:1px;background:var(--border2);margin-top:8px;overflow:hidden;}
-.pipe-col-fill{height:2px;border-radius:1px;}
-.recent-list{display:flex;flex-direction:column;gap:6px;}
-.recent-item{display:flex;align-items:center;gap:10px;padding:8px;background:var(--bg3);border-radius:var(--r-sm);cursor:pointer;transition:background .1s;}
-.recent-item:hover{background:var(--bg4);}
-.av{border-radius:50%;display:grid;place-items:center;font-weight:600;flex-shrink:0;font-size:11px;}
+.panel-title{font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;}
+/* Pipeline stages: bigger, wider, dominant */
+.pipeline-stages{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.pipe-col{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:14px 10px;text-align:center;cursor:pointer;transition:border-color .1s;}
+.pipe-col:hover{border-color:var(--border3);}
+.pipe-col-name{font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
+.pipe-col-num{font-size:30px;font-weight:700;letter-spacing:-1.5px;line-height:1;}
+.pipe-col-bar{height:3px;border-radius:2px;background:var(--border2);margin-top:10px;overflow:hidden;}
+.pipe-col-fill{height:3px;border-radius:2px;}
+/* Candidate list items: scannable, name + role + match + action */
+.recent-list{display:flex;flex-direction:column;gap:4px;}
+.recent-item{display:flex;align-items:center;gap:10px;padding:9px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);cursor:pointer;transition:all .1s;}
+.recent-item:hover{background:var(--bg4);border-color:var(--border3);}
+.av{border-radius:50%;display:grid;place-items:center;font-weight:700;flex-shrink:0;font-size:11px;}
 .recent-info{flex:1;min-width:0;}
-.recent-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.recent-meta{font-size:10.5px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.score-pill{font-size:11px;font-weight:600;font-family:'DM Mono',monospace;padding:2px 6px;border-radius:4px;}
+.recent-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+.recent-meta{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.score-pill{font-size:11px;font-weight:700;font-family:'DM Mono',monospace;padding:3px 7px;border-radius:4px;}
 
 /* ── CANDIDATES ── */
 .cand-layout{flex:1;display:flex;overflow:hidden;}
-.cand-filters{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap;}
-.filter-chip{padding:3px 10px;border-radius:20px;font-size:11.5px;cursor:pointer;border:1px solid var(--border2);color:var(--text3);background:var(--bg3);transition:all .12s;}
+.cand-filters{padding:8px 16px;border-bottom:1px solid var(--border2);display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:wrap;background:var(--bg2);}
+.filter-chip{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);color:var(--text3);background:transparent;transition:all .1s;}
 .filter-chip:hover{border-color:var(--border3);color:var(--text2);}
-.filter-chip.on{background:var(--accent-dim);color:var(--text3);border-color:var(--accent-border);}
-.fsel{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:4px 8px;font-size:11.5px;color:var(--text2);outline:none;cursor:pointer;}
+.filter-chip.on{background:var(--accent-dim);color:var(--text2);border-color:var(--accent-border);}
+.fsel{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:5px 9px;font-size:12px;color:var(--text2);outline:none;cursor:pointer;}
 .fsel option{background:var(--bg3);}
-.res-count{margin-left:auto;font-size:11px;color:var(--text4);}
+.res-count{margin-left:auto;font-size:12px;color:var(--text4);}
 .cand-list{flex:1;overflow-y:auto;}
-.cand-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;}
+.cand-row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border2);cursor:pointer;transition:background .08s;}
 .cand-row:hover{background:var(--bg3);}
-.cand-row.on{background:var(--accent-dim);}
+.cand-row.on{background:var(--accent-dim);border-left:2px solid var(--accent);}
 .cand-info{flex:1;min-width:0;}
-.cand-name{font-size:13px;font-weight:500;}
-.cand-sub{font-size:11.5px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
-.cand-meta{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;}
-.cand-date{font-size:10.5px;color:var(--text4);}
-.detail-panel{width:340px;border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:all .2s;}
-.detail-panel.fullview{position:fixed;inset:0;left:180px;top:0;width:calc(100vw - 180px);z-index:100;background:var(--bg);border-left:none;}
-.detail-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.cand-name{font-size:14px;font-weight:600;color:var(--text);}
+.cand-sub{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.cand-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.cand-date{font-size:11px;color:var(--text4);}
+.detail-panel{width:360px;border-left:1px solid var(--border2);display:flex;flex-direction:column;flex-shrink:0;transition:all .2s;}
+.detail-panel.fullview{position:fixed;inset:0;left:210px;top:0;width:calc(100vw - 210px);z-index:100;background:var(--bg);border-left:none;}
+.detail-head{padding:14px 16px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;}
 .detail-body{flex:1;overflow-y:auto;padding:14px 16px;}
-.detail-actions{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:6px;}
-.dtabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:12px;}
-.dtab{padding:7px 12px;font-size:11.5px;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .12s;}
+.detail-actions{padding:10px 16px;border-top:1px solid var(--border2);display:flex;gap:6px;}
+.dtabs{display:flex;border-bottom:1px solid var(--border2);margin-bottom:14px;}
+.dtab{padding:8px 13px;font-size:12px;font-weight:500;cursor:pointer;color:var(--text4);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .1s;}
 .dtab:hover{color:var(--text2);}
-.dtab.on{color:var(--text3);border-bottom-color:var(--accent);}
-.dsec{margin-bottom:13px;}
-.dlabel{font-size:11px;font-weight:600;color:#9999bb;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
-.dval{font-size:12.5px;}
-.nosel{padding:50px 20px;text-align:center;color:var(--text3);font-size:13px;}
+.dtab.on{color:var(--text2);border-bottom-color:var(--accent);}
+.dsec{margin-bottom:14px;}
+.dlabel{font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;}
+.dval{font-size:13px;color:var(--text2);}
+.nosel{padding:60px 20px;text-align:center;color:var(--text4);font-size:13px;}
 .nosel-icon{font-size:28px;opacity:.2;margin-bottom:8px;}
-.activity-item{display:flex;gap:10px;margin-bottom:10px;font-size:12px;}
+.activity-item{display:flex;gap:10px;margin-bottom:10px;font-size:13px;}
 .activity-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);margin-top:5px;flex-shrink:0;}
-.activity-text{color:var(--text2);line-height:1.4;}
-.activity-time{font-size:11px;color:#8888aa;}
-.match-hl{background:var(--amber-bg);color:var(--amber);border-radius:2px;padding:0 2px;}
+.activity-text{color:var(--text2);line-height:1.5;}
+.activity-time{font-size:11px;color:var(--text4);}
+.match-hl{background:var(--amber-bg);color:var(--amber);border-radius:2px;padding:0 3px;}
 
 /* ── JOBS ── */
 .jobs-layout{display:flex;flex:1;overflow:hidden;}
-.jobs-list-col{width:300px;border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;}
-.job-card{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;}
+.jobs-list-col{width:300px;border-right:1px solid var(--border2);overflow-y:auto;flex-shrink:0;}
+.job-card{padding:14px 16px;border-bottom:1px solid var(--border2);cursor:pointer;transition:background .1s;}
 .job-card:hover{background:var(--bg3);}
-.job-card.on{background:var(--accent-dim);border-left:2px solid var(--text3);}
-.job-title{font-size:13px;font-weight:500;}
-.job-meta{font-size:11px;color:var(--text3);margin-top:2px;}
+.job-card.on{background:var(--accent-dim);border-left:2px solid var(--accent);}
+.job-title{font-size:14px;font-weight:600;color:var(--text);}
+.job-meta{font-size:12px;color:var(--text3);margin-top:2px;}
 .job-bool{font-size:11px;font-family:'DM Mono',monospace;color:var(--text4);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.job-detail-col{flex:1;overflow-y:auto;padding:20px;}
-.bool-display{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text2);word-break:break-word;line-height:1.6;}
-.section-head{font-size:11px;font-weight:600;color:var(--text4);text-transform:uppercase;letter-spacing:.07em;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.job-detail-col{flex:1;overflow-y:auto;padding:24px;}
+.bool-display{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:12px;font-size:12px;font-family:'DM Mono',monospace;color:var(--text2);word-break:break-word;line-height:1.6;}
+.section-head{font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border2);}
 
 /* ── KANBAN ── */
 .kanban-wrap{flex:1;overflow-x:auto;overflow-y:hidden;padding:14px;}
-.kanban-board{display:flex;gap:10px;height:100%;min-width:max-content;}
-.kb-col{width:220px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);display:flex;flex-direction:column;flex-shrink:0;}
-.kb-col-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.kb-col-name{font-size:12px;font-weight:600;}
-.kb-col-count{font-size:11px;color:var(--text4);font-family:'DM Mono',monospace;background:var(--bg4);padding:1px 6px;border-radius:8px;}
+.kanban-board{display:flex;gap:8px;height:100%;min-width:max-content;}
+.kb-col{width:230px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);display:flex;flex-direction:column;flex-shrink:0;}
+.kb-col-head{padding:12px 14px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;}
+.kb-col-name{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;}
+.kb-col-count{font-size:11px;color:var(--text4);font-family:'DM Mono',monospace;background:var(--bg4);padding:2px 7px;border-radius:10px;}
 .kb-cards{flex:1;overflow-y:auto;padding:8px;}
-.kb-card{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px;margin-bottom:6px;cursor:pointer;transition:all .12s;}
+.kb-card{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:11px 12px;margin-bottom:6px;cursor:pointer;transition:all .1s;}
 .kb-card:hover{border-color:var(--border3);background:var(--bg4);}
-.kb-card-name{font-size:12px;font-weight:500;margin-bottom:2px;}
-.kb-card-sub{font-size:10.5px;color:var(--text3);}
-.kb-card-score{font-size:11px;font-family:'DM Mono',monospace;margin-top:6px;display:flex;align-items:center;justify-content:space-between;}
+.kb-card-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.kb-card-sub{font-size:12px;color:var(--text3);}
+.kb-card-score{font-size:12px;font-family:'DM Mono',monospace;margin-top:8px;display:flex;align-items:center;justify-content:space-between;}
 
 /* ── AI MATCH VIEW ── */
 .match-layout{flex:1;display:flex;overflow:hidden;}
-.match-left{width:260px;border-right:1px solid var(--border);overflow-y:auto;padding:12px;flex-shrink:0;}
+.match-left{width:260px;border-right:1px solid var(--border2);overflow-y:auto;padding:12px;flex-shrink:0;}
 .match-right{flex:1;overflow-y:auto;}
-.match-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
-.match-row{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;}
+.match-header{padding:14px 20px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.match-row{display:flex;align-items:center;gap:10px;padding:11px 20px;border-bottom:1px solid var(--border2);cursor:pointer;transition:background .1s;}
 .match-row:hover{background:var(--bg3);}
-.rank-circle{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;flex-shrink:0;}
+.rank-circle{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0;}
 .score-bar-bg{height:4px;border-radius:2px;background:var(--bg4);overflow:hidden;margin-top:4px;}
 .score-bar-fill{height:4px;border-radius:2px;transition:width .6s;}
-.expand-block{padding:10px 20px 14px 52px;border-bottom:1px solid var(--border);background:var(--bg3);display:none;}
-.reason-pro{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);padding:5px 9px;border-radius:var(--r-sm);font-size:11.5px;margin-bottom:4px;}
-.reason-con{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);padding:5px 9px;border-radius:var(--r-sm);font-size:11.5px;margin-bottom:4px;}
+.expand-block{padding:12px 20px 16px 52px;border-bottom:1px solid var(--border2);background:var(--bg3);display:none;}
+.reason-pro{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);padding:6px 10px;border-radius:var(--r-sm);font-size:12px;margin-bottom:4px;}
+.reason-con{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);padding:6px 10px;border-radius:var(--r-sm);font-size:12px;margin-bottom:4px;}
 .spinner{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .ai-thinking{display:flex;align-items:center;gap:10px;padding:20px;font-size:13px;color:var(--text3);}
 
 /* ── ANALYTICS ── */
 .analytics-scroll{flex:1;overflow-y:auto;padding:18px;}
-.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.funnel-bar{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
-.funnel-label{font-size:11px;color:var(--text2);width:90px;flex-shrink:0;}
-.funnel-track{flex:1;height:20px;background:var(--bg3);border-radius:var(--r-sm);overflow:hidden;}
-.funnel-fill{height:20px;border-radius:var(--r-sm);display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:600;color:var(--text);transition:width .8s;}
-.funnel-num{font-size:11px;color:var(--text3);width:30px;text-align:right;}
-.source-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);}
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.funnel-bar{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+.funnel-label{font-size:12px;color:var(--text2);width:90px;flex-shrink:0;}
+.funnel-track{flex:1;height:22px;background:var(--bg3);border-radius:var(--r-sm);overflow:hidden;}
+.funnel-fill{height:22px;border-radius:var(--r-sm);display:flex;align-items:center;padding-left:8px;font-size:12px;font-weight:700;color:#fff;transition:width .8s;}
+.funnel-num{font-size:12px;color:var(--text3);width:30px;text-align:right;font-family:'DM Mono',monospace;}
+.source-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border2);}
 .source-row:last-child{border-bottom:none;}
-.source-name{font-size:12px;}
+.source-name{font-size:13px;color:var(--text2);}
 .source-bar-wrap{flex:1;margin:0 10px;}
 .source-bar{height:4px;border-radius:2px;background:var(--accent);}
-.source-pct{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
+.source-pct{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;}
 
 /* ── MISC ── */
-.section-divider{height:1px;background:var(--border);margin:12px 0;}
-.empty-state{padding:50px 20px;text-align:center;color:var(--text3);font-size:13px;}
+.section-divider{height:1px;background:var(--border2);margin:14px 0;}
+.empty-state{padding:50px 20px;text-align:center;color:var(--text4);font-size:13px;}
 .empty-state-icon{font-size:32px;opacity:.2;margin-bottom:10px;}
 .spinner-wrap{display:flex;align-items:center;justify-content:center;padding:30px;gap:10px;color:var(--text3);font-size:13px;}
 /* ── ACCESS GATE ── */
-#gate{position:fixed;inset:0;z-index:9999;background:#09090f;display:flex;align-items:center;justify-content:center;}
+#gate{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;}
 .gate-box{width:100%;max-width:380px;padding:0 24px;text-align:center;}
 .gate-logo{display:inline-flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:36px;}
-.gate-logo-mark{width:44px;height:44px;background:#6558d4;border-radius:12px;display:grid;place-items:center;}
+.gate-logo-mark{width:44px;height:44px;background:var(--accent);border-radius:8px;display:grid;place-items:center;}
 .gate-logo-mark svg{width:22px;height:22px;}
-.gate-logo-name{font-size:16px;font-weight:600;color:#eeeef5;letter-spacing:-.3px;}
-.gate-logo-by{font-size:11px;color:#9999bb;}
-.gate-title{font-size:24px;font-weight:700;color:#eeeef5;letter-spacing:-.5px;margin-bottom:8px;}
-.gate-sub{font-size:13px;color:#aab0c4;margin-bottom:32px;line-height:1.6;}
+.gate-logo-name{font-size:16px;font-weight:600;color:#fff;letter-spacing:-.3px;}
+.gate-logo-by{font-size:11px;color:#7a7a9e;}
+.gate-title{font-size:24px;font-weight:700;color:#fff;letter-spacing:-.5px;margin-bottom:8px;}
+.gate-sub{font-size:13px;color:#9898bc;margin-bottom:32px;line-height:1.6;}
 .gate-input-wrap{position:relative;margin-bottom:12px;}
-.gate-input{width:100%;background:#18181f;border:1px solid #31314a;border-radius:10px;padding:14px 46px 14px 16px;font-size:16px;color:#eeeef5;outline:none;font-family:'DM Mono',monospace;letter-spacing:.15em;text-align:center;transition:border .15s;}
-.gate-input:focus{border-color:#6558d460;background:#21212b;}
+.gate-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:14px 46px 14px 16px;font-size:16px;color:var(--text);outline:none;font-family:'DM Mono',monospace;letter-spacing:.15em;text-align:center;transition:border .15s;}
+.gate-input:focus{border-color:var(--accent);background:var(--bg4);}
 .gate-input.shake{animation:gshake .35s;}
-.gate-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;color:#8888aa;background:none;border:none;padding:4px;line-height:0;}
-.gate-eye:hover{color:#9898b8;}
-.gate-btn{width:100%;background:#6558d4;color:var(--text);border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;letter-spacing:.02em;}
-.gate-btn:hover{background:#8878e0;}
+.gate-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;color:#7a7a9e;background:none;border:none;padding:4px;line-height:0;}
+.gate-eye:hover{color:#9898bc;}
+.gate-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;letter-spacing:.02em;}
+.gate-btn:hover{background:var(--accent2);}
 .gate-btn:active{transform:scale(.98);}
-.gate-err{font-size:12px;color:#f04f4f;margin-top:10px;height:16px;}
-.gate-footer{font-size:11px;color:#8888aa;margin-top:28px;}
-.gate-footer a{color:#a89dff;text-decoration:none;}
-.gate-footer a:hover{color:#6558d4;}
+.gate-err{font-size:12px;color:#ff5b5b;margin-top:10px;height:16px;}
+.gate-footer{font-size:11px;color:#7a7a9e;margin-top:28px;}
+.gate-footer a{color:var(--accent2);text-decoration:none;}
+.gate-footer a:hover{color:var(--accent);}
 @keyframes gshake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 #app-shell{display:none;}
 </style>
@@ -426,7 +438,7 @@ a{color:var(--text3);text-decoration:none;}
     <!-- V2 Mode Toggle — always visible in sidebar -->
     <div id="v2-sidebar-toggle" style="margin-bottom:8px;display:none;">
       <button onclick="v2ToggleMode()" id="v2-sidebar-btn"
-        style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid rgba(124,106,247,.4);background:rgba(124,106,247,.15);color:#ccc0ff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">
+        style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid rgba(59,130,246,.4);background:rgba(59,130,246,.12);color:var(--accent2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">
         <span id="v2-btn-icon">&#9889;</span>
         <span id="v2-btn-label">Command Center: ON</span>
       </button>
@@ -465,25 +477,34 @@ a{color:var(--text3);text-decoration:none;}
     </button>
   </div>
   <div class="dash-scroll">
+    <!-- STAT BLOCKS -->
     <div class="stats-row" id="dash-stats"></div>
-    <div class="panels-row">
+    <!-- PIPELINE: DOMINANT FULL-WIDTH ROW -->
+    <div class="pipeline-full-row">
       <div class="panel">
-        <div class="panel-header"><div class="panel-title">Pipeline Overview</div></div>
+        <div class="panel-header">
+          <div class="panel-title">Pipeline</div>
+          <button class="btn btn-ghost btn-sm" onclick="nav('pipeline')">View Board →</button>
+        </div>
         <div class="pipeline-stages" id="dash-pipeline"></div>
       </div>
-      <div class="panel">
-        <div class="panel-header"><div class="panel-title">Recent Activity</div><button class="btn btn-ghost btn-sm" onclick="nav('candidates')">View all</button></div>
-        <div class="recent-list" id="dash-recent"></div>
-      </div>
     </div>
-    <div class="panels-row">
-      <div class="panel">
-        <div class="panel-header"><div class="panel-title">Open Positions</div><button class="btn btn-ghost btn-sm" onclick="openAddJob()">+ Add Job</button></div>
-        <div id="dash-jobs"></div>
+    <!-- LOWER ROW: Today's Actions + Top Candidates + Open Jobs -->
+    <div style="display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:8px;">
+      <!-- TODAY / BLOCKED / HOT -->
+      <div class="panel" id="dash-action-panel">
+        <div class="panel-header"><div class="panel-title">Action Queue</div></div>
+        <div id="dash-action-content"></div>
       </div>
+      <!-- TOP CANDIDATES -->
       <div class="panel">
-        <div class="panel-header"><div class="panel-title">Top Candidates</div></div>
-        <div id="dash-top-cands"></div>
+        <div class="panel-header"><div class="panel-title">Top Candidates</div><button class="btn btn-ghost btn-sm" onclick="nav('candidates')">All →</button></div>
+        <div class="recent-list" id="dash-top-cands"></div>
+      </div>
+      <!-- OPEN JOBS -->
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Open Positions</div><button class="btn btn-ghost btn-sm" onclick="openAddJob()">+ Add</button></div>
+        <div id="dash-jobs"></div>
       </div>
     </div>
   </div>
@@ -522,7 +543,7 @@ a{color:var(--text3);text-decoration:none;}
     <span class="res-count" id="res-ct"></span>
   </div>
   <!-- ADVANCED SEARCH PANEL -->
-  <div id="adv-search-panel" style="display:none;background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 20px;">
+  <div id="adv-search-panel" style="display:none;background:var(--bg2);border-bottom:1px solid var(--border2);padding:16px 20px;">
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px;">
       <div>
         <div style="font-size:11px;font-weight:600;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">Job Title</div>
@@ -601,7 +622,7 @@ a{color:var(--text3);text-decoration:none;}
       <label for="import-file-input" style="background:var(--bg3);border:2px dashed var(--border2);border-radius:var(--r-sm);padding:32px;text-align:center;margin-bottom:16px;cursor:pointer;display:block;">
         <div style="font-size:24px;margin-bottom:8px;">📂</div>
         <div style="font-size:13px;color:#ccccee;margin-bottom:4px;">Click to select CSV file</div>
-        <div style="font-size:11px;color:#9999bb;">or drag and drop</div>
+        <div style="font-size:11px;color:var(--text4);">or drag and drop</div>
       </label>
       <input type="file" id="import-file-input" accept=".csv" style="display:none;" onchange="handleImportFile(this)"/>
       <div id="import-preview" style="display:none;"></div>
@@ -751,7 +772,7 @@ a{color:var(--text3);text-decoration:none;}
   <div style="display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 52px);overflow:hidden;">
 
     <!-- LEFT: Fields panel — stays visible always -->
-    <div style="border-right:1px solid var(--border);overflow-y:auto;background:var(--bg2);padding:16px;">
+    <div style="border-right:1px solid var(--border2);overflow-y:auto;background:var(--bg2);padding:16px;">
 
       <!-- Step indicators -->
       <div style="display:flex;align-items:center;gap:0;margin-bottom:16px;">
@@ -784,7 +805,7 @@ a{color:var(--text3);text-decoration:none;}
           <select id="ob-job" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 10px;font-size:12px;color:var(--text);outline:none;font-family:inherit;" onchange="updateOfferPreview()"></select>
         </div>
 
-        <div style="border-top:1px solid var(--border);padding-top:11px;">
+        <div style="border-top:1px solid var(--border2);padding-top:11px;">
           <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Compensation</div>
           <div style="display:flex;flex-direction:column;gap:8px;">
             <div>
@@ -798,7 +819,7 @@ a{color:var(--text3);text-decoration:none;}
           </div>
         </div>
 
-        <div style="border-top:1px solid var(--border);padding-top:11px;">
+        <div style="border-top:1px solid var(--border2);padding-top:11px;">
           <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Position Details</div>
           <div style="display:flex;flex-direction:column;gap:8px;">
             <div>
@@ -828,7 +849,7 @@ a{color:var(--text3);text-decoration:none;}
           </div>
         </div>
 
-        <div style="border-top:1px solid var(--border);padding-top:11px;">
+        <div style="border-top:1px solid var(--border2);padding-top:11px;">
           <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Additional Terms</div>
           <textarea id="ob-notes" placeholder="Benefits, relocation allowance, signing bonus, special terms, contingencies..." oninput="updateOfferPreview()" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 10px;font-size:12px;color:var(--text);outline:none;resize:none;height:70px;font-family:inherit;"></textarea>
         </div>
@@ -931,7 +952,7 @@ a{color:var(--text3);text-decoration:none;}
   <div style="padding:20px;">
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;" id="hc-stats"></div>
     <div class="panel" style="overflow:hidden;">
-      <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 80px;gap:12px;font-size:11px;font-weight:600;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border2);display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 80px;gap:12px;font-size:11px;font-weight:600;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;">
         <div>Role</div><div>Dept</div><div>Status</div><div>Priority</div><div>Target Start</div><div></div>
       </div>
       <div id="hc-list"></div>
@@ -948,7 +969,7 @@ a{color:var(--text3);text-decoration:none;}
   </div>
 
   <!-- Search + filter bar -->
-  <div style="padding:10px 20px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;">
+  <div style="padding:10px 20px;border-bottom:1px solid var(--border2);background:var(--bg2);display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;">
     <div style="position:relative;flex:1;min-width:200px;max-width:300px;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);width:12px;height:12px;color:var(--text3);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input id="lib-search" placeholder="Search files..." style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:6px 10px 6px 28px;font-size:12px;color:var(--text);outline:none;font-family:inherit;" oninput="renderLibrary()"/>
@@ -969,9 +990,9 @@ a{color:var(--text3);text-decoration:none;}
   <div style="display:flex;flex:1;overflow:hidden;height:calc(100vh - 100px);">
 
     <!-- Left: file list -->
-    <div style="width:520px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;background:var(--bg);">
+    <div style="width:520px;flex-shrink:0;border-right:1px solid var(--border2);overflow-y:auto;background:var(--bg);">
       <!-- Column headers -->
-      <div style="display:grid;grid-template-columns:1fr 110px 130px;gap:0;padding:7px 16px;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:2;">
+      <div style="display:grid;grid-template-columns:1fr 110px 130px;gap:0;padding:7px 16px;border-bottom:1px solid var(--border2);background:var(--bg2);position:sticky;top:0;z-index:2;">
         <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;">Filename</div>
         <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;">Category</div>
         <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;text-align:right;">Actions</div>
@@ -1004,10 +1025,10 @@ a{color:var(--text3);text-decoration:none;}
           <div style="width:40px;height:40px;border-radius:10px;background:#0077b5;display:flex;align-items:center;justify-content:center;">
             <svg viewBox="0 0 24 24" fill="white" style="width:20px;height:20px;"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
           </div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--text);">LinkedIn</div><div style="font-size:11px;color:#aaaacc;">Recruiter / Sales Nav</div></div>
+          <div><div style="font-size:13px;font-weight:700;color:var(--text);">LinkedIn</div><div style="font-size:11px;color:var(--text3);">Recruiter / Sales Nav</div></div>
           <span style="margin-left:auto;font-size:11px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);padding:2px 8px;border-radius:999px;">Manual</span>
         </div>
-        <div style="font-size:12px;color:#aaaacc;line-height:1.5;margin-bottom:12px;">Copy candidates from LinkedIn Recruiter using the profile paste feature in candidate profiles. LinkedIn blocks direct API access for individual tools.</div>
+        <div style="font-size:12px;color:var(--text3);line-height:1.5;margin-bottom:12px;">Copy candidates from LinkedIn Recruiter using the profile paste feature in candidate profiles. LinkedIn blocks direct API access for individual tools.</div>
         <button class="btn btn-ghost btn-sm" style="width:100%;" onclick="nav('candidates')">Add LinkedIn Candidate →</button>
       </div>
 
@@ -1015,10 +1036,10 @@ a{color:var(--text3);text-decoration:none;}
       <div class="panel" style="padding:20px;">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
           <div style="width:40px;height:40px;border-radius:10px;background:#003087;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:white;">iC</div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--text);">iCIMS</div><div style="font-size:11px;color:#aaaacc;">ATS Export/Import</div></div>
+          <div><div style="font-size:13px;font-weight:700;color:var(--text);">iCIMS</div><div style="font-size:11px;color:var(--text3);">ATS Export/Import</div></div>
           <span style="margin-left:auto;font-size:11px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);padding:2px 8px;border-radius:999px;">CSV Import</span>
         </div>
-        <div style="font-size:12px;color:#aaaacc;line-height:1.5;margin-bottom:12px;">Export candidates from iCIMS as CSV and import directly into TalentBase. All standard fields are mapped automatically.</div>
+        <div style="font-size:12px;color:var(--text3);line-height:1.5;margin-bottom:12px;">Export candidates from iCIMS as CSV and import directly into TalentBase. All standard fields are mapped automatically.</div>
         <button class="btn btn-ghost btn-sm" style="width:100%;" onclick="openImport()">Import from iCIMS →</button>
       </div>
 
@@ -1026,10 +1047,10 @@ a{color:var(--text3);text-decoration:none;}
       <div class="panel" style="padding:20px;">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
           <div style="width:40px;height:40px;border-radius:10px;background:#24b47e;display:flex;align-items:center;justify-content:center;font-size:18px;">🌿</div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--text);">Greenhouse</div><div style="font-size:11px;color:#aaaacc;">ATS Export/Import</div></div>
+          <div><div style="font-size:13px;font-weight:700;color:var(--text);">Greenhouse</div><div style="font-size:11px;color:var(--text3);">ATS Export/Import</div></div>
           <span style="margin-left:auto;font-size:11px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);padding:2px 8px;border-radius:999px;">CSV Import</span>
         </div>
-        <div style="font-size:12px;color:#aaaacc;line-height:1.5;margin-bottom:12px;">Export your candidate pipeline from Greenhouse and import into TalentBase for AI analysis, scoring, and submission emails.</div>
+        <div style="font-size:12px;color:var(--text3);line-height:1.5;margin-bottom:12px;">Export your candidate pipeline from Greenhouse and import into TalentBase for AI analysis, scoring, and submission emails.</div>
         <button class="btn btn-ghost btn-sm" style="width:100%;" onclick="openImport()">Import from Greenhouse →</button>
       </div>
 
@@ -1037,10 +1058,10 @@ a{color:var(--text3);text-decoration:none;}
       <div class="panel" style="padding:20px;">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
           <div style="width:40px;height:40px;border-radius:10px;background:#217346;display:flex;align-items:center;justify-content:center;font-size:18px;">📊</div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--text);">Excel / Google Sheets</div><div style="font-size:11px;color:#aaaacc;">Spreadsheet Import</div></div>
+          <div><div style="font-size:13px;font-weight:700;color:var(--text);">Excel / Google Sheets</div><div style="font-size:11px;color:var(--text3);">Spreadsheet Import</div></div>
           <span style="margin-left:auto;font-size:11px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);padding:2px 8px;border-radius:999px;">CSV Import</span>
         </div>
-        <div style="font-size:12px;color:#aaaacc;line-height:1.5;margin-bottom:12px;">Save your Excel or Google Sheets as CSV and import. Works with any spreadsheet-based candidate tracker.</div>
+        <div style="font-size:12px;color:var(--text3);line-height:1.5;margin-bottom:12px;">Save your Excel or Google Sheets as CSV and import. Works with any spreadsheet-based candidate tracker.</div>
         <button class="btn btn-ghost btn-sm" style="width:100%;" onclick="openImport()">Import Spreadsheet →</button>
       </div>
 
@@ -1048,21 +1069,21 @@ a{color:var(--text3);text-decoration:none;}
       <div class="panel" style="padding:20px;">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
           <div style="width:40px;height:40px;border-radius:10px;background:#ea4335;display:flex;align-items:center;justify-content:center;font-size:18px;">✉</div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--text);">Gmail / Outlook</div><div style="font-size:11px;color:#aaaacc;">Email Outreach</div></div>
+          <div><div style="font-size:13px;font-weight:700;color:var(--text);">Gmail / Outlook</div><div style="font-size:11px;color:var(--text3);">Email Outreach</div></div>
           <span style="margin-left:auto;font-size:11px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);padding:2px 8px;border-radius:999px;">Copy & Send</span>
         </div>
-        <div style="font-size:12px;color:#aaaacc;line-height:1.5;margin-bottom:12px;">All submission emails and outreach generated by TalentBase are copy-ready. Paste directly into Gmail, Outlook, or any email client.</div>
+        <div style="font-size:12px;color:var(--text3);line-height:1.5;margin-bottom:12px;">All submission emails and outreach generated by TalentBase are copy-ready. Paste directly into Gmail, Outlook, or any email client.</div>
         <button class="btn btn-ghost btn-sm" style="width:100%;" onclick="nav('library')">Email Templates →</button>
       </div>
 
       <!-- Anthropic AI -->
       <div class="panel" style="padding:20px;border-color:var(--accent-border);background:var(--accent-dim);">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#8878e0);display:flex;align-items:center;justify-content:center;font-size:18px;">🤖</div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--text);">Anthropic Claude AI</div><div style="font-size:11px;color:#aaaacc;">Powers all AI features</div></div>
+          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px;">🤖</div>
+          <div><div style="font-size:13px;font-weight:700;color:var(--text);">Anthropic Claude AI</div><div style="font-size:11px;color:var(--text3);">Powers all AI features</div></div>
           <span style="margin-left:auto;font-size:11px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);padding:2px 8px;border-radius:999px;" id="ai-status-badge">Checking...</span>
         </div>
-        <div style="font-size:12px;color:#aaaacc;line-height:1.5;margin-bottom:12px;">Resume parsing, AI match scoring, natural language sourcing, offer letter generation, and submission emails — all powered by Claude.</div>
+        <div style="font-size:12px;color:var(--text3);line-height:1.5;margin-bottom:12px;">Resume parsing, AI match scoring, natural language sourcing, offer letter generation, and submission emails — all powered by Claude.</div>
         <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">API Key: <span id="int-key-status">Not configured</span></div>
         <button class="btn btn-ghost btn-sm" style="width:100%;" onclick="document.getElementById('api-key').focus()">Configure API Key →</button>
       </div>
@@ -1076,19 +1097,19 @@ a{color:var(--text3);text-decoration:none;}
         <div>
           <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Importing Data</div>
           <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;gap:8px;font-size:12px;color:#aaaacc;"><span style="color:var(--green);flex-shrink:0;">✓</span>Export candidates from iCIMS/Greenhouse/Lever as CSV → Import into TalentBase</div>
-            <div style="display:flex;gap:8px;font-size:12px;color:#aaaacc;"><span style="color:var(--green);flex-shrink:0;">✓</span>Copy/paste LinkedIn profiles into candidate LinkedIn tab for AI analysis</div>
-            <div style="display:flex;gap:8px;font-size:12px;color:#aaaacc;"><span style="color:var(--green);flex-shrink:0;">✓</span>Drag &amp; drop resumes (PDF/TXT) for instant AI parsing</div>
-            <div style="display:flex;gap:8px;font-size:12px;color:#aaaacc;"><span style="color:var(--green);flex-shrink:0;">✓</span>Bulk import from any spreadsheet saved as CSV</div>
+            <div style="display:flex;gap:8px;font-size:12px;color:var(--text3);"><span style="color:var(--green);flex-shrink:0;">✓</span>Export candidates from iCIMS/Greenhouse/Lever as CSV → Import into TalentBase</div>
+            <div style="display:flex;gap:8px;font-size:12px;color:var(--text3);"><span style="color:var(--green);flex-shrink:0;">✓</span>Copy/paste LinkedIn profiles into candidate LinkedIn tab for AI analysis</div>
+            <div style="display:flex;gap:8px;font-size:12px;color:var(--text3);"><span style="color:var(--green);flex-shrink:0;">✓</span>Drag &amp; drop resumes (PDF/TXT) for instant AI parsing</div>
+            <div style="display:flex;gap:8px;font-size:12px;color:var(--text3);"><span style="color:var(--green);flex-shrink:0;">✓</span>Bulk import from any spreadsheet saved as CSV</div>
           </div>
         </div>
         <div>
           <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Exporting Data</div>
           <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;gap:8px;font-size:12px;color:#aaaacc;"><span style="color:var(--green);flex-shrink:0;">✓</span>Export all candidates as CSV (works with any ATS import)</div>
-            <div style="display:flex;gap:8px;font-size:12px;color:#aaaacc;"><span style="color:var(--green);flex-shrink:0;">✓</span>Export individual candidate profiles as formatted HTML/PDF</div>
-            <div style="display:flex;gap:8px;font-size:12px;color:#aaaacc;"><span style="color:var(--green);flex-shrink:0;">✓</span>Copy submission emails directly to Gmail/Outlook</div>
-            <div style="display:flex;gap:8px;font-size:12px;color:#aaaacc;"><span style="color:var(--green);flex-shrink:0;">✓</span>Copy offer letters for e-signature tools (DocuSign, etc.)</div>
+            <div style="display:flex;gap:8px;font-size:12px;color:var(--text3);"><span style="color:var(--green);flex-shrink:0;">✓</span>Export all candidates as CSV (works with any ATS import)</div>
+            <div style="display:flex;gap:8px;font-size:12px;color:var(--text3);"><span style="color:var(--green);flex-shrink:0;">✓</span>Export individual candidate profiles as formatted HTML/PDF</div>
+            <div style="display:flex;gap:8px;font-size:12px;color:var(--text3);"><span style="color:var(--green);flex-shrink:0;">✓</span>Copy submission emails directly to Gmail/Outlook</div>
+            <div style="display:flex;gap:8px;font-size:12px;color:var(--text3);"><span style="color:var(--green);flex-shrink:0;">✓</span>Copy offer letters for e-signature tools (DocuSign, etc.)</div>
           </div>
         </div>
       </div>
@@ -1105,7 +1126,7 @@ a{color:var(--text3);text-decoration:none;}
   </div>
 
   <!-- Search bar -->
-  <div style="padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;gap:10px;align-items:center;flex-shrink:0;">
+  <div style="padding:12px 20px;border-bottom:1px solid var(--border2);background:var(--bg2);display:flex;gap:10px;align-items:center;flex-shrink:0;">
     <div style="position:relative;flex:1;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--text4);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input id="pl-search" placeholder="Search 100 prompts — try 'linkedin dm', 'boolean', 'follow up', 'passive candidate'..." style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:8px 12px 8px 32px;font-size:12px;color:var(--text);outline:none;font-family:inherit;" oninput="renderPromptLib()"/>
@@ -1116,7 +1137,7 @@ a{color:var(--text3);text-decoration:none;}
   <div style="display:flex;height:calc(100vh - 110px);overflow:hidden;">
 
     <!-- Category sidebar -->
-    <div style="width:168px;border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;background:var(--bg2);">
+    <div style="width:168px;border-right:1px solid var(--border2);overflow-y:auto;flex-shrink:0;background:var(--bg2);">
       <div id="pl-cats"></div>
     </div>
 
@@ -1155,7 +1176,7 @@ a{color:var(--text3);text-decoration:none;}
   <div class="topbar">
     <div><div class="topbar-title">TalentBase Tutorial</div><div class="topbar-sub">Complete walkthrough — 8 steps to master the system</div></div>
     <div style="display:flex;align-items:center;gap:10px;">
-      <span id="tut-progress-text" style="font-size:11px;color:#aaaacc;">Step 1 of 8</span>
+      <span id="tut-progress-text" style="font-size:11px;color:var(--text3);">Step 1 of 8</span>
       <div style="width:120px;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;">
         <div id="tut-progress-bar" style="height:100%;background:linear-gradient(90deg,var(--teal),var(--accent));border-radius:2px;width:12.5%;transition:width .4s ease;"></div>
       </div>
@@ -1165,8 +1186,8 @@ a{color:var(--text3);text-decoration:none;}
   <div style="display:grid;grid-template-columns:280px 1fr;height:calc(100vh - 56px);overflow:hidden;">
 
     <!-- STEP LIST sidebar -->
-    <div style="background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;padding:16px 0;">
-      <div style="padding:0 12px 10px;font-size:11px;font-weight:700;color:#8888aa;text-transform:uppercase;letter-spacing:.1em;">Chapters</div>
+    <div style="background:var(--bg2);border-right:1px solid var(--border2);overflow-y:auto;padding:16px 0;">
+      <div style="padding:0 12px 10px;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;">Chapters</div>
       <div id="tut-step-list"></div>
     </div>
 
@@ -1174,35 +1195,35 @@ a{color:var(--text3);text-decoration:none;}
     <div style="overflow-y:auto;display:flex;flex-direction:column;">
 
       <!-- Video-style header -->
-      <div id="tut-hero" style="background:linear-gradient(135deg,rgba(101,88,212,.12),rgba(20,212,196,.06));border-bottom:1px solid var(--border);padding:40px;position:relative;overflow:hidden;flex-shrink:0;">
-        <div style="position:absolute;top:-60px;right:-60px;width:250px;height:250px;border-radius:50%;background:radial-gradient(rgba(101,88,212,.12),transparent);pointer-events:none;"></div>
+      <div id="tut-hero" style="background:linear-gradient(135deg,rgba(30,46,80,.6),rgba(15,17,23,.8));border-bottom:1px solid var(--border2);padding:40px;position:relative;overflow:hidden;flex-shrink:0;">
+        <div style="position:absolute;top:-60px;right:-60px;width:250px;height:250px;border-radius:50%;background:radial-gradient(rgba(59,130,246,.08),transparent);pointer-events:none;"></div>
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
-          <div id="tut-step-badge" style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#8878e0);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;font-family:'DM Mono',monospace;flex-shrink:0;">01</div>
+          <div id="tut-step-badge" style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;font-family:'DM Mono',monospace;flex-shrink:0;">01</div>
           <div>
             <div id="tut-category" style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px;"></div>
             <div id="tut-title" style="font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.3px;"></div>
           </div>
         </div>
-        <div id="tut-tagline" style="font-size:15px;color:#aaaacc;line-height:1.6;max-width:620px;"></div>
+        <div id="tut-tagline" style="font-size:15px;color:var(--text3);line-height:1.6;max-width:620px;"></div>
       </div>
 
       <!-- Content body -->
       <div style="padding:32px;flex:1;">
 
         <!-- What you will learn -->
-        <div id="tut-learn-box" style="background:rgba(101,88,212,.12);border:1px solid var(--accent-border);border-radius:12px;padding:18px 22px;margin-bottom:28px;">
+        <div id="tut-learn-box" style="background:rgba(59,130,246,.08);border:1px solid var(--accent-border);border-radius:12px;padding:18px 22px;margin-bottom:28px;">
           <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">In This Step You'll Learn</div>
           <div id="tut-learn-list" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
 
         <!-- Step by step actions -->
-        <div style="font-size:12px;font-weight:700;color:#aaaacc;text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;">Step-by-Step Actions</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;">Step-by-Step Actions</div>
         <div id="tut-steps-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px;"></div>
 
         <!-- Pro tip -->
         <div id="tut-tip-box" style="background:rgba(20,212,196,.06);border:1px solid var(--teal-border);border-radius:12px;padding:16px 20px;margin-bottom:28px;">
           <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">⚡ Pro Tip</div>
-          <div id="tut-tip" style="font-size:13px;color:#aaaacc;line-height:1.6;"></div>
+          <div id="tut-tip" style="font-size:13px;color:var(--text3);line-height:1.6;"></div>
         </div>
 
         <!-- Try it now button -->
@@ -1247,27 +1268,27 @@ a{color:var(--text3);text-decoration:none;}
     </div>
 
     <!-- Campaign types -->
-    <div style="font-size:11px;font-weight:700;color:#8888aa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Campaign Types</div>
+    <div style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Campaign Types</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
       <div class="panel" style="padding:18px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--amber-border)'" onmouseout="this.style.borderColor=''" onclick="openNewCampaign('fill')">
         <div style="font-size:20px;margin-bottom:8px;">📋</div>
         <div style="font-size:13px;font-weight:700;color:#ccccee;margin-bottom:4px;">Fill a Role</div>
-        <div style="font-size:11px;color:#8888aa;line-height:1.5;">Blast a specific job to targeted candidates in your database based on skills, location, and experience.</div>
+        <div style="font-size:11px;color:var(--text4);line-height:1.5;">Blast a specific job to targeted candidates in your database based on skills, location, and experience.</div>
       </div>
       <div class="panel" style="padding:18px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--amber-border)'" onmouseout="this.style.borderColor=''" onclick="openNewCampaign('warmup')">
         <div style="font-size:20px;margin-bottom:8px;">🌡️</div>
         <div style="font-size:13px;font-weight:700;color:#ccccee;margin-bottom:4px;">Warm Up Pipeline</div>
-        <div style="font-size:11px;color:#8888aa;line-height:1.5;">Send market insights and industry updates to keep your network warm before you need them.</div>
+        <div style="font-size:11px;color:var(--text4);line-height:1.5;">Send market insights and industry updates to keep your network warm before you need them.</div>
       </div>
       <div class="panel" style="padding:18px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--amber-border)'" onmouseout="this.style.borderColor=''" onclick="openNewCampaign('reactivate')">
         <div style="font-size:20px;margin-bottom:8px;">⚡</div>
         <div style="font-size:13px;font-weight:700;color:#ccccee;margin-bottom:4px;">Reactivate Candidates</div>
-        <div style="font-size:11px;color:#8888aa;line-height:1.5;">Re-engage candidates you spoke to 3-12 months ago. The best candidates are already in your database.</div>
+        <div style="font-size:11px;color:var(--text4);line-height:1.5;">Re-engage candidates you spoke to 3-12 months ago. The best candidates are already in your database.</div>
       </div>
     </div>
 
     <!-- Active campaigns list -->
-    <div style="font-size:11px;font-weight:700;color:#8888aa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Active Campaigns</div>
+    <div style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Active Campaigns</div>
     <div id="campaigns-list"></div>
   </div>
 </div>
@@ -1405,10 +1426,10 @@ const CK='tb_cands_v3', JK='tb_jobs_v3', AK='tb_apikey';
 let cands=[], jobs=[], fil=[], selCandId=null, selJobId=null, editCandId=null, editJobId=null, stageTargetId=null, activeChip='', matchCache={};
 
 // Avatar colors
-const AVC=[['#6558d420','#8878e0'],['#3dbd7214','#3dbd72'],['#f5a62314','#f5a623'],['#f04f4f14','#f04f4f'],['#4f9cf014','#4f9cf0'],['#2aada314','#2aada3'],['#8878e014','#8878e0']];
+const AVC=[['var(--accent)20','var(--accent2)'],['#3dbd7214','#3dbd72'],['#f5a62314','#f5a623'],['var(--red)14','var(--red)'],['#4f9cf014','#4f9cf0'],['#2aada314','#2aada3'],['var(--accent2)14','var(--accent2)']];
 const STAGES=['New','Screening','Interviewing','Offer','Hired','Rejected','On Hold'];
 const STAGE_COLORS={New:'badge-new',Screening:'badge-screening',Interviewing:'badge-interviewing',Offer:'badge-offer',Hired:'badge-hired',Rejected:'badge-rejected','On Hold':'badge-onhold'};
-const STAGE_PIPE_COLORS={New:'#4f9cf0',Screening:'#8878e0',Interviewing:'#f5a623',Offer:'#2aada3',Hired:'#3dbd72'};
+const STAGE_PIPE_COLORS={New:'#4f9cf0',Screening:'var(--accent2)',Interviewing:'#f5a623',Offer:'#2aada3',Hired:'#3dbd72'};
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -1416,10 +1437,49 @@ function avColor(c){const i=Math.abs(((c.first||'A').charCodeAt(0)+(c.last||'B')
 function ini(c){return((c.first||'?')[0]+(c.last||'?')[0]).toUpperCase();}
 function fmtDate(ts){if(!ts)return'';return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'});}
 function blob(c){return[c.first,c.last,c.title,c.company,c.location,c.role,c.notes,c.email,c.resume,c.source,...(c.skills||[])].join(' ').toLowerCase();}
-function scoreColor(s){if(s>=85)return'#3dbd72';if(s>=70)return'#2aada3';if(s>=55)return'#f5a623';if(s>=40)return'#f04f4f';return'#55556a';}
+function scoreColor(s){if(s>=85)return'#3dbd72';if(s>=70)return'#2aada3';if(s>=55)return'#f5a623';if(s>=40)return'var(--red)';return'#55556a';}
 function badgeHtml(status){const cl=STAGE_COLORS[status]||'badge-new';return`<span class="badge ${cl}">${esc(status)}</span>`;}
 
-// LOAD / SAVE
+// ── NEXT ACTION ENGINE ─────────────────────────────────────────
+// Computed at render time. Zero DB writes. Drives all action UI.
+function getNextAction(c){
+  const now=Date.now();
+  const lastActivity=(c.activity&&c.activity.length)
+    ?Math.max(...c.activity.map(a=>a.ts))
+    :c.created;
+  const daysIdle=(now-lastActivity)/(1000*60*60*24);
+  if(c.status==='New')return'Initial outreach';
+  if(c.status==='Screening'){
+    if(daysIdle>2)return'Follow up \u2014 '+Math.floor(daysIdle)+'d idle';
+    return'Complete screening';
+  }
+  if(c.status==='Interviewing'){
+    if(daysIdle>3)return'Collect interview feedback';
+    return'Schedule next round';
+  }
+  if(c.status==='Offer'){
+    if(daysIdle>2)return'Push offer decision \u2014 '+Math.floor(daysIdle)+'d idle';
+    return'Close candidate';
+  }
+  if(c.status==='On Hold')return'Re-engage candidate';
+  if(c.status==='Hired')return'Onboarding check-in';
+  if(c.status==='Rejected')return'Keep in network';
+  return'Monitor';
+}
+function _naUrgency(c){
+  const now=Date.now();
+  const last=(c.activity&&c.activity.length)?Math.max(...c.activity.map(a=>a.ts)):c.created;
+  const d=(now-last)/(1000*60*60*24);
+  if((c.status==='Offer'&&d>2)||(c.status==='Screening'&&d>4))return'var(--red)';
+  if((c.status==='Screening'&&d>2)||(c.status==='Interviewing'&&d>3))return'var(--amber)';
+  return'var(--accent)';
+}
+function nextActionHtml(c,fontSize){
+  const col=_naUrgency(c);
+  const fs=fontSize||'11px';
+  return`<div style="font-size:${fs};color:${col};font-weight:500;margin-top:3px;display:flex;align-items:center;gap:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><svg viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="2.5" style="width:9px;height:9px;flex-shrink:0;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg><span style="overflow:hidden;text-overflow:ellipsis;">${getNextAction(c)}</span></div>`;
+}
+// ──────────────────────────────────────────────────────────────
 function loadData(){
   try{const r=localStorage.getItem(CK);if(r)cands=JSON.parse(r);}catch(e){cands=[];}
   try{const r=localStorage.getItem(JK);if(r)jobs=JSON.parse(r);}catch(e){jobs=[];}
@@ -1596,6 +1656,7 @@ function renderCandList(terms){
       <div class="cand-info">
         <div class="cand-name">${hlText(c.first+' '+c.last,terms)}</div>
         <div class="cand-sub">${hlText([c.title,c.company,c.location].filter(Boolean).join(' · '),terms)}</div>
+        ${nextActionHtml(c,'11px')}
       </div>
       <div class="cand-meta">${badgeHtml(c.status)}<span class="cand-date">${fmtDate(c.created)}</span></div>
     </div>`;
@@ -1624,6 +1685,7 @@ function selCand(id){
         <div style="flex:1;min-width:0;">
           <div style="font-size:15px;font-weight:700;letter-spacing:-.2px;">${esc(c.first)} ${esc(c.last)}</div>
           <div style="font-size:11.5px;color:var(--text3);margin-top:1px;">${esc(c.title||'')}${c.company?' · '+esc(c.company):''}</div>
+          ${nextActionHtml(c,'12px')}
         </div>
         ${badgeHtml(c.status)}
       </div>
@@ -1668,7 +1730,7 @@ function selCand(id){
       ${c.workAuth?`<div class="dsec"><div class="dlabel">Work Authorization</div><div class="dval">${esc(c.workAuth)}</div></div>`:''}
       ${c.skills&&c.skills.length?`<div class="dsec"><div class="dlabel">Skills (${c.skills.length})</div><div style="margin-top:4px;">${c.skills.map(s=>`<span class="tag">${hlText(s,terms)}</span>`).join('')}</div></div>`:''}
       <!-- Updated date -->
-      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--text4);">Added ${fmtDate(c.created)} · ID: ${c.id.slice(-6).toUpperCase()}</div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border2);font-size:11px;color:var(--text4);">Added ${fmtDate(c.created)} · ID: ${c.id.slice(-6).toUpperCase()}</div>
     </div>
     <div id="dt-comp" style="display:none;">
       ${c.currSalary||c.desiredSalary?`
@@ -1746,7 +1808,7 @@ function selCand(id){
     <div id="dt-activity" style="display:none;">
       <div style="display:flex;flex-direction:column;gap:0;">
         ${(c.activity||[]).slice().reverse().map(a=>`
-          <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border2);">
             <div style="flex-shrink:0;padding-top:3px;">
               <div style="width:7px;height:7px;border-radius:50%;background:var(--accent);"></div>
             </div>
@@ -1840,13 +1902,13 @@ function selCand(id){
         </div>
         <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:12px;">
           <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">Subject:</div>
-          <div id="submit-subject-${c.id}" style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);"></div>
+          <div id="submit-subject-${c.id}" style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border2);"></div>
           <div id="submit-body-${c.id}" style="font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-wrap;"></div>
         </div>
       </div>
     </div>
     </div>
-    <div class="detail-actions" style="border-top:1px solid var(--border);">
+    <div class="detail-actions" style="border-top:1px solid var(--border2);">
       <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="downloadResume('${c.id}')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Download Resume
@@ -2036,7 +2098,7 @@ function renderCampaigns(){
   const el = document.getElementById('campaigns-list');
   if(!el) return;
   if(!campaigns.length){
-    el.innerHTML = '<div style="text-align:center;padding:40px;color:#8888aa;font-size:13px;">No campaigns yet. Create your first one above.</div>';
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text4);font-size:13px;">No campaigns yet. Create your first one above.</div>';
     return;
   }
   const typeIcon = {fill:'📋',warmup:'🌡️',reactivate:'⚡'};
@@ -2046,7 +2108,7 @@ function renderCampaigns(){
       <div style="font-size:22px;">${typeIcon[c.type]||'📋'}</div>
       <div style="flex:1;">
         <div style="font-size:13px;font-weight:700;color:#ccccee;">${esc(c.name)}</div>
-        <div style="font-size:11px;color:#8888aa;margin-top:2px;">${typeLabel[c.type]||c.type} · ${c.recipients} recipients · Created ${fmtDate(c.created)}</div>
+        <div style="font-size:11px;color:var(--text4);margin-top:2px;">${typeLabel[c.type]||c.type} · ${c.recipients} recipients · Created ${fmtDate(c.created)}</div>
       </div>
       <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;background:${c.status==='Active'?'var(--green-bg)':'var(--bg4)'};color:${c.status==='Active'?'var(--green)':'#8888aa'};border:1px solid ${c.status==='Active'?'var(--green-border)':'var(--border2)'};">${c.status}</span>
       <div style="display:flex;gap:6px;">
@@ -2189,7 +2251,7 @@ function toggleAdvSearch(){
   const btn = document.getElementById('adv-search-btn');
   advFiltersActive = !advFiltersActive;
   panel.style.display = advFiltersActive ? 'block' : 'none';
-  btn.style.background = advFiltersActive ? 'rgba(101,88,212,.12)' : '';
+  btn.style.background = advFiltersActive ? 'rgba(59,130,246,.08)' : '';
 }
 
 function applyAdvFilters(){
@@ -2360,7 +2422,7 @@ function handleImportFile(input){
         (skipSummary.length ? '<div style="font-size:11px;color:var(--amber);margin-bottom:8px;">Filtered out: ' + skipSummary.join(', ') + '</div>' : '') +
         '<div style="max-height:150px;overflow-y:auto;">' +
           cleaned.slice(0,8).map(function(c){
-            return '<div style="font-size:11px;color:var(--text3);padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:8px;">' +
+            return '<div style="font-size:11px;color:var(--text3);padding:3px 0;border-bottom:1px solid var(--border2);display:flex;gap:8px;">' +
               '<span style="font-weight:600;color:var(--text);min-width:120px;">' + c.first + ' ' + c.last + '</span>' +
               '<span style="color:var(--text4);">' + (c.title||'No title') + '</span>' +
               '<span style="color:var(--text4);margin-left:auto;">' + (c.location||'') + '</span>' +
@@ -2796,7 +2858,7 @@ function renderCompAnalysis(d){
       ${d.bonusRange?`<span style="background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);padding:2px 8px;border-radius:10px;font-size:10.5px;">Bonus: ${esc(d.bonusRange)}</span>`:''}
     </div>
     ${d.locationMultiplier?`<div style="font-size:11px;color:var(--text3);margin-bottom:8px;padding:6px 8px;background:var(--bg4);border-radius:var(--r-sm);">📍 ${esc(d.locationMultiplier)}</div>`:''}
-    ${d.insights&&d.insights.length?`<div style="margin-bottom:8px;">${d.insights.map(i=>`<div style="font-size:11.5px;color:var(--text2);padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;"><span style="color:var(--text3);flex-shrink:0;">•</span>${esc(i)}</div>`).join('')}</div>`:''}
+    ${d.insights&&d.insights.length?`<div style="margin-bottom:8px;">${d.insights.map(i=>`<div style="font-size:11.5px;color:var(--text2);padding:3px 0;border-bottom:1px solid var(--border2);display:flex;gap:6px;"><span style="color:var(--text3);flex-shrink:0;">•</span>${esc(i)}</div>`).join('')}</div>`:''}
     ${d.negotiationTips&&d.negotiationTips.length?`<div style="margin-top:6px;"><div style="font-size:11px;color:var(--text4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Negotiation Tips</div>${d.negotiationTips.map(t=>`<div style="font-size:11px;color:var(--text3);padding:3px 0;display:flex;gap:6px;"><span style="color:var(--green);flex-shrink:0;">→</span>${esc(t)}</div>`).join('')}</div>`:''}
   `;
 }
@@ -3344,7 +3406,7 @@ function renderPromptCards(items){
 
   // Featured banner
   if(featured && (plActiveCat==='all'||plActiveCat==='prospecting')){
-    html += '<div style="background:linear-gradient(135deg,rgba(101,88,212,.12),rgba(80,68,160,.1));border:1px solid rgba(101,88,212,.12);border-radius:10px;padding:16px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:16px;">';
+    html += '<div style="background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(80,68,160,.1));border:1px solid rgba(59,130,246,.08);border-radius:10px;padding:16px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:16px;">';
     html += '<div>';
     html += '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Featured — Most Powerful</div>';
     html += '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">'+featured.title+'</div>';
@@ -3643,6 +3705,7 @@ function renderKanban(){
         ${stageCands.map(c=>`<div class="kb-card" onclick="nav('candidates');setTimeout(()=>selCand('${c.id}'),100)">
           <div class="kb-card-name">${esc(c.first)} ${esc(c.last)}</div>
           <div class="kb-card-sub">${esc(c.title||'')}${c.company?' · '+esc(c.company):''}</div>
+          ${nextActionHtml(c,'11px')}
           <div class="kb-card-score">
             <span style="font-size:11px;color:var(--text4);">${esc(c.role||'').slice(0,22)}</span>
             <button style="font-size:11px;background:${col}20;color:${col};border:1px solid ${col}40;border-radius:3px;padding:1px 5px;cursor:pointer;" onclick="event.stopPropagation();openStageModal('${c.id}')">→</button>
@@ -3700,14 +3763,14 @@ Return ONLY the JSON array.`;
 function renderMatchResults(j,results){
   const el=document.getElementById('match-results-area');
   el.innerHTML=`
-    <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+    <div style="padding:14px 20px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;">
       <div><div style="font-size:14px;font-weight:600;">${esc(j.title)}</div><div style="font-size:11px;color:var(--text3);">${results.length} candidates ranked by AI</div></div>
       <button class="btn btn-ghost btn-sm" onclick="runMatch('${j.id}')">Re-run ↻</button>
     </div>
     ${results.map((r,i)=>{
       const c=cands.find(x=>x.id===r.id)||{first:'?',last:'?',title:'',company:''};
       const[bg,fg]=avColor(c);const sc=Math.round(r.score||0);const col=scoreColor(sc);
-      const rnkColors=['#6558d4','#3dbd72','#2aada3','#f5a623'];
+      const rnkColors=['var(--accent)','#3dbd72','#2aada3','#f5a623'];
       const rc=rnkColors[Math.min(i,3)]||'#55556a';
       return`<div>
         <div class="match-row" onclick="toggleExpand('mx-${r.id}')">
@@ -3747,46 +3810,104 @@ function renderDash(){
   const hired=cands.filter(c=>c.status==='Hired').length;
   const interviewing=cands.filter(c=>c.status==='Interviewing').length;
   const openJobs=jobs.filter(j=>j.status==='Open').length;
+  const offer=cands.filter(c=>c.status==='Offer').length;
+
+  // STAT BLOCKS — clean, high contrast, color-coded left border via CSS nth-child
   document.getElementById('dash-stats').innerHTML=`
-    <div class="stat"><div class="stat-label">Total Candidates</div><div class="stat-value">${total}</div><div class="stat-delta"><span class="up">Active pipeline</span></div></div>
-    <div class="stat"><div class="stat-label">Open Jobs</div><div class="stat-value">${openJobs}</div><div class="stat-delta"><span class="up">${jobs.length} total reqs</span></div></div>
-    <div class="stat"><div class="stat-label">Interviewing</div><div class="stat-value">${interviewing}</div><div class="stat-delta"><span>${Math.round(interviewing/Math.max(total,1)*100)}% of pipeline</span></div></div>
+    <div class="stat"><div class="stat-label">Pipeline</div><div class="stat-value">${total}</div><div class="stat-delta"><span class="up">Active candidates</span></div></div>
+    <div class="stat"><div class="stat-label">Open Jobs</div><div class="stat-value">${openJobs}</div><div class="stat-delta">${jobs.length} total reqs</div></div>
+    <div class="stat"><div class="stat-label">Interviewing</div><div class="stat-value">${interviewing}</div><div class="stat-delta">${Math.round(interviewing/Math.max(total,1)*100)}% of pipeline</div></div>
     <div class="stat"><div class="stat-label">Hired</div><div class="stat-value">${hired}</div><div class="stat-delta"><span class="up">${Math.round(hired/Math.max(total,1)*100)}% conversion</span></div></div>`;
 
+  // PIPELINE — dominant, full-width, 5 stages with blue accent
   const PIPE_STAGES=['New','Screening','Interviewing','Offer','Hired'];
-  const pipeColors={New:'#4f9cf0',Screening:'#8878e0',Interviewing:'#f5a623',Offer:'#2aada3',Hired:'#3dbd72'};
+  const pipeColors={New:'var(--blue)',Screening:'var(--purple)',Interviewing:'var(--amber)',Offer:'var(--teal)',Hired:'var(--green)'};
   const stageCounts=PIPE_STAGES.map(s=>cands.filter(c=>c.status===s).length);
   const maxCount=Math.max(...stageCounts,1);
   document.getElementById('dash-pipeline').innerHTML=PIPE_STAGES.map((s,i)=>{
     const n=stageCounts[i];const col=pipeColors[s];
-    return`<div class="pipe-col"><div class="pipe-col-name">${s}</div><div class="pipe-col-num" style="color:${col};">${n}</div><div class="pipe-col-bar"><div class="pipe-col-fill" style="background:${col};width:${Math.round(n/maxCount*100)}%;"></div></div></div>`;
+    return`<div class="pipe-col" onclick="nav('pipeline')"><div class="pipe-col-name">${s}</div><div class="pipe-col-num" style="color:${col};">${n}</div><div class="pipe-col-bar"><div class="pipe-col-fill" style="background:${col};width:${Math.round(n/maxCount*100)}%;"></div></div></div>`;
   }).join('');
 
-  const recent=cands.slice().sort((a,b)=>b.created-a.created).slice(0,5);
-  document.getElementById('dash-recent').innerHTML=recent.map(c=>{
-    const[bg,fg]=avColor(c);
-    return`<div class="recent-item" onclick="nav('candidates');setTimeout(()=>selCand('${c.id}'),100)">
-      <div class="av" style="width:30px;height:30px;font-size:11px;background:${bg};color:${fg};">${ini(c)}</div>
-      <div class="recent-info"><div class="recent-name">${esc(c.first)} ${esc(c.last)}</div><div class="recent-meta">${esc(c.title||'')} · ${fmtDate(c.created)}</div></div>
+  // ACTION PANEL — Today / Blocked / Hot, driven by Next Action Engine
+  // Sort all active candidates by urgency: red > amber > blue
+  const urgencyRank=(c)=>{const u=_naUrgency(c);return u==='var(--red)'?0:u==='var(--amber)'?1:2;};
+  const activeCands=cands.filter(c=>!['Hired','Rejected'].includes(c.status));
+  const todayCands=activeCands.slice().sort((a,b)=>urgencyRank(a)-urgencyRank(b)).slice(0,3);
+  const blockedCands=cands.filter(c=>c.status==='Offer').slice(0,2);
+  const hotCands=activeCands.filter(c=>{
+    const last=(c.activity&&c.activity.length)?Math.max(...c.activity.map(a=>a.ts)):c.created;
+    return (Date.now()-last)<(24*60*60*1000*1); // active in last 24h
+  }).slice(0,2);
+
+  let actionHtml='';
+
+  // TODAY — sorted by urgency
+  actionHtml+=`<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Today</div>`;
+  if(todayCands.length){
+    actionHtml+=todayCands.map(c=>{
+      const col=_naUrgency(c);
+      return`<div class="recent-item" style="margin-bottom:4px;" onclick="nav('candidates');setTimeout(()=>selCand('${c.id}'),100)">
+        <div style="flex:1;min-width:0;">
+          <div class="recent-name">${esc(c.first)} ${esc(c.last)}</div>
+          <div style="font-size:11px;color:${col};font-weight:500;margin-top:1px;display:flex;align-items:center;gap:3px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="2.5" style="width:8px;height:8px;flex-shrink:0;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            ${getNextAction(c)}
+          </div>
+        </div>
+        ${badgeHtml(c.status)}
+      </div>`;
+    }).join('');
+  } else {
+    actionHtml+=`<div style="font-size:12px;color:var(--text4);padding:6px 0;">No active candidates</div>`;
+  }
+
+  // BLOCKED — offer stage candidates
+  actionHtml+=`<div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.1em;margin:12px 0 6px;">Blocked</div>`;
+  if(blockedCands.length){
+    actionHtml+=blockedCands.map(c=>`<div class="recent-item" style="margin-bottom:4px;border-color:var(--red-border);" onclick="nav('candidates');setTimeout(()=>selCand('${c.id}'),100)">
+      <div style="flex:1;min-width:0;"><div class="recent-name">${esc(c.first)} ${esc(c.last)}</div>
+      <div style="font-size:11px;color:var(--red);font-weight:500;margin-top:1px;">${getNextAction(c)}</div></div>
+      <span style="font-size:11px;font-weight:600;color:var(--red);">Offer</span>
+    </div>`).join('');
+  } else {
+    actionHtml+=`<div style="font-size:12px;color:var(--text4);padding:6px 0;">Nothing blocked</div>`;
+  }
+
+  // HOT — recently active candidates
+  actionHtml+=`<div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.1em;margin:12px 0 6px;">Hot</div>`;
+  if(hotCands.length){
+    actionHtml+=hotCands.map(c=>`<div class="recent-item" style="margin-bottom:4px;border-color:var(--green-border);" onclick="nav('candidates');setTimeout(()=>selCand('${c.id}'),100)">
+      <div style="flex:1;min-width:0;"><div class="recent-name">${esc(c.first)} ${esc(c.last)}</div>
+      <div style="font-size:11px;color:var(--green);font-weight:500;margin-top:1px;">${getNextAction(c)}</div></div>
       ${badgeHtml(c.status)}
-    </div>`;
-  }).join('');
+    </div>`).join('');
+  } else {
+    actionHtml+=`<div style="font-size:12px;color:var(--text4);padding:6px 0;">No recent activity</div>`;
+  }
+  document.getElementById('dash-action-content').innerHTML=actionHtml;
 
-  document.getElementById('dash-jobs').innerHTML=jobs.filter(j=>j.status==='Open').map(j=>`
-    <div class="recent-item" onclick="nav('jobs');setTimeout(()=>selJob('${j.id}'),100)">
-      <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;">${esc(j.title)}</div><div style="font-size:11px;color:var(--text3);">Req #${esc(j.reqNum||'—')} · ${esc(j.location||'')}</div></div>
-      <span style="font-size:11px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);padding:2px 7px;border-radius:10px;">Open</span>
-    </div>`).join('')||'<div style="font-size:12px;color:var(--text4);">No open jobs.</div>';
-
-  const topCands=cands.filter(c=>['Interviewing','Offer','Screening'].includes(c.status)).slice(0,5);
+  // TOP CANDIDATES — name + role + match score + next action
+  const topCands=cands.filter(c=>['Interviewing','Offer','Screening'].includes(c.status)).slice(0,6);
   document.getElementById('dash-top-cands').innerHTML=topCands.map(c=>{
     const[bg,fg]=avColor(c);
+    const matchScore=c.matchScore?`<span style="font-size:11px;font-weight:700;font-family:'DM Mono',monospace;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);padding:2px 6px;border-radius:4px;">${c.matchScore}%</span>`:'';
     return`<div class="recent-item" onclick="nav('candidates');setTimeout(()=>selCand('${c.id}'),100)">
-      <div class="av" style="width:30px;height:30px;font-size:11px;background:${bg};color:${fg};">${ini(c)}</div>
-      <div class="recent-info"><div class="recent-name">${esc(c.first)} ${esc(c.last)}</div><div class="recent-meta">${esc(c.title||'')}${c.company?' · '+esc(c.company):''}</div></div>
-      ${badgeHtml(c.status)}
+      <div class="av" style="width:32px;height:32px;font-size:12px;background:${bg};color:${fg};">${ini(c)}</div>
+      <div class="recent-info">
+        <div class="recent-name">${esc(c.first)} ${esc(c.last)}</div>
+        <div class="recent-meta">${esc(c.title||'')}${c.company?' · '+esc(c.company):''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">${matchScore}${badgeHtml(c.status)}</div>
     </div>`;
-  }).join('')||'<div style="font-size:12px;color:var(--text4);">Add candidates to see them here.</div>';
+  }).join('')||'<div style="font-size:13px;color:var(--text4);padding:8px 0;">Add candidates to see them here.</div>';
+
+  // OPEN JOBS
+  document.getElementById('dash-jobs').innerHTML=jobs.filter(j=>j.status==='Open').map(j=>`
+    <div class="recent-item" style="margin-bottom:4px;" onclick="nav('jobs');setTimeout(()=>selJob('${j.id}'),100)">
+      <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;color:var(--text);">${esc(j.title)}</div><div style="font-size:12px;color:var(--text3);">Req #${esc(j.reqNum||'—')} · ${esc(j.location||'')}</div></div>
+      <span style="font-size:11px;font-weight:600;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);padding:3px 8px;border-radius:10px;">Open</span>
+    </div>`).join('')||'<div style="font-size:13px;color:var(--text4);">No open jobs.</div>';
 }
 
 // ═══════════════════════════════════════════════
@@ -3802,7 +3923,7 @@ function renderAnalytics(){
     <div class="stat"><div class="stat-label">Hired</div><div class="stat-value">${byStatus['Hired']||0}</div></div>`;
 
   const FUNNEL=['New','Screening','Interviewing','Offer','Hired'];
-  const fColors=['#4f9cf0','#8878e0','#f5a623','#2aada3','#3dbd72'];
+  const fColors=['var(--blue)','var(--purple)','var(--amber)','var(--teal)','var(--green)'];
   document.getElementById('an-funnel').innerHTML=FUNNEL.map((s,i)=>{
     const n=byStatus[s]||0;const pct=Math.round(n/total*100);
     return`<div class="funnel-bar"><div class="funnel-label">${s}</div><div class="funnel-track"><div class="funnel-fill" style="width:${pct}%;background:${fColors[i]};">${n>0?n:''}</div></div><div class="funnel-num">${n}</div></div>`;
@@ -3994,7 +4115,7 @@ Score 0-100. Only include candidates scoring 50+. Sort by score descending. Max 
             </div>
             ${badgeHtml(c.status)}
           </div>
-          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border2);">
             <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">✓ ${m.match_reason}</div>
             ${m.gaps?`<div style="font-size:11px;color:var(--text4);">△ ${m.gaps}</div>`:''}
           </div>
@@ -4299,7 +4420,7 @@ function renderHeadcount(){
   const statusColor = {Approved:'var(--green)',Pending:'var(--amber)',Filled:'var(--teal)',Cancelled:'var(--text4)'};
   
   listEl.innerHTML = headcounts.map(h=>`
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 80px;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);align-items:center;">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 80px;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border2);align-items:center;">
       <div>
         <div style="font-size:13px;font-weight:600;color:var(--text);">${h.title}</div>
         <div style="font-size:11px;color:var(--text3);">${h.hm?'HM: '+h.hm:''} ${h.budget?'· $'+parseFloat(h.budget).toLocaleString():''}</div>
@@ -5376,7 +5497,7 @@ function renderLibrary(){
     var bg = sel ? 'background:var(--accent-dim);border-left:3px solid var(--accent);' : 'border-left:3px solid transparent;';
     var titleColor = sel ? 'color:var(--accent2);' : 'color:var(--text);';
     var id = item.id;
-    rowsHtml += '<div class="lib-row" data-lid="'+id+'" style="'+bg+'display:grid;grid-template-columns:1fr 100px 115px;gap:0;padding:9px 16px;border-bottom:1px solid var(--border);cursor:pointer;align-items:center;">';
+    rowsHtml += '<div class="lib-row" data-lid="'+id+'" style="'+bg+'display:grid;grid-template-columns:1fr 100px 115px;gap:0;padding:9px 16px;border-bottom:1px solid var(--border2);cursor:pointer;align-items:center;">';
     rowsHtml += '<div style="display:flex;align-items:center;gap:8px;min-width:0;">';
     rowsHtml += '<span style="font-size:11px;background:var(--bg4);border:1px solid var(--border2);padding:2px 5px;border-radius:3px;font-family:DM Mono,monospace;color:var(--text3);flex-shrink:0;">'+(catIcons[item.cat]||'FILE')+'</span>';
     rowsHtml += '<div style="min-width:0;"><div style="font-size:12px;font-weight:500;'+titleColor+'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(item.title)+'</div>';
@@ -5455,7 +5576,7 @@ function viewLibItem(id){
   const catColor = catColors[item.cat]||'var(--text3)';
 
   viewer.innerHTML =
-    '<div style="padding:20px 28px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0;background:var(--bg2);">' +
+    '<div style="padding:20px 28px;border-bottom:1px solid var(--border2);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0;background:var(--bg2);">' +
       '<div>' +
         '<div style="font-size:11px;font-weight:700;color:'+catColor+';text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;">' + (item.cat||'').toUpperCase() + '</div>' +
         '<div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;">' + (item.icon||'') + ' ' + esc(item.title) + '</div>' +
@@ -5469,12 +5590,12 @@ function viewLibItem(id){
       '</div>' +
     '</div>' +
     (item.subject ?
-      '<div style="padding:12px 28px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;">' +
+      '<div style="padding:12px 28px;background:var(--bg3);border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;flex-shrink:0;">' +
         '<span style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;">Subject Line:</span>' +
         '<span style="font-size:13px;color:#e8f0ff;font-weight:500;">' + esc(item.subject) + '</span>' +
       '</div>' : '') +
     ((item.vars||[]).length ?
-      '<div style="padding:10px 28px;background:rgba(101,88,212,.12);border-bottom:1px solid var(--accent-border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;">' +
+      '<div style="padding:10px 28px;background:rgba(59,130,246,.08);border-bottom:1px solid var(--accent-border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;">' +
         '<span style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.08em;white-space:nowrap;">FILL IN:</span>' +
         (item.vars||[]).map(function(v){
           return '<span style="background:var(--bg4);color:var(--text2);border:1px solid var(--border2);padding:2px 8px;border-radius:4px;font-size:11px;font-family:DM Mono,monospace;font-weight:500;">{{'+v+'}}</span>';
@@ -5747,7 +5868,7 @@ function renderTutorial(){
       <div style="width:28px;height:28px;border-radius:8px;background:var(--bg4);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;">${s.icon}</div>
       <div style="flex:1;">
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">${i+1}. ${s.action}</div>
-        <div style="font-size:12px;color:#aaaacc;line-height:1.6;">${s.detail}</div>
+        <div style="font-size:12px;color:var(--text3);line-height:1.6;">${s.detail}</div>
       </div>
     </div>`).join('');
 
@@ -5879,12 +6000,12 @@ window.addEventListener('DOMContentLoaded', function(){
       <div class="topbar-sub">Manage your data, workflow, branding, and exports</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <span style="font-size:11px;background:rgba(46,168,98,.12);color:#2ea862;border:1px solid rgba(46,168,98,.25);padding:4px 10px;border-radius:20px;font-weight:600;">Your data is yours. Export anytime. No lock-in.</span>
+      <span style="font-size:11px;background:rgba(46,168,98,.12);color:var(--green);border:1px solid rgba(46,168,98,.25);padding:4px 10px;border-radius:20px;font-weight:600;">Your data is yours. Export anytime. No lock-in.</span>
     </div>
   </div>
 
   <!-- Tab bar -->
-  <div style="display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;padding:0 20px;">
+  <div style="display:flex;gap:0;border-bottom:1px solid var(--border2);background:var(--bg2);flex-shrink:0;padding:0 20px;">
     <button class="ws-tab on" data-tab="ws-general"    onclick="wsTab(this,'ws-general')">General</button>
     <button class="ws-tab"    data-tab="ws-users"      onclick="wsTab(this,'ws-users')">Users &amp; Permissions</button>
     <button class="ws-tab"    data-tab="ws-workflow"   onclick="wsTab(this,'ws-workflow')">Workflow</button>
@@ -5966,7 +6087,7 @@ window.addEventListener('DOMContentLoaded', function(){
         <button class="btn btn-ghost btn-sm" onclick="wsAddStage()">+ Add Stage</button>
         <button class="btn btn-primary btn-sm" onclick="wsSaveStages()">Save Workflow</button>
       </div>
-      <div id="ws-stages-saved" style="font-size:11px;color:#2ea862;margin-top:8px;display:none;">✓ Workflow saved</div>
+      <div id="ws-stages-saved" style="font-size:11px;color:var(--green);margin-top:8px;display:none;">✓ Workflow saved</div>
 
       <div class="ws-divider"></div>
       <div class="ws-section-title">Default Workflow Template</div>
@@ -5984,8 +6105,8 @@ window.addEventListener('DOMContentLoaded', function(){
         <div>
           <div class="ws-label">Accent Color</div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <input type="color" id="ws-brand-color" value="#6558d4" onchange="wsBrandPreview()" style="width:48px;height:36px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;background:none;padding:2px;"/>
-            <input id="ws-brand-color-hex" class="ws-input" style="max-width:120px;" placeholder="#6558d4" oninput="wsBrandColorHex()"/>
+            <input type="color" id="ws-brand-color" value="var(--accent)" onchange="wsBrandPreview()" style="width:48px;height:36px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;background:none;padding:2px;"/>
+            <input id="ws-brand-color-hex" class="ws-input" style="max-width:120px;" placeholder="var(--accent)" oninput="wsBrandColorHex()"/>
             <div style="display:flex;gap:5px;" id="ws-color-presets"></div>
           </div>
         </div>
@@ -6213,8 +6334,8 @@ function v2UpdateToggleBtn(){
   if(window.TALENTBASE_V2){
     lbl.textContent = 'Command Center: ON';
     icon.textContent = '⚡';
-    btn.style.background = 'rgba(124,106,247,.15)';
-    btn.style.borderColor = 'rgba(124,106,247,.4)';
+    btn.style.background = 'rgba(59,130,246,.12)';
+    btn.style.borderColor = 'rgba(59,130,246,.4)';
     btn.style.color = '#ccc0ff';
   } else {
     lbl.textContent = 'Command Center: OFF';
@@ -6235,7 +6356,7 @@ function applyV2(){
     var ccItem = document.createElement('div');
     ccItem.id = 'ni-command';
     ccItem.className = 'ni';
-    ccItem.style.cssText = 'background:rgba(124,106,247,.12);border:1px solid rgba(124,106,247,.3);color:#ccc0ff;margin-bottom:4px;';
+    ccItem.style.cssText = 'background:rgba(124,106,247,.12);border:1px solid rgba(124,106,247,.3);color:var(--accent2);margin-bottom:4px;';
     ccItem.setAttribute('onclick', "nav('command')");
     ccItem.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Command Center';
     navEl.insertBefore(ccItem, navEl.firstChild);
@@ -6342,7 +6463,7 @@ function renderCommandCenter(){
   } else {
     html += '<div style="display:flex;flex-direction:column;gap:6px;">';
     priorities.forEach(function(p){
-      var urgColor = p.urgency === 'HIGH' ? '#f04f4f' : p.urgency === 'MEDIUM' ? '#f5a623' : '#2ea862';
+      var urgColor = p.urgency === 'HIGH' ? 'var(--red)' : p.urgency === 'MEDIUM' ? '#f5a623' : 'var(--green)';
       html += '<div class="panel" style="padding:11px 14px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;">';
       html += '<div style="display:flex;align-items:center;gap:10px;min-width:0;">';
       html += v2Avatar(p.c);
@@ -6352,7 +6473,7 @@ function renderCommandCenter(){
       html += '<div style="font-size:11px;color:'+urgColor+';margin-top:2px;">&#8594; ' + esc(p.reason) + '</div>';
       html += '</div></div>';
       html += '<div style="display:flex;gap:5px;flex-shrink:0;">';
-      html += '<button class="btn-ghost btn-xs v2-action-btn" data-action="call" data-cid="'+p.c.id+'" style=\"color:#2ea862;border-color:rgba(46,168,98,.3);\">📞 Call</button>';
+      html += '<button class="btn-ghost btn-xs v2-action-btn" data-action="call" data-cid="'+p.c.id+'" style=\"color:var(--green);border-color:rgba(46,168,98,.3);\">📞 Call</button>';
       html += '<button class="btn-ghost btn-xs v2-action-btn" data-action="submit" data-cid="'+p.c.id+'" style=\"color:#7c6af7;border-color:rgba(124,106,247,.3);\">📤 Submit</button>';
       html += '<button class="btn-ghost btn-xs v2-action-btn" data-action="email" data-cid="'+p.c.id+'">✉️ Email</button>';
       html += '</div></div>';
@@ -6368,8 +6489,8 @@ function renderCommandCenter(){
   var healthItems = [
     {label:'Total Candidates', val:health.total, color:'#7c6af7'},
     {label:'In Interview', val:health.interviewing, color:'#f5a623'},
-    {label:'At Offer Stage', val:health.offer, color:'#2ea862'},
-    {label:'Aging (14d+)', val:health.aging, color:health.aging>5?'#f04f4f':'#f5a623'}
+    {label:'At Offer Stage', val:health.offer, color:'var(--green)'},
+    {label:'Aging (14d+)', val:health.aging, color:health.aging>5?'var(--red)':'#f5a623'}
   ];
   healthItems.forEach(function(h){
     html += '<div class="panel" style="padding:12px 14px;text-align:center;">';
@@ -6387,7 +6508,7 @@ function renderCommandCenter(){
     {s:'New',v:health.new_,c:'#4f9cf0'},
     {s:'Screening',v:health.screening,c:'#b06af7'},
     {s:'Interviewing',v:health.interviewing,c:'#f5a623'},
-    {s:'Offer',v:health.offer,c:'#2ea862'},
+    {s:'Offer',v:health.offer,c:'var(--green)'},
     {s:'Other',v:health.other,c:'#555'}
   ];
   stages.forEach(function(s){
@@ -6406,8 +6527,8 @@ function renderCommandCenter(){
   html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
   var revItems = [
     {label:'Total Pipeline Value', val:'$'+v2fmt(revenue.total), sub:'All active candidates', color:'#7c6af7'},
-    {label:'Likely to Close', val:'$'+v2fmt(revenue.likely), sub:'Offer + Interview stage', color:'#2ea862'},
-    {label:'At Risk', val:'$'+v2fmt(revenue.atRisk), sub:revenue.aging+' aging candidates', color:revenue.aging>0?'#f04f4f':'#555'}
+    {label:'Likely to Close', val:'$'+v2fmt(revenue.likely), sub:'Offer + Interview stage', color:'var(--green)'},
+    {label:'At Risk', val:'$'+v2fmt(revenue.atRisk), sub:revenue.aging+' aging candidates', color:revenue.aging>0?'var(--red)':'#555'}
   ];
   revItems.forEach(function(r){
     html += '<div class="panel" style="padding:14px;">';
@@ -6434,7 +6555,7 @@ function renderCommandCenter(){
       html += '<div style="font-size:11px;color:var(--text3);">'+esc(c.title||'No title')+'</div>';
       html += '</div>';
       html += '<button class="btn-ghost btn-xs v2-action-btn" data-action="submit" data-cid="'+c.id+'" style=\"color:#7c6af7;border-color:rgba(124,106,247,.3);\">📤 Submit</button>';
-      html += '<button class="btn-ghost btn-xs v2-action-btn" data-action="call" data-cid="'+c.id+'" style=\"color:#2ea862;border-color:rgba(46,168,98,.3);\">📞 Call</button>';
+      html += '<button class="btn-ghost btn-xs v2-action-btn" data-action="call" data-cid="'+c.id+'" style=\"color:var(--green);border-color:rgba(46,168,98,.3);\">📞 Call</button>';
       html += '</div>';
     });
     html += '</div></div>';
@@ -6489,7 +6610,7 @@ function renderRadar(){
     html += '</div>';
     html += '<div style="display:flex;gap:5px;">';
     html += '<button class="btn-primary btn-xs v2-action-btn" data-action="submit" data-cid="'+c.id+'" style=\"color:#7c6af7;border-color:rgba(124,106,247,.3);\">📤 Submit</button>';
-    html += '<button class="btn btn-ghost btn-xs v2-view-btn" data-cid="'+c.id+'" style="color:#2ea862;">View</button>';
+    html += '<button class="btn btn-ghost btn-xs v2-view-btn" data-cid="'+c.id+'" style="color:var(--green);">View</button>';
     html += '</div>';
     html += '</div>';
   });
@@ -6528,7 +6649,7 @@ function v2EnhanceCandDetail(id){
 
   var banner = document.createElement('div');
   banner.id = 'v2-cand-banner';
-  banner.style.cssText = 'padding:12px 14px;border-bottom:1px solid var(--border);background:var(--bg2);';
+  banner.style.cssText = 'padding:12px 14px;border-bottom:1px solid var(--border2);background:var(--bg2);';
 
   var html = '';
 
@@ -6541,14 +6662,14 @@ function v2EnhanceCandDetail(id){
   html += '<div style="font-size:20px;font-weight:900;color:#7c6af7;">'+closeProb+'%</div>';
   html += '<div style="font-size:10px;color:var(--text4);">Close Probability</div></div>';
   html += '<div style="flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:8px 10px;text-align:center;">';
-  html += '<div style="font-size:14px;font-weight:700;color:#2ea862;line-height:1.3;">$120K<br>$180K</div>';
+  html += '<div style="font-size:14px;font-weight:700;color:var(--green);line-height:1.3;">$120K<br>$180K</div>';
   html += '<div style="font-size:10px;color:var(--text4);">Market Value</div></div>';
   html += '</div>';
 
   // Action buttons
   html += '<div style="display:flex;gap:5px;margin-bottom:10px;">';
   html += '<button class="btn-primary btn-sm v2-action-btn" data-action="submit" data-cid="'+c.id+'" style=\"color:#7c6af7;border-color:rgba(124,106,247,.3);\">📤 Submit</button>';
-  html += '<button class="btn-ghost btn-sm v2-action-btn" data-action="call" data-cid="'+c.id+'" style=\"color:#2ea862;border-color:rgba(46,168,98,.3);\">📞 Call</button>';
+  html += '<button class="btn-ghost btn-sm v2-action-btn" data-action="call" data-cid="'+c.id+'" style=\"color:var(--green);border-color:rgba(46,168,98,.3);\">📞 Call</button>';
   html += '<button class="btn-ghost btn-sm v2-action-btn" data-action="email" data-cid="'+c.id+'">✉️ Email</button>';
   html += '<button class="btn btn-ghost btn-sm v2-nav-btn" data-nav="campaigns" style="flex:1;">&#128640; Campaign</button>';
   html += '</div>';
@@ -6558,7 +6679,7 @@ function v2EnhanceCandDetail(id){
     html += '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Why This Candidate</div>';
     html += '<div style="display:flex;flex-direction:column;gap:3px;margin-bottom:10px;">';
     whys.forEach(function(w){
-      html += '<div style="font-size:12px;color:var(--text2);display:flex;gap:6px;"><span style="color:#2ea862;flex-shrink:0;">&#10003;</span>'+esc(w)+'</div>';
+      html += '<div style="font-size:12px;color:var(--text2);display:flex;gap:6px;"><span style="color:var(--green);flex-shrink:0;">&#10003;</span>'+esc(w)+'</div>';
     });
     html += '</div>';
   }
@@ -6704,10 +6825,10 @@ function v2CandRisks(c){
 }
 
 function v2ScoreColor(s){
-  if(s >= 85) return '#2ea862';
+  if(s >= 85) return 'var(--green)';
   if(s >= 70) return '#1aada3';
   if(s >= 55) return '#f5a623';
-  return '#f04f4f';
+  return 'var(--red)';
 }
 
 function v2fmt(n){
@@ -6717,7 +6838,7 @@ function v2fmt(n){
 }
 
 function v2Avatar(c){
-  var colors = [['rgba(124,106,247,.15)','#9d8fff'],['rgba(46,168,98,.12)','#2ea862'],['rgba(245,166,35,.12)','#f5a623'],['rgba(79,156,240,.12)','#4f9cf0']];
+  var colors = [['rgba(59,130,246,.12)','#9d8fff'],['rgba(46,168,98,.12)','var(--green)'],['rgba(245,166,35,.12)','#f5a623'],['rgba(79,156,240,.12)','#4f9cf0']];
   var idx = ((c.first||'A').charCodeAt(0)+(c.last||'B').charCodeAt(0))%colors.length;
   var bg = colors[idx][0], clr = colors[idx][1];
   var ini = ((c.first||'?')[0]+(c.last||'?')[0]).toUpperCase();
@@ -6769,7 +6890,7 @@ function v2EnhanceCandDetail(id){
 
   var banner = document.createElement('div');
   banner.id = 'v2-cand-banner';
-  banner.style.cssText = 'padding:12px 14px;border-bottom:1px solid var(--border);background:var(--bg2);';
+  banner.style.cssText = 'padding:12px 14px;border-bottom:1px solid var(--border2);background:var(--bg2);';
 
   var scoreColor = v2ScoreColor(score);
   var html = '';
@@ -6783,14 +6904,14 @@ function v2EnhanceCandDetail(id){
   html += '<div style="font-size:22px;font-weight:900;color:#7c6af7;">'+closeProb+'%</div>';
   html += '<div style="font-size:10px;color:var(--text4);margin-top:2px;">Close Probability</div></div>';
   html += '<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px 10px;text-align:center;">';
-  html += '<div style="font-size:13px;font-weight:700;color:#2ea862;line-height:1.4;">$120K<br>$180K</div>';
+  html += '<div style="font-size:13px;font-weight:700;color:var(--green);line-height:1.4;">$120K<br>$180K</div>';
   html += '<div style="font-size:10px;color:var(--text4);margin-top:2px;">Market Value</div></div>';
   html += '</div>';
 
   // Action buttons
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:10px;">';
   html += '<button class="btn btn-primary btn-xs v2-action-btn" data-action="submit" data-cid="'+c.id+'">Submit</button>';
-  html += '<button class="btn btn-ghost btn-xs v2-action-btn" data-action="call" data-cid="'+c.id+'" style="color:#2ea862;border-color:rgba(46,168,98,.3);">Call</button>';
+  html += '<button class="btn btn-ghost btn-xs v2-action-btn" data-action="call" data-cid="'+c.id+'" style="color:var(--green);border-color:rgba(46,168,98,.3);">Call</button>';
   html += '<button class="btn btn-ghost btn-xs v2-action-btn" data-action="email" data-cid="'+c.id+'">Email</button>';
   html += '<button class="btn btn-ghost btn-xs" onclick="nav(\'campaigns\')" style="font-size:10px;">Campaign</button>';
   html += '</div>';
@@ -6800,7 +6921,7 @@ function v2EnhanceCandDetail(id){
     html += '<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Why This Candidate</div>';
     html += '<div style="margin-bottom:8px;">';
     whys.forEach(function(w){
-      html += '<div style="font-size:11px;color:var(--text2);display:flex;gap:5px;margin-bottom:2px;"><span style="color:#2ea862;flex-shrink:0;">✓</span>'+w+'</div>';
+      html += '<div style="font-size:11px;color:var(--text2);display:flex;gap:5px;margin-bottom:2px;"><span style="color:var(--green);flex-shrink:0;">✓</span>'+w+'</div>';
     });
     html += '</div>';
   }
@@ -6855,9 +6976,9 @@ function v2EnhanceJobDetail(id){
   });
 
   var urgency, urgColor, urgBg;
-  if(jobCands.length===0){ urgency='HIGH'; urgColor='#f04f4f'; urgBg='rgba(240,79,79,.1)'; }
+  if(jobCands.length===0){ urgency='HIGH'; urgColor='var(--red)'; urgBg='rgba(240,79,79,.1)'; }
   else if(jobCands.length<3){ urgency='MEDIUM'; urgColor='#f5a623'; urgBg='rgba(245,166,35,.1)'; }
-  else{ urgency='LOW'; urgColor='#2ea862'; urgBg='rgba(46,168,98,.1)'; }
+  else{ urgency='LOW'; urgColor='var(--green)'; urgBg='rgba(46,168,98,.1)'; }
 
   // Sort by match score for top candidates
   var topCands = jobCands.slice().sort(function(a,b){
@@ -6886,7 +7007,7 @@ function v2EnhanceJobDetail(id){
   html += '<div style="font-size:18px;font-weight:800;color:var(--text);">'+jobCands.length+'</div>';
   html += '<div style="font-size:10px;color:var(--text4);margin-top:2px;">Candidates</div></div>';
   html += '<div style="background:rgba(46,168,98,.08);border:1px solid rgba(46,168,98,.2);border-radius:6px;padding:10px;text-align:center;">';
-  html += '<div style="font-size:16px;font-weight:800;color:#2ea862;">$25K</div>';
+  html += '<div style="font-size:16px;font-weight:800;color:var(--green);">$25K</div>';
   html += '<div style="font-size:10px;color:var(--text4);margin-top:2px;">Est. Fee</div></div>';
   html += '</div>';
 
@@ -6966,8 +7087,8 @@ function v2EnhanceCampaigns(){
     html += '<div style="flex:1;min-width:0;">';
     html += '<div style="font-size:12px;font-weight:600;color:var(--text);">'+esc(c.first+' '+c.last)+'</div>';
     html += '<div style="font-size:11px;color:var(--text3);">'+esc(c.title||'')+'</div></div>';
-    html += '<span style="font-size:10px;background:rgba(240,79,79,.12);color:#f04f4f;border:1px solid rgba(240,79,79,.25);padding:2px 7px;border-radius:4px;">Engaged</span>';
-    html += '<button class="btn btn-ghost btn-xs v2-action-btn" data-action="call" data-cid="'+c.id+'" style="color:#2ea862;border-color:rgba(46,168,98,.3);">'+action+'</button>';
+    html += '<span style="font-size:10px;background:rgba(240,79,79,.12);color:var(--red);border:1px solid rgba(240,79,79,.25);padding:2px 7px;border-radius:4px;">Engaged</span>';
+    html += '<button class="btn btn-ghost btn-xs v2-action-btn" data-action="call" data-cid="'+c.id+'" style="color:var(--green);border-color:rgba(46,168,98,.3);">'+action+'</button>';
     html += '</div>';
   });
 
@@ -7221,7 +7342,7 @@ function libRevertTo(itemId, versionIndex){
 
 function libShowToast(msg){
   var t = document.createElement('div');
-  t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#2ea862;color:#fff;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.3);';
+  t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--green);color:#fff;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.3);';
   t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(function(){ t.remove(); }, 2500);
@@ -7252,7 +7373,7 @@ function libInjectVersionPanel(id){
 
   var panel = document.createElement('div');
   panel.id = 'lib-v2-panel';
-  panel.style.cssText = 'border-top:1px solid var(--border);padding:14px 20px;background:var(--bg2);flex-shrink:0;';
+  panel.style.cssText = 'border-top:1px solid var(--border2);padding:14px 20px;background:var(--bg2);flex-shrink:0;';
 
   var html = '';
 
@@ -7294,7 +7415,7 @@ function libInjectVersionPanel(id){
       if(i > 0 && perms.canEdit && !isLocked){
         html += '<button class="btn btn-ghost btn-xs" style="font-size:10px;" onclick="libRevertTo(\''+id+'\','+i+')">Revert</button>';
       } else if(i===0){
-        html += '<span style="font-size:10px;color:#2ea862;">Current</span>';
+        html += '<span style="font-size:10px;color:var(--green);">Current</span>';
       }
       html += '</div>';
     });
@@ -7323,7 +7444,7 @@ function libOpenEditor(id){
   var html = '<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;width:100%;max-width:680px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;">';
 
   // Header
-  html += '<div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">';
+  html += '<div style="padding:16px 20px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;">';
   html += '<div><div style="font-size:14px;font-weight:700;color:var(--text);">Edit Template</div>';
   html += '<div style="font-size:11px;color:var(--text4);margin-top:2px;">Changes saved as new version automatically</div></div>';
   html += '<button onclick="document.getElementById(\'lib-editor-overlay\').remove()" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;">✕</button>';
@@ -7361,7 +7482,7 @@ function libOpenEditor(id){
   html += '</div>'; // end scroll body
 
   // Footer
-  html += '<div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;">';
+  html += '<div style="padding:12px 20px;border-top:1px solid var(--border2);display:flex;justify-content:flex-end;gap:8px;">';
   html += '<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'lib-editor-overlay\').remove()">Cancel</button>';
   html += '<button class="btn btn-primary btn-sm" onclick="libSaveEdit(\''+id+'\')">Save Version</button>';
   html += '</div>';
@@ -7553,11 +7674,11 @@ function libShowRolePanel(){
     var perms = ROLE_PERMISSIONS[role];
     html += '<div style="font-size:10px;color:var(--text4);">'+(perms.canDelete?'Can delete · ':'No delete · ')+(perms.canViewAll?'Full access':'Limited access')+'</div>';
     html += '</div>';
-    if(active) html += '<span style="margin-left:auto;font-size:10px;color:#2ea862;">Active</span>';
+    if(active) html += '<span style="margin-left:auto;font-size:10px;color:var(--green);">Active</span>';
     html += '</div>';
   });
 
-  html += '<div style="font-size:10px;color:var(--text4);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">Role affects edit, delete, and template permissions.</div>';
+  html += '<div style="font-size:10px;color:var(--text4);margin-top:8px;padding-top:8px;border-top:1px solid var(--border2);">Role affects edit, delete, and template permissions.</div>';
   wrap.innerHTML = html;
 
   // Close on outside click
@@ -7643,7 +7764,7 @@ var wsConfig = JSON.parse(localStorage.getItem(WS_KEY) || JSON.stringify({
   owner: '',
   industry: 'Medical Device / Life Sciences',
   website: 'https://thestaffingspecialist.com',
-  brandColor: '#6558d4',
+  brandColor: 'var(--accent)',
   brandName: 'The Staffing Specialist',
   signature: '',
   logoDataUrl: null
@@ -7689,8 +7810,8 @@ function wsInitView(){
   var bchEl = document.getElementById('ws-brand-color-hex');
   var sigEl = document.getElementById('ws-signature');
   if(bnEl) bnEl.value = wsConfig.brandName || '';
-  if(bcEl) bcEl.value = wsConfig.brandColor || '#6558d4';
-  if(bchEl) bchEl.value = wsConfig.brandColor || '#6558d4';
+  if(bcEl) bcEl.value = wsConfig.brandColor || 'var(--accent)';
+  if(bchEl) bchEl.value = wsConfig.brandColor || 'var(--accent)';
   if(sigEl) sigEl.value = wsConfig.signature || '';
   wsColorPresets();
   wsBrandPreview();
@@ -7834,7 +7955,7 @@ function wsSaveStages(){
 }
 
 // ─── BRANDING ─────────────────────────────────────────────────
-var WS_COLOR_PRESETS = ['#6558d4','#2ea862','#f5a623','#f04f4f','#4f9cf0','#1aada3','#e05c9a','#222222'];
+var WS_COLOR_PRESETS = ['var(--accent)','var(--green)','#f5a623','var(--red)','#4f9cf0','#1aada3','#e05c9a','#222222'];
 
 function wsColorPresets(){
   var el = document.getElementById('ws-color-presets');
@@ -7867,7 +7988,7 @@ function wsBrandColorHex(){
 
 function wsBrandPreview(){
   var name = (document.getElementById('ws-brand-name')||{}).value || wsConfig.brandName || 'Your Company';
-  var color = (document.getElementById('ws-brand-color')||{}).value || wsConfig.brandColor || '#6558d4';
+  var color = (document.getElementById('ws-brand-color')||{}).value || wsConfig.brandColor || 'var(--accent)';
   var pn = document.getElementById('ws-preview-name');
   var ph = document.getElementById('ws-preview-header');
   if(pn) pn.textContent = name;
@@ -7890,7 +8011,7 @@ function wsLogoUpload(input){
 
 function wsSaveBranding(){
   wsConfig.brandName  = (document.getElementById('ws-brand-name')||{}).value || '';
-  wsConfig.brandColor = (document.getElementById('ws-brand-color')||{}).value || '#6558d4';
+  wsConfig.brandColor = (document.getElementById('ws-brand-color')||{}).value || 'var(--accent)';
   wsConfig.signature  = (document.getElementById('ws-signature')||{}).value || '';
   // Apply accent color to CSS variables
   document.documentElement.style.setProperty('--accent', wsConfig.brandColor);
@@ -8004,7 +8125,7 @@ function wsToast(msg){
 
 // ─── APPLY SAVED BRANDING ON LOAD ─────────────────────────────
 (function applyWsBranding(){
-  if(wsConfig.brandColor && wsConfig.brandColor !== '#6558d4'){
+  if(wsConfig.brandColor && wsConfig.brandColor !== 'var(--accent)'){
     document.documentElement.style.setProperty('--accent', wsConfig.brandColor);
   }
   if(wsConfig.logoDataUrl){
