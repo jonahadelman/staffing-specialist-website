@@ -1326,12 +1326,22 @@ function addToPipeline() {
   toast.style.display = 'block';
   setTimeout(() => { toast.style.display = 'none'; }, 5000);
 
+  // ── STEP 9: Redirect into TalentBase with the new job highlighted ──
+  const tbBase = window.location.href
+    .replace(/HappyHunting\.html.*/, 'TalentBase_TheStaffingSpecialist.html')
+    .replace(/happy-hunting[^?#]*/, 'TalentBase_TheStaffingSpecialist.html');
+  const tbUrl = (tbBase.includes('TalentBase') ? tbBase : 'TalentBase_TheStaffingSpecialist.html')
+    + '?newJob=' + jobObj.id;
+
   btn.textContent = duplicate ? 'ALREADY ADDED' : '✓ ADDED';
   btn.disabled = true;
 
   // Update bar fee line
   document.getElementById('pb-fee').textContent =
-    'Added · Req ' + reqNum + ' · ' + matched.length + ' candidate match' + (matched.length !== 1 ? 'es' : '');
+    'Added · Req ' + reqNum + ' · ' + matched.length + ' candidate match' + (matched.length !== 1 ? 'es' : '')
+    + ' · Opening TalentBase...';
+
+  setTimeout(() => { window.open(tbUrl, '_blank'); }, 1200);
 }
 
 function pipelineViewTB() {

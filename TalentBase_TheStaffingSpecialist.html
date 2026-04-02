@@ -6264,6 +6264,40 @@ const SESSION_KEY = 'tb_access_v1';
 
 function launchApp(){
   try { loadData(); } catch(e){ console.warn('loadData error:', e); }
+
+  // ── AUTO PIPELINE HOOK — from Happy Hunting redirect ────────
+  // If ?newJob=<id> is in the URL, open Jobs view and highlight the job
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const newJobId = params.get('newJob');
+    if(newJobId){
+      // Nav to jobs view
+      try { nav('jobs'); } catch(e){}
+      // Highlight job after a brief render delay
+      setTimeout(function(){
+        try {
+          selJob(newJobId);
+          // Show a brief success banner
+          var banner = document.createElement('div');
+          banner.id = 'hh-pipeline-banner';
+          banner.style.cssText = [
+            'position:fixed','top:0','left:0','right:0','z-index:9999',
+            'background:#0d2010','border-bottom:1px solid #00c853',
+            'color:#00e676','font-family:DM Mono,monospace','font-size:12px',
+            'letter-spacing:.05em','padding:10px 24px',
+            'display:flex','align-items:center','justify-content:space-between'
+          ].join(';');
+          banner.innerHTML = '<span>&#10003; PIPELINE CREATED &mdash; JOB ADDED FROM HAPPY HUNTING. READY TO EXECUTE.</span>'
+            + '<button onclick="this.parentNode.remove()" style="background:none;border:none;color:#00e676;cursor:pointer;font-size:16px;line-height:1;">&times;</button>';
+          document.body.appendChild(banner);
+          setTimeout(function(){ if(banner.parentNode) banner.parentNode.removeChild(banner); }, 6000);
+        } catch(e){}
+      }, 300);
+      return; // skip default dashboard nav
+    }
+  } catch(e){}
+  // ────────────────────────────────────────────────────────────
+
   try { nav('dashboard'); } catch(e){ console.warn('nav error:', e); }
 }
 
