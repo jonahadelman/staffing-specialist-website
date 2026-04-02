@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Happy Hunting — Know Who's Paying Fees Before You Call</title>
+  <meta name="description" content="Happy Hunting decodes any staffing firm job posting to reveal the end client, hiring manager, and a ready-to-send pitch — in 10 seconds." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --orange: #ff4d00;
+      --orange-light: #ff6520;
+      --bg: #060606;
+      --bg2: #0a0a0a;
+      --bg3: #0d0d0d;
+      --border: #141414;
+      --border2: #1a1a1a;
+      --text: #e8e8e8;
+      --dim: #cccccc;
+      --dimmer: #555555;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 2px; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+    @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+    .fade1 { animation: fadeUp 0.5s ease 0.1s both; }
+    .fade2 { animation: fadeUp 0.5s ease 0.25s both; }
+    .fade3 { animation: fadeUp 0.5s ease 0.4s both; }
+    .fade4 { animation: fadeUp 0.5s ease 0.55s both; }
+
+    /* ── NAV ── */
+    nav {
+      height: 62px; border-bottom: 1px solid #0f0f0f;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 44px; position: sticky; top: 0;
+      background: var(--bg); z-index: 100;
+    }
+    .brand { display: flex; flex-direction: column; gap: 1px; }
+    .brand-name { font-family: 'Bebas Neue'; font-size: 24px; color: #fff; letter-spacing: 3px; line-height: 1; }
+    .brand-name span { color: var(--orange); }
+    .brand-by { font-family: 'DM Mono', monospace; font-size: 8px; color: #888888; letter-spacing: 3px; text-transform: uppercase; }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-link { font-family: 'DM Mono', monospace; font-size: 10px; color: #dddddd; text-decoration:none; outline:none; -webkit-tap-highlight-color:transparent; background:none; letter-spacing: 1px; cursor: pointer; text-decoration: none; transition: color 0.2s; }
+    .nav-link:hover { color: #ff4d00; }
+    .nav-link:visited { color: #dddddd; }
+    .nav-link:focus { outline: none; color: #dddddd; }
+    .nav-link:active { color: #ff4d00; }
+    .nav-cta { background: var(--orange); color: #fff; border: none; padding: 10px 22px; font-family: 'Bebas Neue'; font-size: 17px; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+    .nav-cta:hover { background: var(--orange-light); transform: translateY(-1px); }
+
+    /* ── TICKER ── */
+    .ticker-wrap { background: var(--orange); padding: 9px 0; overflow: hidden; white-space: nowrap; }
+    .ticker-inner { display: inline-block; animation: ticker 24s linear infinite; }
+    .ticker-item { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; color: #fff; margin: 0 44px; }
+
+    /* ── HERO ── */
+    .hero { padding: 96px 44px 80px; max-width: 1160px; margin: 0 auto; }
+    .hero-eye { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--orange); letter-spacing: 4px; margin-bottom: 22px; }
+    .hero-h1 { font-family: 'Bebas Neue'; font-size: clamp(60px, 10.5vw, 124px); line-height: 0.9; letter-spacing: 2px; margin-bottom: 28px; color: #fff; }
+    .hero-h1 em { color: var(--orange); font-style: normal; }
+    .hero-p { font-size: 18px; color: var(--dim); max-width: 500px; line-height: 1.72; margin-bottom: 42px; font-weight: 300; }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+    .btn-primary { background: var(--orange); color: #fff; border: none; padding: 16px 50px; font-family: 'Bebas Neue'; font-size: 22px; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; }
+    .btn-primary:hover { background: var(--orange-light); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(255,77,0,0.35); }
+    .btn-ghost { background: none; color: #fff; border: 2px solid #1e1e1e; padding: 14px 32px; font-family: 'Bebas Neue'; font-size: 20px; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+    .btn-ghost:hover { border-color: var(--orange); color: var(--orange); }
+    .hero-note { font-family: 'DM Mono', monospace; font-size: 10px; color: #888888; letter-spacing: 1px; }
+
+    /* ── STATS ── */
+    .stats { background: var(--orange); padding: 52px 44px; }
+    .stats-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: repeat(4,1fr); gap: 32px; text-align: center; }
+    .stat-n { font-family: 'Bebas Neue'; font-size: 58px; color: #fff; line-height: 1; }
+    .stat-l { font-size: 13px; color: #ffb099; margin-top: 5px; font-weight: 300; }
+
+    /* ── SECTIONS ── */
+    .section { padding: 92px 44px; }
+    .section-inner { max-width: 1160px; margin: 0 auto; }
+    .s-eye { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--orange); letter-spacing: 4px; margin-bottom: 14px; }
+    .s-h2 { font-family: 'Bebas Neue'; font-size: 68px; line-height: 0.93; margin-bottom: 52px; letter-spacing: 1px; color: #fff; }
+    .s-h2 em { color: var(--orange); font-style: normal; }
+
+    /* ── STEPS ── */
+    .steps { display: grid; grid-template-columns: repeat(4,1fr); gap: 2px; }
+    .step { background: var(--bg3); border: 1px solid var(--border2); padding: 32px 28px; transition: all 0.25s; }
+    .step:hover { border-color: var(--orange); transform: translateY(-3px); }
+    .step-n { font-family: 'Bebas Neue'; font-size: 68px; color: #141414; line-height: 1; margin-bottom: 12px; }
+    .step-t { font-family: 'Bebas Neue'; font-size: 25px; color: var(--orange); letter-spacing: 2px; margin-bottom: 8px; }
+    .step-d { font-size: 14px; color: var(--dim); line-height: 1.7; font-weight: 300; }
+
+    /* ── PROBLEM ── */
+    .problem { background: #080808; border-top: 1px solid #0f0f0f; border-bottom: 1px solid #0f0f0f; padding: 92px 44px; }
+    .problem-grid { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
+    .problem-p { font-size: 16px; color: var(--dim); line-height: 1.8; font-weight: 300; margin-bottom: 14px; }
+    .cmp { padding: 26px 24px; }
+    .cmp-bad { background: var(--bg3); border: 1px solid var(--border2); margin-bottom: 2px; }
+    .cmp-good { background: #0a1a0a; border: 1px solid #1a3a1a; }
+    .cmp-label { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .cmp-text { font-size: 14px; color: var(--dim); line-height: 1.65; font-weight: 300; }
+
+    /* ── PRICING ── */
+    .pricing { padding: 92px 44px; }
+    .pricing-inner { max-width: 960px; margin: 0 auto; }
+    .pricing-sub { font-size: 15px; color: #cccccc; margin-bottom: 48px; font-weight: 300; }
+    .plans { display: flex; gap: 2px; }
+    .plan { background: var(--bg3); border: 1px solid var(--border2); padding: 36px 32px; flex: 1; transition: all 0.25s; }
+    .plan:hover:not(.plan-hot) { border-color: #cccccc; transform: translateY(-4px); }
+    .plan-hot { background: var(--orange); border-color: var(--orange); }
+    .plan-name { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 4px; color: #cccccc; margin-bottom: 16px; }
+    .plan-hot .plan-name { color: #fff; }
+    .plan-price { font-family: 'Bebas Neue'; font-size: 52px; color: #fff; line-height: 1; }
+    .plan-mo { font-size: 14px; color: #cccccc; }
+    .plan-hot .plan-mo { color: #ffb099; }
+    .plan-line { border-top: 1px solid var(--border2); margin: 22px 0; }
+    .plan-hot .plan-line { border-color: #ff6d20; }
+    .plan-feat { font-size: 13px; color: var(--dim); margin-bottom: 10px; display: flex; gap: 10px; font-weight: 300; }
+    .plan-hot .plan-feat { color: #ffe0d4; }
+    .plan-dot { color: var(--orange); font-size: 10px; flex-shrink: 0; margin-top: 3px; }
+    .plan-hot .plan-dot { color: #ffb099; }
+    .plan-btn { width: 100%; background: var(--orange); color: #fff; border: none; padding: 14px; font-family: 'Bebas Neue'; font-size: 18px; letter-spacing: 2px; cursor: pointer; margin-top: 20px; transition: opacity 0.2s; }
+    .plan-hot .plan-btn { background: #fff; color: var(--orange); }
+    .plan-btn:hover { opacity: 0.88; }
+
+    /* ── FOUNDER ── */
+    .founder { background: #080808; border-top: 1px solid #0f0f0f; padding: 92px 44px; }
+    .founder-grid { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
+    .founder-p { font-size: 15px; color: #cccccc; line-height: 1.8; font-weight: 300; margin-bottom: 14px; }
+    .quote-box { background: var(--bg3); border: 1px solid var(--border2); padding: 40px; }
+    .quote-mark { font-family: 'Bebas Neue'; font-size: 80px; color: #141414; line-height: 1; }
+    .quote-text { font-size: 20px; color: #cccccc; line-height: 1.75; font-style: italic; font-weight: 300; margin-bottom: 28px; }
+    .quote-rule { border-top: 1px solid var(--border2); padding-top: 22px; }
+    .quote-name { font-family: 'Bebas Neue'; font-size: 22px; color: var(--orange); letter-spacing: 1px; }
+    .quote-title { font-family: 'DM Mono', monospace; font-size: 9px; color: #aaaaaa; letter-spacing: 2px; margin-top: 4px; }
+
+    /* ── BOTTOM CTA ── */
+    .bcta { background: var(--orange); padding: 72px 44px; text-align: center; }
+    .bcta h2 { font-family: 'Bebas Neue'; font-size: 72px; color: #fff; margin-bottom: 14px; letter-spacing: 2px; }
+    .bcta p { font-size: 17px; color: #ffb099; margin-bottom: 36px; font-weight: 300; }
+    .bcta-btn { background: #fff; color: var(--orange); border: none; padding: 18px 60px; font-family: 'Bebas Neue'; font-size: 26px; letter-spacing: 3px; cursor: pointer; transition: all 0.2s; }
+    .bcta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.25); }
+
+    /* ── FOOTER ── */
+    footer { padding: 32px 44px; border-top: 1px solid #0d0d0d; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .footer-brand { font-family: 'Bebas Neue'; font-size: 18px; color: var(--orange); letter-spacing: 2px; }
+    .footer-by { font-family: 'DM Mono', monospace; font-size: 9px; color: #aaaaaa; letter-spacing: 2px; margin-left: 10px; }
+    .footer-copy { font-family: 'DM Mono', monospace; font-size: 9px; color: #aaaaaa; letter-spacing: 2px; }
+
+    /* ══════════════════════════════════════
+       TOOL PAGE
+    ══════════════════════════════════════ */
+    .tool-nav { height: 56px; border-bottom: 1px solid #0f0f0f; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; background: var(--bg); position: sticky; top: 0; z-index: 100; }
+    .back-btn { background: none; border: none; color: var(--dimmer); cursor: pointer; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; transition: color 0.2s; }
+    .back-btn:hover { color: #cccccc; }
+    .vr { width: 1px; height: 20px; background: #111; }
+    .tool-brand-name { font-family: 'Bebas Neue'; font-size: 20px; letter-spacing: 3px; }
+    .tool-brand-name span { color: var(--orange); }
+    .live-ind { display: flex; align-items: center; gap: 8px; }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); animation: blink 2s infinite; }
+    .live-lbl { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dimmer); letter-spacing: 2px; }
+
+    .tool-wrap { display: grid; grid-template-columns: 400px 1fr; min-height: calc(100vh - 56px); }
+    .tool-wrap.solo { grid-template-columns: 1fr; }
+
+    .input-side { padding: 28px 24px; border-right: 1px solid #0f0f0f; }
+    .tool-wrap.solo .input-side { max-width: 560px; margin: 0 auto; border-right: none; }
+    .input-title { font-family: 'Bebas Neue'; font-size: 38px; color: #fff; letter-spacing: 1px; margin-bottom: 4px; }
+    .input-sub { color:#cccccc;  font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dimmer); letter-spacing: 2px; margin-bottom: 20px; }
+    textarea { background: #080808; border: 1px solid var(--border); color: #999; font-family: 'DM Mono', monospace; font-size: 12px; line-height: 1.8; padding: 18px; width: 100%; min-height: 280px; resize: vertical; outline: none; transition: border-color 0.2s; }
+    textarea:focus { border-color: #aaaaaa; }
+    textarea::placeholder { color: #cccccc; }
+    .decode-btn { background: var(--orange); color: #fff; border: none; padding: 12px 28px; font-family: 'Bebas Neue'; font-size: 20px; letter-spacing: 2px; cursor: pointer; transition: opacity 0.2s; }
+    .decode-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .clear-btn { background: none; border: none; color: #aaaaaa; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; margin-left: 12px; transition: color 0.2s; }
+    .clear-btn:hover { color: #bbbbbb; }
+    .err { margin-top: 12px; color: #ff4444; font-family: 'DM Mono', monospace; font-size: 11px; }
+    .load-steps { margin-top: 28px; }
+    .ls { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; transition: opacity 0.5s; }
+    .ld { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; transition: background 0.4s; }
+    .lt { font-family: 'DM Mono', monospace; font-size: 11px; }
+    .howto { margin-top: 32px; border-top: 1px solid #0f0f0f; padding-top: 24px; }
+    .hw { display: flex; gap: 14px; margin-bottom: 14px; }
+    .hw-l { font-family: 'Bebas Neue'; font-size: 13px; color: var(--orange); letter-spacing: 1px; min-width: 52px; padding-top: 1px; }
+    .hw-d { color:#e0e0e0; font-size: 12px; color: var(--dimmer); line-height: 1.6; font-weight: 300; }
+
+    .res-side { overflow-y: auto; max-height: calc(100vh - 56px); }
+    .res-banner { padding: 18px 24px; border-bottom: 1px solid #0f0f0f; background: #080808; display: flex; justify-content: space-between; align-items: center; }
+    .res-co { font-family: 'Bebas Neue'; font-size: 26px; color: #fff; letter-spacing: 1px; }
+    .res-ticker { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--orange); margin-left: 10px; }
+    .res-tags { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
+    .res-tag { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--dimmer); border: 1px solid var(--border); padding: 2px 8px; letter-spacing: 1px; }
+    .badge { padding: 3px 12px; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 2px; }
+    .b-high { background: #0d2010; border: 1px solid #00c853; color: #00e676; }
+    .b-medium { background: #1a1400; border: 1px solid #cc8800; color: #ffaa00; }
+    .b-low { background: #1a0808; border: 1px solid #cc3333; color: #ff5555; }
+
+    .tabs { border-bottom: 1px solid #0f0f0f; display: flex; background: var(--bg); overflow-x: auto; }
+    .tab-btn { background: none; border: none; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 13px 20px; color: var(--dimmer); border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+    .tab-btn.on { color: var(--orange); border-bottom-color: var(--orange); }
+    .tab-btn:hover:not(.on) { color: #bbbbbb; }
+
+    .tc { padding: 20px 24px; }
+    .rc { background: #0a0a0a; border: 1px solid var(--border); padding: 20px 22px; margin-bottom: 10px; animation: fadeUp 0.3s ease; transition: border-color 0.2s; }
+    .rc:hover { border-color: #888888; }
+    .rl { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--dimmer); display: block; margin-bottom: 8px; }
+    .rv { font-size: 13px; color: #cccccc; line-height: 1.75; font-weight: 300; }
+    .rg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .rg-v { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--orange); }
+    .t-rank { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--orange); letter-spacing: 3px; }
+    .t-name { font-family: 'Bebas Neue'; font-size: 22px; color: #fff; margin-top: 2px; letter-spacing: 1px; }
+    .t-title { font-family: 'DM Mono', monospace; font-size: 11px; color: #cccccc; margin-top: 2px; }
+    .li-row { display: flex; gap: 8px; margin-top: 12px; }
+    .li-box { flex: 1; background: #080808; border: 1px solid var(--border); padding: 9px 12px; font-family: 'DM Mono', monospace; font-size: 11px; color: #cccccc; }
+    .cpbtn { background: transparent; border: 1px solid #222; color: #cccccc; padding: 6px 16px; font-size: 10px; letter-spacing: 2px; cursor: pointer; font-family: 'DM Mono', monospace; transition: all 0.2s; white-space: nowrap; }
+    .cpbtn:hover { border-color: var(--orange); color: var(--orange); }
+    .cpbtn.ok { background: var(--orange); border-color: var(--orange); color: #fff; }
+    .subj-box { background: #080808; border: 1px solid var(--border); padding: 10px 14px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--orange); }
+    .fee-big { font-family: 'Bebas Neue'; font-size: 48px; color: var(--orange); letter-spacing: -1px; line-height: 1; }
+    .fee-note { font-family: 'DM Mono', monospace; font-size: 9px; color: #aaaaaa; margin-top: 8px; letter-spacing: 2px; }
+    .pitch-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+
+    @media (max-width: 800px) {
+      .steps { grid-template-columns: 1fr 1fr; }
+      .problem-grid, .founder-grid, .plans { flex-direction: column; display: block; }
+      .plans .plan { margin-bottom: 2px; }
+      .stats-inner { grid-template-columns: 1fr 1fr; }
+      .tool-wrap { grid-template-columns: 1fr; }
+      .res-side { max-height: none; }
+    }
+/* ── ACCESS GATE ── */
+#hh-gate{position:fixed;inset:0;z-index:9999;background:#060606;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;}
+.hh-gate-box{width:100%;max-width:400px;padding:0 24px;text-align:center;}
+.hh-gate-logo{margin-bottom:32px;}
+.hh-gate-brand{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:3px;color:#fff;line-height:1;}
+.hh-gate-brand span{color:#ff4d00;}
+.hh-gate-by{font-size:11px;color:#cccccc;letter-spacing:.1em;text-transform:uppercase;margin-top:4px;}
+.hh-gate-title{font-size:15px;font-weight:500;color:#bbb;margin-bottom:6px;}
+.hh-gate-sub{font-size:12px;color:#999;margin-bottom:28px;line-height:1.6;}
+.hh-gate-wrap{position:relative;margin-bottom:12px;}
+.hh-gate-input{width:100%;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;padding:14px 46px 14px 16px;font-size:16px;color:#fff;outline:none;font-family:'DM Mono',monospace;letter-spacing:.15em;text-align:center;transition:border .15s;}
+.hh-gate-input:focus{border-color:#ff4d0050;}
+.hh-gate-input.shake{animation:hhshake .35s;}
+.hh-gate-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;color:#cccccc;background:none;border:none;padding:4px;line-height:0;}
+.hh-gate-eye:hover{color:#bbb;}
+.hh-gate-btn{width:100%;background:#ff4d00;color:#fff;border:none;border-radius:8px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:.12em;transition:all .15s;font-size:16px;}
+.hh-gate-btn:hover{background:#ff6520;}
+.hh-gate-btn:active{transform:scale(.98);}
+.hh-gate-err{font-size:12px;color:#ff4d00;margin-top:10px;height:16px;}
+.hh-gate-footer{font-size:11px;color:#777;margin-top:24px;}
+.hh-gate-footer a{color:#cccccc;text-decoration:none;}
+.hh-gate-footer a:hover{color:#ff4d00;}
+@keyframes hhshake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+#hh-main{display:none;}
+    ::selection { background: rgba(255,77,0,.3); color: #fff; }
+    ::-moz-selection { background: rgba(255,77,0,.3); color: #fff; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════ GATE ══ -->
+<div id="hh-gate">
+  <div class="hh-gate-box">
+    <div class="hh-gate-logo">
+      <div class="hh-gate-brand">HAPPY <span>HUNTING</span></div>
+      <div class="hh-gate-by">by The Staffing Specialist</div>
+    </div>
+    <div class="hh-gate-title">Enter your access code</div>
+    <div class="hh-gate-sub">Happy Hunting is available to clients and partners of The Staffing Specialist. Enter the code provided to you to get started.</div>
+    <div class="hh-gate-wrap">
+      <input class="hh-gate-input" id="hh-gate-input" type="text" placeholder="Enter access code" maxlength="30" autocomplete="off" spellcheck="false"/>
+    </div>
+    <button class="hh-gate-btn" id="hh-gate-btn">ACCESS HAPPY HUNTING →</button>
+    <div class="hh-gate-err" id="hh-gate-err"></div>
+    <div class="hh-gate-footer">Don't have a code? <a href="/cdn-cgi/l/email-protection#cca6a3a2ada48cb8a4a9bfb8adaaaaa5a2abbfbca9afa5ada0a5bfb8e2afa3a1">Contact Jonah</a></div>
+  </div>
+</div>
+
+<div id="hh-main" style="display:none;">
+
+<!-- ══════════════════════════ HOME ══ -->
+<div id="pg-home">
+
+  <nav>
+    <div class="brand">
+      <div class="brand-name">HAPPY <span>HUNTING</span></div>
+      <div class="brand-by">by The Staffing Specialist</div>
+    </div>
+    <div class="nav-links">
+      <a class="nav-link" href="#how">How It Works</a>
+      <a class="nav-link" href="#pricing">Pricing</a>
+      <a class="nav-link" href="https://www.thestaffingspecialist.com" target="_blank">The Staffing Specialist</a>
+      <button class="nav-cta" onclick="showTool()">TRY FREE →</button>
+    </div>
+  </nav>
+
+  <div class="ticker-wrap">
+    <div class="ticker-inner">
+      <span class="ticker-item">◆ AXOS BANK → LEAD ENTERPRISE ARCHITECT → $42K FEE IDENTIFIED</span>
+      <span class="ticker-item">◆ ROBERT HALF CLIENT → CFO SEARCH → $68K FEE IDENTIFIED</span>
+      <span class="ticker-item">◆ KFORCE END CLIENT → SENIOR DEVELOPER → $31K FEE IDENTIFIED</span>
+      <span class="ticker-item">◆ CYBERCODERS POSTING → FINTECH VP → $90K FEE IDENTIFIED</span>
+      <span class="ticker-item">◆ TEK SYSTEMS CLIENT → DATA ENGINEER → $28K FEE IDENTIFIED</span>
+      <span class="ticker-item">◆ INSIGHT GLOBAL → VP OF SALES → $55K FEE IDENTIFIED</span>
+      <span class="ticker-item">◆ AXOS BANK → LEAD ENTERPRISE ARCHITECT → $42K FEE IDENTIFIED</span>
+      <span class="ticker-item">◆ ROBERT HALF CLIENT → CFO SEARCH → $68K FEE IDENTIFIED</span>
+      <span class="ticker-item">◆ KFORCE END CLIENT → SENIOR DEVELOPER → $31K FEE IDENTIFIED</span>
+      <span class="ticker-item">◆ CYBERCODERS POSTING → FINTECH VP → $90K FEE IDENTIFIED</span>
+      <span class="ticker-item">◆ TEK SYSTEMS CLIENT → DATA ENGINEER → $28K FEE IDENTIFIED</span>
+      <span class="ticker-item">◆ INSIGHT GLOBAL → VP OF SALES → $55K FEE IDENTIFIED</span>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-eye fade1">◆ STAFFING INTELLIGENCE · HAPPYHUNTING.COM</div>
+    <h1 class="hero-h1 fade2">
+      KNOW WHO'S<br>
+      <em>PAYING FEES</em><br>
+      BEFORE YOU CALL.
+    </h1>
+    <p class="hero-p fade3">Paste any CyberCoders, Robert Half, or Kforce posting. Get the end client, the hiring manager's name, a personalized pitch, and the exact fee you stand to earn — in 10 seconds.</p>
+    <div class="hero-btns fade4">
+      <button class="btn-primary" onclick="showTool()">DECODE YOUR FIRST POSTING →</button>
+    </div>
+    <div class="hero-note fade4">No signup · No credit card · First 3 decodes free</div>
+  </div>
+
+  <div class="stats">
+    <div class="stats-inner">
+      <div><div class="stat-n">$42K</div><div class="stat-l">Avg fee per decoded posting</div></div>
+      <div><div class="stat-n">10s</div><div class="stat-l">Time to identify end client</div></div>
+      <div><div class="stat-n">3×</div><div class="stat-l">BD call connect rate lift</div></div>
+      <div><div class="stat-n">100%</div><div class="stat-l">Companies proven to pay fees</div></div>
+    </div>
+  </div>
+
+  <div class="section" id="how">
+    <div class="section-inner">
+      <div class="s-eye">HOW IT WORKS</div>
+      <h2 class="s-h2">FOUR STEPS.<br>ONE PLACEMENT.</h2>
+      <div class="steps">
+        <div class="step"><div class="step-n">01</div><div class="step-t">PASTE</div><div class="step-d">Drop in any staffing firm job posting — full text, no formatting needed.</div></div>
+        <div class="step"><div class="step-n">02</div><div class="step-t">DECODE</div><div class="step-d">AI cross-references 40+ signals to fingerprint the exact end client.</div></div>
+        <div class="step"><div class="step-n">03</div><div class="step-t">TARGET</div><div class="step-d">Get ranked hiring managers with exact LinkedIn search strings.</div></div>
+        <div class="step"><div class="step-n">04</div><div class="step-t">PITCH</div><div class="step-d">Send the ready-made email or DM. Book the meeting. Close the fee.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="problem">
+    <div class="problem-grid">
+      <div>
+        <div class="s-eye">THE PROBLEM</div>
+        <h2 class="s-h2" style="font-size:52px;margin-bottom:22px;">YOU'RE COLD<br>CALLING BLIND.</h2>
+        <p class="problem-p">Every staffing firm posting is a company that has already proven they'll write a check to a recruiter. They're just hiding behind the agency.</p>
+        <p class="problem-p">Happy Hunting decodes the posting and hands you the company name, the hiring manager, and the pitch — before you pick up the phone.</p>
+      </div>
+      <div>
+        <div class="cmp cmp-bad">
+          <div class="cmp-label" style="color:#999;">❌ Without Happy Hunting</div>
+          <div class="cmp-text">Cold call random companies hoping they're hiring. 1–2% connect rate. Months of wasted dials.</div>
+        </div>
+        <div class="cmp cmp-good">
+          <div class="cmp-label" style="color:#4ade80;">✅ With Happy Hunting</div>
+          <div class="cmp-text">Call companies actively paying staffing fees today. Reach the hiring manager by name. Close faster.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pricing" id="pricing">
+    <div class="pricing-inner">
+      <div class="s-eye">PRICING</div>
+      <h2 class="s-h2" style="margin-bottom:12px;">ONE PLACEMENT PAYS FOR <em>10 YEARS.</em></h2>
+      <p class="pricing-sub">Simple pricing. No contracts. Cancel anytime.</p>
+      <div class="plans">
+        <div class="plan">
+          <div class="plan-name">STARTER</div>
+          <div><span class="plan-price">$149</span><span class="plan-mo">/mo</span></div>
+          <div class="plan-line"></div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>50 decodes/month</div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>End client identification</div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>Hiring manager intel</div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>Outreach pitches</div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>Email support</div>
+          <button class="plan-btn" onclick="showTool()">GET STARTED</button>
+        </div>
+        <div class="plan plan-hot">
+          <div class="plan-name">PRO — MOST POPULAR</div>
+          <div><span class="plan-price">$299</span><span class="plan-mo">/mo</span></div>
+          <div class="plan-line"></div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>Unlimited decodes</div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>Everything in Starter</div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>Saved decode history</div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>CRM lead tracker</div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>CSV export</div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>Priority support</div>
+          <button class="plan-btn" onclick="showTool()">GET STARTED</button>
+        </div>
+        <div class="plan">
+          <div class="plan-name">TEAM</div>
+          <div><span class="plan-price">$599</span><span class="plan-mo">/mo</span></div>
+          <div class="plan-line"></div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>Everything in Pro</div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>5 team seats</div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>Daily email digest</div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>Team lead sharing</div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>Onboarding call</div>
+          <div class="plan-feat"><span class="plan-dot">◆</span>Dedicated support</div>
+          <button class="plan-btn" onclick="showTool()">GET STARTED</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="founder">
+    <div class="founder-grid">
+      <div>
+        <div class="s-eye">THE FOUNDER</div>
+        <h2 class="s-h2" style="font-size:50px;margin-bottom:20px;">BUILT BY SOMEONE WHO DID THIS <em>MANUALLY.</em></h2>
+        <p class="founder-p">Jonah Adelman is the founder of Agency-Leads.com and The Staffing Specialist. He spent years manually cross-referencing staffing firm postings against direct company job boards to identify companies actively paying placement fees.</p>
+        <p class="founder-p">Happy Hunting automates what he did by hand — in seconds, not hours.</p>
+        <button class="btn-primary" style="margin-top:24px;font-size:18px;padding:14px 36px;" onclick="showTool()">TRY IT FREE →</button>
+      </div>
+      <div class="quote-box">
+        <div class="quote-mark">"</div>
+        <p class="quote-text">Every staffing firm posting is a company that's already proven they'll write a check to a recruiter. You just have to know who they are.</p>
+        <div class="quote-rule">
+          <div class="quote-name">JONAH ADELMAN</div>
+          <div class="quote-title">FOUNDER · THE STAFFING SPECIALIST · BOSTON, MA</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bcta">
+    <h2>HAPPY HUNTING.</h2>
+    <p>Decode your first posting free. No card required.</p>
+    <button class="bcta-btn" onclick="showTool()">START DECODING NOW →</button>
+  </div>
+
+  <footer>
+    <div>
+      <span class="footer-brand">HAPPY HUNTING</span>
+      <span class="footer-by">by The Staffing Specialist</span>
+    </div>
+    <span class="footer-copy">© 2025 · HAPPYHUNTING.COM · BOSTON, MA · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d19b9e9f9099918599948285909797989f968281949298909d988285ff929e9c">[email&#160;protected]</a></span>
+  </footer>
+
+</div><!-- end pg-home -->
+
+
+<!-- ══════════════════════════ TOOL ══ -->
+<div id="pg-tool" style="display:none;">
+
+  <div class="tool-nav">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <button class="back-btn" onclick="showHome()">← BACK</button>
+      <div class="vr"></div>
+      <div class="brand-name tool-brand-name">HAPPY <span>HUNTING</span></div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:#aaaaaa;letter-spacing:2px;">DECODER</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <button id="mode-job" onclick="setMode('job')" style="background:#ff4d00;color:#fff;border:none;padding:6px 14px;font-family:'Bebas Neue';font-size:14px;letter-spacing:1px;cursor:pointer;border-radius:3px;">JOB POSTING</button>
+      <button id="mode-url" onclick="setMode('url')" style="background:#111;color:#aaa;border:1px solid #222;padding:6px 14px;font-family:'Bebas Neue';font-size:14px;letter-spacing:1px;cursor:pointer;border-radius:3px;">URL DECODE</button>
+      <button id="mode-profile" onclick="setMode('profile')" style="background:#111;color:#aaa;border:1px solid #222;padding:6px 14px;font-family:'Bebas Neue';font-size:14px;letter-spacing:1px;cursor:pointer;border-radius:3px;">LINKEDIN PROFILE</button>
+      <div class="live-ind" style="margin-left:8px;"><div class="live-dot"></div><span class="live-lbl">LIVE AI</span></div>
+    </div>
+  </div>
+
+  <div class="tool-wrap solo" id="tool-wrap">
+    <div class="input-side" id="input-side">
+
+      <!-- MODE: JOB POSTING -->
+      <div id="mode-job-panel">
+        <div id="input-hdr">
+          <div class="input-title">DECODE A POSTING</div>
+          <div class="input-sub">PASTE ANY STAFFING FIRM JOB POSTING BELOW</div>
+        </div>
+        <textarea id="job-input" placeholder="Paste the full job posting here...&#10;&#10;Works with: CyberCoders · Robert Half · Kforce · Insight Global · TEK Systems · Randstad · Any staffing firm"></textarea>
+        <div style="margin-top:14px;display:flex;align-items:center;">
+          <button class="decode-btn" id="decode-btn" onclick="runDecode()" disabled>DECODE →</button>
+          <button class="clear-btn" id="clear-btn" onclick="clearTool()" style="display:none;">CLEAR</button>
+        </div>
+      </div>
+
+      <!-- MODE: URL -->
+      <div id="mode-url-panel" style="display:none;">
+        <div>
+          <div class="input-title">DECODE FROM URL</div>
+          <div class="input-sub">PASTE A JOB POSTING URL — AI FETCHES AND DECODES IT</div>
+        </div>
+        <input id="url-input" type="url" placeholder="https://www.cybercoders.com/job/..." style="width:100%;background:#080808;border:1px solid #222;color:#e8e8e8;font-family:'DM Mono',monospace;font-size:13px;padding:14px;margin-top:14px;outline:none;" oninput="document.getElementById('url-decode-btn').disabled=!this.value.trim()"/>
+        <div style="font-size:11px;color:#666;margin-top:6px;">Works on most job boards · Some sites block fetching (LinkedIn, Indeed) — paste text instead</div>
+        <div style="margin-top:14px;">
+          <button class="decode-btn" id="url-decode-btn" onclick="runUrlDecode()" disabled>FETCH &amp; DECODE →</button>
+        </div>
+        <div class="howto" style="margin-top:20px;">
+          <div class="hw"><span class="hw-l">PASTE URL</span><span class="hw-d">Any staffing firm job posting URL from CyberCoders, Kforce, Robert Half, etc.</span></div>
+          <div class="hw"><span class="hw-l">AI FETCHES</span><span class="hw-d">We pull the full posting text automatically</span></div>
+          <div class="hw"><span class="hw-l">DECODE</span><span class="hw-d">Same full decode — client, managers, pitch, fees</span></div>
+        </div>
+      </div>
+
+      <!-- MODE: LINKEDIN PROFILE -->
+      <div id="mode-profile-panel" style="display:none;">
+        <div>
+          <div class="input-title">DECODE A PROFILE</div>
+          <div class="input-sub">PASTE ANY LINKEDIN PROFILE TEXT BELOW</div>
+        </div>
+        <div style="font-size:11px;color:#888;margin-top:8px;margin-bottom:10px;line-height:1.6;">
+          On LinkedIn: open a profile → Ctrl+A → Ctrl+C → paste here. Works on any profile.
+        </div>
+        <textarea id="profile-input" placeholder="Paste the full LinkedIn profile text here...&#10;&#10;Include: name, headline, current role, past roles, education, skills — the more the better" style="min-height:260px;"></textarea>
+        <div style="margin-top:14px;display:flex;align-items:center;">
+          <button class="decode-btn" id="profile-decode-btn" onclick="runProfileDecode()" disabled>ANALYZE PROFILE →</button>
+          <button class="clear-btn" id="profile-clear-btn" onclick="clearProfile()" style="display:none;">CLEAR</button>
+        </div>
+        <div class="howto" style="margin-top:20px;">
+          <div class="hw"><span class="hw-l">OPEN TO MOVE?</span><span class="hw-d">AI reads signals that indicate if they are likely to take a call</span></div>
+          <div class="hw"><span class="hw-l">FEE OPPORTUNITY</span><span class="hw-d">Is their current company a client payer? What would they be worth?</span></div>
+          <div class="hw"><span class="hw-l">BEST PITCH</span><span class="hw-d">Personalized DM and email opening line written instantly</span></div>
+          <div class="hw"><span class="hw-l">MOVE TRIGGERS</span><span class="hw-d">What roles, companies, or situations would make them leave</span></div>
+        </div>
+      </div>
+
+      <div class="err" id="err" style="display:none;margin-top:12px;"></div>
+
+      <div class="load-steps" id="load-steps" style="display:none;margin-top:16px;">
+        <div class="ls" id="s0"><div class="ld" style="background:#1a1a1a;"></div><span class="lt" style="color:#aaaaaa;">Scanning fingerprints...</span></div>
+        <div class="ls" id="s1"><div class="ld" style="background:#1a1a1a;"></div><span class="lt" style="color:#aaaaaa;">Cross-referencing signals...</span></div>
+        <div class="ls" id="s2"><div class="ld" style="background:#1a1a1a;"></div><span class="lt" style="color:#aaaaaa;">Identifying decision makers...</span></div>
+        <div class="ls" id="s3"><div class="ld" style="background:#1a1a1a;"></div><span class="lt" style="color:#aaaaaa;">Calculating opportunity...</span></div>
+        <div class="ls" id="s4"><div class="ld" style="background:#1a1a1a;"></div><span class="lt" style="color:#aaaaaa;">Writing your pitch...</span></div>
+      </div>
+
+    </div>
+
+    <div class="res-side" id="res-side" style="display:none;">
+      <div class="res-banner">
+        <div>
+          <div><span class="res-co" id="r-co"></span><span class="res-ticker" id="r-ticker"></span></div>
+          <div class="res-tags" id="r-tags"></div>
+        </div>
+        <div id="r-badge"></div>
+      </div>
+      <div class="tabs" id="result-tabs">
+        <button class="tab-btn on" onclick="switchTab('client',this)">End Client</button>
+        <button class="tab-btn" onclick="switchTab('managers',this)">Hiring Managers</button>
+        <button class="tab-btn" onclick="switchTab('pitch',this)">Outreach</button>
+        <button class="tab-btn" onclick="switchTab('fees',this)">Fee Intel</button>
+      </div>
+      <div class="tabs" id="profile-tabs" style="display:none;">
+        <button class="tab-btn on" onclick="switchProfileTab('overview',this)">Overview</button>
+        <button class="tab-btn" onclick="switchProfileTab('pitch',this)">Pitch</button>
+        <button class="tab-btn" onclick="switchProfileTab('triggers',this)">Move Triggers</button>
+        <button class="tab-btn" onclick="switchProfileTab('fee',this)">Fee Opportunity</button>
+      </div>
+      <div class="tc">
+        <div id="t-client"></div>
+        <div id="t-managers" style="display:none;"></div>
+        <div id="t-pitch" style="display:none;"></div>
+        <div id="t-fees" style="display:none;"></div>
+        <div id="t-p-overview" style="display:none;"></div>
+        <div id="t-p-pitch" style="display:none;"></div>
+        <div id="t-p-triggers" style="display:none;"></div>
+        <div id="t-p-fee" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end pg-tool -->
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+const PROMPT = `Staffing intelligence expert. Decode this job posting in one pass. Return ONLY compact JSON, no markdown:
+{"confidence":"High","end_client":{"company_name":"Name","reasoning":"1-2 sentences max","company_type":"type","headquarters":"City, ST","publicly_traded":false,"ticker":null,"size_estimate":"range","why_using_staffing":"one sentence"},"hiring_managers":[{"rank":1,"name":null,"title":"title","why_them":"one sentence","linkedin_search":"search string","confidence":"High"},{"rank":2,"name":null,"title":"title","why_them":"one sentence","linkedin_search":"search string","confidence":"Medium"}],"outreach_pitches":{"primary":{"subject":"under 8 words","opening":"one sentence","value_prop":"one sentence","cta":"one sentence"},"linkedin_dm":"2 sentences"},"fee_intel":{"estimated_placement_fee":"$XX,000-$XX,000","role_urgency":"High","urgency_reason":"one sentence","competing_firms":"firms"}}`;
+
+// ── MODE SWITCHING ─────────────────────────────────────────────────────────
+let currentMode = 'job';
+function setMode(mode) {
+  currentMode = mode;
+  ['job','url','profile'].forEach(m => {
+    const panel = document.getElementById('mode-'+m+'-panel');
+    const btn = document.getElementById('mode-'+m);
+    if(panel) panel.style.display = m===mode ? 'block' : 'none';
+    if(btn) {
+      btn.style.background = m===mode ? '#ff4d00' : '#111';
+      btn.style.color = m===mode ? '#fff' : '#aaa';
+      btn.style.border = m===mode ? 'none' : '1px solid #222';
+    }
+  });
+  document.getElementById('res-side').style.display = 'none';
+  document.getElementById('err').style.display = 'none';
+  document.getElementById('load-steps').style.display = 'none';
+  const w = document.getElementById('tool-wrap');
+  w.className = 'tool-wrap solo';
+}
+
+// ── URL DECODE ──────────────────────────────────────────────────────────────
+const CORS_PROXIES = [
+  'https://api.allorigins.win/get?url=',
+  'https://corsproxy.io/?',
+];
+
+async function fetchJobUrl(url) {
+  for(const proxy of CORS_PROXIES) {
+    try {
+      const r = await fetch(proxy + encodeURIComponent(url), {signal: AbortSignal.timeout(10000)});
+      if(!r.ok) continue;
+      const data = await r.json().catch(() => null);
+      const html = data ? (data.contents || '') : await r.text();
+      // Strip HTML tags and extract text
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      // Remove scripts/styles
+      tmp.querySelectorAll('script,style,nav,header,footer').forEach(e=>e.remove());
+      const text = tmp.innerText || tmp.textContent || '';
+      if(text.length > 200) return text.slice(0, 5000);
+    } catch(e) { continue; }
+  }
+  throw new Error('Could not fetch that URL. Try pasting the job text directly instead.');
+}
+
+async function runUrlDecode() {
+  const url = document.getElementById('url-input').value.trim();
+  if(!url) return;
+  const btn = document.getElementById('url-decode-btn');
+  btn.disabled = true; btn.textContent = 'FETCHING...';
+  document.getElementById('err').style.display = 'none';
+  document.getElementById("load-steps").style.display="flex";document.getElementById("load-steps").innerHTML="<div style='color:#ff4d00;font-size:13px;font-weight:700;letter-spacing:.05em;'>DECODING — RESULTS IN SECONDS...</div>";
+  try {
+    const text = await fetchJobUrl(url);
+    btn.textContent = 'DECODING...';
+    const res = await callAnthropicDecode(text);
+    renderResults(res);
+  } catch(e) {
+    const errEl = document.getElementById('err');
+    errEl.textContent = e.message || 'Fetch failed — paste the job text directly.';
+    errEl.style.display = 'block';
+  } finally {
+    stopSteps(); btn.disabled = false; btn.textContent = 'FETCH & DECODE →';
+  }
+}
+
+// ── PROFILE DECODE ──────────────────────────────────────────────────────────
+const PROFILE_PROMPT = `You are an expert headhunter and talent intelligence analyst. Analyze this LinkedIn profile and return ONLY valid JSON (no markdown):
+{"candidate":{"name":"","current_title":"","current_company":"","location":"","years_experience":0,"career_summary":"2-3 sentences"},"open_to_move":{"score":0,"score_label":"Hot / Warm / Cold","signals":["signal1","signal2","signal3"],"best_time_to_reach":"e.g. Now — just promoted / Watch — happy but listening"},"move_triggers":["trigger1","trigger2","trigger3"],"target_roles":["role1","role2"],"target_companies":["company type or name"],"pitch":{"email_subject":"Under 8 words","email_opening":"1 personalized sentence referencing their background","linkedin_dm":"2 casual sentences — reference something specific from their profile","talk_track":"3 bullet points for a phone call"},"fee_opportunity":{"estimated_salary":"e.g. $180K-$220K","estimated_fee":"e.g. $36K-$44K at 20%","current_company_pays_fees":"Yes / No / Unknown","reasoning":"Why they would or would not pay fees"}}`;
+
+async function runProfileDecode() {
+  const txt = document.getElementById('profile-input').value.trim();
+  if(!txt) return;
+  const btn = document.getElementById('profile-decode-btn');
+  btn.disabled = true; btn.textContent = 'ANALYZING...';
+  document.getElementById('err').style.display = 'none';
+  document.getElementById("load-steps").style.display="flex";document.getElementById("load-steps").innerHTML="<div style='color:#ff4d00;font-size:13px;font-weight:700;letter-spacing:.05em;'>DECODING — RESULTS IN SECONDS...</div>";
+  try {
+    const apiKey = getApiKey();
+    if(!apiKey) throw new Error('Add your Anthropic API key to use this feature.');
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:700,system:PROFILE_PROMPT,messages:[{role:'user',content:txt.slice(0,2000)}]})
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message);
+    const raw = (data.content||[]).map(b=>b.text||'').join('');
+    const result = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderProfileResults(result);
+  } catch(e) {
+    const errEl = document.getElementById('err');
+    errEl.textContent = 'Analysis failed: ' + e.message;
+    errEl.style.display = 'block';
+  } finally {
+    stopSteps(); btn.disabled = false; btn.textContent = 'ANALYZE PROFILE →';
+  }
+}
+
+function clearProfile() {
+  document.getElementById('profile-input').value = '';
+  document.getElementById('profile-decode-btn').disabled = true;
+  document.getElementById('profile-clear-btn').style.display = 'none';
+  document.getElementById('res-side').style.display = 'none';
+  const w = document.getElementById('tool-wrap');
+  w.className = 'tool-wrap solo';
+}
+
+function renderProfileResults(r) {
+  const w = document.getElementById('tool-wrap');
+  w.className = 'tool-wrap';
+  w.style.gridTemplateColumns = '400px 1fr';
+  const is = document.getElementById('input-side');
+  is.style.maxWidth='none'; is.style.margin='0'; is.style.borderRight='1px solid #0f0f0f';
+
+  document.getElementById('r-co').textContent = r.candidate.name || 'Profile Decoded';
+  document.getElementById('r-ticker').textContent = '';
+  document.getElementById('r-tags').innerHTML = [r.candidate.current_title, r.candidate.current_company, r.candidate.location].filter(Boolean).map(t=>`<span class="res-tag">${t}</span>`).join('');
+  document.getElementById('r-badge').innerHTML = mkBadge(r.open_to_move.score_label || 'Medium');
+
+  const scoreColor = {'Hot':'#ff4d00','Warm':'#f59e0b','Cold':'#666'}[r.open_to_move.score_label] || '#aaa';
+
+  document.getElementById('t-p-overview').innerHTML = `
+    <div class="rc" style="text-align:center;padding:28px 22px;">
+      <span class="rl">Open to Move Score</span>
+      <div style="font-size:72px;font-weight:900;color:${scoreColor};font-family:'Bebas Neue';letter-spacing:2px;">${r.open_to_move.score}/10</div>
+      <div style="font-size:18px;color:${scoreColor};font-family:'Bebas Neue';letter-spacing:2px;">${r.open_to_move.score_label}</div>
+      <div style="font-size:13px;color:#aaa;margin-top:8px;">${r.open_to_move.best_time_to_reach}</div>
+    </div>
+    <div class="rc"><span class="rl">Move Signals</span>
+      ${(r.open_to_move.signals||[]).map(s=>`<div style="padding:7px 0;border-bottom:1px solid #111;color:#cccccc;font-size:13px;">→ ${s}</div>`).join('')}
+    </div>
+    <div class="rc"><span class="rl">Career Summary</span><p class="rv">${r.candidate.career_summary}</p></div>`;
+
+  document.getElementById('t-p-pitch').innerHTML = `
+    <div class="rc">
+      <div class="pitch-hd"><span class="rl" style="margin:0;">📧 EMAIL PITCH</span><button class="cpbtn" onclick="cp('Subject: ${esc(r.pitch.email_subject)}\n\n${esc(r.pitch.email_opening)}',this)">COPY</button></div>
+      <div style="margin-bottom:12px;"><span class="rl">Subject</span><div class="subj-box">${r.pitch.email_subject}</div></div>
+      <div><span class="rl">Opening Line</span><p class="rv">${r.pitch.email_opening}</p></div>
+    </div>
+    <div class="rc">
+      <div class="pitch-hd"><span class="rl" style="margin:0;">💼 LINKEDIN DM</span><button class="cpbtn" onclick="cp('${esc(r.pitch.linkedin_dm)}',this)">COPY</button></div>
+      <p class="rv">${r.pitch.linkedin_dm}</p>
+    </div>
+    <div class="rc"><span class="rl">📞 Call Talk Track</span>
+      ${(r.pitch.talk_track||[]).map(t=>`<div style="padding:8px 0;border-bottom:1px solid #111;color:#cccccc;font-size:13px;">• ${t}</div>`).join('')}
+    </div>`;
+
+  document.getElementById('t-p-triggers').innerHTML = `
+    <div class="rc"><span class="rl">What Would Make Them Move</span>
+      ${(r.move_triggers||[]).map(t=>`<div style="padding:8px 0;border-bottom:1px solid #111;color:#cccccc;font-size:13px;">→ ${t}</div>`).join('')}
+    </div>
+    <div class="rc"><span class="rl">Target Role Types</span>
+      ${(r.target_roles||[]).map(t=>`<span class="res-tag" style="margin:3px;display:inline-block;">${t}</span>`).join('')}
+    </div>
+    <div class="rc"><span class="rl">Target Company Types</span>
+      ${(r.target_companies||[]).map(t=>`<span class="res-tag" style="margin:3px;display:inline-block;">${t}</span>`).join('')}
+    </div>`;
+
+  document.getElementById('t-p-fee').innerHTML = `
+    <div class="rc" style="text-align:center;padding:36px 22px;">
+      <span class="rl">Estimated Placement Fee</span>
+      <div class="fee-big">${r.fee_opportunity.estimated_fee}</div>
+      <div class="fee-note">IF YOU PLACE THIS PERSON</div>
+    </div>
+    <div class="rc">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+        <span class="rl" style="margin:0;">Current Company Pays Fees?</span>
+        <span style="color:${r.fee_opportunity.current_company_pays_fees==='Yes'?'#ff4d00':r.fee_opportunity.current_company_pays_fees==='No'?'#666':'#aaa'};font-family:'Bebas Neue';font-size:16px;letter-spacing:1px;">${r.fee_opportunity.current_company_pays_fees}</span>
+      </div>
+      <p class="rv">${r.fee_opportunity.reasoning}</p>
+    </div>
+    <div class="rc"><span class="rl">Estimated Salary Range</span><p class="rv" style="font-size:18px;color:#e8e8e8;">${r.fee_opportunity.estimated_salary}</p></div>`;
+
+  // Show profile tabs, hide job tabs
+  document.getElementById('result-tabs').style.display = 'none';
+  document.getElementById('profile-tabs').style.display = 'flex';
+  document.querySelectorAll('#profile-tabs .tab-btn').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('#profile-tabs .tab-btn')[0].classList.add('on');
+  ['t-client','t-managers','t-pitch','t-fees'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+  ['t-p-overview','t-p-pitch','t-p-triggers','t-p-fee'].forEach((id,i)=>{const e=document.getElementById(id);if(e)e.style.display=i===0?'block':'none';});
+  document.getElementById('res-side').style.display = 'block';
+}
+
+function switchProfileTab(name, btn) {
+  document.querySelectorAll('#profile-tabs .tab-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  ['overview','pitch','triggers','fee'].forEach(t=>{const e=document.getElementById('t-p-'+t);if(e)e.style.display=t===name?'block':'none';});
+}
+
+// ── API KEY HELPER ──────────────────────────────────────────────────────────
+function getApiKey() {
+  return localStorage.getItem('hh_api_key') || '';
+}
+
+// ── ORIGINAL DECODE WITH API KEY SUPPORT ────────────────────────────────────
+async function callAnthropicDecode(txt) {
+  const apiKey = getApiKey();
+  if(!apiKey) throw new Error('Add your Anthropic API key to use AI features.');
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:600,system:PROMPT,messages:[{role:'user',content:txt.slice(0,3000)}]})
+  });
+  const data = await res.json();
+  if(data.error) throw new Error(data.error.message);
+  const raw = (data.content||[]).map(b=>b.text||'').join('');
+  return JSON.parse(raw.replace(/```json|```/g,'').trim());
+}
+
+// Profile textarea listener
+document.addEventListener('DOMContentLoaded', function() {
+  const pi = document.getElementById('profile-input');
+  if(pi) pi.addEventListener('input', function() {
+    const has = this.value.trim().length > 0;
+    document.getElementById('profile-decode-btn').disabled = !has;
+    document.getElementById('profile-clear-btn').style.display = has ? 'inline-block' : 'none';
+  });
+});
+
+function showTool() {
+  if(sessionStorage.getItem('hh_v1')!=='1'){
+    window._pendingTool = true;
+    document.getElementById('hh-gate').style.display='flex';
+    document.getElementById('hh-main').style.display='none';
+    setTimeout(()=>{ const i=document.getElementById('hh-gate-input'); if(i)i.focus(); },100);
+    return;
+  }
+  document.getElementById('hh-gate').style.display='none';
+  document.getElementById('hh-main').style.display='block';
+  document.getElementById('pg-home').style.display='none';
+  document.getElementById('pg-tool').style.display='block';
+  window.scrollTo(0,0);
+}
+function showHome() { document.getElementById('pg-home').style.display='block'; document.getElementById('pg-tool').style.display='none'; window.scrollTo(0,0); }
+
+document.getElementById('job-input').addEventListener('input', function() {
+  const has = this.value.trim().length > 0;
+  document.getElementById('decode-btn').disabled = !has;
+  document.getElementById('clear-btn').style.display = has ? 'inline-block' : 'none';
+});
+
+function clearTool() {
+  document.getElementById('job-input').value = '';
+  document.getElementById('decode-btn').disabled = true;
+  document.getElementById('clear-btn').style.display = 'none';
+  document.getElementById('res-side').style.display = 'none';
+  document.getElementById('howto').style.display = 'block';
+  document.getElementById('input-hdr').style.display = 'block';
+  const w = document.getElementById('tool-wrap');
+  w.className = 'tool-wrap solo';
+  const is = document.getElementById('input-side');
+  is.style.maxWidth = '560px'; is.style.margin = '0 auto'; is.style.borderRight = 'none';
+}
+
+let stepIv = null;
+function startSteps() {
+  document.getElementById('load-steps').style.display = 'block';
+  document.getElementById('howto').style.display = 'none';
+  let s = 0; setStep(0);
+  stepIv = setInterval(() => { s = Math.min(s+1,4); setStep(s); }, 800);
+}
+function setStep(i) {
+  for (let j=0;j<=4;j++) {
+    const el = document.getElementById('s'+j);
+    const d = el.querySelector('.ld'), t = el.querySelector('.lt');
+    if (j<i) { d.style.background='#ff4d00'; t.style.color='#444'; el.style.opacity='1'; }
+    else if (j===i) { d.style.background='#ff8c00'; t.style.color='#555'; el.style.opacity='1'; }
+    else { d.style.background='#1a1a1a'; t.style.color='#1a1a1a'; el.style.opacity='0.15'; }
+  }
+}
+function stopSteps() { if(stepIv) clearInterval(stepIv); document.getElementById('load-steps').style.display='none'; }
+
+async function runDecode() {
+  const txt = document.getElementById('job-input').value.trim();
+  if (!txt) return;
+  const btn = document.getElementById('decode-btn');
+  btn.disabled = true; btn.textContent = 'DECODING...';
+  document.getElementById('err').style.display = 'none';
+  document.getElementById('res-side').style.display = 'none';
+  document.getElementById("load-steps").style.display="flex";document.getElementById("load-steps").innerHTML="<div style='color:#ff4d00;font-size:13px;font-weight:700;letter-spacing:.05em;'>DECODING — RESULTS IN SECONDS...</div>";
+  try {
+    const result = await callAnthropicDecode(txt);
+    renderResults(result);
+  } catch(e) {
+    const errEl = document.getElementById('err');
+    errEl.textContent = 'Analysis failed: ' + (e.message||'Please try again.');
+    errEl.style.display = 'block';
+  } finally {
+    stopSteps(); btn.disabled = false; btn.textContent = 'DECODE →';
+  }
+}
+
+function renderResults(r) {
+  const w = document.getElementById('tool-wrap');
+  w.className = 'tool-wrap';
+  w.style.gridTemplateColumns = '400px 1fr';
+  const is = document.getElementById('input-side');
+  is.style.maxWidth='none'; is.style.margin='0'; is.style.borderRight='1px solid #0f0f0f';
+
+  document.getElementById('r-co').textContent = r.end_client.company_name;
+  document.getElementById('r-ticker').textContent = r.end_client.publicly_traded && r.end_client.ticker ? r.end_client.ticker : '';
+  document.getElementById('r-tags').innerHTML = [r.end_client.company_type, r.end_client.headquarters, r.end_client.size_estimate].map(t=>`<span class="res-tag">${t}</span>`).join('');
+  document.getElementById('r-badge').innerHTML = mkBadge(r.confidence);
+
+  document.getElementById('t-client').innerHTML = `
+    <div class="rc"><span class="rl">How We ID'd Them</span><p class="rv">${r.end_client.reasoning}</p></div>
+    <div class="rc"><span class="rl">Why They Use Staffing</span><p class="rv">${r.end_client.why_using_staffing}</p></div>
+    <div class="rc"><div class="rg2">
+      <div><span class="rl">Type</span><span class="rg-v">${r.end_client.company_type}</span></div>
+      <div><span class="rl">HQ</span><span class="rg-v">${r.end_client.headquarters}</span></div>
+      <div><span class="rl">Size</span><span class="rg-v">${r.end_client.size_estimate}</span></div>
+      <div><span class="rl">Market</span><span class="rg-v">${r.end_client.publicly_traded ? (r.end_client.ticker||'Public') : 'Private'}</span></div>
+    </div></div>`;
+
+  document.getElementById('t-managers').innerHTML = r.hiring_managers.map((m,i)=>`
+    <div class="rc">
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+        <div>
+          <div class="t-rank">TARGET #${m.rank}</div>
+          <div class="t-name">${m.name||'Find via LinkedIn'}</div>
+          <div class="t-title">${m.title}</div>
+        </div>${mkBadge(m.confidence)}
+      </div>
+      <div style="margin-bottom:12px;"><span class="rl">Why This Person</span><p class="rv">${m.why_them}</p></div>
+      <div class="li-row">
+        <div class="li-box">🔍 ${m.linkedin_search}</div>
+        <button class="cpbtn" onclick="cp('${esc(m.linkedin_search)}',this)">COPY</button>
+      </div>
+    </div>`).join('');
+
+  const p = r.outreach_pitches.primary;
+  const full = `Subject: ${p.subject}\n\n${p.opening} ${p.value_prop} ${p.cta}`;
+  document.getElementById('t-pitch').innerHTML = `
+    <div class="rc">
+      <div class="pitch-hd"><span class="rl" style="margin:0;">📧 EMAIL PITCH</span><button class="cpbtn" onclick="cp('${esc(full)}',this)">COPY ALL</button></div>
+      <div style="margin-bottom:12px;"><span class="rl">Subject Line</span><div class="subj-box">${p.subject}</div></div>
+      <div style="margin-bottom:10px;"><span class="rl">Opening</span><p class="rv">${p.opening}</p></div>
+      <div style="margin-bottom:10px;"><span class="rl">Value Prop</span><p class="rv">${p.value_prop}</p></div>
+      <div><span class="rl">CTA</span><p class="rv">${p.cta}</p></div>
+    </div>
+    <div class="rc">
+      <div class="pitch-hd"><span class="rl" style="margin:0;">💼 LINKEDIN DM</span><button class="cpbtn" onclick="cp('${esc(r.outreach_pitches.linkedin_dm)}',this)">COPY</button></div>
+      <p class="rv">${r.outreach_pitches.linkedin_dm}</p>
+    </div>`;
+
+  document.getElementById('t-fees').innerHTML = `
+    <div class="rc" style="text-align:center;padding:36px 22px;">
+      <span class="rl">Estimated Placement Fee</span>
+      <div class="fee-big">${r.fee_intel.estimated_placement_fee}</div>
+      <div class="fee-note">IF YOU CLOSE THIS ROLE</div>
+    </div>
+    <div class="rc">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+        <span class="rl" style="margin:0;">Role Urgency</span>${mkBadge(r.fee_intel.role_urgency)}
+      </div>
+      <p class="rv">${r.fee_intel.urgency_reason}</p>
+    </div>
+    <div class="rc"><span class="rl">Competing Firms on This Req</span><p class="rv">${r.fee_intel.competing_firms}</p></div>`;
+
+  // Show job tabs
+  const rt = document.getElementById('result-tabs');
+  const pt = document.getElementById('profile-tabs');
+  if(rt) rt.style.display = 'flex';
+  if(pt) pt.style.display = 'none';
+  document.querySelectorAll('#result-tabs .tab-btn').forEach(b=>b.classList.remove('on'));
+  const firstTab = document.querySelector('#result-tabs .tab-btn');
+  if(firstTab) firstTab.classList.add('on');
+  ['client','managers','pitch','fees'].forEach(t => document.getElementById('t-'+t).style.display = t==='client'?'block':'none');
+  ['t-p-overview','t-p-pitch','t-p-triggers','t-p-fee'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+  document.getElementById('res-side').style.display = 'block';
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  ['client','managers','pitch','fees'].forEach(t => document.getElementById('t-'+t).style.display = t===name?'block':'none');
+}
+
+function mkBadge(l) {
+  const c = {High:'b-high',Medium:'b-medium',Low:'b-low'}[l]||'b-medium';
+  return `<span class="badge ${c}">${l}</span>`;
+}
+function esc(s) { return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n'); }
+function cp(text, btn) {
+  navigator.clipboard.writeText(text).then(()=>{
+    const o = btn.textContent;
+    btn.textContent='COPIED ✓'; btn.classList.add('ok');
+    setTimeout(()=>{ btn.textContent=o; btn.classList.remove('ok'); },2000);
+  });
+}
+
+if (window.location.search.includes('decode') || window.location.hash === '#decode') showTool();
+
+
+</script>
+
+</div><!-- /hh-main -->
+
+
+<script>
+// HAPPY HUNTING GATE - SIMPLE AND BULLETPROOF
+(function() {
+  var CODE = 'HUNT2026';
+  var KEY = 'hh_v3';
+
+  function unlock() {
+    document.getElementById('hh-gate').style.display = 'none';
+    document.getElementById('hh-main').style.display = 'block';
+  }
+
+  function tryCode() {
+    var val = document.getElementById('hh-gate-input').value.trim().toUpperCase();
+    if (val === CODE) {
+      sessionStorage.setItem(KEY, '1');
+      unlock();
+      if (window._pendingTool) {
+        window._pendingTool = false;
+        document.getElementById('pg-home').style.display = 'none';
+        document.getElementById('pg-tool').style.display = 'block';
+        window.scrollTo(0, 0);
+      }
+    } else {
+      document.getElementById('hh-gate-err').textContent = 'Incorrect code. Try HUNT2026 or contact Jonah.';
+      document.getElementById('hh-gate-input').value = '';
+      document.getElementById('hh-gate-input').focus();
+      setTimeout(function() { document.getElementById('hh-gate-err').textContent = ''; }, 3000);
+    }
+  }
+
+  window.addEventListener('load', function() {
+    if (sessionStorage.getItem(KEY) === '1') {
+      unlock();
+    } else {
+      document.getElementById('hh-gate').style.display = 'flex';
+      document.getElementById('hh-main').style.display = 'none';
+      document.getElementById('hh-gate-input').focus();
+    }
+
+    document.getElementById('hh-gate-btn').addEventListener('click', tryCode);
+    document.getElementById('hh-gate-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') tryCode();
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
