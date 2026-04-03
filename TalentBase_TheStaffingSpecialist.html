@@ -711,6 +711,18 @@ a{color:var(--text3);text-decoration:none;}
         <div id="dash-jobs"></div>
       </div>
     </div>
+    <!-- NEEDS ATTENTION — hot leads + at-risk deals + stale follow-ups -->
+    <div id="dash-attention-panel" style="display:none;margin-top:8px;">
+      <div class="panel" style="border-left:3px solid var(--red);">
+        <div class="panel-header">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="panel-title">Needs Attention</div>
+            <span id="dash-attention-count" style="font-size:10px;font-weight:700;color:var(--red);background:var(--red-bg);border:1px solid var(--red-border);padding:1px 7px;border-radius:10px;"></span>
+          </div>
+        </div>
+        <div id="dash-attention-list"></div>
+      </div>
+    </div>
     <!-- TOP DEALS TO CLOSE — score-sorted, always visible when deals exist -->
     <div id="dash-top-deals-panel" style="display:none;margin-top:8px;">
       <div class="panel">
@@ -2183,12 +2195,12 @@ function renderDeals(){
       var currentIdx = DEAL_STAGES.indexOf(stage);
       var nextStage  = currentIdx < DEAL_STAGES.length-1 ? DEAL_STAGES[currentIdx+1] : null;
 
-      return '<div class="deal-card" onclick="openDealDetail(\''+d.id+'\')" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:14px;margin-bottom:8px;cursor:pointer;transition:border-color .1s;" onmouseover="this.style.borderColor=\'var(--border3)\'" onmouseout="this.style.borderColor=\'var(--border2)\'">' +
-        // Header: temp dot + company + score ring
+      return '<div class="deal-card" onclick="openDealDetail(\''+d.id+'\')" style="background:var(--bg3);border:1px solid '+(d.statusFlag==='At Risk'?'var(--red-border)':'var(--border2)')+';border-radius:8px;padding:14px;margin-bottom:8px;cursor:pointer;transition:border-color .1s;" onmouseover="this.style.borderColor=\'var(--border3)\'" onmouseout="this.style.borderColor=\''+(d.statusFlag==='At Risk'?'var(--red-border)':'var(--border2)')+'\'">' +
+        // Header: temp dot + company + flags + score ring
         '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;">' +
           tempDot +
           '<div style="flex:1;min-width:0;">' +
-            '<div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.3;">'+esc(d.company||'—')+'</div>' +
+            '<div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.3;display:flex;align-items:center;gap:5px;">'+esc(d.company||'—')+(d.statusFlag==='At Risk'?'<span title="Stalled deal — at risk" style="font-size:11px;">⚠</span>':'')+'</div>' +
             '<div style="font-size:11px;color:var(--text4);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(d.jobTitle||d.role||'—')+'</div>' +
           '</div>' +
           // Score ring
@@ -2268,11 +2280,12 @@ function openDealDetail(dealId){
   if(!bodyEl) return;
 
   bodyEl.innerHTML =
-    // Stage badge + score + priority
+    // Stage badge + score + priority + at-risk
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">' +
       '<span style="font-size:11px;font-weight:700;color:'+sc.text+';background:'+sc.bg+';border:1px solid '+sc.border+';padding:3px 10px;border-radius:4px;">'+esc(d.stage)+'</span>' +
       '<span style="font-size:11px;font-weight:700;color:'+priority.color+';background:'+priority.bg+';border:1px solid '+priority.border+';padding:3px 10px;border-radius:4px;">'+priority.label+' Priority</span>' +
       '<span style="font-size:11px;font-weight:800;color:'+priority.color+';">'+score+'/100</span>' +
+      (d.statusFlag==='At Risk'?'<span style="font-size:11px;font-weight:700;color:var(--red);background:var(--red-bg);border:1px solid var(--red-border);padding:3px 10px;border-radius:4px;">⚠ At Risk</span>':'')+
       _dealTempDot(temp)+' <span style="font-size:11px;color:var(--text4);">'+temp+'</span>' +
       '<span style="margin-left:auto;font-size:11px;color:var(--text4);">'+fmtDate(d.createdAt)+'</span>' +
     '</div>' +
@@ -2774,7 +2787,7 @@ function renderCandList(terms){
     return`<div class="cand-row${selCandId===c.id?' on':''}" onclick="selCand('${c.id}')">
       <div class="av" style="width:34px;height:34px;background:${bg};color:${fg};">${ini(c)}</div>
       <div class="cand-info">
-        <div class="cand-name" style="display:flex;align-items:center;gap:6px;">${(()=>{const crm=getCRMFields(c);return tempDot(crm.temperature);})()}${hlText(c.first+' '+c.last,terms)}</div>
+        <div class="cand-name" style="display:flex;align-items:center;gap:6px;">${(()=>{const crm=getCRMFields(c);const now=Date.now();const DAY=864e5;const lastAct=c.activity&&c.activity.length?Math.max(...c.activity.map(a=>a.ts)):(c.created||now);const daysIdle=(now-lastAct)/DAY;let flags='';if(c.responded)flags+='<span title="Hot lead — replied to outreach" style="font-size:11px;">🔥</span>';else if(daysIdle>=2&&['Screening','Interviewing','Offer'].includes(c.status))flags+='<span title="Follow-up due ('+Math.floor(daysIdle)+'d idle)" style="font-size:11px;">⏱</span>';return tempDot(crm.temperature)+flags;})()}${hlText(c.first+' '+c.last,terms)}</div>
         <div class="cand-sub">${hlText([c.title,c.company,c.location].filter(Boolean).join(' · '),terms)}</div>
         ${nextActionCompact(c,'11px')}
       </div>
@@ -5404,12 +5417,142 @@ function toggleExpand(id){const el=document.getElementById(id);if(el)el.style.di
 // ═══════════════════════════════════════════════
 // DASHBOARD
 // ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// AUTOMATION ENGINE
+// Runs on dashboard render. Zero writes unless something changed.
+// Returns: { attention: [{type, icon, label, subtext, urgency, action, id}] }
+// ═══════════════════════════════════════════════════════════
+function runAutomation(){
+  var now  = Date.now();
+  var DAY  = 1000*60*60*24;
+  var items = [];
+
+  // ── STEP 1: Candidate follow-up detection ────────────────
+  // If candidate has been in Screening or Contacted state with no
+  // activity for 2+ days, flag for follow-up. Write activity once.
+  cands.forEach(function(c){
+    if(c.status==='Hired'||c.status==='Rejected') return;
+    var lastAct = c.activity&&c.activity.length
+      ? Math.max.apply(null, c.activity.map(function(a){return a.ts;}))
+      : (c.created||now);
+    var daysIdle = (now - lastAct) / DAY;
+
+    // ── STEP 3: Hot lead detection ─────────────────────────
+    if(c.responded && getCRMFields(c).temperature === 'hot'){
+      items.push({
+        type:'hot', icon:'🔥', urgency:'high',
+        label: c.first+' '+c.last,
+        subtext: 'Replied to outreach — call now',
+        action: function(){ selCand(c.id); },
+        actionLabel: 'View →',
+        id: 'hot-'+c.id
+      });
+      return; // hot leads take priority over follow-up flags
+    }
+
+    // ── Follow-up due ──────────────────────────────────────
+    if(daysIdle >= 2 && (c.status==='Screening'||c.status==='Interviewing'||c.status==='Offer')){
+      // Write activity flag once (check for existing)
+      var alreadyFlagged = (c.activity||[]).some(function(a){
+        return a.text && a.text.includes('Auto: follow-up due') && (now-a.ts) < DAY;
+      });
+      if(!alreadyFlagged){
+        if(!c.activity) c.activity=[];
+        c.activity.push({ts:now, text:'Auto: follow-up due ('+Math.floor(daysIdle)+'d idle)'});
+      }
+      items.push({
+        type:'followup', icon:'⏱', urgency: daysIdle>=4 ? 'high' : 'medium',
+        label: c.first+' '+c.last,
+        subtext: c.status+' · '+Math.floor(daysIdle)+'d no activity',
+        action: function(){ selCand(c.id); },
+        actionLabel: 'Follow up →',
+        id: 'fu-'+c.id
+      });
+    }
+  });
+
+  // ── STEP 2: Deal stall detection ─────────────────────────
+  deals.forEach(function(d){
+    if(d.stage==='Closed') return;
+    var lastAct = d.stageUpdatedAt || d.createdAt || now;
+    var daysIdle = (now - lastAct) / DAY;
+
+    if(daysIdle >= 3){
+      d.statusFlag = 'At Risk';
+      items.push({
+        type:'atrisk', icon:'⚠', urgency: daysIdle>=7 ? 'high' : 'medium',
+        label: d.company + (d.jobTitle?' · '+d.jobTitle:''),
+        subtext: d.stage+' · '+Math.floor(daysIdle)+'d stalled',
+        action: function(){ nav('deals'); setTimeout(function(){openDealDetail(d.id);},200); },
+        actionLabel: 'View deal →',
+        id: 'ar-'+d.id
+      });
+    } else {
+      d.statusFlag = '';
+    }
+
+    // ── STEP 4: Deal acceleration (score >80) ─────────────
+    var score = getDealScore(d);
+    if(score > 80 && d.stage !== 'Active' && d.stage !== 'Closed'){
+      items.push({
+        type:'close', icon:'💰', urgency:'high',
+        label: d.company + ' — Score '+score,
+        subtext: 'High score · Ready to close — move to Active now',
+        action: function(){ nav('deals'); setTimeout(function(){openDealDetail(d.id);},200); },
+        actionLabel: 'Close deal →',
+        id: 'cl-'+d.id
+      });
+    }
+  });
+
+  // Persist any new activity flags written
+  saveCands();
+  saveDeals();
+
+  // Sort: high urgency first
+  items.sort(function(a,b){
+    var order={high:0,medium:1,low:2};
+    return (order[a.urgency]||1)-(order[b.urgency]||1);
+  });
+
+  return items;
+}
+
 function renderDash(){
   const total=cands.length;
   const hired=cands.filter(c=>c.status==='Hired').length;
   const interviewing=cands.filter(c=>c.status==='Interviewing').length;
   const openJobs=jobs.filter(j=>j.status==='Open').length;
   const offer=cands.filter(c=>c.status==='Offer').length;
+
+  // ── RUN AUTOMATION ENGINE ──────────────────────────────────
+  var attnItems = runAutomation();
+  var attnPanel = document.getElementById('dash-attention-panel');
+  var attnList  = document.getElementById('dash-attention-list');
+  var attnCount = document.getElementById('dash-attention-count');
+  if(attnPanel && attnList){
+    if(attnItems.length){
+      attnPanel.style.display = 'block';
+      if(attnCount) attnCount.textContent = attnItems.length + ' item'+(attnItems.length>1?'s':'');
+      var urgColors = {high:'var(--red)',medium:'var(--amber)',low:'var(--text4)'};
+      var urgBgs    = {high:'rgba(239,68,68,.07)',medium:'rgba(245,158,11,.07)',low:'var(--bg3)'};
+      attnList.innerHTML = attnItems.map(function(item){
+        var col = urgColors[item.urgency]||'var(--text4)';
+        var bg  = urgBgs[item.urgency]||'var(--bg3)';
+        return '<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border2);">' +
+          '<span style="font-size:16px;flex-shrink:0;width:22px;text-align:center;">'+item.icon+'</span>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:13px;font-weight:700;color:var(--text);">'+esc(item.label)+'</div>' +
+            '<div style="font-size:11px;color:'+col+';font-weight:600;margin-top:2px;">'+esc(item.subtext)+'</div>' +
+          '</div>' +
+          '<button onclick="('+item.action.toString()+'()); return false;" style="background:'+bg+';border:1px solid '+col+';color:'+col+';font-size:11px;font-weight:700;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:inherit;white-space:nowrap;">'+esc(item.actionLabel)+'</button>' +
+        '</div>';
+      }).join('');
+    } else {
+      attnPanel.style.display = 'none';
+    }
+  }
+
 
   const rev=getRevenueStats();
   const hasRevData=rev.pipelineValue>0||rev.closedRevenue>0;
