@@ -9056,63 +9056,93 @@ function deleteDocInstance(instId){
 
 function setLibCat(cat, btn){
   libCat = cat;
-  document.querySelectorAll('.lib-cat-btn').forEach(b=>b.classList.remove('on'));
+  // Update button active state
+  document.querySelectorAll('.lib-cat-btn').forEach(function(b){ b.classList.remove('on'); });
   if(btn) btn.classList.add('on');
   renderLibrary();
 }
 
 function renderLibrary(){
   var el = document.getElementById('lib-list');
-  if(!el) return;
+  if(!el){ console.warn('[Library] #lib-list not found'); return; }
+
   var q = (document.getElementById('lib-search')||{}).value||'';
-  var filtered = libraryItems.filter(function(item){
-    if(!item || !item.id) return false;  // guard against null/corrupt entries
-    if(libCat !== 'all' && item.cat !== libCat) return false;
-    if(q && !item.title.toLowerCase().includes(q.toLowerCase()) &&
-       !(item.tags||[]).some(function(t){return t.toLowerCase().includes(q.toLowerCase());})) return false;
+  var currentCat = libCat || 'all';
+
+  var filtered = (libraryItems||[]).filter(function(item){
+    if(!item || !item.id || !item.title) return false;
+    if(currentCat !== 'all' && item.cat !== currentCat) return false;
+    if(q){
+      var ql = q.toLowerCase();
+      var inTitle = (item.title||'').toLowerCase().includes(ql);
+      var inTags  = (item.tags||[]).some(function(t){ return t.toLowerCase().includes(ql); });
+      if(!inTitle && !inTags) return false;
+    }
     return true;
   });
+
   var countEl = document.getElementById('lib-file-count');
-  if(countEl) countEl.textContent = filtered.length + ' of ' + libraryItems.length + ' files';
+  if(countEl) countEl.textContent = filtered.length + ' of ' + (libraryItems||[]).length + ' files';
+
   if(!filtered.length){
-    el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text4);font-size:13px;">No files found.</div>';
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text4);font-size:13px;">No files found for this category.</div>';
     return;
   }
-  var catLabel = {email:'Email',offer:'Offer Letter',candidate:'Candidate',compliance:'Compliance',onboarding:'Onboarding',jd:'Job Description',script:'Script',playbook:'Playbook',misc:'Other'};
-  var catIcons = {email:'EMAIL',offer:'OFFER',script:'SCRIPT',jd:'JD',playbook:'PLAYBOOK',misc:'FILE'};
-  var rowsHtml = '';
+
+  var catLabel = {email:'Email',offer:'Offer Letter',candidate:'Candidate',
+    compliance:'Compliance',onboarding:'Onboarding',jd:'Job Description',
+    script:'Script',playbook:'Playbook',misc:'Other'};
+  var catIcons = {email:'EMAIL',offer:'OFFER',script:'SCRIPT',jd:'JD',
+    playbook:'PLAYBOOK',misc:'FILE',candidate:'CAND',compliance:'COMP',onboarding:'ON'};
+
+  var html = '';
   filtered.forEach(function(item){
     var sel = libSelectedId === item.id;
-    var bg = sel ? 'background:var(--accent-dim);border-left:3px solid var(--accent);' : 'border-left:3px solid transparent;';
-    var titleColor = sel ? 'color:var(--accent2);' : 'color:var(--text);';
+    var rowBg  = sel ? 'background:var(--accent-dim);border-left:3px solid var(--accent);' : 'border-left:3px solid transparent;';
+    var titleC = sel ? 'color:var(--accent2);' : 'color:var(--text);';
     var id = item.id;
-    rowsHtml += '<div class="lib-row" data-lid="'+id+'" style="'+bg+'display:grid;grid-template-columns:1fr 100px 115px;gap:0;padding:9px 16px;border-bottom:1px solid var(--border2);cursor:pointer;align-items:center;">';
-    rowsHtml += '<div style="display:flex;align-items:center;gap:8px;min-width:0;">';
-    rowsHtml += '<span style="font-size:11px;background:var(--bg4);border:1px solid var(--border2);padding:2px 5px;border-radius:3px;font-family:DM Mono,monospace;color:var(--text3);flex-shrink:0;">'+(catIcons[item.cat]||'FILE')+'</span>';
-    rowsHtml += '<div style="min-width:0;"><div style="font-size:12px;font-weight:500;'+titleColor+'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(item.title)+'</div>';
-    rowsHtml += '<div style="font-size:11px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(item.tags||[]).slice(0,3).join(' · ')+'</div></div></div>';
-    rowsHtml += '<div><span style="font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border2);padding:2px 6px;border-radius:4px;">'+(catLabel[item.cat]||item.cat)+'</span></div>';
-    rowsHtml += '<div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;">';
-    rowsHtml += '<button class="btn btn-ghost btn-xs lib-act" data-act="copy" data-lid="'+id+'">Copy</button>';
-    if(item.subject) rowsHtml += '<button class="btn btn-ghost btn-xs lib-act" data-act="copysubj" data-lid="'+id+'">+Subj</button>';
-    rowsHtml += '<button class="btn btn-ghost btn-xs lib-act" data-act="del" data-lid="'+id+'" style="color:var(--red);">&#x2715;</button>';
-    rowsHtml += '</div></div>';
-  });
-  el.innerHTML = rowsHtml;
+    var escapedId = id.replace(/'/g,"\\'");
+    var icon = catIcons[item.cat] || 'FILE';
+    var label = catLabel[item.cat] || item.cat || '';
+    var title = (item.title||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    var tags  = (item.tags||[]).slice(0,3).join(' · ').replace(/&/g,'&amp;');
 
-  // Attach handlers via delegation
-  el.querySelectorAll('.lib-row').forEach(function(row){
-    row.addEventListener('click', function(){ viewLibItem(row.dataset.lid); });
+    html += '<div style="'+rowBg+'display:grid;grid-template-columns:1fr 100px 115px;gap:0;'+
+      'padding:9px 16px;border-bottom:1px solid var(--border2);cursor:pointer;align-items:center;" '+
+      'onclick="viewLibItem(\''+escapedId+'\')">';
+
+    // Title + icon column
+    html += '<div style="display:flex;align-items:center;gap:8px;min-width:0;">'+
+      '<span style="font-size:10px;background:var(--bg4);border:1px solid var(--border2);'+
+      'padding:2px 5px;border-radius:3px;font-family:DM Mono,monospace;color:var(--text3);'+
+      'flex-shrink:0;letter-spacing:.03em;">'+icon+'</span>'+
+      '<div style="min-width:0;">'+
+        '<div style="font-size:12px;font-weight:500;'+titleC+
+        'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+title+'</div>'+
+        '<div style="font-size:11px;color:var(--text4);white-space:nowrap;overflow:hidden;'+
+        'text-overflow:ellipsis;">'+tags+'</div>'+
+      '</div>'+
+    '</div>';
+
+    // Category column
+    html += '<div><span style="font-size:11px;color:var(--text3);background:var(--bg3);'+
+      'border:1px solid var(--border2);padding:2px 6px;border-radius:4px;">'+label+'</span></div>';
+
+    // Actions column — stopPropagation on each button individually
+    html += '<div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;" '+
+      'onclick="event.stopPropagation()">';
+    html += '<button class="btn btn-ghost btn-xs" onclick="copyLibItem(\''+escapedId+'\')">Copy</button>';
+    if(item.subject){
+      html += '<button class="btn btn-ghost btn-xs" onclick="copyLibItemFull(\''+escapedId+'\')">+Subj</button>';
+    }
+    html += '<button class="btn btn-ghost btn-xs" style="color:var(--red);" '+
+      'onclick="deleteLibItem(\''+escapedId+'\')">&#x2715;</button>';
+    html += '</div>';
+
+    html += '</div>'; // end row
   });
-  el.querySelectorAll('.lib-act').forEach(function(btn){
-    btn.addEventListener('click', function(e){
-      e.stopPropagation();
-      var act = btn.dataset.act, lid = btn.dataset.lid;
-      if(act==='copy') copyLibItem(lid);
-      else if(act==='copysubj') copyLibItemFull(lid);
-      else if(act==='del') deleteLibItem(lid);
-    });
-  });
+
+  el.innerHTML = html;
 }
 
 function viewLibItem(id){
