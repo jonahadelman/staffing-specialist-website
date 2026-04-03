@@ -522,6 +522,22 @@ a{color:var(--text3);text-decoration:none;}
 @keyframes gshake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 @keyframes fadeSlideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 #app-shell{display:none;}
+
+/* ── MODAL OVERLAY (Import, Prompt modals) ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;z-index:1000;padding:20px;overflow-y:auto;align-items:flex-start;justify-content:center;}
+.modal-overlay.on{display:flex;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--border2);}
+.modal-title{font-size:16px;font-weight:600;letter-spacing:-.3px;color:var(--text);}
+
+/* ── LIBRARY ── */
+.lib-cat-btn{padding:5px 13px;border-radius:14px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);color:var(--text3);background:transparent;transition:all .1s;white-space:nowrap;}
+.lib-cat-btn:hover{border-color:var(--border3);color:var(--text2);background:var(--bg3);}
+.lib-cat-btn.on{background:var(--accent-dim);color:var(--text);border-color:var(--accent-border);}
+.lib-row{transition:background .08s;user-select:none;}
+.lib-row:hover{background:var(--bg3) !important;}
+.lib-act{pointer-events:all;position:relative;z-index:2;}
+.lib-tag{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:11px;background:var(--bg4);color:var(--text3);border:1px solid var(--border2);margin:2px;}
+
 </style>
 </head>
 <body>
@@ -9490,14 +9506,24 @@ function exportCSV(){
 // ═══════════════════════════════════════════════
 // MODAL HELPERS
 // ═══════════════════════════════════════════════
-function openModal(id){document.getElementById(id).classList.add('on');}
+function openModal(id){
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.classList.add('on');
+  el.style.display = 'flex'; // works for both .overlay and .modal-overlay
+}
 function closeModal(id){
   var el = document.getElementById(id);
   if(!el) return;
   el.classList.remove('on');
   el.style.display = 'none';
 }
-document.querySelectorAll('.overlay').forEach(ov=>{ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('on');});});
+// Close on backdrop click for both overlay types
+document.querySelectorAll('.overlay, .modal-overlay').forEach(function(ov){
+  ov.addEventListener('click', function(e){
+    if(e.target === ov){ ov.classList.remove('on'); ov.style.display='none'; }
+  });
+});
 
 // ═══════════════════════════════════════════════
 // INIT
