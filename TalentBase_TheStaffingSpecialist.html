@@ -2225,6 +2225,45 @@ function openDealDetail(dealId){
       '<button class="btn btn-ghost btn-sm" style="width:100%;color:var(--red);" onclick="deleteDeal(\''+d.id+'\');closeDealDetail()">Delete Deal</button>' +
     '</div>' +
 
+    // ── PIPELINE SECTION ─────────────────────────────────────
+    (function(){
+      if(d.stage !== 'Active' && d.stage !== 'Closed') return '';
+      var matchedCandList = (d.candidateIds||[])
+        .map(function(id){ return cands.find(function(c){ return c.id===id; }); })
+        .filter(Boolean);
+      // Also find any candidates currently assigned to this job
+      var pipelineCands = cands.filter(function(c){
+        return c.role && linkedJob && c.role===linkedJob.title && !d.candidateIds?.includes(c.id);
+      });
+      var allCands = matchedCandList.concat(pipelineCands).slice(0,10);
+
+      var candRows = allCands.length
+        ? allCands.map(function(c){
+            return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border2);">' +
+              '<div style="width:28px;height:28px;border-radius:50%;background:var(--accent-dim);display:grid;place-items:center;font-size:10px;font-weight:700;color:var(--accent2);flex-shrink:0;">'+esc((c.first||'?')[0]+(c.last||'?')[0])+'</div>' +
+              '<div style="flex:1;min-width:0;">' +
+                '<div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(c.first+' '+c.last)+'</div>' +
+                '<div style="font-size:11px;color:var(--text4);">'+esc(c.title||'')+'</div>' +
+              '</div>' +
+              '<span style="font-size:10px;font-weight:700;color:'+(c.status==='Interviewing'?'var(--amber)':c.status==='Offer'?'var(--green)':'var(--text4)')+';background:var(--bg4);padding:2px 6px;border-radius:3px;">'+esc(c.status||'New')+'</span>' +
+              '<button onclick="closeDealDetail();selCand(\''+c.id+'\')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:11px;padding:2px 4px;">View</button>' +
+            '</div>';
+          }).join('')
+        : '<div style="font-size:12px;color:var(--text4);padding:8px 0;">No candidates matched yet.</div>';
+
+      return '<div style="margin-bottom:18px;">' +
+        '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Pipeline</div>' +
+        // Pipeline stat
+        '<div style="display:flex;gap:6px;margin-bottom:10px;">' +
+          (linkedJob?'<button class="btn btn-primary btn-sm" style="flex:1;" onclick="closeDealDetail();nav(\'jobs\');setTimeout(()=>selJob(\''+linkedJob.id+'\'),200)">↗ Open Pipeline</button>':'')+
+          (allCands.length?'<button class="btn btn-ghost btn-sm" style="flex:1;" onclick="closeDealDetail();nav(\'candidates\')" >View Candidates ('+allCands.length+')</button>':'')+
+          '<button class="btn btn-ghost btn-sm" onclick="dealSendBatchOutreach(\''+d.id+'\')" style="flex:1;">Send Outreach</button>' +
+        '</div>' +
+        // Matched candidate list
+        candRows +
+      '</div>';
+    })() +
+
     // Notes
     (d.notes?'<div style="margin-bottom:18px;"><div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Notes</div><div style="font-size:12px;color:var(--text3);line-height:1.6;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;white-space:pre-wrap;">'+esc(d.notes)+'</div></div>':'')+
 
@@ -2269,6 +2308,42 @@ function addDealNote(dealId){
   renderDeals();
 }
 
+// Send outreach to all candidates matched to this deal
+async function dealSendBatchOutreach(dealId){
+  var d = deals.find(function(x){return x.id===dealId;});
+  if(!d||!d.candidateIds||!d.candidateIds.length){
+    alert('No matched candidates. Move deal to Active first to auto-match candidates.');
+    return;
+  }
+  var linkedJob = d.jobId ? jobs.find(function(j){return j.id===d.jobId;}) : null;
+  if(!linkedJob){
+    alert('No job linked to this deal. Move to Active to create job first.');
+    return;
+  }
+  var candList = d.candidateIds
+    .map(function(id){ return cands.find(function(c){return c.id===id;}); })
+    .filter(Boolean);
+  if(!candList.length){ alert('No matched candidates found.'); return; }
+
+  if(!confirm('Send outreach to '+candList.length+' candidate'+(candList.length>1?'s':'')+' for '+d.company+' — '+linkedJob.title+'?')) return;
+
+  var sent=0, queued=0;
+  for(var i=0;i<candList.length;i++){
+    var c = candList[i];
+    await sendOrQueueOutreach(c, linkedJob);
+    var lastStatus = c.lastMessage && c.lastMessage.status;
+    if(lastStatus==='sent') sent++;
+    else queued++;
+  }
+  saveCands();
+  if(!d.activity) d.activity=[];
+  d.activity.push({ts:Date.now(), text:'Batch outreach: '+sent+' sent, '+queued+' queued — '+candList.length+' candidates'});
+  saveDeals();
+  openDealDetail(dealId);
+  var msg = '✓ Outreach complete\n'+(sent?sent+' emails sent\n':'')+(queued?queued+' queued for approval':'');
+  alert(msg);
+}
+
 function moveDealStage(dealId, newStage){
   var d = deals.find(function(x){return x.id===dealId;});
   if(!d) return;
@@ -2292,55 +2367,99 @@ function moveDealStage(dealId, newStage){
 }
 
 function _dealActivate(d){
-  // If no job yet, create one now
+  // ── STEP 1: Create job (no duplicates) ──────────────────────
   if(!d.jobId){
-    var newJob = {
-      id: uid(),
-      title: d.jobTitle || d.role || 'Open Role',
-      company: d.company||'',
-      dept: '',
-      location: '',
-      type: 'Full-time',
-      status: 'Open',
-      reqNum: 'DEAL-'+Date.now().toString(36).toUpperCase().slice(-5),
-      expectedFee: d.fee || d.estimatedFee || 0,
-      probability: 80,
-      source: d.source||'Deal CRM',
-      description: d.notes||'',
-      notes: 'Auto-created when deal moved to Active. Company: '+d.company,
-      created: Date.now(),
-    };
-    jobs.unshift(newJob);
-    saveJobsStore();
-    d.jobId = newJob.id;
+    // Check if a job for this deal already exists (same company+title within 5 min)
+    var existing = jobs.find(function(j){
+      return j.company===d.company
+        && j.title===(d.jobTitle||d.role||'Open Role')
+        && j.source==='Deals CRM'
+        && (Date.now()-j.created)<300000;
+    });
+    if(existing){
+      d.jobId = existing.id;
+    } else {
+      var newJob = {
+        id          : uid(),
+        title       : d.jobTitle || d.role || 'Open Role',
+        company     : d.company || '',
+        dept        : '',
+        location    : '',
+        type        : 'Full-time',
+        status      : 'Open',
+        reqNum      : 'DEAL-' + Date.now().toString(36).toUpperCase().slice(-5),
+        expectedFee : d.fee || d.estimatedFee || 0,
+        probability : d.probability || 70,
+        source      : 'Deals CRM',
+        description : d.notes || '',
+        notes       : 'Auto-created from Deals CRM. Company: ' + d.company,
+        created     : Date.now(),
+      };
+      jobs.unshift(newJob);
+      saveJobsStore();
+      // ── STEP 2: Link deal → job ────────────────────────────
+      d.jobId = newJob.id;
+    }
   }
 
-  // Auto-match candidates by title keywords
-  var titleWords = (d.jobTitle||d.role||'').toLowerCase().split(/\W+/).filter(function(w){return w.length>3;});
-  var linkedJob  = jobs.find(function(j){return j.id===d.jobId;});
-  var matched    = cands.filter(function(c){
-    if(c.role===linkedJob.title) return false; // already assigned
-    var blob = [c.title,c.role,(c.skills||[]).join(' ')].join(' ').toLowerCase();
-    return titleWords.some(function(w){return blob.includes(w);});
-  }).slice(0,8);
+  var linkedJob = jobs.find(function(j){ return j.id===d.jobId; });
+  if(!linkedJob) return;
 
-  matched.forEach(function(c){
+  // ── STEP 3: Match candidates (title + skills) ───────────────
+  var titleWords = (d.jobTitle||d.role||'').toLowerCase()
+    .split(/\W+/).filter(function(w){ return w.length>3; });
+
+  var scored = cands.map(function(c){
+    var blob = [
+      c.title||'', c.role||'',
+      (c.skills||[]).join(' '),
+      c.notes||''
+    ].join(' ').toLowerCase();
+    var score = titleWords.reduce(function(s,w){
+      return s + (blob.includes(w)?1:0);
+    }, 0);
+    return { c:c, score:score };
+  }).filter(function(x){
+    // Must match at least 1 word and not already assigned to this exact job
+    return x.score>0 && x.c.role!==linkedJob.title;
+  }).sort(function(a,b){ return b.score-a.score; })
+    .slice(0,10)
+    .map(function(x){ return x.c; });
+
+  // ── STEP 4: Attach candidateIds to deal ─────────────────────
+  d.candidateIds = scored.map(function(c){ return c.id; });
+
+  // ── STEP 5+6: Assign to job pipeline + log activity ─────────
+  scored.forEach(function(c){
+    // Assign role if not yet set for this job
     if(!c.role) c.role = linkedJob.title;
-    if(!c.activity) c.activity=[];
-    c.activity.push({ts:Date.now(), text:'Auto-matched to deal: '+d.company+' — '+(d.jobTitle||d.role)});
+    if(!c.activity) c.activity = [];
+    // Avoid duplicate entries
+    var alreadyLogged = c.activity.some(function(a){
+      return a.text && a.text.includes('Auto: ready for outreach') && a.text.includes(d.company);
+    });
+    if(!alreadyLogged){
+      c.activity.push({
+        ts  : Date.now(),
+        text: 'Auto: ready for outreach — ' + d.company + ' · ' + linkedJob.title
+      });
+    }
   });
-  if(matched.length) saveCands();
+  if(scored.length) saveCands();
 
-  // Show confirmation
-  setTimeout(function(){
-    var msg = '⚡ Deal Activated\n\n'
-      +'✓ Job created: '+linkedJob.title+'\n'
-      +'✓ Req #'+linkedJob.reqNum+'\n'
-      +(matched.length?'✓ '+matched.length+' candidate'+(matched.length>1?'s':'')+' auto-matched':'○ No candidate matches yet — add from Candidates');
-    alert(msg);
-    nav('jobs');
-    setTimeout(function(){ selJob(d.jobId); }, 300);
-  }, 100);
+  // Log on deal itself
+  if(!d.activity) d.activity=[];
+  d.activity.push({
+    ts  : Date.now(),
+    text: '⚡ Activated — Job created: Req #' + linkedJob.reqNum
+      + (scored.length ? ' · ' + scored.length + ' candidate'+(scored.length>1?'s':'')+' matched' : ' · No candidates matched yet')
+  });
+
+  saveDeals();
+  renderDeals();
+
+  // Refresh detail panel if open
+  if(_openDealId===d.id) openDealDetail(d.id);
 }
 
 function openAddDealModal(){
