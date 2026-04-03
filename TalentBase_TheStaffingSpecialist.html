@@ -366,8 +366,10 @@ a{color:var(--text3);text-decoration:none;}
     <button class="gate-btn" id="gate-btn" onclick="gateLogin()" style="margin-top:12px;">Sign In →</button>
     <div class="gate-err" id="gate-err"></div>
     <div class="gate-footer">Need access? <a href="mailto:jonah@thestaffingspecialist.com">Contact Jonah</a></div>
-    <div id="gate-fallback" style="display:none;margin-top:16px;padding:12px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;font-size:11px;color:var(--amber);line-height:1.5;">
-      Supabase not configured. Go to Settings → Database to add your project URL and anon key, then refresh.
+    <div id="gate-fallback" style="display:none;margin-top:14px;padding:10px 14px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:8px;font-size:11px;color:#93c5fd;line-height:1.6;">
+      <strong style="display:block;margin-bottom:2px;">Dev mode available</strong>
+      Supabase not configured — use <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px;">dev@local</code> / <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px;">dev</code> to open the app locally.<br>
+      Add Supabase credentials in Settings → Database to enable real auth.
     </div>
   </div>
 </div>
@@ -393,7 +395,7 @@ a{color:var(--text3);text-decoration:none;}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
       Dashboard
     </div>
-    <div class="ni" onclick="nav('deals')">
+    <div class="ni" onclick="nav('deals')" id="ni-deals">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
       Find Deals
       <span class="ni-badge" id="nb-deals"></span>
@@ -453,7 +455,7 @@ a{color:var(--text3);text-decoration:none;}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
         Campaigns
       </div>
-      <div class="ni" onclick="nav('analytics')">
+      <div class="ni" onclick="nav('analytics')" id="ni-analytics">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Analytics
       </div>
@@ -462,7 +464,7 @@ a{color:var(--text3);text-decoration:none;}
         Headcount
       </div>
       <div class="nav-section-label" style="padding-top:10px;">System</div>
-      <div class="ni" onclick="nav('aitools')">
+      <div class="ni" onclick="nav('aitools')" id="ni-aitools">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
         AI Tools
       </div>
@@ -500,6 +502,11 @@ a{color:var(--text3);text-decoration:none;}
       </div>
       <input type="password" class="api-field" id="api-key" placeholder="sk-ant-..." oninput="saveKey(this.value)" autocomplete="off"/>
       <div class="api-hint">For AI features. Get one at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
+    </div>
+    <!-- Role badge — shows current user role -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 2px;margin-bottom:4px;">
+      <span id="sb-role-badge" style="font-size:10px;font-weight:700;color:var(--text4);"></span>
+      <button onclick="sbSignOut()" style="background:none;border:none;color:var(--text4);font-size:10px;cursor:pointer;padding:2px 4px;border-radius:3px;font-family:inherit;" title="Sign out">Sign out</button>
     </div>
     <!-- Supabase connection status -->
     <div class="api-box" style="margin-top:6px;cursor:pointer;" onclick="nav('workspace');setTimeout(()=>switchWsTab('database'),100)">
@@ -1683,12 +1690,20 @@ a{color:var(--text3);text-decoration:none;}
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 
-<!-- ═══ SUPABASE CLIENT (CDN — loaded before main script) ═══ -->
-<script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+<!-- ═══ SUPABASE CLIENT (CDN — UMD build, synchronous global) ═══ -->
+<!-- Using the UMD/IIFE build so window.supabase is available synchronously -->
+<!-- No import() race with DOMContentLoaded -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
 window.__initSupabase = function(url, key) {
   if (!url || !key || url === 'YOUR_URL') return null;
-  try { return createClient(url, key); } catch(e) { return null; }
+  try {
+    // UMD build exposes window.supabase.createClient
+    var factory = (window.supabase && window.supabase.createClient)
+      || (window.Supabase && window.Supabase.createClient);
+    if (!factory) { console.warn('[SB] createClient not available'); return null; }
+    return factory(url, key);
+  } catch(e) { console.warn('[SB] init failed:', e.message); return null; }
 };
 </script>
 
@@ -1707,49 +1722,115 @@ var _sbUser = null;      // Authenticated user (null = no Supabase auth)
 var _sbReady = false;    // True once init attempted
 
 // ── GATE LOGIN — replaces hardcoded access code ───────────────
+// ── DEV FALLBACK SESSION ──────────────────────────────────────
+// When Supabase is not configured, allow dev@local / dev to log in.
+// Creates a synthetic _sbUser so the rest of the app works unchanged.
+var DEV_MODE_EMAIL = 'dev@local';
+var DEV_MODE_PASS  = 'dev';
+var _devModeActive = false;
+
+function _setDevSession(email) {
+  _devModeActive = true;
+  _sbUser = {
+    id            : 'dev-local-user',
+    email         : email,
+    user_metadata : { role: 'admin' },
+  };
+  sessionStorage.setItem('tb_sb_user', JSON.stringify(_sbUser));
+  _updateSbStatus();
+}
+
+function _clearSession() {
+  _sbUser       = null;
+  _devModeActive = false;
+  sessionStorage.removeItem('tb_sb_user');
+}
+
+// ── GATE HELPERS ──────────────────────────────────────────────
+function _gateSetLoading(loading) {
+  var btn = document.getElementById('gate-btn');
+  if (!btn) return;
+  btn.disabled    = loading;
+  btn.textContent = loading ? 'Signing in…' : 'Sign In →';
+}
+function _gateSetError(msg) {
+  var err = document.getElementById('gate-err');
+  if (err) err.textContent = msg || '';
+}
+// ── APP UNLOCK — the single function that controls what a user sees ──
+// Hard rule: admin/recruiter → app-shell only, client-portal hidden.
+//            client          → client-portal only, app-shell hidden.
+// Neither branch ever gives a client access to app-shell.
+function _unlockApp(role) {
+  var g  = document.getElementById('gate');
+  var a  = document.getElementById('app-shell');
+  var cp = document.getElementById('client-portal');
+
+  // Always hide the gate
+  if (g) g.style.cssText = 'display:none!important';
+
+  if (role === 'client') {
+    // CLIENT — portal visible, app-shell forcibly hidden
+    if (a)  a.style.cssText  = 'display:none!important';
+    if (cp) cp.style.display = 'flex';
+    try { renderClientPortal(); } catch(e) { console.warn('[Portal]', e); }
+    // Start tamper-prevention guard (reverses DevTools manipulation every 800ms)
+    _startClientPortalGuard();
+    return;
+  }
+
+  // ADMIN / RECRUITER — app-shell visible, portal forcibly hidden
+  if (cp) cp.style.display = 'none';
+  if (a)  a.style.cssText  = 'display:flex!important';
+
+  try { _syncLibRole(); }    catch(e) {}
+  try { launchApp(); }       catch(e) { try { loadData(); nav('dashboard'); } catch(e2) {} }
+
+  setTimeout(applyNavRestrictions, 50);
+}
+
+// ── MAIN GATE LOGIN ───────────────────────────────────────────
 async function gateLogin() {
-  var email = (document.getElementById('gate-email')||{}).value||'';
-  var pass  = (document.getElementById('gate-input')||{}).value||'';
-  var btn   = document.getElementById('gate-btn');
-  var err   = document.getElementById('gate-err');
-  email = email.trim(); pass = pass.trim();
+  var email = ((document.getElementById('gate-email')||{}).value||'').trim();
+  var pass  = ((document.getElementById('gate-input')||{}).value||'').trim();
 
-  if(!email || !pass){
-    if(err) err.textContent = 'Email and password required.';
+  if (!email || !pass) { _gateSetError('Email and password required.'); return; }
+
+  _gateSetLoading(true);
+  _gateSetError('');
+
+  // ── CASE 1: Supabase configured — real auth ───────────────
+  if (_sb) {
+    var result = await sbSignIn(email, pass);
+    if (result.error) {
+      _gateSetError(result.error.message || 'Sign in failed.');
+      _gateSetLoading(false);
+      return;
+    }
+    var role = (_sbUser && _sbUser.user_metadata && _sbUser.user_metadata.role) || 'admin';
+    _unlockApp(role);
     return;
   }
 
-  // If Supabase not configured, show fallback and stop
-  if(!_sb){
-    var fb = document.getElementById('gate-fallback');
-    if(fb) fb.style.display = 'block';
-    if(err) err.textContent = 'Configure Supabase first (see below).';
+  // ── CASE 2: No Supabase — dev fallback ────────────────────
+  if (email === DEV_MODE_EMAIL && pass === DEV_MODE_PASS) {
+    _setDevSession(email);
+    _unlockApp('admin');
     return;
   }
 
-  if(btn){ btn.disabled = true; btn.textContent = 'Signing in…'; }
-  if(err) err.textContent = '';
+  // ── CASE 3: No Supabase, wrong credentials ─────────────────
+  _gateSetError('Supabase not configured. Use dev@local / dev to continue in dev mode.');
+  _gateSetLoading(false);
+}
 
-  var result = await sbSignIn(email, pass);
-  if(result.error){
-    if(err) err.textContent = result.error.message || 'Sign in failed.';
-    if(btn){ btn.disabled = false; btn.textContent = 'Sign In →'; }
-    return;
-  }
-
-  // Auth succeeded — route by role
-  var role = (_sbUser && _sbUser.user_metadata && _sbUser.user_metadata.role) || 'admin';
-  if(role === 'client'){
-    document.getElementById('gate').style.cssText = 'display:none!important';
-    var cp = document.getElementById('client-portal');
-    if(cp) cp.style.display = 'block';
-    renderClientPortal();
-  } else {
-    document.getElementById('gate').style.cssText = 'display:none!important';
-    document.getElementById('app-shell').style.cssText = 'display:flex!important';
-    try{ loadData(); }catch(e){}
-    try{ nav('dashboard'); }catch(e){}
-  }
+// ── CREATE USER ───────────────────────────────────────────────
+async function createUser(email, password) {
+  if (!_sb) return { error: { message: 'Supabase not configured' } };
+  if (!email || !password) return { error: { message: 'Email and password required' } };
+  var { data, error } = await _sb.auth.signUp({ email, password });
+  if (error) return { error };
+  return { data, message: 'Account created. Check email to confirm.' };
 }
 
 function sbInit() {
@@ -1757,20 +1838,24 @@ function sbInit() {
   const key = localStorage.getItem(SB_KEY_KEY) || '';
   if (url && key && url !== 'YOUR_URL' && typeof window.__initSupabase === 'function') {
     _sb = window.__initSupabase(url, key);
+    if (!_sb) console.warn('[SB] __initSupabase returned null — check URL/key format');
   }
   _sbReady = true;
   _updateSbStatus();
 
-  // Show/hide fallback message on gate based on SB config
+  // Always show dev hint when no Supabase configured
   var fb = document.getElementById('gate-fallback');
-  if(fb) fb.style.display = _sb ? 'none' : 'block';
+  if (fb) fb.style.display = _sb ? 'none' : 'block';
 }
 
 function _updateSbStatus() {
   const dot = document.getElementById('sb-status-dot');
   const lbl = document.getElementById('sb-status-lbl');
   if (!dot) return;
-  if (_sb && _sbUser) {
+  if (_devModeActive) {
+    dot.style.background = 'var(--amber)';
+    lbl.textContent = 'Dev mode — data saved locally only';
+  } else if (_sb && _sbUser) {
     dot.style.background = 'var(--green)';
     lbl.textContent = 'Connected · ' + (_sbUser.email || '');
   } else if (_sb) {
@@ -1782,29 +1867,165 @@ function _updateSbStatus() {
   }
 }
 
-// ── SAFE TABLE NAMES ──────────────────────────────────────────
-// Map internal keys → Supabase table names
-// SB_TABLE defined below after storage key constants
+// ═══════════════════════════════════════════════════════════════
+// ROLE-BASED ACCESS CONTROL
+// Single source of truth. Everything in the app checks these.
+// ═══════════════════════════════════════════════════════════════
+
+// Get current role from live session. Defaults to 'admin' when unconfigured.
+function getRole() {
+  if (_devModeActive) return 'admin';
+  return (_sbUser && _sbUser.user_metadata && _sbUser.user_metadata.role) || 'admin';
+}
+
+// Returns the client_company scoping value (clients only)
+function getClientCompany() {
+  if (!_sbUser || !_sbUser.user_metadata) return null;
+  return _sbUser.user_metadata.client_company || null;
+}
+
+// Permission map — what each role is allowed to do
+var ROLE_PERMISSIONS = {
+  admin: {
+    viewDashboard    : true,
+    viewCandidates   : true,
+    viewJobs         : true,
+    viewDeals        : true,
+    viewPipeline     : true,
+    viewAnalytics    : true,
+    viewSettings     : true,
+    viewAITools      : true,
+    editCandidates   : true,
+    deleteCandidates : true,
+    editJobs         : true,
+    deleteJobs       : true,
+    editDeals        : true,
+    exportData       : true,
+    manageUsers      : true,
+    sendEmail        : true,
+  },
+  recruiter: {
+    viewDashboard    : true,
+    viewCandidates   : true,
+    viewJobs         : true,
+    viewDeals        : true,
+    viewPipeline     : true,
+    viewAnalytics    : true,
+    viewSettings     : false,   // no workspace settings
+    viewAITools      : true,
+    editCandidates   : true,
+    deleteCandidates : false,   // recruiters cannot delete
+    editJobs         : true,
+    deleteJobs       : false,
+    editDeals        : true,
+    exportData       : false,
+    manageUsers      : false,
+    sendEmail        : true,
+  },
+  client: {
+    viewDashboard    : false,
+    viewCandidates   : true,    // portal only — filtered
+    viewJobs         : true,    // portal only — open roles
+    viewDeals        : false,
+    viewPipeline     : false,
+    viewAnalytics    : false,
+    viewSettings     : false,
+    viewAITools      : false,
+    editCandidates   : false,
+    deleteCandidates : false,
+    editJobs         : false,
+    deleteJobs       : false,
+    editDeals        : false,
+    exportData       : false,
+    manageUsers      : false,
+    sendEmail        : false,
+  },
+};
+
+// Check a single permission. Safe to call anywhere.
+function can(permission) {
+  var role = getRole();
+  var perms = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.admin;
+  return perms[permission] === true;
+}
+
+// Enforce: navigate away if user lacks permission for current view
+function enforcePermission(permission) {
+  if (!can(permission)) {
+    nav('dashboard');
+    return false;
+  }
+  return true;
+}
+
+// Apply nav restrictions based on current role.
+// Called after login and after every nav() call.
+function applyNavRestrictions() {
+  var role = getRole();
+
+  // Map: nav item ID → permission required to see it
+  var navPermissions = {
+    'ni-deals'     : 'viewDeals',
+    'ni-analytics' : 'viewAnalytics',
+    'ni-aitools'   : 'viewAITools',
+    'ni-workspace' : 'viewSettings',
+  };
+
+  Object.keys(navPermissions).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = can(navPermissions[id]) ? '' : 'none';
+  });
+
+  // Hide delete buttons for roles without deleteCandidates permission
+  if (!can('deleteCandidates')) {
+    document.querySelectorAll('[data-action="delete-cand"]').forEach(function(b) {
+      b.style.display = 'none';
+    });
+  }
+
+  // Hide export for non-admins
+  document.querySelectorAll('[data-action="export"]').forEach(function(b) {
+    b.style.display = can('exportData') ? '' : 'none';
+  });
+
+  // Hide "Manage Users" section in workspace for non-admins
+  var usersTab = document.querySelector('.ws-tab[data-tab="ws-users"]');
+  if (usersTab) usersTab.style.display = can('manageUsers') ? '' : 'none';
+
+  // Show role badge in sidebar bottom
+  _renderRoleBadge(role);
+}
+
+function _renderRoleBadge(role) {
+  var badge = document.getElementById('sb-role-badge');
+  if (!badge) return;
+  var labels = { admin: '⚙️ Admin', recruiter: '🎯 Recruiter', client: '👤 Client' };
+  var colors = { admin: 'var(--accent)', recruiter: 'var(--teal)', client: 'var(--amber)' };
+  badge.textContent = labels[role] || role;
+  badge.style.color = colors[role] || 'var(--text4)';
+}
 
 // ── ASYNC LOAD ────────────────────────────────────────────────
-// Try Supabase first. On any failure, fall back to localStorage.
-// Always filters by user_id — prevents cross-user data leaks.
+// Supabase path: filters by user_id, limits to 500 rows.
+// Dev mode / no Supabase: falls back to localStorage transparently.
 async function sbLoad(key) {
   const table = SB_TABLE[key] || key;
-  if (_sb && _sbUser) {
+  if (_sb && _sbUser && !_devModeActive) {
     try {
       const { data, error } = await _sb
         .from(table)
         .select('id, data')
-        .eq('user_id', _sbUser.id)          // ← SECURITY: own records only
+        .eq('user_id', _sbUser.id)          // SECURITY: own records only
         .order('created_at', { ascending: false })
-        .limit(500);                          // ← PERF: cap initial load
+        .limit(500);                          // PERF: cap initial load
       if (error) throw error;
       return (data || []).map(row => row.data && typeof row.data === 'object' ? row.data : row);
     } catch(e) {
-      console.warn('[Supabase] load failed, using localStorage:', e.message);
+      console.warn('[SB] sbLoad failed, falling back to localStorage:', e.message);
     }
   }
+  // Fallback: localStorage (dev mode or Supabase failure)
   try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { return []; }
 }
 
@@ -1813,22 +2034,24 @@ async function sbLoad(key) {
 // Records are stored as {id, user_id, data: <full record>} to avoid
 // schema migrations every time the app data model changes.
 async function sbSave(key, data) {
-  // Always write localStorage immediately (cache + fallback)
+  // Always write localStorage immediately (cache + offline fallback)
   try { localStorage.setItem(key, JSON.stringify(data)); } catch(e) {}
+
+  // Skip Supabase in dev mode — localStorage is the store
+  if (_devModeActive) return;
 
   const table = SB_TABLE[key] || key;
   if (_sb && _sbUser) {
-    // Wrap each record in the jsonb envelope
     const rows = data.map(d => ({
-      id: d.id || ('auto_' + Math.random().toString(36).slice(2)),
-      user_id: _sbUser.id,
-      data: d
+      id      : d.id || ('auto_' + Math.random().toString(36).slice(2)),
+      user_id : _sbUser.id,
+      data    : d
     }));
     try {
       const { error } = await _sb.from(table).upsert(rows, { onConflict: 'id' });
       if (error) throw error;
     } catch(e) {
-      console.warn('[Supabase] save failed, localStorage used:', e.message);
+      console.warn('[SB] save failed, localStorage used:', e.message);
     }
   }
 }
@@ -1846,29 +2069,57 @@ async function sbSignIn(email, password) {
 }
 
 async function sbSignOut() {
-  if (_sb) { try { await _sb.auth.signOut(); } catch(e) {} }
-  _sbUser = null;
-  sessionStorage.removeItem('tb_sb_user');
+  if (_sb && !_devModeActive) { try { await _sb.auth.signOut(); } catch(e) {} }
+  _clearSession();
   _updateSbStatus();
+  // Return to gate
+  var g = document.getElementById('gate');
+  var a = document.getElementById('app-shell');
+  if (g) g.style.cssText = 'display:flex!important;position:fixed;inset:0;z-index:9999;';
+  if (a) a.style.cssText = 'display:none!important';
+  var cp = document.getElementById('client-portal');
+  if (cp) cp.style.display = 'none';
+  // Clear inputs for fresh login
+  var ei = document.getElementById('gate-email');
+  var pi = document.getElementById('gate-input');
+  if (ei) { ei.value = ''; ei.focus(); }
+  if (pi) pi.value = '';
+  var err = document.getElementById('gate-err');
+  if (err) err.textContent = '';
+  var btn = document.getElementById('gate-btn');
+  if (btn) { btn.disabled = false; btn.textContent = 'Sign In →'; }
 }
 
 async function sbRestoreSession() {
-  // Restore from sessionStorage first (fast path)
+  // Fast path: restore from sessionStorage (works for both real and dev sessions)
   try {
-    const cached = sessionStorage.getItem('tb_sb_user');
-    if (cached) { _sbUser = JSON.parse(cached); _updateSbStatus(); return; }
+    var cached = sessionStorage.getItem('tb_sb_user');
+    if (cached) {
+      var user = JSON.parse(cached);
+      if (user && user.id) {
+        _sbUser = user;
+        if (user.id === 'dev-local-user') _devModeActive = true;
+        _updateSbStatus();
+        return true; // session restored
+      }
+    }
   } catch(e) {}
-  // Then check Supabase session
+
+  // Slow path: ask Supabase for a live session token
   if (_sb) {
     try {
-      const { data: { session } } = await _sb.auth.getSession();
+      var resp = await _sb.auth.getSession();
+      var session = resp.data && resp.data.session;
       if (session) {
         _sbUser = session.user;
         sessionStorage.setItem('tb_sb_user', JSON.stringify(_sbUser));
         _updateSbStatus();
+        return true;
       }
-    } catch(e) {}
+    } catch(e) { console.warn('[SB] getSession failed:', e.message); }
   }
+
+  return false; // no session
 }
 
 // ═══════════════════════════════════════════════
@@ -2718,6 +2969,18 @@ function toggleNavTools(btn){
 }
 
 function nav(v){
+  // Permission guard — block views the current role cannot access
+  var viewPermissions = {
+    'deals'      : 'viewDeals',
+    'analytics'  : 'viewAnalytics',
+    'aitools'    : 'viewAITools',
+    'workspace'  : 'viewSettings',
+  };
+  if (viewPermissions[v] && !can(viewPermissions[v])) {
+    console.warn('[RBAC] Access denied to view:', v);
+    v = 'dashboard';
+  }
+
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('on'));
   const view=document.getElementById('v-'+v);
   if(view)view.classList.add('on');
@@ -2725,7 +2988,7 @@ function nav(v){
   document.querySelectorAll('.ni').forEach(el=>{if(el.getAttribute('onclick')&&el.getAttribute('onclick').includes("'"+v+"'"))el.classList.add('on');});
   if(v==='dashboard')renderDash();
   if(v==='deals'){renderDeals();}
-  if(v==='aitools'){}  // hub is static HTML, no init needed
+  if(v==='aitools'){}
   if(v==='candidates'){updateRoleFilter();doSearch();}
   if(v==='pipeline'){renderKanban();updateKbJobFilter();}
   if(v==='jobs'){renderJobsList();}
@@ -2747,6 +3010,8 @@ function nav(v){
   if(nc)nc.textContent=cands.length;
   if(nj)nj.textContent=jobs.filter(j=>j.status==='Open').length;
   if(nd)nd.textContent=deals.length||'';
+  // Re-apply nav restrictions on every view change (handles direct URL manipulation)
+  applyNavRestrictions();
 }
 
 // ═══════════════════════════════════════════════
@@ -3710,12 +3975,15 @@ function _updateEmailToggleUI(){
 async function sendEmail({ to, subject, html, text, candidateId }){
   var cfg = getEmailConfig();
   if(!cfg.proxyUrl){
-    console.info('[Email] No proxy configured — skipping real send, logging only.');
+    console.info('[Email] No proxy configured — skipping.');
     return { skipped: true, reason: 'no_proxy' };
   }
   if(!to || !to.includes('@')){
-    console.warn('[Email] Invalid or missing recipient:', to);
+    console.warn('[Email] Invalid recipient:', to);
     return { skipped: true, reason: 'no_recipient' };
+  }
+  if(!cfg.secret){
+    return { skipped: true, reason: 'no_secret', error: 'Email secret not configured in Settings → Email.' };
   }
 
   // Build tracking ID: "<candidateId>-<timestamp>"
@@ -3723,9 +3991,6 @@ async function sendEmail({ to, subject, html, text, candidateId }){
     ? (candidateId + '-' + Date.now())
     : ('anon-' + Date.now());
 
-  // Fix 1: Pixel URL uses explicit VERCEL_DOMAIN config, not derived from proxyUrl.
-  // Set in Workspace Settings → Email → Vercel Domain field.
-  // Falls back to proxyOrigin so existing installs keep working.
   var vercelDomain = localStorage.getItem('tb_vercel_domain') || '';
   var pixelBase = vercelDomain
     ? vercelDomain.replace(/\/$/, '')
@@ -3733,36 +3998,55 @@ async function sendEmail({ to, subject, html, text, candidateId }){
   var pixelUrl = pixelBase + '/api/track-open?id=' + encodeURIComponent(trackingId)
     + (candidateId ? '&uid=' + encodeURIComponent(candidateId) : '');
 
-  // Inject tracking pixel at bottom of email HTML (hidden 1x1 image)
   var htmlBody = html || (text ? '<pre style="font-family:sans-serif;white-space:pre-wrap;">'+text+'</pre>' : '');
   var htmlWithTracking = htmlBody
     + '\n<!-- tracking -->'
     + '<img src="' + pixelUrl + '" width="1" height="1" alt="" '
     + 'style="display:block;width:1px;height:1px;border:0;margin:0;padding:0;" />';
 
+  // 10-second timeout to avoid hanging silently
+  var controller = new AbortController();
+  var timeoutId  = setTimeout(function(){ controller.abort(); }, 10000);
+
   try {
     var res = await fetch(cfg.proxyUrl, {
-      method: 'POST',
+      method : 'POST',
+      signal : controller.signal,
       headers: {
         'Content-Type': 'application/json',
-        ...(cfg.secret ? { 'x-tb-secret': cfg.secret } : {}),
+        'x-tb-secret' : cfg.secret,
       },
       body: JSON.stringify({
         to,
         subject,
-        html      : htmlWithTracking,
-        text      : text || '',
-        from_name : cfg.fromName,
-        from_addr : cfg.fromAddr,
-        // Pass trackingId as a Resend tag for webhook correlation
-        tags      : [{ name: 'tracking_id', value: trackingId }],
+        html       : htmlWithTracking,
+        text       : text || '',
+        from_name  : cfg.fromName,
+        from_addr  : cfg.fromAddr,
+        tags       : [{ name: 'tracking_id', value: trackingId }],
         tracking_id: trackingId,
       }),
     });
-    var result = await res.json();
-    if(!res.ok) throw new Error(result.error || 'Send failed ('+res.status+')');
+    clearTimeout(timeoutId);
 
-    // Log to Supabase activity table if connected
+    var result = await res.json().catch(function(){ return {}; });
+
+    // Surface specific status errors with actionable messages
+    if (res.status === 401) {
+      return { error: 'Email secret mismatch — check Settings → Email → Email Secret matches your Vercel EMAIL_SECRET env var.' };
+    }
+    if (res.status === 429) {
+      var retryAfter = res.headers.get('Retry-After') || '60';
+      return { error: 'Rate limit hit — too many emails sent. Try again in ' + retryAfter + ' seconds.' };
+    }
+    if (res.status === 503) {
+      return { error: 'Email service not configured on the server — check Vercel env vars (EMAIL_SECRET, RESEND_API_KEY).' };
+    }
+    if (!res.ok) {
+      throw new Error(result.error || 'Send failed (' + res.status + ')');
+    }
+
+    // Log to Supabase activity table
     if(_sb && _sbUser && candidateId){
       _sb.from('activity').insert({
         candidate_id: candidateId,
@@ -3770,10 +4054,15 @@ async function sendEmail({ to, subject, html, text, candidateId }){
         tracking_id : trackingId,
         user_id     : _sbUser.id,
         created_at  : new Date().toISOString()
-      }).then(()=>{}).catch(()=>{});
+      }).then(function(){}).catch(function(){});
     }
     return { success: true, id: result.id, trackingId };
-  } catch(e){
+
+  } catch(e) {
+    clearTimeout(timeoutId);
+    if (e.name === 'AbortError') {
+      return { error: 'Email request timed out after 10 seconds. Check your proxy URL.' };
+    }
     console.error('[Email] Send failed:', e.message);
     return { error: e.message };
   }
@@ -3860,6 +4149,7 @@ async function sbPollTracking(candId){
       .from('candidates')
       .select('id, data')
       .eq('id', candId)
+      .eq('user_id', _sbUser.id)   // defense-in-depth: own record only
       .single();
     if(error || !data) return;
     const remote = data.data || {};
@@ -8853,9 +9143,6 @@ document.querySelectorAll('.overlay').forEach(ov=>{ov.addEventListener('click',e
 // ═══════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════
-// ═══ ACCESS GATE ═══
-const ACCESS_CODE = 'TSS2026';
-const SESSION_KEY = 'tb_access_v1';
 
 async function launchApp(){
   try { await loadData(); } catch(e){ console.warn('loadData error:', e); }
@@ -8866,13 +9153,10 @@ async function launchApp(){
     const params = new URLSearchParams(window.location.search);
     const newJobId = params.get('newJob');
     if(newJobId){
-      // Nav to jobs view
       try { nav('jobs'); } catch(e){}
-      // Highlight job after a brief render delay
       setTimeout(function(){
         try {
           selJob(newJobId);
-          // Show a brief success banner
           var banner = document.createElement('div');
           banner.id = 'hh-pipeline-banner';
           banner.style.cssText = [
@@ -8888,29 +9172,11 @@ async function launchApp(){
           setTimeout(function(){ if(banner.parentNode) banner.parentNode.removeChild(banner); }, 6000);
         } catch(e){}
       }, 300);
-      return; // skip default dashboard nav
+      return;
     }
   } catch(e){}
-  // ────────────────────────────────────────────────────────────
 
   try { nav('dashboard'); } catch(e){ console.warn('nav error:', e); }
-}
-
-function checkGate(){
-  var inp = document.getElementById('gate-input');
-  var val = (inp ? inp.value : '').trim();
-  if(val.toUpperCase() === ACCESS_CODE){
-    sessionStorage.setItem(SESSION_KEY, '1');
-    var g = document.getElementById('gate');
-    var a = document.getElementById('app-shell');
-    if(g) g.style.cssText = 'display:none!important';
-    if(a) a.style.cssText = 'display:flex!important';
-    launchApp();
-  } else {
-    var err = document.getElementById('gate-err');
-    if(inp){ inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake'); inp.value=''; inp.focus(); }
-    if(err){ err.textContent='Incorrect code — try again.'; setTimeout(function(){ err.textContent=''; if(inp)inp.classList.remove('shake'); }, 2500); }
-  }
 }
 
 function toggleGateEye(){
@@ -8925,17 +9191,24 @@ function toggleGateEye(){
   }
 }
 
-window.addEventListener('DOMContentLoaded', function(){
+window.addEventListener('DOMContentLoaded', async function(){
   var g = document.getElementById('gate');
   var a = document.getElementById('app-shell');
-  if(sessionStorage.getItem(SESSION_KEY) === '1'){
-    if(g) g.style.cssText = 'display:none!important';
-    if(a) a.style.cssText = 'display:flex!important';
-    launchApp();
+
+  // Init Supabase first so sbRestoreSession can check credentials
+  sbInit();
+
+  // Try to restore a live Supabase session (handles page refresh)
+  await sbRestoreSession();
+
+  if(_sbUser){
+    var role = (_sbUser.user_metadata && _sbUser.user_metadata.role) || 'admin';
+    _unlockApp(role);   // _unlockApp enforces mutual exclusion — one path only
   } else {
+    // No session — show gate
     if(g) g.style.cssText = 'display:flex!important;position:fixed;inset:0;z-index:9999;';
     if(a) a.style.cssText = 'display:none!important';
-    setTimeout(function(){ var i=document.getElementById('gate-input'); if(i)i.focus(); }, 150);
+    setTimeout(function(){ var i=document.getElementById('gate-email'); if(i)i.focus(); }, 150);
   }
 });
 </script>
@@ -9012,19 +9285,19 @@ window.addEventListener('DOMContentLoaded', function(){
       <div class="ws-section-title">Role Permissions</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
         <div class="ws-role-card">
-          <div style="font-size:20px;margin-bottom:6px;">🎯</div>
-          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Recruiter</div>
-          <div style="font-size:11px;color:var(--text4);line-height:1.6;">Add/edit candidates<br>Run searches<br>Use templates<br>View pipeline</div>
-        </div>
-        <div class="ws-role-card">
-          <div style="font-size:20px;margin-bottom:6px;">👥</div>
-          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">HR Manager</div>
-          <div style="font-size:11px;color:var(--text4);line-height:1.6;">All recruiter rights<br>Delete records<br>Edit templates<br>View analytics</div>
-        </div>
-        <div class="ws-role-card">
           <div style="font-size:20px;margin-bottom:6px;">⚙️</div>
           <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Admin</div>
-          <div style="font-size:11px;color:var(--text4);line-height:1.6;">Full access<br>Export/delete data<br>Manage users<br>Workspace settings</div>
+          <div style="font-size:11px;color:var(--text4);line-height:1.6;">Full access<br>Delete &amp; export<br>Manage users<br>Workspace settings</div>
+        </div>
+        <div class="ws-role-card">
+          <div style="font-size:20px;margin-bottom:6px;">🎯</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Recruiter</div>
+          <div style="font-size:11px;color:var(--text4);line-height:1.6;">Add/edit candidates<br>Run AI tools<br>View pipeline &amp; deals<br>No delete or export</div>
+        </div>
+        <div class="ws-role-card">
+          <div style="font-size:20px;margin-bottom:6px;">👤</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Client</div>
+          <div style="font-size:11px;color:var(--text4);line-height:1.6;">Portal only<br>Flagged candidates<br>Approve / reject<br>No internal data</div>
         </div>
       </div>
     </div>
@@ -9228,43 +9501,155 @@ window.addEventListener('DOMContentLoaded', function(){
       <div style="font-size:12px;color:var(--text4);margin-bottom:10px;line-height:1.6;">Run this SQL in your Supabase SQL editor to create the required tables with row-level security:</div>
       <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:12px 14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);line-height:1.7;position:relative;">
         <button onclick="copySbSchema(this)" class="btn btn-ghost btn-xs" style="position:absolute;top:8px;right:8px;">Copy SQL</button>
-        <pre id="sb-schema-sql" style="margin:0;white-space:pre-wrap;padding-right:60px;">-- Run in Supabase SQL Editor
+        <pre id="sb-schema-sql" style="margin:0;white-space:pre-wrap;padding-right:60px;">-- ═══════════════════════════════════════════════
+-- TalentBase — Supabase Schema + RLS
+-- Run BOTH blocks in Supabase Dashboard → SQL Editor → Run
+-- Run schema first, then RLS block.
+-- ═══════════════════════════════════════════════
+
+-- ── BLOCK 1: TABLES + INDEXES ────────────────────
 CREATE TABLE IF NOT EXISTS candidates (
-  id text PRIMARY KEY,
-  user_id uuid REFERENCES auth.users,
-  data jsonb
+  id                text PRIMARY KEY,
+  user_id           uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+  data              jsonb,
+  visible_to_client boolean DEFAULT false,
+  client_company    text,
+  created_at        timestamptz DEFAULT now()
 );
 CREATE TABLE IF NOT EXISTS jobs (
-  id text PRIMARY KEY,
-  user_id uuid REFERENCES auth.users,
-  data jsonb
-);
-CREATE TABLE IF NOT EXISTS deals (
-  id text PRIMARY KEY,
-  user_id uuid REFERENCES auth.users,
-  data jsonb
-);
-CREATE TABLE IF NOT EXISTS activity (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  candidate_id text,
-  user_id uuid REFERENCES auth.users,
-  text text,
-  tracking_id text,
-  email text,
+  id         text PRIMARY KEY,
+  user_id    uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+  data       jsonb,
   created_at timestamptz DEFAULT now()
 );
--- Enable row-level security
-ALTER TABLE candidates ENABLE ROW LEVEL SECURITY;
-ALTER TABLE jobs       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE deals      ENABLE ROW LEVEL SECURITY;
-ALTER TABLE activity   ENABLE ROW LEVEL SECURITY;
--- Each user only sees their own data
-CREATE POLICY "own_candidates" ON candidates FOR ALL USING (auth.uid()=user_id);
-CREATE POLICY "own_jobs"       ON jobs       FOR ALL USING (auth.uid()=user_id);
-CREATE POLICY "own_deals"      ON deals      FOR ALL USING (auth.uid()=user_id);
-CREATE POLICY "own_activity"   ON activity   FOR ALL USING (auth.uid()=user_id);
--- Service role can write activity (for webhook + tracking pixel)
-CREATE POLICY "service_activity" ON activity FOR INSERT WITH CHECK (true);</pre>
+CREATE TABLE IF NOT EXISTS deals (
+  id         text PRIMARY KEY,
+  user_id    uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+  data       jsonb,
+  created_at timestamptz DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS activity (
+  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  candidate_id text,
+  user_id      uuid REFERENCES auth.users ON DELETE CASCADE,
+  text         text,
+  tracking_id  text,
+  email        text,
+  created_at   timestamptz DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS client_feedback (
+  id             uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  candidate_id   text NOT NULL,
+  client_user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+  decision       text,
+  note           text,
+  created_at     timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS candidates_user_created ON candidates(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS jobs_user_created       ON jobs(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS deals_user_created      ON deals(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS activity_candidate      ON activity(candidate_id, created_at DESC);
+
+ALTER TABLE candidates      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jobs            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE deals           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE activity        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE client_feedback ENABLE ROW LEVEL SECURITY;
+
+-- ── BLOCK 2: RLS POLICIES ────────────────────────
+-- Drop all existing policies first
+DROP POLICY IF EXISTS "own_candidates"         ON candidates;
+DROP POLICY IF EXISTS "own_jobs"               ON jobs;
+DROP POLICY IF EXISTS "own_deals"              ON deals;
+DROP POLICY IF EXISTS "own_activity"           ON activity;
+DROP POLICY IF EXISTS "service_activity"       ON activity;
+DROP POLICY IF EXISTS "client_read_candidates" ON candidates;
+DROP POLICY IF EXISTS "client_own_feedback"    ON client_feedback;
+DROP POLICY IF EXISTS "admin_read_feedback"    ON client_feedback;
+DROP POLICY IF EXISTS "recruiter_candidates"   ON candidates;
+DROP POLICY IF EXISTS "recruiter_jobs"         ON jobs;
+DROP POLICY IF EXISTS "admin_candidates"       ON candidates;
+DROP POLICY IF EXISTS "admin_jobs"             ON jobs;
+DROP POLICY IF EXISTS "admin_deals"            ON deals;
+DROP POLICY IF EXISTS "recruiter_deals"        ON deals;
+DROP POLICY IF EXISTS "admin_activity"         ON activity;
+DROP POLICY IF EXISTS "recruiter_activity"     ON activity;
+DROP POLICY IF EXISTS "staff_read_feedback"    ON client_feedback;
+
+-- Helper functions
+CREATE OR REPLACE FUNCTION current_user_role()
+RETURNS text LANGUAGE sql STABLE AS $$
+  SELECT coalesce(auth.jwt()->'user_metadata'->>'role','admin')
+$$;
+CREATE OR REPLACE FUNCTION current_user_company()
+RETURNS text LANGUAGE sql STABLE AS $$
+  SELECT auth.jwt()->'user_metadata'->>'client_company'
+$$;
+-- workspace_owner_id scopes client to a single recruiter workspace
+CREATE OR REPLACE FUNCTION current_workspace_owner()
+RETURNS uuid LANGUAGE sql STABLE AS $$
+  SELECT nullif(auth.jwt()->'user_metadata'->>'workspace_owner_id','')::uuid
+$$;
+
+-- Admin policies
+CREATE POLICY "admin_candidates" ON candidates FOR ALL
+  USING  (auth.uid()=user_id AND current_user_role()='admin')
+  WITH CHECK (auth.uid()=user_id AND current_user_role()='admin');
+CREATE POLICY "admin_jobs" ON jobs FOR ALL
+  USING  (auth.uid()=user_id AND current_user_role()='admin')
+  WITH CHECK (auth.uid()=user_id AND current_user_role()='admin');
+CREATE POLICY "admin_deals" ON deals FOR ALL
+  USING  (auth.uid()=user_id AND current_user_role()='admin')
+  WITH CHECK (auth.uid()=user_id AND current_user_role()='admin');
+CREATE POLICY "admin_activity" ON activity FOR ALL
+  USING  (auth.uid()=user_id AND current_user_role()='admin')
+  WITH CHECK (auth.uid()=user_id AND current_user_role()='admin');
+
+-- Recruiter policies
+CREATE POLICY "recruiter_candidates" ON candidates FOR ALL
+  USING  (auth.uid()=user_id AND current_user_role()='recruiter')
+  WITH CHECK (auth.uid()=user_id AND current_user_role()='recruiter');
+CREATE POLICY "recruiter_jobs" ON jobs FOR ALL
+  USING  (auth.uid()=user_id AND current_user_role()='recruiter')
+  WITH CHECK (auth.uid()=user_id AND current_user_role()='recruiter');
+CREATE POLICY "recruiter_deals" ON deals FOR ALL
+  USING  (auth.uid()=user_id AND current_user_role()='recruiter')
+  WITH CHECK (auth.uid()=user_id AND current_user_role()='recruiter');
+CREATE POLICY "recruiter_activity" ON activity FOR ALL
+  USING  (auth.uid()=user_id AND current_user_role()='recruiter')
+  WITH CHECK (auth.uid()=user_id AND current_user_role()='recruiter');
+
+-- Client: read-only, scoped by workspace_owner_id + company + visible flag
+-- workspace_owner_id prevents cross-workspace leaks (set when creating client user)
+CREATE POLICY "client_read_candidates" ON candidates FOR SELECT
+  USING (
+    current_user_role()='client'
+    AND visible_to_client=true
+    AND (current_workspace_owner() IS NULL OR user_id=current_workspace_owner())
+    AND (current_user_company() IS NULL OR client_company=current_user_company())
+  );
+
+-- Client feedback
+CREATE POLICY "client_own_feedback" ON client_feedback FOR ALL
+  USING (auth.uid()=client_user_id) WITH CHECK (auth.uid()=client_user_id);
+CREATE POLICY "staff_read_feedback" ON client_feedback FOR SELECT
+  USING (current_user_role() IN ('admin','recruiter'));
+
+-- ── USER SETUP ────────────────────────────────────
+-- Admin:     { "role": "admin" }
+-- Recruiter: { "role": "recruiter" }
+-- Client:    { "role": "client", "client_company": "HiARC",
+--              "workspace_owner_id": "&lt;your-admin-uuid&gt;" }
+--
+-- Mark candidates visible to a client:
+-- UPDATE candidates SET visible_to_client=true, client_company='HiARC'
+-- WHERE id IN ('id1','id2');
+--
+-- Verify:
+-- SELECT tablename,policyname FROM pg_policies
+-- WHERE tablename IN ('candidates','jobs','deals','activity','client_feedback')
+-- ORDER BY tablename;</pre>
       </div>
     </div>
 
@@ -10438,7 +10823,21 @@ function applyV2(){
 // Auto-trigger map: stage → array of lib item ids
 
 var LIB_VERSIONS = JSON.parse(localStorage.getItem('tb_lib_versions')||'{}');
-var CURRENT_ROLE = localStorage.getItem('tb_role') || 'recruiter';
+// CURRENT_ROLE: library-level permission tier.
+// Mapped from the real auth role — not a separate setting.
+// admin → admin, recruiter → recruiter, client/unknown → recruiter (read-only)
+var CURRENT_ROLE = (function(){
+  var stored = localStorage.getItem('tb_role');
+  return stored || 'recruiter'; // will be overridden in _syncLibRole() after login
+})();
+
+function _syncLibRole() {
+  var authRole = getRole();
+  // Map auth roles to library permission tiers
+  var map = { admin: 'admin', recruiter: 'recruiter', client: 'recruiter' };
+  CURRENT_ROLE = map[authRole] || 'recruiter';
+  localStorage.setItem('tb_role', CURRENT_ROLE);
+}
 
 // Stage → template category auto-trigger map
 var STAGE_TRIGGER_MAP = {
@@ -11136,16 +11535,25 @@ function wsSaveGeneral(){
 function wsRenderUsers(){
   var el = document.getElementById('ws-user-list');
   if(!el) return;
-  if(!wsUsers.length){ el.innerHTML = '<div style="color:var(--text4);font-size:12px;">No users yet.</div>'; return; }
+  if(!wsUsers.length){
+    el.innerHTML = '<div style="color:var(--text4);font-size:12px;padding:8px 0;">No users yet. Click + Invite User to add team members.</div>';
+    return;
+  }
   el.innerHTML = wsUsers.map(function(u){
     return '<div class="ws-user-row">' +
-      '<div style="width:34px;height:34px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--accent2);flex-shrink:0;">' + (u.name||'?')[0].toUpperCase() + '</div>' +
-      '<div style="flex:1;min-width:0;">' +
-        '<div style="font-size:13px;font-weight:600;color:var(--text);">' + esc(u.name) + '</div>' +
-        '<div style="font-size:11px;color:var(--text4);">' + esc(u.email) + '</div>' +
+      '<div style="width:34px;height:34px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--accent2);flex-shrink:0;">' +
+        (u.name||u.email||'?')[0].toUpperCase() +
       '</div>' +
-      '<select class="ws-input" style="width:130px;" onchange="wsChangeRole(\''+u.id+'\',this.value)">' +
-        ['admin','hr','recruiter'].map(function(r){ return '<option'+(r===u.role?' selected':'')+'>'+r+'</option>'; }).join('') +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:13px;font-weight:600;color:var(--text);">' + esc(u.name||u.email||'—') + '</div>' +
+        '<div style="font-size:11px;color:var(--text4);">' + esc(u.email) +
+          (u.client_company ? ' · ' + esc(u.client_company) : '') +
+        '</div>' +
+      '</div>' +
+      '<select class="ws-input" style="width:120px;" onchange="wsChangeRole(\''+u.id+'\',this.value)">' +
+        ['admin','recruiter','client'].map(function(r){
+          return '<option'+(r===u.role?' selected':'')+' value="'+r+'">'+r.charAt(0).toUpperCase()+r.slice(1)+'</option>';
+        }).join('') +
       '</select>' +
       (u.id==='u1' ? '' : '<button class="btn btn-ghost btn-xs" style="color:var(--red);" onclick="wsRemoveUser(\''+u.id+'\')">Remove</button>') +
     '</div>';
@@ -11153,13 +11561,109 @@ function wsRenderUsers(){
 }
 
 function wsAddUser(){
-  var name = prompt('Name:'); if(!name||!name.trim()) return;
-  var email = prompt('Email:'); if(!email||!email.trim()) return;
-  var role = prompt('Role (admin / hr / recruiter):','recruiter') || 'recruiter';
-  wsUsers.push({id: uid(), name:name.trim(), email:email.trim(), role:role.trim(), added:Date.now()});
-  localStorage.setItem(WS_USERS_KEY, JSON.stringify(wsUsers));
-  wsRenderUsers();
-  wsToast('User invited');
+  if (!can('manageUsers')) { wsToast('Admin access required'); return; }
+
+  // Build a simple inline modal — no prompt(), no browser dialogs
+  var existing = document.getElementById('ws-invite-modal');
+  if (existing) existing.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'ws-invite-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML = [
+    '<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:24px;width:380px;max-width:90vw;">',
+      '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">Invite Team Member</div>',
+      '<div style="font-size:12px;color:var(--text4);margin-bottom:20px;">',
+        _sb ? 'Creates a real Supabase account. User receives a confirmation email.' : 'Dev mode: stored locally only.',
+      '</div>',
+      '<div style="margin-bottom:12px;">',
+        '<label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;">Email</label>',
+        '<input id="wsi-email" type="email" class="ws-input" placeholder="name@company.com" style="width:100%;"/>',
+      '</div>',
+      '<div style="margin-bottom:12px;">',
+        '<label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;">Temporary Password</label>',
+        '<input id="wsi-pass" type="password" class="ws-input" placeholder="min 8 characters" style="width:100%;"/>',
+      '</div>',
+      '<div style="margin-bottom:20px;">',
+        '<label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;">Role</label>',
+        '<select id="wsi-role" class="ws-input" style="width:100%;">',
+          '<option value="recruiter">Recruiter — can edit, cannot delete or export</option>',
+          '<option value="admin">Admin — full access</option>',
+          '<option value="client">Client — portal only, sees flagged candidates</option>',
+        '</select>',
+      '</div>',
+      // client_company field — shown only when role=client
+      '<div id="wsi-company-wrap" style="margin-bottom:20px;display:none;">',
+        '<label style="font-size:11px;font-weight:700;color:var(--text3);display:block;margin-bottom:4px;">Client Company <span style="color:var(--text4);font-weight:400;">(scopes visible candidates)</span></label>',
+        '<input id="wsi-company" class="ws-input" placeholder="e.g. HiARC" style="width:100%;"/>',
+      '</div>',
+      '<div id="wsi-err" style="font-size:12px;color:var(--red);min-height:16px;margin-bottom:12px;"></div>',
+      '<div style="display:flex;gap:8px;">',
+        '<button class="btn btn-primary" style="flex:1;" onclick="wsInviteSubmit()">Create User</button>',
+        '<button class="btn btn-ghost" onclick="document.getElementById(\'ws-invite-modal\').remove()">Cancel</button>',
+      '</div>',
+    '</div>'
+  ].join('');
+
+  // Show/hide company field when role changes to client
+  document.body.appendChild(modal);
+  document.getElementById('wsi-role').addEventListener('change', function() {
+    document.getElementById('wsi-company-wrap').style.display =
+      this.value === 'client' ? 'block' : 'none';
+  });
+  setTimeout(function(){ var e=document.getElementById('wsi-email'); if(e)e.focus(); }, 80);
+}
+
+async function wsInviteSubmit(){
+  var email   = (document.getElementById('wsi-email')||{}).value||'';
+  var pass    = (document.getElementById('wsi-pass')||{}).value||'';
+  var role    = (document.getElementById('wsi-role')||{}).value||'recruiter';
+  var company = (document.getElementById('wsi-company')||{}).value||'';
+  var errEl   = document.getElementById('wsi-err');
+
+  email = email.trim(); pass = pass.trim(); company = company.trim();
+  if (!email || !pass) { if(errEl) errEl.textContent='Email and password required.'; return; }
+  if (pass.length < 8) { if(errEl) errEl.textContent='Password must be at least 8 characters.'; return; }
+
+  var btn = document.querySelector('#ws-invite-modal .btn-primary');
+  if (btn) { btn.disabled=true; btn.textContent='Creating…'; }
+  if (errEl) errEl.textContent = '';
+
+  // Build user metadata
+  var meta = { role: role };
+  if (role === 'client') {
+    if (company) meta.client_company = company;
+    // Automatically scope client to THIS workspace by embedding the admin's user_id.
+    // This is the workspace_owner_id checked by the RLS client_read_candidates policy.
+    if (_sbUser && _sbUser.id) meta.workspace_owner_id = _sbUser.id;
+  }
+
+  if (_sb) {
+    // Real Supabase signup — use signUp (admin.createUser requires service key not safe client-side)
+    var { data, error } = await _sb.auth.signUp({
+      email    : email,
+      password : pass,
+      options  : { data: meta }
+    });
+    if (error) {
+      if (errEl) errEl.textContent = error.message;
+      if (btn) { btn.disabled=false; btn.textContent='Create User'; }
+      return;
+    }
+    // Also persist to local wsUsers list for display
+    wsUsers.push({ id: (data.user && data.user.id)||uid(), name: email.split('@')[0], email: email, role: role, added: Date.now() });
+    localStorage.setItem(WS_USERS_KEY, JSON.stringify(wsUsers));
+    document.getElementById('ws-invite-modal').remove();
+    wsRenderUsers();
+    wsToast('User created — confirmation email sent to ' + email);
+  } else {
+    // Dev mode: store locally only
+    wsUsers.push({ id: uid(), name: email.split('@')[0], email: email, role: role, added: Date.now() });
+    localStorage.setItem(WS_USERS_KEY, JSON.stringify(wsUsers));
+    document.getElementById('ws-invite-modal').remove();
+    wsRenderUsers();
+    wsToast('User added (dev mode — local only)');
+  }
 }
 
 function wsChangeRole(id, role){
@@ -11426,10 +11930,12 @@ function wsToast(msg){
 </div><!-- /app-shell -->
 
 <!-- ═══════════════════════════════════════════════════════════
-     CLIENT PORTAL — activated via ?view=client in URL
-     Standalone view: pipeline, candidates, roles, activity. Read-only + feedback.
+     CLIENT PORTAL
+     Shown only when _sbUser.user_metadata.role === 'client'.
+     Routed exclusively through _unlockApp('client') after login.
+     No URL parameter bypass. No direct access.
      ═══════════════════════════════════════════════════════════ -->
-<div id="client-portal" style="display:none;position:fixed;inset:0;background:#0b0f1a;color:#e2e8f0;font-family:'DM Sans',sans-serif;overflow-y:auto;z-index:99999;">
+<div id="client-portal" style="display:none;position:fixed;inset:0;background:#0b0f1a;color:#e2e8f0;font-family:'DM Sans',sans-serif;overflow-y:auto;z-index:99999;flex-direction:column;">
 <style>
 /* ── CLIENT PORTAL DESIGN SYSTEM ── */
 #cp{--cp-bg:#0b0f1a;--cp-panel:#111827;--cp-card:#1c2333;--cp-border:#1e2d45;--cp-border2:#2a3a52;--cp-text:#f1f5f9;--cp-text2:#94a3b8;--cp-text3:#64748b;--cp-blue:#3b82f6;--cp-green:#22c55e;--cp-amber:#f59e0b;--cp-red:#ef4444;--cp-purple:#a78bf5;--cp-teal:#14b8a6;font-family:'DM Sans',sans-serif;}
@@ -11521,7 +12027,10 @@ function wsToast(msg){
     <button class="cp-nav-btn" onclick="cpTab('roles',this)">Roles</button>
     <button class="cp-nav-btn" onclick="cpTab('activity',this)">Activity</button>
   </nav>
-  <div id="cp-header-right"></div>
+  <div id="cp-header-right" style="display:flex;align-items:center;gap:12px;">
+    <div id="cp-user-info" style="text-align:right;line-height:1.5;"></div>
+    <button onclick="sbSignOut()" style="padding:6px 14px;border:1px solid rgba(255,255,255,.15);border-radius:6px;background:transparent;color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;" onmouseover="this.style.color='#f1f5f9';this.style.borderColor='rgba(255,255,255,.3)'" onmouseout="this.style.color='#94a3b8';this.style.borderColor='rgba(255,255,255,.15)'">Sign Out</button>
+  </div>
 </div>
 <div id="cp-body">
   <div id="cp-metrics" class="cp-metrics"></div>
@@ -11531,15 +12040,53 @@ function wsToast(msg){
 </div>
 
 <script>
-// ── CLIENT PORTAL BOOTSTRAP ────────────────────────────────────
-(function(){
-  if(window.location.search.indexOf('view=client')===-1) return;
-  document.getElementById('gate').style.display='none';
-  document.getElementById('app-shell').style.display='none';
-  var portal = document.getElementById('client-portal');
-  portal.style.display = 'block';
-  setTimeout(renderClientPortal, 150);
-})();
+// ═══════════════════════════════════════════════════════════════
+// CLIENT PORTAL — ISOLATION ENGINE
+// ═══════════════════════════════════════════════════════════════
+// No URL parameter routing. No public access.
+// Only path in: _unlockApp('client') after successful gateLogin()
+// with role=client in Supabase user_metadata.
+//
+// Three-layer enforcement:
+//   1. _unlockApp: mutual exclusion — sets app-shell display:none!important
+//   2. _assertClientOnly: called at top of every render — aborts + signs out
+//   3. _startClientPortalGuard: 1s interval — reverses any DevTools tampering
+
+var _cpGuardInterval = null;
+
+function _startClientPortalGuard() {
+  if (_cpGuardInterval) return;
+  _cpGuardInterval = setInterval(function() {
+    if (!_sbUser || getRole() !== 'client') {
+      clearInterval(_cpGuardInterval);
+      _cpGuardInterval = null;
+      return;
+    }
+    var a  = document.getElementById('app-shell');
+    var cp = document.getElementById('client-portal');
+    var g  = document.getElementById('gate');
+    // Reverse any manual display manipulation
+    if (a  && getComputedStyle(a).display  !== 'none') a.style.cssText  = 'display:none!important';
+    if (g  && getComputedStyle(g).display  !== 'none') g.style.cssText  = 'display:none!important';
+    if (cp && getComputedStyle(cp).display === 'none') cp.style.display  = 'flex';
+  }, 800);
+}
+
+function _assertClientOnly() {
+  if (getRole() !== 'client') return true;
+  var a = document.getElementById('app-shell');
+  if (a && getComputedStyle(a).display !== 'none') {
+    console.error('[Security] app-shell visible for client — forcing sign-out');
+    sbSignOut();
+    return false;
+  }
+  // Ensure correct state
+  var g  = document.getElementById('gate');
+  var cp = document.getElementById('client-portal');
+  if (g)  g.style.cssText  = 'display:none!important';
+  if (cp && cp.style.display === 'none') cp.style.display = 'flex';
+  return true;
+}
 
 var _cpTab = 'overview';
 
@@ -11553,10 +12100,51 @@ function cpTab(tab, btn){
 // ── DATA HELPERS ───────────────────────────────────────────────
 var _cpCands=[], _cpJobs=[], _cpFeedback={};
 
-function _cpLoad(){
-  try{ _cpCands = JSON.parse(localStorage.getItem('tb_cands_v3')||'[]'); }catch(e){ _cpCands=[]; }
-  try{ _cpJobs  = JSON.parse(localStorage.getItem('tb_jobs_v3') ||'[]'); }catch(e){ _cpJobs=[]; }
-  try{ _cpFeedback = JSON.parse(localStorage.getItem('tb_client_feedback')||'{}'); }catch(e){ _cpFeedback={}; }
+async function _cpLoad(){
+  _cpFeedback = {};
+  try{ _cpFeedback = JSON.parse(localStorage.getItem('tb_client_feedback')||'{}'); }catch(e){}
+
+  // Supabase path: RLS enforces visible_to_client=true and client_company scoping
+  if (_sb && _sbUser && !_devModeActive) {
+    try {
+      var company = getClientCompany();
+      var candQuery = _sb
+        .from('candidates')
+        .select('id, data')
+        .eq('visible_to_client', true)
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (company) candQuery = candQuery.eq('client_company', company);
+
+      // Jobs: fetch open jobs from the workspace owner's records
+      // The client session user_id won't match — use a separate admin-scoped
+      // query. Since the client role has no jobs policy, use a public-safe approach:
+      // store the workspace admin's user_id in client metadata, or simply
+      // rely on RLS + the admin having set up jobs correctly.
+      // For now, fetch jobs from localStorage as a safe fallback (jobs are not sensitive).
+      var candResult = await candQuery;
+      _cpCands = (candResult.data||[]).map(function(r){ return r.data&&typeof r.data==='object'?r.data:r; });
+
+      // Jobs: clients have no RLS access to jobs table → use localStorage cache
+      try{
+        var allJobs = JSON.parse(localStorage.getItem('tb_jobs_v3')||'[]');
+        _cpJobs = allJobs.filter(function(j){ return j.status==='Open'; });
+      }catch(e){ _cpJobs=[]; }
+      return;
+    } catch(e) {
+      console.warn('[Portal] Supabase load failed, falling back:', e.message);
+    }
+  }
+
+  // Dev mode / no Supabase: show only explicitly flagged candidates
+  try{
+    var all = JSON.parse(localStorage.getItem('tb_cands_v3')||'[]');
+    _cpCands = all.filter(function(c){ return c.visible_to_client === true; });
+  }catch(e){ _cpCands=[]; }
+  try{
+    var allJ = JSON.parse(localStorage.getItem('tb_jobs_v3')||'[]');
+    _cpJobs = allJ.filter(function(j){ return j.status==='Open'; });
+  }catch(e){ _cpJobs=[]; }
 }
 
 var _cpAVC=[['rgba(59,130,246,.2)','#60a5fa'],['rgba(34,197,94,.2)','#22c55e'],['rgba(245,158,11,.2)','#f59e0b'],['rgba(139,92,246,.2)','#a78bf5'],['rgba(20,184,166,.2)','#2dd4bf']];
@@ -11565,8 +12153,9 @@ function _cpEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 function _cpFmt(ts){ return ts?new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}):''; }
 
 // ── MAIN RENDER ────────────────────────────────────────────────
-function renderClientPortal(){
-  _cpLoad();
+async function renderClientPortal(){
+  if (_assertClientOnly() === false) return; // aborted — security violation
+  await _cpLoad();
   var active      = _cpCands.filter(function(c){ return !['Rejected','Hired'].includes(c.status); });
   var interviewing= _cpCands.filter(function(c){ return c.status==='Interviewing'; }).length;
   var offer       = _cpCands.filter(function(c){ return c.status==='Offer'; }).length;
