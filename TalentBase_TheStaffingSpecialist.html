@@ -381,6 +381,11 @@ a{color:var(--text3);text-decoration:none;}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
       Dashboard
     </div>
+    <div class="ni" onclick="nav('deals')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Deals
+      <span class="ni-badge" id="nb-deals">0</span>
+    </div>
     <div class="ni" onclick="nav('candidates')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
       Candidates
@@ -599,6 +604,71 @@ a{color:var(--text3);text-decoration:none;}
 
 <!-- ═══ AI TOOL MODAL ═══ -->
 <div class="overlay" id="ov-aitool" onclick="if(event.target===this)closeModal('ov-aitool')"></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+
+<!-- ══════════════════════════════════════════════════════════
+     DEALS CRM — Sales pipeline from HappyHunting to Closed
+═══════════════════════════════════════════════════════════ -->
+<div class="view" id="v-deals" style="flex-direction:column;overflow:hidden;">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Deals</div>
+      <div class="topbar-sub">Sales pipeline · From prospect to closed</div>
+    </div>
+    <div class="tb-spacer"></div>
+    <button class="btn btn-ghost btn-sm" onclick="openAddDealModal()">+ Add Deal</button>
+  </div>
+
+  <!-- Stage filter pills -->
+  <div style="padding:10px 20px;border-bottom:1px solid var(--border2);background:var(--bg2);display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:wrap;">
+    <button class="filter-chip on" onclick="setDealStageFilter('all',this)">All</button>
+    <button class="filter-chip" onclick="setDealStageFilter('Prospect',this)">Prospect</button>
+    <button class="filter-chip" onclick="setDealStageFilter('Contacted',this)">Contacted</button>
+    <button class="filter-chip" onclick="setDealStageFilter('Meeting',this)">Meeting</button>
+    <button class="filter-chip" onclick="setDealStageFilter('Active',this)">Active</button>
+    <button class="filter-chip" onclick="setDealStageFilter('Closed',this)">Closed</button>
+    <span id="deals-count" style="margin-left:auto;font-size:12px;color:var(--text4);"></span>
+  </div>
+
+  <!-- Pipeline funnel bar -->
+  <div id="deals-funnel" style="padding:12px 20px;border-bottom:1px solid var(--border2);background:var(--bg2);display:flex;gap:8px;flex-shrink:0;overflow-x:auto;"></div>
+
+  <!-- Deals table -->
+  <div style="flex:1;overflow-y:auto;">
+    <div style="display:grid;grid-template-columns:1fr 1.2fr 100px 130px 1fr 100px;gap:0;padding:7px 20px;border-bottom:1px solid var(--border2);background:var(--bg2);position:sticky;top:0;z-index:2;">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;">Company</div>
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;">Role</div>
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;">Fee</div>
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;">Stage</div>
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;">Move Stage</div>
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;text-align:right;">Added</div>
+    </div>
+    <div id="deals-list"></div>
+  </div>
+</div>
+
+<!-- ═══ ADD DEAL MODAL ═══ -->
+<div class="overlay" id="ov-add-deal" onclick="if(event.target===this)closeModal('ov-add-deal')">
+  <div class="modal" style="max-width:440px;">
+    <button class="modal-close" onclick="closeModal('ov-add-deal')">✕</button>
+    <h2>New Deal</h2>
+    <div class="field"><label>Company</label><input id="ad-company" placeholder="e.g. HiARC / Medtronic" class="ws-input"/></div>
+    <div class="field"><label>Role / Position</label><input id="ad-role" placeholder="e.g. Senior Quality Engineer" class="ws-input"/></div>
+    <div class="field"><label>Estimated Fee ($)</label><input id="ad-fee" type="number" placeholder="e.g. 28000" class="ws-input"/></div>
+    <div class="field"><label>Stage</label>
+      <select id="ad-stage" class="ws-input">
+        <option>Prospect</option><option>Contacted</option><option>Meeting</option><option>Active</option><option>Closed</option>
+      </select>
+    </div>
+    <div class="field"><label>Source</label><input id="ad-source" placeholder="e.g. Happy Hunting / Referral / Cold" class="ws-input"/></div>
+    <div class="field"><label>Notes</label><textarea id="ad-notes" rows="3" placeholder="Optional context..." class="ws-input" style="resize:vertical;"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('ov-add-deal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewDeal()">Create Deal</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════════════════════ -->
 
@@ -1937,6 +2007,239 @@ async function loadData(){
 function saveCands(){ sbSave(CK, cands).catch(()=>{}); }
 function saveJobsStore(){ sbSave(JK, jobs).catch(()=>{}); }
 function saveDeals(){ sbSave(DK, deals).catch(()=>{}); }
+
+// ═══════════════════════════════════════════════════════════
+// DEALS CRM ENGINE
+// ═══════════════════════════════════════════════════════════
+const DEAL_STAGES = ['Prospect','Contacted','Meeting','Active','Closed'];
+const DEAL_STAGE_COLORS = {
+  Prospect : {bg:'var(--bg4)',       text:'var(--text3)',  border:'var(--border2)'},
+  Contacted: {bg:'var(--blue-bg)',   text:'var(--blue)',   border:'var(--blue-border)'},
+  Meeting  : {bg:'var(--amber-bg)',  text:'var(--amber)',  border:'var(--amber-border)'},
+  Active   : {bg:'var(--green-bg)',  text:'var(--green)',  border:'var(--green-border)'},
+  Closed   : {bg:'var(--teal-bg)',   text:'var(--teal)',   border:'var(--teal-border)'},
+};
+
+var dealStageFilter = 'all';
+
+function setDealStageFilter(stage, btn){
+  dealStageFilter = stage;
+  document.querySelectorAll('#v-deals .filter-chip').forEach(function(b){ b.classList.remove('on'); });
+  if(btn) btn.classList.add('on');
+  renderDeals();
+}
+
+function renderDeals(){
+  var listEl   = document.getElementById('deals-list');
+  var countEl  = document.getElementById('deals-count');
+  var funnelEl = document.getElementById('deals-funnel');
+  if(!listEl) return;
+
+  // Sort: Active first, then by recency
+  var stageOrder = {Active:0,Meeting:1,Contacted:2,Prospect:3,Closed:4};
+  var sorted = deals.slice().sort(function(a,b){
+    var so = (stageOrder[a.stage]||3) - (stageOrder[b.stage]||3);
+    if(so!==0) return so;
+    return (b.createdAt||0)-(a.createdAt||0);
+  });
+
+  var filtered = dealStageFilter==='all'
+    ? sorted
+    : sorted.filter(function(d){ return d.stage===dealStageFilter; });
+
+  if(countEl) countEl.textContent = filtered.length+' deal'+(filtered.length!==1?'s':'')+
+    (dealStageFilter!=='all'?' · '+dealStageFilter:'');
+
+  // Funnel bar
+  if(funnelEl){
+    var stageCounts = {};
+    var stageFees   = {};
+    DEAL_STAGES.forEach(function(s){ stageCounts[s]=0; stageFees[s]=0; });
+    deals.forEach(function(d){
+      if(stageCounts[d.stage]!==undefined){
+        stageCounts[d.stage]++;
+        stageFees[d.stage]+=(d.fee||d.estimatedFee||0);
+      }
+    });
+    funnelEl.innerHTML = DEAL_STAGES.map(function(s){
+      var sc = DEAL_STAGE_COLORS[s];
+      return '<div style="background:'+sc.bg+';border:1px solid '+sc.border+';border-radius:6px;padding:7px 14px;display:flex;flex-direction:column;gap:2px;min-width:110px;cursor:pointer;" onclick="setDealStageFilter(\''+s+'\',document.querySelector(\'[onclick*=&quot;\\\''+s+'\\\'&quot;]\'))">' +
+        '<div style="font-size:11px;font-weight:700;color:'+sc.text+';">'+s+'</div>' +
+        '<div style="font-size:11px;color:var(--text3);">'+stageCounts[s]+' deal'+(stageCounts[s]!==1?'s':'')+
+        (stageFees[s]?' · '+fmtMoney(stageFees[s]):'')+'</div>' +
+        '</div>';
+    }).join('<div style="color:var(--text4);align-self:center;font-size:12px;">›</div>');
+  }
+
+  if(!filtered.length){
+    listEl.innerHTML='<div style="padding:48px;text-align:center;color:var(--text4);font-size:13px;">No deals yet.<br><br>Decode a job in <a href="HappyHunting.html" target="_blank" style="color:var(--accent);">Happy Hunting</a> and click Build Deal, or click + Add Deal above.</div>';
+    return;
+  }
+
+  var rows = filtered.map(function(d){
+    var sc = DEAL_STAGE_COLORS[d.stage]||DEAL_STAGE_COLORS.Prospect;
+    var currentIdx = DEAL_STAGES.indexOf(d.stage);
+    var nextStage  = currentIdx < DEAL_STAGES.length-1 ? DEAL_STAGES[currentIdx+1] : null;
+    var prevStage  = currentIdx > 0 ? DEAL_STAGES[currentIdx-1] : null;
+    var linkedJob  = d.jobId ? jobs.find(function(j){return j.id===d.jobId;}) : null;
+    var matchCount = d.jobId ? cands.filter(function(c){return c.role&&c.role.toLowerCase().includes((d.jobTitle||'').toLowerCase().split(' ')[0]);}).length : 0;
+
+    return '<div style="display:grid;grid-template-columns:1fr 1.2fr 100px 130px 1fr 100px;gap:0;padding:12px 20px;border-bottom:1px solid var(--border2);align-items:center;" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'\'">' +
+      // Company
+      '<div>' +
+        '<div style="font-size:13px;font-weight:700;color:var(--text);">'+esc(d.company||'—')+'</div>' +
+        '<div style="font-size:11px;color:var(--text4);margin-top:2px;">'+(d.source?esc(d.source):'')+(d.urgency?' · '+esc(d.urgency):'')+'</div>' +
+      '</div>' +
+      // Role
+      '<div>' +
+        '<div style="font-size:12px;color:var(--text2);">'+esc(d.jobTitle||d.role||'—')+'</div>' +
+        (linkedJob?'<div style="font-size:11px;color:var(--accent);margin-top:2px;">↗ Job linked · Req #'+esc(linkedJob.reqNum||'—')+'</div>':
+         d.stage==='Active'?'<div style="font-size:11px;color:var(--amber);margin-top:2px;">⚡ No job yet — will create on Active</div>':
+         matchCount?'<div style="font-size:11px;color:var(--text4);margin-top:2px;">'+matchCount+' potential match'+(matchCount!==1?'es':'')+'</div>':'') +
+      '</div>' +
+      // Fee
+      '<div style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--teal);">' +
+        (d.fee||d.estimatedFee?fmtMoney(d.fee||d.estimatedFee):'—') +
+      '</div>' +
+      // Stage badge
+      '<div><span style="font-size:11px;font-weight:700;color:'+sc.text+';background:'+sc.bg+';border:1px solid '+sc.border+';padding:3px 10px;border-radius:4px;">'+esc(d.stage||'Prospect')+'</span></div>' +
+      // Stage actions
+      '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
+        (prevStage?'<button class="btn btn-ghost btn-xs" onclick="moveDealStage(\''+d.id+'\',\''+prevStage+'\')">← '+prevStage+'</button>':'')+
+        (nextStage?'<button class="btn btn-primary btn-xs" onclick="moveDealStage(\''+d.id+'\',\''+nextStage+'\')">'+(nextStage==='Active'?'⚡ ':'')+''+nextStage+' →</button>':'')+
+        '<button class="btn btn-ghost btn-xs" style="color:var(--red);" onclick="deleteDeal(\''+d.id+'\')">✕</button>' +
+      '</div>' +
+      // Date
+      '<div style="font-size:11px;color:var(--text4);text-align:right;">'+fmtDate(d.createdAt)+'</div>' +
+    '</div>';
+  }).join('');
+
+  listEl.innerHTML = rows;
+
+  // Update badge
+  var badge = document.getElementById('nb-deals');
+  if(badge) badge.textContent = deals.length || '';
+}
+
+function moveDealStage(dealId, newStage){
+  var d = deals.find(function(x){return x.id===dealId;});
+  if(!d) return;
+  var oldStage = d.stage;
+  d.stage = newStage;
+  d.stageUpdatedAt = Date.now();
+
+  // ── AUTO-ACTIVATE: when moved to Active, create Job + start pipeline ──
+  if(newStage === 'Active' && oldStage !== 'Active'){
+    _dealActivate(d);
+  }
+
+  // ── CLOSED: mark linked job as Filled ──
+  if(newStage === 'Closed' && d.jobId){
+    var j = jobs.find(function(x){return x.id===d.jobId;});
+    if(j){ j.status='Filled'; saveJobsStore(); }
+  }
+
+  saveDeals();
+  renderDeals();
+}
+
+function _dealActivate(d){
+  // If no job yet, create one now
+  if(!d.jobId){
+    var newJob = {
+      id: uid(),
+      title: d.jobTitle || d.role || 'Open Role',
+      company: d.company||'',
+      dept: '',
+      location: '',
+      type: 'Full-time',
+      status: 'Open',
+      reqNum: 'DEAL-'+Date.now().toString(36).toUpperCase().slice(-5),
+      expectedFee: d.fee || d.estimatedFee || 0,
+      probability: 80,
+      source: d.source||'Deal CRM',
+      description: d.notes||'',
+      notes: 'Auto-created when deal moved to Active. Company: '+d.company,
+      created: Date.now(),
+    };
+    jobs.unshift(newJob);
+    saveJobsStore();
+    d.jobId = newJob.id;
+  }
+
+  // Auto-match candidates by title keywords
+  var titleWords = (d.jobTitle||d.role||'').toLowerCase().split(/\W+/).filter(function(w){return w.length>3;});
+  var linkedJob  = jobs.find(function(j){return j.id===d.jobId;});
+  var matched    = cands.filter(function(c){
+    if(c.role===linkedJob.title) return false; // already assigned
+    var blob = [c.title,c.role,(c.skills||[]).join(' ')].join(' ').toLowerCase();
+    return titleWords.some(function(w){return blob.includes(w);});
+  }).slice(0,8);
+
+  matched.forEach(function(c){
+    if(!c.role) c.role = linkedJob.title;
+    if(!c.activity) c.activity=[];
+    c.activity.push({ts:Date.now(), text:'Auto-matched to deal: '+d.company+' — '+(d.jobTitle||d.role)});
+  });
+  if(matched.length) saveCands();
+
+  // Show confirmation
+  setTimeout(function(){
+    var msg = '⚡ Deal Activated\n\n'
+      +'✓ Job created: '+linkedJob.title+'\n'
+      +'✓ Req #'+linkedJob.reqNum+'\n'
+      +(matched.length?'✓ '+matched.length+' candidate'+(matched.length>1?'s':'')+' auto-matched':'○ No candidate matches yet — add from Candidates');
+    alert(msg);
+    nav('jobs');
+    setTimeout(function(){ selJob(d.jobId); }, 300);
+  }, 100);
+}
+
+function openAddDealModal(){
+  var el = document.getElementById('ad-company');
+  if(el) el.value='';
+  var r = document.getElementById('ad-role'); if(r) r.value='';
+  var f = document.getElementById('ad-fee');  if(f) f.value='';
+  var s = document.getElementById('ad-stage'); if(s) s.value='Prospect';
+  var src=document.getElementById('ad-source'); if(src) src.value='';
+  var n = document.getElementById('ad-notes'); if(n) n.value='';
+  openModal('ov-add-deal');
+  setTimeout(function(){ var el=document.getElementById('ad-company'); if(el)el.focus(); },150);
+}
+
+function saveNewDeal(){
+  var company = (document.getElementById('ad-company')||{}).value||'';
+  var role    = (document.getElementById('ad-role')||{}).value||'';
+  var fee     = parseInt((document.getElementById('ad-fee')||{}).value||'0')||0;
+  var stage   = (document.getElementById('ad-stage')||{}).value||'Prospect';
+  var source  = (document.getElementById('ad-source')||{}).value||'Manual';
+  var notes   = (document.getElementById('ad-notes')||{}).value||'';
+  if(!company){ alert('Company name is required.'); return; }
+  var d = {
+    id: uid(),
+    company: company.trim(),
+    jobTitle: role.trim(),
+    role: role.trim(),
+    fee: fee,
+    estimatedFee: fee,
+    stage: stage,
+    source: source.trim()||'Manual',
+    notes: notes.trim(),
+    createdAt: Date.now(),
+  };
+  deals.unshift(d);
+  if(stage==='Active') _dealActivate(d);
+  saveDeals();
+  closeModal('ov-add-deal');
+  renderDeals();
+}
+
+function deleteDeal(dealId){
+  if(!confirm('Delete this deal?')) return;
+  deals = deals.filter(function(d){return d.id!==dealId;});
+  saveDeals();
+  renderDeals();
+}
 function saveKey(v){localStorage.setItem(AK,v);updateApiDot(v);}
 function updateApiDot(v){document.getElementById('api-dot').className='api-dot'+(v&&v.length>10?' ok':'');}
 function getKey(){return document.getElementById('api-key').value.trim();}
@@ -1972,6 +2275,7 @@ function nav(v){
   document.querySelectorAll('.ni').forEach(el=>el.classList.remove('on'));
   document.querySelectorAll('.ni').forEach(el=>{if(el.getAttribute('onclick')&&el.getAttribute('onclick').includes("'"+v+"'"))el.classList.add('on');});
   if(v==='dashboard')renderDash();
+  if(v==='deals'){renderDeals();}
   if(v==='aitools'){}  // hub is static HTML, no init needed
   if(v==='candidates'){updateRoleFilter();doSearch();}
   if(v==='pipeline'){renderKanban();updateKbJobFilter();}
@@ -1990,8 +2294,10 @@ function nav(v){
   if(v==='nlsearch'){}
   const nc=document.getElementById('nb-cands');
   const nj=document.getElementById('nb-jobs');
+  const nd=document.getElementById('nb-deals');
   if(nc)nc.textContent=cands.length;
   if(nj)nj.textContent=jobs.filter(j=>j.status==='Open').length;
+  if(nd)nd.textContent=deals.length||'';
 }
 
 // ═══════════════════════════════════════════════

@@ -1129,6 +1129,9 @@ if (window.location.search.includes('decode') || window.location.hash === '#deco
     <div class="pipeline-bar-co" id="pb-company">—</div>
     <div class="pipeline-bar-fee" id="pb-fee">Calculating fee...</div>
   </div>
+  <button class="pipeline-btn-secondary" id="build-deal-btn" onclick="buildDealOnly()" style="background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#22c55e;">
+    BUILD DEAL →
+  </button>
   <button class="pipeline-btn-secondary" onclick="pipelineViewTB()">OPEN TALENTBASE ↗</button>
   <button class="pipeline-btn" id="pipeline-btn" onclick="addToPipeline()">
     + ADD TO PIPELINE
@@ -1195,6 +1198,61 @@ function _tbLoad(key) {
 
 function _tbSave(key, data) {
   localStorage.setItem(key, JSON.stringify(data));
+}
+
+// ── BUILD DEAL (Prospect stage — no full pipeline redirect) ──
+// Creates a CRM deal in TalentBase at Prospect stage.
+// Faster path: identify the opportunity, save it, move it forward later.
+function buildDealOnly() {
+  const r = _hhLastResult;
+  if (!r) return;
+
+  const btn = document.getElementById('build-deal-btn');
+  if(btn){ btn.disabled = true; btn.textContent = 'BUILDING...'; }
+
+  const bar = document.getElementById('pipeline-bar');
+  const fee = bar._parsedFee || 0;
+  const company = r.end_client.company_name || 'Unknown';
+  const now = Date.now();
+
+  let jobTitle = 'Open Role';
+  const lines = _hhLastJobText.split('\n').map(l => l.trim()).filter(Boolean);
+  if (lines.length) jobTitle = lines[0].slice(0, 80);
+
+  const dealObj = {
+    id: _tbUid(),
+    company: company,
+    jobTitle: jobTitle,
+    role: jobTitle,
+    fee: fee,
+    estimatedFee: fee,
+    stage: 'Prospect',
+    source: 'Happy Hunting',
+    confidence: r.confidence || 'Medium',
+    urgency: (r.fee_intel && r.fee_intel.role_urgency) || 'Unknown',
+    notes: (r.end_client.why_using_staffing || '') + (r.end_client.reasoning ? '\n\n' + r.end_client.reasoning : ''),
+    hiringManagers: r.hiring_managers || [],
+    feeIntel: r.fee_intel || {},
+    createdAt: now,
+  };
+
+  const deals = _tbLoad(TB_DEALS);
+  // Deduplicate within 5 min
+  const dup = deals.find(d => d.company === company && d.jobTitle === jobTitle && (now - d.createdAt) < 300000);
+  if (!dup) {
+    deals.unshift(dealObj);
+    _tbSave(TB_DEALS, deals);
+  }
+
+  const toast = document.getElementById('pipeline-toast');
+  toast.textContent = (dup ? '⚠ DEAL ALREADY EXISTS  →  ' : '✓ DEAL CREATED  →  ') + company + ' · ' + jobTitle + '\n✓ STAGE  →  Prospect\n✓ FEE TRACKED  →  $' + fee.toLocaleString() + '\n→ Open TalentBase → Deals to move it forward';
+  toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; }, 6000);
+
+  if(btn){
+    btn.textContent = dup ? '✓ EXISTS' : '✓ DEAL SAVED';
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'BUILD DEAL →'; }, 3000);
+  }
 }
 
 function addToPipeline() {
