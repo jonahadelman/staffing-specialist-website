@@ -452,6 +452,17 @@ a{color:var(--text3);text-decoration:none;}
       <input type="password" class="api-field" id="api-key" placeholder="sk-ant-..." oninput="saveKey(this.value)" autocomplete="off"/>
       <div class="api-hint">For AI features. Get one at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
     </div>
+    <!-- Supabase connection status -->
+    <div class="api-box" style="margin-top:6px;cursor:pointer;" onclick="nav('workspace');setTimeout(()=>switchWsTab('database'),100)">
+      <div class="api-top">
+        <div class="api-label" style="display:flex;align-items:center;gap:5px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px;height:10px;"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          Database
+        </div>
+        <div id="sb-status-dot" style="width:6px;height:6px;border-radius:50%;background:var(--text4);transition:background .3s;flex-shrink:0;"></div>
+      </div>
+      <div id="sb-status-lbl" class="api-hint" style="margin-top:2px;">Local only (no Supabase)</div>
+    </div>
   </div>
 </div>
 
@@ -1441,11 +1452,148 @@ a{color:var(--text3);text-decoration:none;}
 </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+
+<!-- ═══ SUPABASE CLIENT (CDN — loaded before main script) ═══ -->
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+window.__initSupabase = function(url, key) {
+  if (!url || !key || url === 'YOUR_URL') return null;
+  try { return createClient(url, key); } catch(e) { return null; }
+};
+</script>
+
+<script>
+// ═══════════════════════════════════════════════
+// SUPABASE DATA LAYER
+// ═══════════════════════════════════════════════
+// Config — users paste their Supabase project URL + anon key
+// into Workspace Settings → Database tab.
+// Falls back to localStorage silently if unconfigured or offline.
+
+const SB_URL_KEY = 'tb_sb_url';
+const SB_KEY_KEY = 'tb_sb_key';
+var _sb = null;          // Supabase client instance (null = use localStorage)
+var _sbUser = null;      // Authenticated user (null = no Supabase auth)
+var _sbReady = false;    // True once init attempted
+
+function sbInit() {
+  const url = localStorage.getItem(SB_URL_KEY) || '';
+  const key = localStorage.getItem(SB_KEY_KEY) || '';
+  if (url && key && url !== 'YOUR_URL' && typeof window.__initSupabase === 'function') {
+    _sb = window.__initSupabase(url, key);
+  }
+  _sbReady = true;
+  _updateSbStatus();
+}
+
+function _updateSbStatus() {
+  const dot = document.getElementById('sb-status-dot');
+  const lbl = document.getElementById('sb-status-lbl');
+  if (!dot) return;
+  if (_sb && _sbUser) {
+    dot.style.background = 'var(--green)';
+    lbl.textContent = 'Connected · ' + (_sbUser.email || '');
+  } else if (_sb) {
+    dot.style.background = 'var(--amber)';
+    lbl.textContent = 'Supabase ready — not signed in';
+  } else {
+    dot.style.background = 'var(--text4)';
+    lbl.textContent = 'Local only (no Supabase)';
+  }
+}
+
+// ── SAFE TABLE NAMES ──────────────────────────────────────────
+// Map internal keys → Supabase table names
+// SB_TABLE defined below after storage key constants
+
+// ── ASYNC LOAD ────────────────────────────────────────────────
+// Try Supabase first. On any failure, fall back to localStorage.
+async function sbLoad(key) {
+  const table = SB_TABLE[key] || key;
+  if (_sb && _sbUser) {
+    try {
+      const { data, error } = await _sb.from(table).select('id, data');
+      if (error) throw error;
+      // Unwrap jsonb envelope: each row is {id, data:{...full record}}
+      // Fall back gracefully if rows don't have a data column (flat schema)
+      return (data || []).map(row => row.data && typeof row.data === 'object' ? row.data : row);
+    } catch(e) {
+      console.warn('[Supabase] load failed, using localStorage:', e.message);
+    }
+  }
+  try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { return []; }
+}
+
+// ── ASYNC SAVE ────────────────────────────────────────────────
+// Upsert to Supabase. Always mirror to localStorage as cache/fallback.
+// Records are stored as {id, user_id, data: <full record>} to avoid
+// schema migrations every time the app data model changes.
+async function sbSave(key, data) {
+  // Always write localStorage immediately (cache + fallback)
+  try { localStorage.setItem(key, JSON.stringify(data)); } catch(e) {}
+
+  const table = SB_TABLE[key] || key;
+  if (_sb && _sbUser) {
+    // Wrap each record in the jsonb envelope
+    const rows = data.map(d => ({
+      id: d.id || ('auto_' + Math.random().toString(36).slice(2)),
+      user_id: _sbUser.id,
+      data: d
+    }));
+    try {
+      const { error } = await _sb.from(table).upsert(rows, { onConflict: 'id' });
+      if (error) throw error;
+    } catch(e) {
+      console.warn('[Supabase] save failed, localStorage used:', e.message);
+    }
+  }
+}
+
+// ── AUTH ──────────────────────────────────────────────────────
+async function sbSignIn(email, password) {
+  if (!_sb) return { error: { message: 'Supabase not configured' } };
+  const { data, error } = await _sb.auth.signInWithPassword({ email, password });
+  if (!error && data.session) {
+    _sbUser = data.session.user;
+    sessionStorage.setItem('tb_sb_user', JSON.stringify(_sbUser));
+    _updateSbStatus();
+  }
+  return { data, error };
+}
+
+async function sbSignOut() {
+  if (_sb) { try { await _sb.auth.signOut(); } catch(e) {} }
+  _sbUser = null;
+  sessionStorage.removeItem('tb_sb_user');
+  _updateSbStatus();
+}
+
+async function sbRestoreSession() {
+  // Restore from sessionStorage first (fast path)
+  try {
+    const cached = sessionStorage.getItem('tb_sb_user');
+    if (cached) { _sbUser = JSON.parse(cached); _updateSbStatus(); return; }
+  } catch(e) {}
+  // Then check Supabase session
+  if (_sb) {
+    try {
+      const { data: { session } } = await _sb.auth.getSession();
+      if (session) {
+        _sbUser = session.user;
+        sessionStorage.setItem('tb_sb_user', JSON.stringify(_sbUser));
+        _updateSbStatus();
+      }
+    } catch(e) {}
+  }
+}
+
 // ═══════════════════════════════════════════════
 // DATA LAYER
 // ═══════════════════════════════════════════════
 const CK='tb_cands_v3', JK='tb_jobs_v3', AK='tb_apikey', DK='tb_deals_v1';
+// Supabase table name map (must be after CK/JK/DK)
+const SB_TABLE = {'tb_cands_v3':'candidates','tb_jobs_v3':'jobs','tb_deals_v1':'deals'};
 var deals=[];
 let cands=[], jobs=[], fil=[], selCandId=null, selJobId=null, editCandId=null, editJobId=null, stageTargetId=null, activeChip='', matchCache={};
 
@@ -1544,23 +1692,27 @@ function getNextAction(c){
 
 // ── CRM COMPUTED FIELDS ────────────────────────────────────────
 // engagementScore, temperature, lastContacted — all derived, never stored.
+// Reads: c.opened, c.responded, c.engagementBoost, c.forcedTemperature (set by webhooks)
 function getCRMFields(c){
   const now=Date.now();
   const acts=c.activity||[];
   const lastTs=acts.length?Math.max(...acts.map(a=>a.ts)):c.created;
   const daysIdle=(now-lastTs)/(1000*60*60*24);
 
-  // engagementScore: base from activity count, decays with idle time
+  // engagementScore: base from activity count + stage bonus, decays with idle time
   const actBase=Math.min(acts.length*12,60);
   const stageBonus={New:0,Screening:10,Interviewing:25,Offer:35,Hired:40,Rejected:0,'On Hold':5}[c.status]||0;
   const decayFactor=Math.max(0,1-(daysIdle/30));
-  const engagementScore=Math.round(Math.min(100,Math.max(0,(actBase+stageBonus)*decayFactor)));
+  // Webhook-sourced boosts: +10 opened, +30 replied, +5 clicked (persisted on c)
+  const webhookBoost=Math.min(c.engagementBoost||0,40); // cap at 40 to prevent overflow
+  const engagementScore=Math.round(Math.min(100,Math.max(0,(actBase+stageBonus)*decayFactor+webhookBoost)));
 
-  // temperature: hot/warm/cold based on score + recency
+  // temperature: forced hot if replied, otherwise computed
   let temperature;
-  if(engagementScore>=60||daysIdle<1)temperature='hot';
-  else if(engagementScore>=30||daysIdle<7)temperature='warm';
-  else temperature='cold';
+  if(c.forcedTemperature==='hot'||c.responded)  temperature='hot';
+  else if(engagementScore>=60||daysIdle<1)        temperature='hot';
+  else if(engagementScore>=30||daysIdle<7)        temperature='warm';
+  else                                             temperature='cold';
 
   // lastContacted: most recent activity timestamp
   const lastContacted=lastTs;
@@ -1609,25 +1761,41 @@ function nextActionCompact(c,fontSize){
   const crm=getCRMFields(c);
   const col=_naUrgency(c);
   const fs=fontSize||'11px';
+  const repliedBadge=c.responded
+    ?`<span title="Replied" style="font-size:10px;font-weight:700;color:var(--green);margin-left:2px;">↩</span>`:'';
+  const openedBadge=c.opened&&!c.responded
+    ?`<span title="Opened" style="font-size:10px;color:var(--blue);margin-left:2px;">📬</span>`:'';
   return`<div style="font-size:${fs};display:flex;align-items:center;gap:5px;margin-top:2px;">
     ${tempDot(crm.temperature)}
     <span style="color:${col};font-weight:500;">${na.action}</span>
+    ${repliedBadge}${openedBadge}
   </div>`;
 }
 // ──────────────────────────────────────────────────────────────
-function loadData(){
-  try{const r=localStorage.getItem(CK);if(r)cands=JSON.parse(r);}catch(e){cands=[];}
-  try{const r=localStorage.getItem(JK);if(r)jobs=JSON.parse(r);}catch(e){jobs=[];}
-  try{const r=localStorage.getItem(DK);if(r)deals=JSON.parse(r);}catch(e){deals=[];}
-  const k=localStorage.getItem(AK)||'';
-  document.getElementById('api-key').value=k;
-  updateApiDot(k);
-  if(!cands.length)seedCands();
-  if(!jobs.length)seedJobs();
+async function loadData(){
+  // Init Supabase + restore session before loading (no-op if not configured)
+  sbInit();
+  await sbRestoreSession();
+
+  // Load all three stores in parallel
+  const [c, j, d] = await Promise.all([
+    sbLoad(CK), sbLoad(JK), sbLoad(DK)
+  ]);
+  cands = c; jobs = j; deals = d;
+
+  const k = localStorage.getItem(AK) || '';
+  const apiField = document.getElementById('api-key');
+  if (apiField) { apiField.value = k; updateApiDot(k); }
+  if (!cands.length) seedCands();
+  if (!jobs.length)  seedJobs();
 }
-function saveCands(){localStorage.setItem(CK,JSON.stringify(cands));}
-function saveJobsStore(){localStorage.setItem(JK,JSON.stringify(jobs));}
-function saveDeals(){localStorage.setItem(DK,JSON.stringify(deals));}
+
+// ── SAVE WRAPPERS ─────────────────────────────────────────────
+// Fire-and-forget: UI never waits on these.
+// localStorage write is synchronous (instant), Supabase write is async.
+function saveCands(){ sbSave(CK, cands).catch(()=>{}); }
+function saveJobsStore(){ sbSave(JK, jobs).catch(()=>{}); }
+function saveDeals(){ sbSave(DK, deals).catch(()=>{}); }
 function saveKey(v){localStorage.setItem(AK,v);updateApiDot(v);}
 function updateApiDot(v){document.getElementById('api-dot').className='api-dot'+(v&&v.length>10?' ok':'');}
 function getKey(){return document.getElementById('api-key').value.trim();}
@@ -1812,12 +1980,25 @@ function selCand(id){
   selCandId=id;
   doSearch();
   const c=cands.find(x=>x.id===id);if(!c)return;
+  // Pull latest tracking data from Supabase (opened/responded flags)
+  // Fire-and-forget: re-renders detail if new data arrives
+  sbPollTracking(id).then(()=>{
+    const refreshed=cands.find(x=>x.id===id);
+    if(refreshed&&document.getElementById('cand-detail')&&selCandId===id){
+      _renderCandDetail(refreshed);
+    }
+  }).catch(()=>{});
   // Hide list, expand detail to full screen
   document.getElementById('cand-list').style.display='none';
   document.getElementById('cand-detail').classList.add('fullview');
+  _renderCandDetail(c);
+}
+
+function _renderCandDetail(c){
   const[bg,fg]=avColor(c);
   const terms=extractTerms(document.getElementById('q')?document.getElementById('q').value:'');
   const det=document.getElementById('cand-detail');
+  if(!det)return;
   det.innerHTML=`
     <div class="detail-head" style="flex-direction:column;align-items:flex-start;gap:10px;padding:14px 16px;">
       <!-- Back to list button -->
@@ -1987,14 +2168,26 @@ function selCand(id){
       ${c.lastMessage ? `
       <!-- AUTO OUTREACH — generated by Auto Pipeline Engine -->
       <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:12px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="display:flex;align-items:center;gap:6px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <span style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;">Auto Outreach</span>
-            <span style="font-size:10px;color:var(--text4);font-family:'DM Mono',monospace;">Generated by Auto Pipeline Engine</span>
+            ${(()=>{
+              const st = c.lastMessage.status||'';
+              const sentAt = c.lastMessage.sentAt;
+              if(st==='sent')   return`<span style="font-size:10px;font-weight:700;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);padding:1px 7px;border-radius:3px;">✓ Sent ${sentAt?fmtDate(sentAt):''}</span>`;
+              if(st==='queued') return`<span style="font-size:10px;font-weight:700;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border);padding:1px 7px;border-radius:3px;">⏳ Pending Approval</span>`;
+              if(st==='error')  return`<span style="font-size:10px;font-weight:700;color:var(--red);background:var(--red-bg);border:1px solid var(--red-border);padding:1px 7px;border-radius:3px;">⚠ Send Error</span>`;
+              return`<span style="font-size:10px;color:var(--text4);font-family:'DM Mono',monospace;">Logged</span>`;
+            })()}
+            ${c.responded?`<span title="Candidate replied — hot lead" style="font-size:10px;font-weight:700;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);padding:1px 7px;border-radius:3px;">↩ Replied</span>`:''}
+            ${c.opened&&!c.responded?`<span title="Email opened" style="font-size:10px;font-weight:700;color:var(--blue);background:var(--blue-bg);border:1px solid var(--blue-border);padding:1px 7px;border-radius:3px;">📬 Opened</span>`:''}
+            ${c.emailBounced?`<span title="Email bounced — check address" style="font-size:10px;font-weight:700;color:var(--red);background:var(--red-bg);border:1px solid var(--red-border);padding:1px 7px;border-radius:3px;">⚠ Bounced</span>`:''}
+            ${c.emailComplained?`<span title="Spam complaint received" style="font-size:10px;font-weight:700;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border);padding:1px 7px;border-radius:3px;">🚫 Complained</span>`:''}
           </div>
-          <div style="display:flex;gap:6px;">
+          <div style="display:flex;gap:6px;align-items:center;">
             <button class="btn btn-ghost btn-xs" onclick="(function(){navigator.clipboard.writeText(${JSON.stringify((c.lastMessage.email||'').replace(/`/g,"'"))});this.textContent='✓ Copied';setTimeout(()=>this.textContent='Copy',1500)}).call(this)">Copy</button>
-            <button class="btn btn-ghost btn-xs" style="color:var(--accent);" onclick="openCandEmail('${c.id}')">Open in Email ↗</button>
+            <button class="btn btn-ghost btn-xs" style="color:var(--accent);" onclick="openCandEmail('${c.id}')">Gmail ↗</button>
+            <button class="btn btn-primary btn-xs" id="send-email-btn-${c.id}" onclick="sendManualEmail('${c.id}')">Send Email</button>
           </div>
         </div>
         <div style="font-size:12px;color:var(--text3);margin-bottom:4px;">
@@ -2456,6 +2649,291 @@ function openCandEmail(candId){
   } else {
     // Fallback: mailto: with blank To
     window.open('mailto:?subject=' + encodeURIComponent(sub) + '&body=' + encodeURIComponent(body));
+  }
+}
+
+// ── EMAIL ENGINE ───────────────────────────────────────────────
+// Config keys
+const EMAIL_PROXY_KEY    = 'tb_email_proxy';
+const EMAIL_FROM_NAME_KEY= 'tb_email_from_name';
+const EMAIL_FROM_ADDR_KEY= 'tb_email_from_addr';
+const EMAIL_APPROVAL_KEY = 'tb_email_approval';  // "1" = require approval
+const EMAIL_QUEUE_KEY    = 'tb_email_queue';      // pending approval queue
+
+function getEmailConfig(){
+  return {
+    proxyUrl : localStorage.getItem(EMAIL_PROXY_KEY)||'',
+    fromName : localStorage.getItem(EMAIL_FROM_NAME_KEY)||'Jonah Adelman',
+    fromAddr : localStorage.getItem(EMAIL_FROM_ADDR_KEY)||'',
+    approval : localStorage.getItem(EMAIL_APPROVAL_KEY)==='1',
+  };
+}
+
+function saveEmailConfig(){
+  var url   = (document.getElementById('email-proxy-url')||{}).value||'';
+  var name  = (document.getElementById('email-from-name')||{}).value||'';
+  var addr  = (document.getElementById('email-from-addr')||{}).value||'';
+  var appr  = !!(document.getElementById('email-approval-toggle')||{}).checked;
+  localStorage.setItem(EMAIL_PROXY_KEY,    url.trim());
+  localStorage.setItem(EMAIL_FROM_NAME_KEY,name.trim()||'Jonah Adelman');
+  localStorage.setItem(EMAIL_FROM_ADDR_KEY,addr.trim());
+  localStorage.setItem(EMAIL_APPROVAL_KEY, appr?'1':'0');
+  refreshEmailStatusCard();
+  _updateEmailToggleUI();
+}
+
+function clearEmailConfig(){
+  [EMAIL_PROXY_KEY,EMAIL_FROM_NAME_KEY,EMAIL_FROM_ADDR_KEY,EMAIL_APPROVAL_KEY].forEach(k=>localStorage.removeItem(k));
+  refreshEmailStatusCard();
+}
+
+function refreshEmailStatusCard(){
+  var cfg = getEmailConfig();
+  var dot  = document.getElementById('email-status-dot');
+  var ttl  = document.getElementById('email-status-title');
+  var sub  = document.getElementById('email-status-sub');
+  if(!dot) return;
+  if(cfg.proxyUrl){
+    dot.style.background  = 'var(--green)';
+    ttl.textContent        = 'Configured — real emails enabled';
+    sub.textContent        = cfg.approval ? 'Approval required before sending' : 'Emails send immediately on outreach';
+  } else {
+    dot.style.background  = 'var(--text4)';
+    ttl.textContent        = 'Not configured';
+    sub.textContent        = 'Enter your proxy URL below to enable real sending';
+  }
+  // Populate form fields
+  var u = document.getElementById('email-proxy-url');
+  var n = document.getElementById('email-from-name');
+  var a = document.getElementById('email-from-addr');
+  var t = document.getElementById('email-approval-toggle');
+  if(u) u.value = cfg.proxyUrl;
+  if(n) n.value = cfg.fromName;
+  if(a) a.value = cfg.fromAddr;
+  if(t) t.checked = cfg.approval;
+  _updateEmailToggleUI();
+}
+
+function _updateEmailToggleUI(){
+  var track = document.getElementById('email-toggle-track');
+  var thumb = document.getElementById('email-toggle-thumb');
+  var on    = (document.getElementById('email-approval-toggle')||{}).checked;
+  if(track) track.style.background = on ? 'var(--accent)' : 'var(--bg5)';
+  if(thumb) thumb.style.transform  = on ? 'translateX(18px)' : 'translateX(0)';
+  if(thumb) thumb.style.background = on ? '#fff' : 'var(--text4)';
+}
+
+// Core send function — always calls the secure proxy, never exposes keys
+async function sendEmail({ to, subject, html, text, candidateId }){
+  var cfg = getEmailConfig();
+  if(!cfg.proxyUrl){
+    console.info('[Email] No proxy configured — skipping real send, logging only.');
+    return { skipped: true, reason: 'no_proxy' };
+  }
+  if(!to || !to.includes('@')){
+    console.warn('[Email] Invalid or missing recipient:', to);
+    return { skipped: true, reason: 'no_recipient' };
+  }
+
+  // Build tracking ID: "<candidateId>-<timestamp>"
+  var trackingId = candidateId
+    ? (candidateId + '-' + Date.now())
+    : ('anon-' + Date.now());
+
+  // Build proxy base URL from proxyUrl (strip /api/send-email to get origin)
+  var proxyOrigin = cfg.proxyUrl.replace(/\/api\/send-email.*$/, '');
+  var pixelUrl    = proxyOrigin + '/api/track-open?id=' + encodeURIComponent(trackingId)
+    + (candidateId ? '&uid=' + encodeURIComponent(candidateId) : '');
+
+  // Inject tracking pixel at bottom of email HTML (hidden 1x1 image)
+  var htmlBody = html || (text ? '<pre style="font-family:sans-serif;white-space:pre-wrap;">'+text+'</pre>' : '');
+  var htmlWithTracking = htmlBody
+    + '\n<!-- tracking -->'
+    + '<img src="' + pixelUrl + '" width="1" height="1" alt="" '
+    + 'style="display:block;width:1px;height:1px;border:0;margin:0;padding:0;" />';
+
+  try {
+    var res = await fetch(cfg.proxyUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to,
+        subject,
+        html      : htmlWithTracking,
+        text      : text || '',
+        from_name : cfg.fromName,
+        from_addr : cfg.fromAddr,
+        // Pass trackingId as a Resend tag for webhook correlation
+        tags      : [{ name: 'tracking_id', value: trackingId }],
+        tracking_id: trackingId,
+      }),
+    });
+    var result = await res.json();
+    if(!res.ok) throw new Error(result.error || 'Send failed ('+res.status+')');
+
+    // Log to Supabase activity table if connected
+    if(_sb && _sbUser && candidateId){
+      _sb.from('activity').insert({
+        candidate_id: candidateId,
+        text        : 'Email sent: ' + subject,
+        tracking_id : trackingId,
+        user_id     : _sbUser.id,
+        created_at  : new Date().toISOString()
+      }).then(()=>{}).catch(()=>{});
+    }
+    return { success: true, id: result.id, trackingId };
+  } catch(e){
+    console.error('[Email] Send failed:', e.message);
+    return { error: e.message };
+  }
+}
+
+// Test connection from settings UI
+async function testEmailConnection(){
+  var cfg = getEmailConfig();
+  if(!cfg.proxyUrl){ alert('Enter proxy URL first.'); return; }
+  var btn = event.target;
+  btn.textContent = 'Testing...'; btn.disabled = true;
+  try {
+    // Send to a safe address — use fromAddr or warn user
+    var testTo = cfg.fromAddr || prompt('Enter a test recipient email:');
+    if(!testTo){ btn.textContent='Test'; btn.disabled=false; return; }
+    var r = await sendEmail({
+      to: testTo,
+      subject: 'TalentBase email test',
+      html: '<p>Email sending is configured correctly. You can close this.</p>',
+      text: 'Email sending is configured correctly.'
+    });
+    if(r && r.success)  { btn.textContent='✓ Working!'; }
+    else if(r && r.skipped) { btn.textContent='Not configured'; }
+    else                { btn.textContent='✗ Failed'; alert('Test failed: '+(r&&r.error||'Unknown error')); }
+  } catch(e){ btn.textContent='✗ Error'; alert(e.message); }
+  setTimeout(()=>{ btn.textContent='Test'; btn.disabled=false; }, 3000);
+}
+
+// Email approval queue — stores pending sends for manual review
+function queueEmail(candId, subject, html){
+  var queue = JSON.parse(localStorage.getItem(EMAIL_QUEUE_KEY)||'[]');
+  queue.push({ id: Date.now().toString(36), candId, subject, html, queuedAt: Date.now() });
+  localStorage.setItem(EMAIL_QUEUE_KEY, JSON.stringify(queue));
+  refreshEmailQueueBadge();
+}
+
+function refreshEmailQueueBadge(){
+  var queue = JSON.parse(localStorage.getItem(EMAIL_QUEUE_KEY)||'[]');
+  // Show pending count in nav if any
+  var ni = document.getElementById('ni-email-queue');
+  if(ni) ni.textContent = queue.length > 0 ? queue.length : '';
+}
+
+// Called from Auto Pipeline Engine — respects approval setting
+async function sendOrQueueOutreach(c, job){
+  var msg = generateOutreach(c, job);
+  var cfg = getEmailConfig();
+  var html = '<p>'+msg.email.replace(/\n/g,'<br>')+'</p>';
+
+  if(cfg.approval){
+    queueEmail(c.id, msg.subject, html);
+    if(!c.activity) c.activity=[];
+    c.activity.push({ ts: Date.now(), text: 'Outreach queued (pending approval): '+job.title });
+    c.lastMessage = { subject: msg.subject, email: msg.email, sentAt: null, status: 'queued', trackingId: null };
+  } else {
+    var result = await sendEmail({ to: c.email, subject: msg.subject, html, candidateId: c.id });
+    if(!c.activity) c.activity=[];
+    var logText = (result && result.success)
+      ? 'Email sent: '+job.title
+      : result && result.skipped
+        ? 'Outreach logged (no email config): '+job.title
+        : 'Outreach attempted (error): '+job.title+' — '+(result&&result.error||'');
+    c.activity.push({ ts: Date.now(), text: logText });
+    c.activity.push({ ts: Date.now() + 2*86400000, text: 'Follow up scheduled: '+job.title });
+    c.lastContacted = Date.now();
+    c.lastMessage = {
+      subject   : msg.subject,
+      email     : msg.email,
+      sentAt    : (result&&result.success) ? Date.now() : null,
+      status    : (result&&result.success) ? 'sent' : 'logged',
+      trackingId: (result&&result.trackingId) || null
+    };
+  }
+  return msg;
+}
+
+// ── TRACKING SYNC ─────────────────────────────────────────────
+// Pull webhook-written opened/responded flags from Supabase back into
+// local candidate objects. Called when opening a candidate detail.
+async function sbPollTracking(candId){
+  if(!_sb || !_sbUser || !candId) return;
+  try {
+    const { data, error } = await _sb
+      .from('candidates')
+      .select('id, data')
+      .eq('id', candId)
+      .single();
+    if(error || !data) return;
+    const remote = data.data || {};
+    const local  = cands.find(c=>c.id===candId);
+    if(!local) return;
+    // Merge tracking fields from server → local (only upgrade, never downgrade)
+    let changed = false;
+    if(remote.opened    && !local.opened)    { local.opened=true; local.openedAt=remote.openedAt; changed=true; }
+    if(remote.responded && !local.responded) { local.responded=true; local.respondedAt=remote.respondedAt; changed=true; }
+    if(remote.forcedTemperature && local.forcedTemperature!==remote.forcedTemperature){ local.forcedTemperature=remote.forcedTemperature; changed=true; }
+    if((remote.engagementBoost||0) > (local.engagementBoost||0)){ local.engagementBoost=remote.engagementBoost; changed=true; }
+    if(remote.emailBounced  && !local.emailBounced)  { local.emailBounced=true;  changed=true; }
+    if(remote.emailComplained && !local.emailComplained){ local.emailComplained=true; changed=true; }
+    // Merge any new remote activity entries not already in local
+    if(remote.activity && remote.activity.length){
+      const localTs = new Set((local.activity||[]).map(a=>a.ts));
+      const newActs = remote.activity.filter(a=>!localTs.has(a.ts));
+      if(newActs.length){ local.activity=(local.activity||[]).concat(newActs); changed=true; }
+    }
+    if(changed){ saveCands(); }
+  } catch(e){ /* non-critical — tracking data just won't refresh */ }
+}
+
+// Manual "Send Email" from candidate detail — uses lastMessage
+async function sendManualEmail(candId){
+  var c = cands.find(x=>x.id===candId);
+  if(!c){ alert('Candidate not found.'); return; }
+  if(!c.lastMessage){ alert('No outreach message on file for this candidate.'); return; }
+  if(!c.email){ alert('No email address on file for this candidate.'); openCandEmail(candId); return; }
+
+  var cfg = getEmailConfig();
+  if(!cfg.proxyUrl){
+    // Fallback: open Gmail/mailto
+    openCandEmail(candId);
+    return;
+  }
+
+  var btn = document.getElementById('send-email-btn-'+candId);
+  if(btn){ btn.disabled=true; btn.textContent='Sending...'; }
+
+  var html = '<p>'+(c.lastMessage.email||'').replace(/\n/g,'<br>')+'</p>';
+  var result = await sendEmail({
+    to: c.email,
+    subject: c.lastMessage.subject,
+    html,
+    candidateId: candId
+  });
+
+  if(result && result.success){
+    c.lastMessage.sentAt     = Date.now();
+    c.lastMessage.status     = 'sent';
+    c.lastMessage.trackingId = result.trackingId || null;
+    if(!c.activity) c.activity=[];
+    c.activity.push({ ts: Date.now(), text: 'Manual email sent: '+c.lastMessage.subject });
+    c.lastContacted = Date.now();
+    saveCands();
+    if(btn){ btn.textContent='✓ Sent'; setTimeout(()=>{ btn.disabled=false; btn.textContent='Send Email'; },3000); }
+  } else if(result && result.skipped){
+    // No proxy — fall back to Gmail
+    openCandEmail(candId);
+    if(btn){ btn.disabled=false; btn.textContent='Send Email'; }
+  } else {
+    alert('Send failed: '+(result&&result.error||'Unknown error')+'\n\nFalling back to Gmail.');
+    openCandEmail(candId);
+    if(btn){ btn.disabled=false; btn.textContent='Send Email'; }
   }
 }
 
@@ -6296,8 +6774,8 @@ document.querySelectorAll('.overlay').forEach(ov=>{ov.addEventListener('click',e
 const ACCESS_CODE = 'TSS2026';
 const SESSION_KEY = 'tb_access_v1';
 
-function launchApp(){
-  try { loadData(); } catch(e){ console.warn('loadData error:', e); }
+async function launchApp(){
+  try { await loadData(); } catch(e){ console.warn('loadData error:', e); }
 
   // ── AUTO PIPELINE HOOK — from Happy Hunting redirect ────────
   // If ?newJob=<id> is in the URL, open Jobs view and highlight the job
@@ -6400,6 +6878,8 @@ window.addEventListener('DOMContentLoaded', function(){
     <button class="ws-tab"    data-tab="ws-workflow"   onclick="wsTab(this,'ws-workflow')">Workflow</button>
     <button class="ws-tab"    data-tab="ws-brand"      onclick="wsTab(this,'ws-brand')">Branding</button>
     <button class="ws-tab"    data-tab="ws-export"     onclick="wsTab(this,'ws-export')">Data &amp; Exports</button>
+    <button class="ws-tab"    data-tab="ws-database"   onclick="wsTab(this,'ws-database')">&#9737; Database</button>
+    <button class="ws-tab"    data-tab="ws-email"      onclick="wsTab(this,'ws-email')">&#9993; Email</button>
   </div>
 
   <div style="flex:1;overflow-y:auto;">
@@ -6587,10 +7067,207 @@ window.addEventListener('DOMContentLoaded', function(){
       </div>
     </div>
 
+    <!-- ── TAB: DATABASE (SUPABASE) ── -->
+    <div id="ws-database" class="ws-panel" style="display:none;padding:24px;max-width:600px;">
+      <div class="ws-section-title">Database Connection</div>
+      <div style="font-size:12px;color:var(--text4);margin-bottom:20px;line-height:1.6;">
+        Connect to <a href="https://supabase.com" target="_blank" style="color:var(--accent);">Supabase</a> to sync data across devices and users.
+        Without a connection, TalentBase works perfectly — data is saved locally in your browser.
+        All changes mirror to localStorage instantly, so Supabase is enhancement-only.
+      </div>
+
+      <!-- Connection status card -->
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+        <div id="sb-card-dot" style="width:10px;height:10px;border-radius:50%;background:var(--text4);flex-shrink:0;"></div>
+        <div style="flex:1;min-width:0;">
+          <div id="sb-card-title" style="font-size:13px;font-weight:600;color:var(--text);">Not connected</div>
+          <div id="sb-card-sub" style="font-size:11px;color:var(--text4);margin-top:2px;">Enter your Supabase project URL and anon key below</div>
+        </div>
+      </div>
+
+      <!-- Project credentials -->
+      <div style="margin-bottom:16px;">
+        <div class="ws-label">Supabase Project URL</div>
+        <input class="ws-input" id="sb-url-input" placeholder="https://xxxx.supabase.co" style="font-family:'DM Mono',monospace;font-size:12px;"/>
+        <div style="font-size:11px;color:var(--text4);margin-top:4px;">Found in Supabase → Settings → API</div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div class="ws-label">Anon / Public Key</div>
+        <input class="ws-input" id="sb-key-input" type="password" placeholder="eyJhbGciOiJIUzI1NiIs..." style="font-family:'DM Mono',monospace;font-size:12px;"/>
+        <div style="font-size:11px;color:var(--text4);margin-top:4px;">Public key — safe to use in browser</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:24px;">
+        <button class="btn btn-primary" onclick="sbConnect()">Connect Supabase</button>
+        <button class="btn btn-ghost" onclick="sbDisconnect()">Disconnect</button>
+      </div>
+
+      <div class="ws-divider"></div>
+
+      <!-- Auth section -->
+      <div class="ws-section-title">User Authentication</div>
+      <div style="font-size:12px;color:var(--text4);margin-bottom:16px;line-height:1.6;">Sign in with your Supabase account to enable multi-user sync and row-level security.</div>
+
+      <div id="sb-auth-signed-out">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div>
+            <div class="ws-label">Email</div>
+            <input class="ws-input" id="sb-email" type="email" placeholder="you@company.com"/>
+          </div>
+          <div>
+            <div class="ws-label">Password</div>
+            <input class="ws-input" id="sb-password" type="password" placeholder="••••••••"/>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn btn-primary" onclick="sbDoSignIn()">Sign In</button>
+          <div id="sb-auth-err" style="font-size:12px;color:var(--red);"></div>
+        </div>
+      </div>
+
+      <div id="sb-auth-signed-in" style="display:none;">
+        <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--green);">Signed in</div>
+            <div id="sb-user-email" style="font-size:11px;color:var(--text4);margin-top:2px;"></div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="sbDoSignOut()">Sign Out</button>
+        </div>
+        <div style="margin-top:12px;">
+          <button class="btn btn-ghost btn-sm" onclick="sbSyncNow()">&#8635; Sync Now</button>
+          <div id="sb-sync-msg" style="font-size:11px;color:var(--text4);margin-top:6px;"></div>
+        </div>
+      </div>
+
+      <div class="ws-divider"></div>
+
+      <!-- Schema helper -->
+      <div class="ws-section-title">Supabase Table Setup</div>
+      <div style="font-size:12px;color:var(--text4);margin-bottom:10px;line-height:1.6;">Run this SQL in your Supabase SQL editor to create the required tables with row-level security:</div>
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:12px 14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);line-height:1.7;position:relative;">
+        <button onclick="copySbSchema(this)" class="btn btn-ghost btn-xs" style="position:absolute;top:8px;right:8px;">Copy SQL</button>
+        <pre id="sb-schema-sql" style="margin:0;white-space:pre-wrap;padding-right:60px;">-- Run in Supabase SQL Editor
+CREATE TABLE IF NOT EXISTS candidates (
+  id text PRIMARY KEY,
+  user_id uuid REFERENCES auth.users,
+  data jsonb
+);
+CREATE TABLE IF NOT EXISTS jobs (
+  id text PRIMARY KEY,
+  user_id uuid REFERENCES auth.users,
+  data jsonb
+);
+CREATE TABLE IF NOT EXISTS deals (
+  id text PRIMARY KEY,
+  user_id uuid REFERENCES auth.users,
+  data jsonb
+);
+CREATE TABLE IF NOT EXISTS activity (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  candidate_id text,
+  user_id uuid REFERENCES auth.users,
+  text text,
+  tracking_id text,
+  email text,
+  created_at timestamptz DEFAULT now()
+);
+-- Enable row-level security
+ALTER TABLE candidates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jobs       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE deals      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE activity   ENABLE ROW LEVEL SECURITY;
+-- Each user only sees their own data
+CREATE POLICY "own_candidates" ON candidates FOR ALL USING (auth.uid()=user_id);
+CREATE POLICY "own_jobs"       ON jobs       FOR ALL USING (auth.uid()=user_id);
+CREATE POLICY "own_deals"      ON deals      FOR ALL USING (auth.uid()=user_id);
+CREATE POLICY "own_activity"   ON activity   FOR ALL USING (auth.uid()=user_id);
+-- Service role can write activity (for webhook + tracking pixel)
+CREATE POLICY "service_activity" ON activity FOR INSERT WITH CHECK (true);</pre>
+      </div>
+    </div>
+
+    <!-- ── TAB: EMAIL (RESEND) ── -->
+    <div id="ws-email" class="ws-panel" style="display:none;padding:24px;max-width:600px;">
+      <div class="ws-section-title">Email Sending</div>
+      <div style="font-size:12px;color:var(--text4);margin-bottom:20px;line-height:1.6;">
+        Connect your <a href="https://resend.com" target="_blank" style="color:var(--accent);">Resend</a> account to send real emails from TalentBase.
+        Emails are sent via a secure server-side proxy — your API key never touches the browser.
+        Without configuration, outreach is still logged and composable via Gmail.
+      </div>
+
+      <!-- Status card -->
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+        <div id="email-status-dot" style="width:10px;height:10px;border-radius:50%;background:var(--text4);flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div id="email-status-title" style="font-size:13px;font-weight:600;color:var(--text);">Not configured</div>
+          <div id="email-status-sub" style="font-size:11px;color:var(--text4);margin-top:2px;">Enter your proxy URL below to enable real sending</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="testEmailConnection()">Test</button>
+      </div>
+
+      <!-- Proxy endpoint -->
+      <div style="margin-bottom:16px;">
+        <div class="ws-label">Email Proxy URL</div>
+        <input class="ws-input" id="email-proxy-url" placeholder="https://your-site.vercel.app/api/send-email" style="font-family:'DM Mono',monospace;font-size:12px;"/>
+        <div style="font-size:11px;color:var(--text4);margin-top:4px;">
+          Your deployed <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">api/send-email.js</code> Vercel function URL.
+          Set <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">RESEND_API_KEY</code> in your Vercel environment variables.
+        </div>
+      </div>
+
+      <!-- Sender identity -->
+      <div style="margin-bottom:16px;">
+        <div class="ws-label">From Name</div>
+        <input class="ws-input" id="email-from-name" placeholder="Jonah Adelman" />
+      </div>
+      <div style="margin-bottom:20px;">
+        <div class="ws-label">From Address <span style="color:var(--text4);font-weight:400;">(must be verified in Resend)</span></div>
+        <input class="ws-input" id="email-from-addr" placeholder="jonah@thestaffingspecialist.com" />
+        <div style="font-size:11px;color:var(--text4);margin-top:4px;">Add and verify this domain in Resend → Domains</div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:24px;">
+        <button class="btn btn-primary" onclick="saveEmailConfig()">Save Configuration</button>
+        <button class="btn btn-ghost" onclick="clearEmailConfig()">Clear</button>
+      </div>
+
+      <div class="ws-divider"></div>
+
+      <!-- Send approval toggle -->
+      <div class="ws-section-title">Approval Mode</div>
+      <div style="font-size:12px;color:var(--text4);margin-bottom:14px;line-height:1.6;">
+        Control whether auto-pipeline outreach sends immediately or waits for manual approval.
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:14px 16px;margin-bottom:10px;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Require approval before sending</div>
+          <div style="font-size:11px;color:var(--text4);margin-top:2px;">Auto-pipeline queues outreach — you review and approve each email before it sends</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0;margin-left:12px;">
+          <input type="checkbox" id="email-approval-toggle" onchange="saveEmailConfig()" style="opacity:0;width:0;height:0;"/>
+          <span id="email-toggle-track" onclick="document.getElementById('email-approval-toggle').click()" style="position:absolute;cursor:pointer;inset:0;background:var(--bg5);border-radius:12px;transition:.2s;"></span>
+          <span id="email-toggle-thumb" style="position:absolute;content:'';height:18px;width:18px;left:3px;bottom:3px;background:var(--text4);border-radius:50%;transition:.2s;pointer-events:none;"></span>
+        </label>
+      </div>
+
+      <div class="ws-divider"></div>
+
+      <!-- Deployment guide -->
+      <div class="ws-section-title">Deployment Setup</div>
+      <div style="font-size:12px;color:var(--text4);margin-bottom:10px;line-height:1.6;">
+        The email proxy function lives in your GitHub repo at <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">api/send-email.js</code>.
+        Vercel deploys it automatically on push.
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:12px 14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);line-height:1.8;">
+        1. Push api/send-email.js to GitHub<br>
+        2. In Vercel project → Settings → Environment Variables<br>
+        3. Add: <strong style="color:var(--text2);">RESEND_API_KEY</strong> = your Resend API key<br>
+        4. Redeploy (or it auto-deploys on next push)<br>
+        5. Paste your Vercel URL above: https://yoursite.vercel.app/api/send-email
+      </div>
+    </div>
+
   </div>
 </div>
-
-</div><!-- /app-shell -->
 
 
 
@@ -8235,6 +8912,115 @@ function wsTab(btn, tabId){
   if(tabId === 'ws-users') wsRenderUsers();
   if(tabId === 'ws-workflow') wsRenderStages();
   if(tabId === 'ws-export') wsInitExport();
+  if(tabId === 'ws-database') sbRefreshDbUI();
+  if(tabId === 'ws-email')    refreshEmailStatusCard();
+}
+
+// Called from sidebar link
+function switchWsTab(tabName){
+  var tabId = 'ws-' + tabName;
+  var btn = document.querySelector('.ws-tab[data-tab="'+tabId+'"]');
+  if(btn) wsTab(btn, tabId);
+}
+
+// ─── SUPABASE UI ACTIONS ──────────────────────────────────────
+function sbRefreshDbUI(){
+  var urlInput = document.getElementById('sb-url-input');
+  var keyInput = document.getElementById('sb-key-input');
+  if(urlInput) urlInput.value = localStorage.getItem(SB_URL_KEY) || '';
+  if(keyInput) keyInput.value = localStorage.getItem(SB_KEY_KEY) || '';
+  _updateSbStatusCard();
+}
+
+function _updateSbStatusCard(){
+  var dot = document.getElementById('sb-card-dot');
+  var title = document.getElementById('sb-card-title');
+  var sub = document.getElementById('sb-card-sub');
+  var signedOut = document.getElementById('sb-auth-signed-out');
+  var signedIn = document.getElementById('sb-auth-signed-in');
+  var emailEl = document.getElementById('sb-user-email');
+  var sbDot = document.getElementById('sb-status-dot');
+  var sbLbl = document.getElementById('sb-status-lbl');
+  if(!dot) return;
+  if(_sb && _sbUser){
+    dot.style.background='var(--green)'; title.textContent='Connected & signed in';
+    sub.textContent='Syncing data to Supabase · '+(_sbUser.email||'');
+    if(signedOut) signedOut.style.display='none';
+    if(signedIn) signedIn.style.display='block';
+    if(emailEl) emailEl.textContent=_sbUser.email||'';
+    if(sbDot) sbDot.style.background='var(--green)';
+    if(sbLbl) sbLbl.textContent='Connected · '+(_sbUser.email||'');
+  } else if(_sb){
+    dot.style.background='var(--amber)'; title.textContent='Supabase configured';
+    sub.textContent='Sign in to enable multi-user sync';
+    if(signedOut) signedOut.style.display='block';
+    if(signedIn) signedIn.style.display='none';
+    if(sbDot) sbDot.style.background='var(--amber)';
+    if(sbLbl) sbLbl.textContent='Supabase ready — not signed in';
+  } else {
+    dot.style.background='var(--text4)'; title.textContent='Not connected';
+    sub.textContent='Enter your Supabase project URL and anon key above';
+    if(signedOut) signedOut.style.display='block';
+    if(signedIn) signedIn.style.display='none';
+    if(sbDot) sbDot.style.background='var(--text4)';
+    if(sbLbl) sbLbl.textContent='Local only (no Supabase)';
+  }
+}
+
+function sbConnect(){
+  var url = (document.getElementById('sb-url-input')||{}).value||'';
+  var key = (document.getElementById('sb-key-input')||{}).value||'';
+  url = url.trim(); key = key.trim();
+  if(!url||!key){ alert('Enter both Supabase URL and anon key.'); return; }
+  localStorage.setItem(SB_URL_KEY, url);
+  localStorage.setItem(SB_KEY_KEY, key);
+  sbInit();
+  _updateSbStatusCard();
+  alert(_sb ? 'Supabase client initialized. Sign in below to start syncing.' : 'Connection failed — check URL and key.');
+}
+
+function sbDisconnect(){
+  if(!confirm('Disconnect Supabase? Your data stays in localStorage.')) return;
+  localStorage.removeItem(SB_URL_KEY);
+  localStorage.removeItem(SB_KEY_KEY);
+  _sb = null; _sbUser = null;
+  sessionStorage.removeItem('tb_sb_user');
+  _updateSbStatusCard();
+}
+
+async function sbDoSignIn(){
+  var email = (document.getElementById('sb-email')||{}).value||'';
+  var pass  = (document.getElementById('sb-password')||{}).value||'';
+  var errEl = document.getElementById('sb-auth-err');
+  if(!email||!pass){ if(errEl) errEl.textContent='Email and password required.'; return; }
+  if(!_sb){ if(errEl) errEl.textContent='Connect Supabase first.'; return; }
+  if(errEl) errEl.textContent='Signing in...';
+  var { error } = await sbSignIn(email, pass);
+  if(error){ if(errEl) errEl.textContent=error.message; }
+  else { if(errEl) errEl.textContent=''; _updateSbStatusCard(); }
+}
+
+async function sbDoSignOut(){
+  await sbSignOut();
+  _updateSbStatusCard();
+}
+
+async function sbSyncNow(){
+  var msgEl = document.getElementById('sb-sync-msg');
+  if(msgEl) msgEl.textContent='Syncing...';
+  try {
+    await Promise.all([sbSave(CK,cands), sbSave(JK,jobs), sbSave(DK,deals)]);
+    if(msgEl) msgEl.textContent='Synced ' + new Date().toLocaleTimeString();
+  } catch(e) {
+    if(msgEl) msgEl.textContent='Sync failed: '+e.message;
+  }
+}
+
+function copySbSchema(btn){
+  var el = document.getElementById('sb-schema-sql');
+  if(el){ navigator.clipboard.writeText(el.textContent||el.innerText); }
+  var orig = btn.textContent; btn.textContent='Copied!';
+  setTimeout(()=>{ btn.textContent=orig; }, 1500);
 }
 
 function wsDirty(){ /* visual indicator hook */ }

@@ -1365,16 +1365,46 @@ function generateOutreach(c, job) {
   };
 }
 
-function autoSendOutreach(c, job) {
-  const msg = generateOutreach(c, job);
+async function autoSendOutreach(c, job) {
+  const msg      = generateOutreach(c, job);
+  const proxyUrl = localStorage.getItem('tb_email_proxy') || '';
+  const approval = localStorage.getItem('tb_email_approval') === '1';
+  const fromName = localStorage.getItem('tb_email_from_name') || 'Jonah Adelman';
+  const html     = '<p>' + msg.email.replace(/\n/g, '<br>') + '</p>';
   if (!c.activity) c.activity = [];
-  // Outreach sent entry — now
-  c.activity.push({ ts: Date.now(), text: 'Outreach sent: ' + job.title + ' @ ' + (job.company || '') });
-  // Follow-up scheduled entry — 2 days out
+
+  if (proxyUrl && !approval && c.email && c.email.includes('@')) {
+    // Real send via proxy
+    try {
+      const res = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: c.email, subject: msg.subject, html, from_name: fromName })
+      });
+      const result = await res.json();
+      if (res.ok && result.success) {
+        c.activity.push({ ts: Date.now(), text: 'Email sent: ' + job.title + ' @ ' + (job.company || '') });
+        c.lastMessage = { subject: msg.subject, email: msg.email, sentAt: Date.now(), status: 'sent' };
+      } else { throw new Error(result.error || 'Send failed'); }
+    } catch(e) {
+      c.activity.push({ ts: Date.now(), text: 'Outreach logged (send error): ' + job.title });
+      c.lastMessage = { subject: msg.subject, email: msg.email, sentAt: null, status: 'error' };
+    }
+  } else if (proxyUrl && approval) {
+    // Queue for TalentBase approval
+    const queue = JSON.parse(localStorage.getItem('tb_email_queue') || '[]');
+    queue.push({ id: Date.now().toString(36), candId: c.id, subject: msg.subject, html, queuedAt: Date.now() });
+    localStorage.setItem('tb_email_queue', JSON.stringify(queue));
+    c.activity.push({ ts: Date.now(), text: 'Outreach queued (pending approval): ' + job.title });
+    c.lastMessage = { subject: msg.subject, email: msg.email, sentAt: null, status: 'queued' };
+  } else {
+    // Log only — open in Gmail from TalentBase when ready
+    c.activity.push({ ts: Date.now(), text: 'Outreach sent: ' + job.title + ' @ ' + (job.company || '') });
+    c.lastMessage = { subject: msg.subject, email: msg.email, sentAt: null, status: 'logged' };
+  }
+
   c.activity.push({ ts: Date.now() + 2 * 86400000, text: 'Follow up scheduled: ' + job.title });
-  // CRM fields
   c.lastContacted = Date.now();
-  c.lastMessage = msg;
   return msg;
 }
 
