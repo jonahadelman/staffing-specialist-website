@@ -992,8 +992,12 @@ a{color:var(--text3);text-decoration:none;}
 <!-- ═══ EMAIL TEMPLATES ═══ -->
 <div class="view" id="v-library">
   <div class="topbar">
-    <div><div class="topbar-title">File Library</div><div class="topbar-sub">Templates, scripts, offer letters, job descriptions, playbooks</div></div>
-    <button class="btn btn-primary" onclick="openNewLibraryItem()">+ Add File</button>
+    <div><div class="topbar-title">Document Library</div><div class="topbar-sub">Templates, offer letters, compliance docs, onboarding, scripts</div></div>
+    <button class="btn btn-ghost btn-sm" onclick="showDocInstances()" style="margin-right:4px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Generated Docs
+    </button>
+    <button class="btn btn-primary" onclick="openNewLibraryItem()">+ Add Template</button>
   </div>
 
   <!-- Search + filter bar -->
@@ -1006,6 +1010,9 @@ a{color:var(--text3);text-decoration:none;}
       <button class="lib-cat-btn on" onclick="setLibCat('all',this)">All</button>
       <button class="lib-cat-btn" onclick="setLibCat('email',this)">Email</button>
       <button class="lib-cat-btn" onclick="setLibCat('offer',this)">Offer Letters</button>
+      <button class="lib-cat-btn" onclick="setLibCat('candidate',this)">Candidate Comms</button>
+      <button class="lib-cat-btn" onclick="setLibCat('compliance',this)">Compliance</button>
+      <button class="lib-cat-btn" onclick="setLibCat('onboarding',this)">Onboarding</button>
       <button class="lib-cat-btn" onclick="setLibCat('script',this)">Scripts</button>
       <button class="lib-cat-btn" onclick="setLibCat('jd',this)">Job Descriptions</button>
       <button class="lib-cat-btn" onclick="setLibCat('playbook',this)">Playbooks</button>
@@ -6304,11 +6311,644 @@ Competing offers?            ⬜ Yes (details: _______________)  ⬜ No
 Urgency to extend offer:     ⬜ Today  ⬜ This Week  ⬜ Flexible
 Notes: _______________________________________________`},
 
+  // ─── CANDIDATE COMMUNICATION ─────────────────────────────────
+  {id:'lib21',cat:'candidate',icon:'📋',title:'Candidate Submission to Client',
+   tags:['submission','client','intro'],
+   vars:['candidate_name','job_title','company','hiring_manager','years_exp','key_skill_1','key_skill_2','key_skill_3','salary_expectation'],
+   subject:'Candidate Submission — {{candidate_name}} for {{job_title}}',
+   body:`Dear {{hiring_manager}},
+
+I am pleased to submit {{candidate_name}} for consideration for the {{job_title}} role at {{company}}.
+
+CANDIDATE OVERVIEW
+{{candidate_name}} brings {{years_exp}} years of direct experience and has consistently delivered results in environments that mirror {{company}}'s operating context.
+
+KEY QUALIFICATIONS
+• {{key_skill_1}}
+• {{key_skill_2}}
+• {{key_skill_3}}
+
+COMPENSATION EXPECTATIONS
+{{salary_expectation}}
+
+AVAILABILITY
+Available to start with two weeks' notice. Flexible on timing if the right opportunity.
+
+NEXT STEP
+I recommend a 30-minute screening call. I will coordinate scheduling and brief {{candidate_name}} on what to expect.
+
+Please let me know if you would like the full resume, references, or any additional background.
+
+Best regards,
+Jonah Adelman
+The Staffing Specialist
+603.401.2901`},
+
+  {id:'lib22',cat:'candidate',icon:'🚫',title:'Rejection Email — HR Compliant',
+   tags:['rejection','HR','compliance','candidate'],
+   vars:['candidate_name','role','company'],
+   subject:'Your application — {{role}} at {{company}}',
+   body:`Dear {{candidate_name}},
+
+Thank you for your time and interest in the {{role}} position at {{company}}.
+
+After careful consideration, we have decided to move forward with other candidates whose experience more closely aligns with the current requirements of this role.
+
+This was not an easy decision. You presented yourself professionally throughout the process and we genuinely appreciate the time you invested.
+
+We will retain your information and will reach out if a relevant opportunity arises. We encourage you to apply to future openings that align with your background.
+
+We wish you every success in your search.
+
+Warm regards,
+{{company}} Talent Acquisition
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NOTE: This rejection does not reflect any evaluation of protected characteristics under EEO guidelines. All candidates are evaluated solely on job-related qualifications.`},
+
+  // ─── COMPLIANCE ───────────────────────────────────────────────
+  {id:'lib23',cat:'compliance',icon:'🔒',title:'Background Check Authorization',
+   tags:['compliance','background','authorization','FCRA'],
+   vars:['candidate_name','company','position','date'],
+   body:`BACKGROUND CHECK AUTHORIZATION AND DISCLOSURE
+
+Pursuant to the Fair Credit Reporting Act (FCRA), 15 U.S.C. § 1681 et seq., and applicable state laws:
+
+DISCLOSURE
+{{company}} ("Company") may obtain a consumer report and/or investigative consumer report (collectively, "background check") for employment purposes in connection with your application for the position of {{position}}.
+
+The background check may include, but is not limited to: criminal history, employment verification, education verification, professional license verification, credit history (where permitted by law), and reference checks.
+
+AUTHORIZATION
+I, {{candidate_name}}, hereby authorize {{company}} and its designated agents to obtain background check reports about me as described above.
+
+I understand that:
+⬜ I have the right to request a free copy of any report obtained
+⬜ I may dispute inaccurate information directly with the consumer reporting agency
+⬜ A separate "Summary of Your Rights Under the FCRA" has been provided to me
+⬜ This authorization remains on file and may be used for future employment decisions
+
+Candidate Signature: ___________________________
+Printed Name: {{candidate_name}}
+Date: {{date}}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FOR COMPANY USE ONLY
+Background check vendor: _______________
+Order date: _______________
+Completed: _______________
+Result: ⬜ Clear  ⬜ Adverse  ⬜ Pending review`},
+
+  {id:'lib24',cat:'compliance',icon:'⚖️',title:'At-Will Employment Statement',
+   tags:['compliance','at-will','employment','legal'],
+   vars:['company','state'],
+   body:`AT-WILL EMPLOYMENT ACKNOWLEDGMENT
+
+NOTICE TO EMPLOYEE
+
+Employment at {{company}} is at-will. This means that either you or {{company}} may terminate the employment relationship at any time, with or without cause, and with or without advance notice, subject to applicable law in {{state}}.
+
+Nothing in any employee handbook, policy manual, offer letter, or other communication creates a contract of employment for a specified term or alters the at-will nature of your employment, unless specifically stated in a written agreement signed by an authorized officer of {{company}}.
+
+This at-will relationship can only be modified by a written agreement signed by both you and an authorized officer of {{company}}.
+
+ACKNOWLEDGMENT
+By signing below, I acknowledge that I have read, understand, and agree to the at-will nature of my employment with {{company}}.
+
+Employee Name: ___________________________
+Employee Signature: ___________________________
+Date: ___________________________
+
+Witness / HR Representative: ___________________________
+Date: ___________________________`},
+
+  {id:'lib25',cat:'compliance',icon:'🏛️',title:'EEO Statement + Self-ID Form',
+   tags:['compliance','EEO','diversity','OFCCP'],
+   vars:['company','position','date'],
+   body:`EQUAL EMPLOYMENT OPPORTUNITY STATEMENT
+
+{{company}} is an Equal Opportunity Employer. We do not discriminate on the basis of race, color, religion, sex, sexual orientation, gender identity, national origin, disability, veteran status, age, or any other characteristic protected by applicable federal, state, or local law.
+
+VOLUNTARY SELF-IDENTIFICATION FORM
+Position Applied For: {{position}}
+Date: {{date}}
+
+This information is collected pursuant to EEO and OFCCP regulations. Providing this information is voluntary. Refusal to provide it will not subject you to adverse treatment. This information is kept separate from your application and is not used in hiring decisions.
+
+RACE / ETHNICITY (Select one)
+⬜ Hispanic or Latino
+⬜ White (Not Hispanic or Latino)
+⬜ Black or African American (Not Hispanic or Latino)
+⬜ Native Hawaiian or Other Pacific Islander
+⬜ Asian (Not Hispanic or Latino)
+⬜ American Indian or Alaska Native
+⬜ Two or More Races (Not Hispanic or Latino)
+⬜ I choose not to self-identify
+
+GENDER
+⬜ Male  ⬜ Female  ⬜ Non-binary / Third gender  ⬜ I choose not to self-identify
+
+VETERAN STATUS (if applicable)
+⬜ I identify as a Protected Veteran
+⬜ I am not a Protected Veteran
+⬜ I choose not to self-identify
+
+DISABILITY STATUS
+⬜ Yes, I have a disability (or previously had one)
+⬜ No, I do not have a disability
+⬜ I choose not to self-identify`},
+
+  // ─── ONBOARDING ───────────────────────────────────────────────
+  {id:'lib26',cat:'onboarding',icon:'🎉',title:'Welcome Letter — New Hire',
+   tags:['onboarding','welcome','first-day'],
+   vars:['candidate_name','job_title','company','start_date','manager_name','office_address','start_time','it_contact','hr_contact'],
+   subject:'Welcome to {{company}} — We are so glad you are joining us',
+   body:`Dear {{candidate_name}},
+
+On behalf of everyone at {{company}}, welcome. We are genuinely excited to have you join the team as {{job_title}}.
+
+This decision was not made lightly. You impressed everyone you met, and we believe you are going to do exceptional work here.
+
+YOUR FIRST DAY
+Date: {{start_date}}
+Time: Please arrive by {{start_time}}
+Location: {{office_address}}
+
+You will be greeted at reception. Please bring two forms of valid ID for I-9 verification.
+
+YOUR MANAGER
+You will be reporting to {{manager_name}}, who is looking forward to your arrival and has already planned your first week.
+
+BEFORE YOU ARRIVE
+⬜ Accept the formal offer in writing (if not already done)
+⬜ Complete any pre-employment paperwork sent separately
+⬜ Set up your personal email notifications to forward during your transition
+⬜ Get some rest — the first week will be full
+
+HELPFUL CONTACTS
+IT Setup / Equipment: {{it_contact}}
+HR / Benefits questions: {{hr_contact}}
+
+We built something great here. Now it gets better.
+
+See you on {{start_date}}.
+
+Warmly,
+{{manager_name}}
+{{company}}`},
+
+  {id:'lib27',cat:'onboarding',icon:'📅',title:'30-60-90 Day Plan Template',
+   tags:['onboarding','30-60-90','ramp','manager'],
+   vars:['candidate_name','job_title','manager_name','start_date'],
+   body:`30 / 60 / 90 DAY SUCCESS PLAN
+{{candidate_name}} — {{job_title}}
+Manager: {{manager_name}} | Start Date: {{start_date}}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DAYS 1–30: LEARN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Focus: Orientation, relationships, and context-building
+
+⬜ Complete all onboarding paperwork and compliance training
+⬜ Meet with every direct stakeholder (schedule within first 2 weeks)
+⬜ Shadow key team members and observe core workflows
+⬜ Review all relevant documentation, SOPs, and past projects
+⬜ Identify the 3 most important things to understand about this role
+⬜ Attend all team meetings — observe before contributing heavily
+
+30-Day Check-In Goal: Clearly articulate the team's priorities, key processes, and where you can add immediate value.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DAYS 31–60: CONTRIBUTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Focus: Take ownership of defined responsibilities
+
+⬜ Fully own your first project or deliverable
+⬜ Begin contributing independently in team meetings
+⬜ Identify one process improvement opportunity
+⬜ Deliver first performance self-assessment
+⬜ Deepen relationships outside your immediate team
+⬜ Provide first substantive update to manager on goals
+
+60-Day Check-In Goal: Operating independently on core responsibilities. No longer needing active hand-holding. Clear on what success looks like.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DAYS 61–90: LEAD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Focus: Demonstrate initiative and early impact
+
+⬜ Drive at least one initiative from idea to completion
+⬜ Present a proposal or recommendation to the team
+⬜ Begin mentoring or helping a peer if applicable
+⬜ Deliver measurable output tied to a business goal
+⬜ Complete formal 90-day performance review with manager
+⬜ Set 6-month goals collaboratively with manager
+
+90-Day Review Goal: Proven contributor. Team can see clear value. Foundation set for long-term growth.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NOTES FROM MANAGER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+_______________________________________________
+_______________________________________________`},
+
+  {id:'lib28',cat:'onboarding',icon:'🗓️',title:'First Day Instructions',
+   tags:['onboarding','first-day','logistics'],
+   vars:['candidate_name','company','start_date','start_time','address','parking','dress_code','lunch_plan','it_contact','manager_name','manager_phone'],
+   subject:'Everything you need for your first day — {{company}}',
+   body:`Hi {{candidate_name}},
+
+Your start date is coming up fast. Here is everything you need to know.
+
+ARRIVAL
+Date: {{start_date}}
+Time: {{start_time}}
+Address: {{address}}
+Parking: {{parking}}
+
+WHAT TO BRING
+⬜ Two forms of valid government-issued ID (for I-9)
+⬜ Voided check or bank info (for direct deposit setup)
+⬜ Any signed documents you have not already returned
+⬜ Personal items for your workspace
+
+DRESS CODE
+{{dress_code}}
+
+FIRST DAY SCHEDULE
+Morning: Arrival, building access, IT setup, HR paperwork
+Late morning: Team introductions
+Lunch: {{lunch_plan}}
+Afternoon: Role orientation with {{manager_name}}
+
+HELPFUL TO KNOW BEFORE YOU ARRIVE
+⬜ Expect the first day to feel like a lot of information — that is normal
+⬜ You will not be expected to produce work on day one
+⬜ If you get lost or something changes, call {{manager_name}} at {{manager_phone}}
+
+IT / EQUIPMENT QUESTIONS
+Contact {{it_contact}} if you have any issues with equipment or access after day one.
+
+We are looking forward to having you here.
+
+See you {{start_date}}.
+
+— The {{company}} Team`},
+
 ]));
 
 
 
+
 function saveLibrary(){ localStorage.setItem('tb_library', JSON.stringify(libraryItems)); }
+
+// ═══ FEATURE FLAG ═══════════════════════════════════════════
+// Set to false to hide Doc Library + Generator from UI instantly
+const DOCLIB_ENABLED = true;
+
+// ═══ DOCUMENT INSTANCES ═════════════════════════════════════
+// Generated documents tied to candidate + job. Schema-compatible with Supabase.
+// {id, templateId, templateTitle, candId, jobId, populatedContent, vars, status, createdAt}
+var docInstances = JSON.parse(localStorage.getItem('tb_doc_instances') || '[]');
+function saveDocInstances(){ localStorage.setItem('tb_doc_instances', JSON.stringify(docInstances)); }
+
+// Category display config — single source of truth
+const LIB_CAT_META = {
+  email:      {label:'Email',       color:'var(--accent2)',  icon:'EMAIL'},
+  offer:      {label:'Offer Letter',color:'var(--green)',    icon:'OFFER'},
+  candidate:  {label:'Candidate',   color:'var(--blue)',     icon:'CAND'},
+  compliance: {label:'Compliance',  color:'var(--red)',      icon:'LEGAL'},
+  onboarding: {label:'Onboarding',  color:'var(--teal)',     icon:'ONBOARD'},
+  script:     {label:'Script',      color:'var(--amber)',    icon:'SCRIPT'},
+  jd:         {label:'JD',          color:'var(--purple)',   icon:'JD'},
+  playbook:   {label:'Playbook',    color:'var(--teal)',     icon:'PLAY'},
+  misc:       {label:'Other',       color:'var(--text3)',    icon:'FILE'},
+};
+
+// ═══ DOCUMENT GENERATOR ══════════════════════════════════════
+// Opens a fill-in-variables modal for any library template.
+// On generate: creates a docInstance + shows filled preview.
+
+function openDocGenerator(templateId, prefillCandId, prefillJobId){
+  if(!DOCLIB_ENABLED) return;
+  var item = libraryItems.find(function(x){ return x.id===templateId; });
+  if(!item) return;
+
+  var vars = item.vars || [];
+  var modal = document.getElementById('ov-docgen');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'ov-docgen';
+    modal.className = 'overlay';
+    modal.onclick = function(e){ if(e.target===modal) closeModal('ov-docgen'); };
+    document.body.appendChild(modal);
+  }
+
+  // Build candidate/job dropdowns
+  var candOptions = '<option value="">— No candidate —</option>' +
+    cands.map(function(c){ return '<option value="'+c.id+'"'+(c.id===prefillCandId?' selected':'')+'>'+esc(c.first+' '+c.last+(c.title?' — '+c.title:''))+'</option>'; }).join('');
+  var jobOptions = '<option value="">— No job —</option>' +
+    jobs.map(function(j){ return '<option value="'+j.id+'"'+(j.id===prefillJobId?' selected':'')+'>'+esc(j.title+' (Req #'+(j.reqNum||'—')+')')+'</option>'; }).join('');
+
+  // Build auto-fill map from selected candidate + job
+  function getAutoVars(candId, jobId){
+    var c = cands.find(function(x){return x.id===candId;})||{};
+    var j = jobs.find(function(x){return x.id===jobId;})||{};
+    return {
+      candidate_name: (c.first||'') + ' ' + (c.last||''),
+      first_name: c.first||'',
+      last_name: c.last||'',
+      job_title: j.title||'',
+      company: j.company||c.company||'',
+      salary: c.desiredSalary||'',
+      start_date: '',
+      bonus: '',
+      manager_name: '',
+      position: j.title||'',
+      years_exp: c.yoe||'',
+      salary_expectation: c.desiredSalary||'',
+      role: j.title||'',
+      date: new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
+      state: c.location||'',
+    };
+  }
+
+  function buildFields(candId, jobId){
+    if(!vars.length) return '<div style="font-size:12px;color:var(--text4);padding:8px 0;">No variables in this template.</div>';
+    var auto = getAutoVars(candId, jobId);
+    return vars.map(function(v){
+      var val = auto[v]||'';
+      return '<div class="field" style="margin-bottom:10px;">' +
+        '<label style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;display:block;font-family:DM Mono,monospace;">{{'+v+'}}</label>' +
+        '<input id="dg-var-'+v+'" value="'+esc(val)+'" placeholder="'+esc(v.replace(/_/g,' '))+'" ' +
+        'style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:8px 10px;font-size:13px;color:var(--text);outline:none;font-family:inherit;" '+
+        'oninput="dgPreviewUpdate()"/>' +
+        '</div>';
+    }).join('');
+  }
+
+  var catMeta = LIB_CAT_META[item.cat]||LIB_CAT_META.misc;
+  modal.innerHTML = '<div class="modal modal-lg" style="max-width:820px;height:80vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">' +
+    '<div style="padding:18px 24px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">' +
+      '<div>' +
+        '<div style="font-size:11px;font-weight:700;color:'+catMeta.color+';text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Document Generator</div>' +
+        '<div style="font-size:16px;font-weight:700;color:var(--text);">'+esc(item.title)+'</div>' +
+      '</div>' +
+      '<button class="modal-close" onclick="closeModal(\'ov-docgen\')">✕</button>' +
+    '</div>' +
+    '<div style="display:flex;flex:1;overflow:hidden;">' +
+      // LEFT: controls
+      '<div style="width:280px;flex-shrink:0;border-right:1px solid var(--border2);overflow-y:auto;padding:16px 18px;">' +
+        '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Link to</div>' +
+        '<div class="field" style="margin-bottom:10px;">' +
+          '<label style="font-size:11px;color:var(--text3);margin-bottom:4px;display:block;">Candidate</label>' +
+          '<select id="dg-cand" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;font-size:12px;color:var(--text);outline:none;font-family:inherit;" onchange="dgAutoFill()">'+candOptions+'</select>' +
+        '</div>' +
+        '<div class="field" style="margin-bottom:16px;">' +
+          '<label style="font-size:11px;color:var(--text3);margin-bottom:4px;display:block;">Job</label>' +
+          '<select id="dg-job" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;font-size:12px;color:var(--text);outline:none;font-family:inherit;" onchange="dgAutoFill()">'+jobOptions+'</select>' +
+        '</div>' +
+        '<div style="height:1px;background:var(--border2);margin:12px 0;"></div>' +
+        '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Variables</div>' +
+        '<div id="dg-vars">'+buildFields(prefillCandId||'', prefillJobId||'')+'</div>' +
+      '</div>' +
+      // RIGHT: live preview
+      '<div style="flex:1;overflow-y:auto;background:var(--bg);display:flex;flex-direction:column;">' +
+        '<div style="padding:10px 20px;border-bottom:1px solid var(--border2);background:var(--bg2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">' +
+          '<div style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;">Live Preview</div>' +
+          '<div style="display:flex;gap:6px;">' +
+            '<button class="btn btn-ghost btn-xs" onclick="dgCopyFilled()">Copy</button>' +
+            '<button class="btn btn-ghost btn-xs" onclick="dgPrintFilled()">Print / PDF</button>' +
+            '<button class="btn btn-primary btn-sm" onclick="dgSaveInstance(\''+templateId+'\')">Save Document ↓</button>' +
+          '</div>' +
+        '</div>' +
+        '<div id="dg-preview" style="padding:32px 40px;flex:1;max-width:720px;"></div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+  openModal('ov-docgen');
+  // Store template ref on modal for dgPreviewUpdate
+  modal._templateId = templateId;
+  // Initial preview render
+  setTimeout(function(){ dgPreviewUpdate(); }, 50);
+}
+
+// Auto-fill variable fields from selected candidate/job
+function dgAutoFill(){
+  var candId = (document.getElementById('dg-cand')||{}).value||'';
+  var jobId  = (document.getElementById('dg-job')||{}).value||'';
+  var c = cands.find(function(x){return x.id===candId;})||{};
+  var j = jobs.find(function(x){return x.id===jobId;})||{};
+  var auto = {
+    candidate_name:(c.first||'')+' '+(c.last||''), first_name:c.first||'',
+    last_name:c.last||'', job_title:j.title||'', company:j.company||c.company||'',
+    salary:c.desiredSalary||'', position:j.title||'', years_exp:c.yoe||'',
+    salary_expectation:c.desiredSalary||'', role:j.title||'', state:c.location||'',
+    date:new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
+  };
+  Object.keys(auto).forEach(function(k){
+    var el = document.getElementById('dg-var-'+k);
+    if(el && !el.value) el.value = auto[k];
+  });
+  dgPreviewUpdate();
+}
+
+// Re-render live preview with current field values
+function dgPreviewUpdate(){
+  var modal = document.getElementById('ov-docgen');
+  if(!modal) return;
+  var templateId = modal._templateId;
+  var item = libraryItems.find(function(x){return x.id===templateId;});
+  if(!item) return;
+  var filled = fillTemplate(item.body||'', function(varName){
+    var el = document.getElementById('dg-var-'+varName);
+    return el ? el.value : '{{'+varName+'}}';
+  });
+  var preview = document.getElementById('dg-preview');
+  if(preview) preview.innerHTML = renderLibBodyHtml(filled);
+}
+
+// Core template fill engine — replaces {{var}} with values
+function fillTemplate(body, resolver){
+  return (body||'').replace(/\{\{([^}]+)\}\}/g, function(match, varName){
+    return resolver(varName.trim()) || match;
+  });
+}
+
+// Shared body renderer (used in viewer + generator preview)
+function renderLibBodyHtml(body){
+  return (body||'').split('\n').map(function(line){
+    var escaped = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // Highlight unfilled {{vars}} in amber
+    escaped = escaped.replace(/\{\{([^}]+)\}\}/g,
+      '<span style="background:var(--amber-bg);color:var(--amber);font-weight:600;padding:1px 5px;border-radius:3px;font-family:DM Mono,monospace;font-size:11px;">{{$1}}</span>');
+    if(/^━+/.test(line)) return '<div style="height:1px;background:var(--border2);margin:16px 0;"></div>';
+    if(/^[A-Z\s&\/\-–—·•]+$/.test(line.trim())&&line.trim().length>3&&line.trim().length<60)
+      return '<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin:20px 0 8px;">'+escaped+'</div>';
+    if(/^⬜/.test(line))
+      return '<div style="display:flex;gap:10px;align-items:flex-start;padding:4px 0;">' +
+        '<span style="color:var(--border3);font-size:14px;flex-shrink:0;">⬜</span>' +
+        '<span style="font-size:13px;color:var(--text2);line-height:1.6;">'+escaped.slice(1).trim()+'</span></div>';
+    if(!line.trim()) return '<div style="height:8px;"></div>';
+    return '<div style="font-size:13px;color:var(--text2);line-height:1.7;">'+escaped+'</div>';
+  }).join('');
+}
+
+function dgGetFilledContent(templateId){
+  var item = libraryItems.find(function(x){return x.id===templateId;});
+  if(!item) return '';
+  return fillTemplate(item.body||'', function(varName){
+    var el = document.getElementById('dg-var-'+varName);
+    return el ? el.value : '';
+  });
+}
+
+function dgCopyFilled(){
+  var modal = document.getElementById('ov-docgen');
+  if(!modal) return;
+  var txt = dgGetFilledContent(modal._templateId);
+  navigator.clipboard.writeText(txt).then(function(){
+    var btn = document.querySelector('#ov-docgen .btn-ghost');
+    if(btn){ var orig=btn.textContent; btn.textContent='Copied!'; setTimeout(function(){btn.textContent=orig;},1500); }
+  });
+}
+
+function dgPrintFilled(){
+  var modal = document.getElementById('ov-docgen');
+  if(!modal) return;
+  var item = libraryItems.find(function(x){return x.id===modal._templateId;})||{title:'Document'};
+  var txt = dgGetFilledContent(modal._templateId);
+  var w = window.open('','_blank','width=800,height=900');
+  w.document.write('<!DOCTYPE html><html><head><title>'+esc(item.title)+'</title>' +
+    '<style>body{font-family:Georgia,serif;margin:60px auto;max-width:700px;font-size:14px;line-height:1.8;color:#111;}' +
+    'h1{font-size:18px;margin-bottom:4px;}.meta{font-size:12px;color:#666;margin-bottom:32px;border-bottom:1px solid #ddd;padding-bottom:12px;}' +
+    'pre{white-space:pre-wrap;font-family:inherit;}</style></head><body>' +
+    '<h1>'+esc(item.title)+'</h1>' +
+    '<div class="meta">Generated '+new Date().toLocaleDateString()+' · The Staffing Specialist</div>' +
+    '<pre>'+esc(txt)+'</pre>' +
+    '</body></html>');
+  w.document.close();
+  setTimeout(function(){ w.print(); }, 400);
+}
+
+function dgSaveInstance(templateId){
+  var item = libraryItems.find(function(x){return x.id===templateId;});
+  if(!item) return;
+  var candId = (document.getElementById('dg-cand')||{}).value||'';
+  var jobId  = (document.getElementById('dg-job')||{}).value||'';
+  var filled = dgGetFilledContent(templateId);
+  var varSnapshot = {};
+  (item.vars||[]).forEach(function(v){
+    var el = document.getElementById('dg-var-'+v);
+    varSnapshot[v] = el ? el.value : '';
+  });
+  var inst = {
+    id: uid(),
+    templateId: templateId,
+    templateTitle: item.title,
+    templateCat: item.cat,
+    candId: candId,
+    jobId: jobId,
+    populatedContent: filled,
+    vars: varSnapshot,
+    status: 'draft',
+    createdAt: Date.now(),
+  };
+  docInstances.unshift(inst);
+  saveDocInstances();
+  // Log on candidate if linked
+  if(candId){
+    var c = cands.find(function(x){return x.id===candId;});
+    if(c){
+      if(!c.activity) c.activity=[];
+      c.activity.push({ts:Date.now(), text:'Document generated: '+item.title});
+      saveCands();
+    }
+  }
+  closeModal('ov-docgen');
+  // Show in library viewer
+  nav('library');
+  showDocInstances();
+  alert('Document saved to Generated Documents.');
+}
+
+// Show instance history panel in library
+function showDocInstances(){
+  var viewer = document.getElementById('lib-viewer');
+  if(!viewer) return;
+  if(!docInstances.length){
+    viewer.innerHTML='<div style="padding:40px;text-align:center;color:var(--text4);font-size:13px;">No generated documents yet.<br>Click "Generate" on any template to create one.</div>';
+    return;
+  }
+  var rows = docInstances.slice(0,50).map(function(inst){
+    var c = inst.candId ? cands.find(function(x){return x.id===inst.candId;}) : null;
+    var j = inst.jobId  ? jobs.find(function(x){return x.id===inst.jobId;})  : null;
+    var meta = LIB_CAT_META[inst.templateCat]||LIB_CAT_META.misc;
+    return '<div onclick="viewDocInstance(\''+inst.id+'\')" style="padding:12px 20px;border-bottom:1px solid var(--border2);cursor:pointer;display:flex;align-items:center;gap:10px;" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'\'">' +
+      '<span style="font-size:10px;font-weight:700;color:'+meta.color+';background:var(--bg4);padding:2px 6px;border-radius:3px;font-family:DM Mono,monospace;flex-shrink:0;">'+meta.icon+'</span>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(inst.templateTitle)+'</div>' +
+        '<div style="font-size:11px;color:var(--text4);margin-top:2px;">'+(c?esc(c.first+' '+c.last):'No candidate')+(j?' · '+esc(j.title):'')+'</div>' +
+      '</div>' +
+      '<span style="font-size:10px;color:var(--text4);">'+fmtDate(inst.createdAt)+'</span>' +
+    '</div>';
+  }).join('');
+
+  viewer.innerHTML =
+    '<div style="padding:14px 20px;border-bottom:1px solid var(--border2);background:var(--bg2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">' +
+      '<div style="font-size:13px;font-weight:700;color:var(--text);">Generated Documents</div>' +
+      '<span style="font-size:11px;color:var(--text4);">'+docInstances.length+' documents</span>' +
+    '</div>' +
+    '<div style="flex:1;overflow-y:auto;">'+rows+'</div>';
+}
+
+function viewDocInstance(instId){
+  var inst = docInstances.find(function(x){return x.id===instId;});
+  if(!inst) return;
+  var viewer = document.getElementById('lib-viewer');
+  if(!viewer) return;
+  var c = inst.candId ? cands.find(function(x){return x.id===inst.candId;}) : null;
+  var j = inst.jobId  ? jobs.find(function(x){return x.id===inst.jobId;})  : null;
+  var meta = LIB_CAT_META[inst.templateCat]||LIB_CAT_META.misc;
+  viewer.innerHTML =
+    '<div style="padding:16px 24px;border-bottom:1px solid var(--border2);background:var(--bg2);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0;">' +
+      '<div>' +
+        '<div style="font-size:10px;font-weight:700;color:'+meta.color+';text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">'+meta.label+'</div>' +
+        '<div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;">'+esc(inst.templateTitle)+'</div>' +
+        '<div style="font-size:11px;color:var(--text4);">'+(c?esc(c.first+' '+c.last):'No candidate')+(j?' · '+esc(j.title):'')+ ' · '+fmtDate(inst.createdAt)+'</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px;flex-shrink:0;">' +
+        '<button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText(docInstances.find(x=>x.id===\''+inst.id+'\').populatedContent||\'\')" >Copy</button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="dgPrintInstance(\''+inst.id+'\')" >Print / PDF</button>' +
+        '<button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteDocInstance(\''+inst.id+'\')" >Delete</button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="showDocInstances()">← All</button>' +
+      '</div>' +
+    '</div>' +
+    '<div style="padding:32px 40px;flex:1;overflow-y:auto;max-width:720px;">'+renderLibBodyHtml(inst.populatedContent||'')+'</div>';
+}
+
+function dgPrintInstance(instId){
+  var inst = docInstances.find(function(x){return x.id===instId;});
+  if(!inst) return;
+  var w = window.open('','_blank','width=800,height=900');
+  w.document.write('<!DOCTYPE html><html><head><title>'+esc(inst.templateTitle)+'</title>' +
+    '<style>body{font-family:Georgia,serif;margin:60px auto;max-width:700px;font-size:14px;line-height:1.8;color:#111;}' +
+    'h1{font-size:18px;margin-bottom:4px;}.meta{font-size:12px;color:#666;margin-bottom:32px;border-bottom:1px solid #ddd;padding-bottom:12px;}pre{white-space:pre-wrap;font-family:inherit;}</style></head><body>' +
+    '<h1>'+esc(inst.templateTitle)+'</h1>' +
+    '<div class="meta">Generated '+fmtDate(inst.createdAt)+' · The Staffing Specialist</div>' +
+    '<pre>'+esc(inst.populatedContent||'')+'</pre>' +
+    '</body></html>');
+  w.document.close();
+  setTimeout(function(){ w.print(); }, 400);
+}
+
+function deleteDocInstance(instId){
+  if(!confirm('Delete this generated document?')) return;
+  docInstances = docInstances.filter(function(x){return x.id!==instId;});
+  saveDocInstances();
+  showDocInstances();
+}
 
 function setLibCat(cat, btn){
   libCat = cat;
@@ -6427,7 +7067,7 @@ function viewLibItem(id){
         (((item.tags||[]).length) ? ('<div style="display:flex;gap:5px;flex-wrap:wrap;">' + (item.tags||[]).map(function(t){return '<span class="lib-tag">'+t+'</span>';}).join('') + '</div>') : '') +
       '</div>' +
       '<div style="display:flex;gap:6px;flex-shrink:0;">' +
-        '<button class="btn btn-primary btn-sm" onclick="copyLibItem(\'' + id + '\')" >📋 Copy</button>' +
+        '<button class="btn btn-primary btn-sm" onclick="openDocGenerator(\'' + id + '\')" >⚡ Generate</button>' + '<button class="btn btn-ghost btn-sm" onclick="copyLibItem(\'' + id + '\')" >📋 Copy</button>' +
         (item.subject ? '<button class="btn btn-ghost btn-sm" onclick="copyLibItemFull(\'' + id + '\')" >Copy + Subject</button>' : '') +
         '<button class="btn btn-ghost btn-sm" onclick="editLibItem(\'' + id + '\')" >Edit</button>' +
         '<button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteLibItem(\'' + id + '\')" >✕</button>' +
