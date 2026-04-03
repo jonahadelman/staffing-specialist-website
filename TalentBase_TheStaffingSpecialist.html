@@ -11326,157 +11326,401 @@ function wsToast(msg){
 
 <!-- ═══════════════════════════════════════════════════════════
      CLIENT PORTAL — activated via ?view=client in URL
-     Standalone view: candidates, status, feedback. No auth yet.
+     Standalone view: pipeline, candidates, roles, activity. Read-only + feedback.
      ═══════════════════════════════════════════════════════════ -->
-<div id="client-portal" style="display:none;position:fixed;inset:0;background:#0f1117;color:#e2e8f0;font-family:'DM Sans',sans-serif;overflow-y:auto;z-index:99999;">
+<div id="client-portal" style="display:none;position:fixed;inset:0;background:#0b0f1a;color:#e2e8f0;font-family:'DM Sans',sans-serif;overflow-y:auto;z-index:99999;">
 <style>
-#client-portal .cp-header{background:#161b22;border-bottom:1px solid #263044;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;}
-#client-portal .cp-logo{font-size:16px;font-weight:700;color:#e2e8f0;letter-spacing:-.3px;}
-#client-portal .cp-sub{font-size:12px;color:#64748b;margin-top:1px;}
-#client-portal .cp-body{max-width:900px;margin:0 auto;padding:32px 24px;}
-#client-portal .cp-section{font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.1em;margin:24px 0 10px;}
-#client-portal .cp-card{background:#161b22;border:1px solid #263044;border-radius:10px;padding:16px 20px;margin-bottom:8px;display:flex;align-items:flex-start;gap:14px;}
-#client-portal .cp-card:hover{border-color:#334155;}
-#client-portal .cp-av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;flex-shrink:0;}
-#client-portal .cp-name{font-size:15px;font-weight:600;color:#e2e8f0;}
-#client-portal .cp-role{font-size:12px;color:#94a3b8;margin-top:2px;}
-#client-portal .cp-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;}
-#client-portal .cp-action{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
-#client-portal .cp-btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;font-family:inherit;transition:all .1s;}
-#client-portal .cp-approve{background:rgba(34,197,94,.1);color:#22c55e;border-color:rgba(34,197,94,.3);}
-#client-portal .cp-approve:hover{background:rgba(34,197,94,.2);}
-#client-portal .cp-reject{background:rgba(239,68,68,.08);color:#ef4444;border-color:rgba(239,68,68,.25);}
-#client-portal .cp-reject:hover{background:rgba(239,68,68,.15);}
-#client-portal .cp-note{background:rgba(59,130,246,.08);color:#60a5fa;border-color:rgba(59,130,246,.25);}
-#client-portal .cp-note:hover{background:rgba(59,130,246,.15);}
-#client-portal .cp-stat{background:#161b22;border:1px solid #263044;border-radius:10px;padding:14px 18px;}
-#client-portal .cp-stat-val{font-size:28px;font-weight:700;letter-spacing:-1.5px;line-height:1;}
-#client-portal .cp-stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;font-weight:700;}
-#client-portal .cp-feedback-area{width:100%;background:#1c2230;border:1px solid #334155;border-radius:6px;padding:8px 10px;font-size:13px;color:#e2e8f0;font-family:inherit;resize:vertical;min-height:60px;outline:none;margin-top:8px;}
-#client-portal .cp-feedback-area:focus{border-color:#3b82f6;}
-#client-portal .cp-feedback-saved{font-size:11px;color:#22c55e;margin-top:4px;display:none;}
+/* ── CLIENT PORTAL DESIGN SYSTEM ── */
+#cp{--cp-bg:#0b0f1a;--cp-panel:#111827;--cp-card:#1c2333;--cp-border:#1e2d45;--cp-border2:#2a3a52;--cp-text:#f1f5f9;--cp-text2:#94a3b8;--cp-text3:#64748b;--cp-blue:#3b82f6;--cp-green:#22c55e;--cp-amber:#f59e0b;--cp-red:#ef4444;--cp-purple:#a78bf5;--cp-teal:#14b8a6;font-family:'DM Sans',sans-serif;}
+#cp *{box-sizing:border-box;}
+#cp-header{background:var(--cp-panel);border-bottom:1px solid var(--cp-border);padding:0 40px;display:flex;align-items:center;gap:0;height:60px;position:sticky;top:0;z-index:10;}
+#cp-logo{font-size:15px;font-weight:700;color:var(--cp-text);letter-spacing:-.3px;}
+#cp-logo-sub{font-size:11px;color:var(--cp-text3);margin-top:1px;}
+.cp-nav{display:flex;gap:2px;margin-left:32px;}
+.cp-nav-btn{padding:6px 14px;border:none;background:none;color:var(--cp-text3);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;border-radius:6px;transition:all .1s;}
+.cp-nav-btn:hover{background:rgba(255,255,255,.05);color:var(--cp-text);}
+.cp-nav-btn.on{background:rgba(59,130,246,.12);color:#60a5fa;font-weight:600;}
+#cp-header-right{margin-left:auto;font-size:12px;color:var(--cp-text3);text-align:right;line-height:1.5;}
+#cp-body{max-width:1100px;margin:0 auto;padding:32px 40px;}
+
+/* Metric cards */
+.cp-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;}
+.cp-metric{background:var(--cp-panel);border:1px solid var(--cp-border);border-radius:10px;padding:18px 20px;}
+.cp-metric-label{font-size:10px;font-weight:700;color:var(--cp-text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
+.cp-metric-val{font-size:28px;font-weight:700;letter-spacing:-1px;line-height:1;}
+.cp-metric-sub{font-size:11px;color:var(--cp-text3);margin-top:5px;}
+
+/* Section header */
+.cp-sh{font-size:10px;font-weight:700;color:var(--cp-text3);text-transform:uppercase;letter-spacing:.1em;margin:28px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--cp-border);}
+
+/* Actions required */
+.cp-action-item{display:flex;align-items:center;gap:14px;padding:13px 16px;background:var(--cp-panel);border:1px solid var(--cp-border2);border-left:3px solid var(--cp-red);border-radius:8px;margin-bottom:8px;}
+.cp-action-item.amber{border-left-color:var(--cp-amber);}
+.cp-action-icon{font-size:18px;flex-shrink:0;width:24px;text-align:center;}
+.cp-action-text{flex:1;font-size:13px;font-weight:600;color:var(--cp-text);}
+.cp-action-sub{font-size:11px;color:var(--cp-text3);margin-top:2px;}
+
+/* Pipeline kanban */
+.cp-kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:4px;}
+.cp-col{background:var(--cp-panel);border:1px solid var(--cp-border);border-radius:8px;overflow:hidden;}
+.cp-col-head{padding:10px 14px;border-bottom:1px solid var(--cp-border);display:flex;align-items:center;justify-content:space-between;}
+.cp-col-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;}
+.cp-col-count{font-size:11px;color:var(--cp-text3);font-family:monospace;}
+.cp-col-body{padding:10px;}
+.cp-mini-card{background:var(--cp-card);border:1px solid var(--cp-border);border-radius:6px;padding:10px 12px;margin-bottom:6px;}
+.cp-mini-card:last-child{margin-bottom:0;}
+.cp-mini-name{font-size:12px;font-weight:700;color:var(--cp-text);}
+.cp-mini-role{font-size:11px;color:var(--cp-text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* Candidate cards */
+.cp-cand-card{background:var(--cp-panel);border:1px solid var(--cp-border);border-radius:10px;padding:20px;margin-bottom:10px;transition:border-color .1s;}
+.cp-cand-card:hover{border-color:var(--cp-border2);}
+.cp-cand-approved{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.03);}
+.cp-cand-rejected{border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.02);opacity:.7;}
+.cp-av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:15px;flex-shrink:0;}
+.cp-cand-name{font-size:16px;font-weight:700;color:var(--cp-text);}
+.cp-cand-title{font-size:13px;color:var(--cp-text2);margin-top:3px;}
+.cp-cand-summary{font-size:13px;color:var(--cp-text2);line-height:1.6;margin:12px 0;padding:12px 14px;background:var(--cp-card);border-radius:6px;border-left:3px solid var(--cp-border2);}
+.cp-badge{display:inline-flex;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;}
+.cp-btns{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+.cp-btn{padding:8px 18px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid;font-family:inherit;transition:all .15s;}
+.cp-approve-btn{background:rgba(34,197,94,.1);color:var(--cp-green);border-color:rgba(34,197,94,.35);}
+.cp-approve-btn:hover{background:rgba(34,197,94,.2);}
+.cp-reject-btn{background:rgba(239,68,68,.08);color:var(--cp-red);border-color:rgba(239,68,68,.3);}
+.cp-reject-btn:hover{background:rgba(239,68,68,.15);}
+.cp-note-btn{background:transparent;color:var(--cp-text3);border-color:var(--cp-border2);}
+.cp-note-btn:hover{color:var(--cp-text);border-color:var(--cp-border2);}
+.cp-feedback-area{width:100%;background:var(--cp-card);border:1px solid var(--cp-border2);border-radius:6px;padding:10px 12px;font-size:13px;color:var(--cp-text);font-family:inherit;resize:vertical;min-height:70px;outline:none;margin-top:10px;}
+.cp-feedback-area:focus{border-color:var(--cp-blue);}
+.cp-feedback-saved{font-size:11px;color:var(--cp-green);margin-top:4px;display:none;}
+
+/* Role cards */
+.cp-role-card{background:var(--cp-panel);border:1px solid var(--cp-border);border-radius:10px;padding:18px 20px;margin-bottom:10px;display:flex;align-items:flex-start;gap:16px;}
+.cp-role-title{font-size:15px;font-weight:700;color:var(--cp-text);}
+.cp-role-meta{font-size:12px;color:var(--cp-text3);margin-top:4px;}
+.cp-role-stat{font-size:11px;color:var(--cp-text2);background:var(--cp-card);border:1px solid var(--cp-border);border-radius:5px;padding:4px 10px;margin-top:8px;display:inline-block;}
+
+/* Activity feed */
+.cp-activity-item{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid var(--cp-border);}
+.cp-activity-item:last-child{border-bottom:none;}
+.cp-activity-dot{width:8px;height:8px;border-radius:50%;background:var(--cp-blue);flex-shrink:0;margin-top:4px;}
+.cp-activity-text{font-size:13px;color:var(--cp-text2);line-height:1.5;}
+.cp-activity-time{font-size:11px;color:var(--cp-text3);margin-top:2px;}
 </style>
-<div class="cp-header">
+
+<div id="cp">
+<div id="cp-header">
   <div>
-    <div class="cp-logo">The Staffing Specialist</div>
-    <div class="cp-sub">Candidate Review Portal</div>
+    <div id="cp-logo">The Staffing Specialist</div>
+    <div id="cp-logo-sub">Hiring Dashboard</div>
   </div>
-  <div id="cp-header-meta" style="font-size:12px;color:#64748b;text-align:right;"></div>
+  <nav class="cp-nav">
+    <button class="cp-nav-btn on" onclick="cpTab('overview',this)">Overview</button>
+    <button class="cp-nav-btn" onclick="cpTab('candidates',this)">Candidates</button>
+    <button class="cp-nav-btn" onclick="cpTab('roles',this)">Roles</button>
+    <button class="cp-nav-btn" onclick="cpTab('activity',this)">Activity</button>
+  </nav>
+  <div id="cp-header-right"></div>
 </div>
-<div class="cp-body">
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px;" id="cp-stats"></div>
-  <div id="cp-sections"></div>
+<div id="cp-body">
+  <div id="cp-metrics" class="cp-metrics"></div>
+  <div id="cp-content"></div>
+</div>
 </div>
 </div>
 
 <script>
 // ── CLIENT PORTAL BOOTSTRAP ────────────────────────────────────
 (function(){
-  if(window.location.search.indexOf('view=client')===-1)return;
-  // Hide main app, show portal
+  if(window.location.search.indexOf('view=client')===-1) return;
   document.getElementById('gate').style.display='none';
   document.getElementById('app-shell').style.display='none';
-  const portal=document.getElementById('client-portal');
-  portal.style.display='block';
-
-  // Wait for data to be available (localStorage)
-  setTimeout(renderClientPortal, 100);
+  var portal = document.getElementById('client-portal');
+  portal.style.display = 'block';
+  setTimeout(renderClientPortal, 150);
 })();
 
-function renderClientPortal(){
-  const CK='tb_cands_v2', JK='tb_jobs_v2';
-  let portalCands=[], portalJobs=[];
-  try{portalCands=JSON.parse(localStorage.getItem(CK)||'[]');}catch(e){}
-  try{portalJobs=JSON.parse(localStorage.getItem(JK)||'[]');}catch(e){}
+var _cpTab = 'overview';
 
-  const clientFeedback=JSON.parse(localStorage.getItem('tb_client_feedback')||'{}');
-  const openJobs=portalJobs.filter(j=>j.status==='Open');
-  const active=portalCands.filter(c=>!['Rejected','Hired'].includes(c.status));
-  const interviewing=portalCands.filter(c=>c.status==='Interviewing').length;
-  const offer=portalCands.filter(c=>c.status==='Offer').length;
-
-  // Header meta
-  document.getElementById('cp-header-meta').innerHTML=
-    `${portalJobs.filter(j=>j.status==='Open').length} open roles<br>${active.length} active candidates`;
-
-  // Stats
-  const AVC_CLIENT=[['rgba(59,130,246,.2)','#60a5fa'],['rgba(34,197,94,.2)','#22c55e'],['rgba(245,158,11,.2)','#f59e0b'],['rgba(139,92,246,.2)','#a78bf5']];
-  document.getElementById('cp-stats').innerHTML=`
-    <div class="cp-stat"><div class="cp-stat-label">Active Pipeline</div><div class="cp-stat-val" style="color:#60a5fa;">${active.length}</div></div>
-    <div class="cp-stat"><div class="cp-stat-label">Interviewing</div><div class="cp-stat-val" style="color:#f59e0b;">${interviewing}</div></div>
-    <div class="cp-stat"><div class="cp-stat-label">Offer Stage</div><div class="cp-stat-val" style="color:#22c55e;">${offer}</div></div>
-    <div class="cp-stat"><div class="cp-stat-label">Open Roles</div><div class="cp-stat-val" style="color:#a78bf5;">${openJobs.length}</div></div>`;
-
-  // Group candidates by status for client — show active pipeline only
-  const SHOW_STAGES=['Offer','Interviewing','Screening','New'];
-  const statusLabel={Offer:'Ready to Close',Interviewing:'In Process',Screening:'Under Review',New:'New Submissions'};
-  const statusColor={Offer:'#22c55e',Interviewing:'#f59e0b',Screening:'#60a5fa',New:'#94a3b8'};
-
-  let sectHtml='';
-  SHOW_STAGES.forEach(stage=>{
-    const stageCands=portalCands.filter(c=>c.status===stage);
-    if(!stageCands.length)return;
-    sectHtml+=`<div class="cp-section">${statusLabel[stage]||stage} (${stageCands.length})</div>`;
-    stageCands.forEach(c=>{
-      const initials=((c.first||'?')[0]+(c.last||'?')[0]).toUpperCase();
-      const idx=Math.abs(((c.first||'A').charCodeAt(0)+(c.last||'B').charCodeAt(0)))%AVC_CLIENT.length;
-      const[bg,fg]=AVC_CLIENT[idx];
-      const fb=clientFeedback[c.id]||{};
-      const fbColor=fb.decision==='approve'?'#22c55e':fb.decision==='reject'?'#ef4444':'#64748b';
-      const matchBadge=c.matchScore?`<span style="font-size:11px;font-weight:700;font-family:monospace;color:#22c55e;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);padding:2px 7px;border-radius:4px;">${c.matchScore}% match</span>`:'';
-
-      sectHtml+=`<div class="cp-card" id="cp-card-${c.id}">
-        <div class="cp-av" style="background:${bg};color:${fg};">${initials}</div>
-        <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <div class="cp-name">${(c.first||'')} ${(c.last||'')}</div>
-            <span class="cp-badge" style="background:rgba(59,130,246,.08);color:${statusColor[stage]||'#94a3b8'};border:1px solid rgba(59,130,246,.2);">${stage}</span>
-            ${matchBadge}
-            ${fb.decision?`<span style="font-size:11px;font-weight:700;color:${fbColor};">${fb.decision==='approve'?'✓ Approved':fb.decision==='reject'?'✗ Declined':'★ Note added'}</span>`:''}
-          </div>
-          <div class="cp-role">${c.title||''}${c.company?' · '+c.company:''}</div>
-          ${c.location?`<div style="font-size:11px;color:#64748b;margin-top:2px;">📍 ${c.location}</div>`:''}
-          ${c.yoe?`<div style="font-size:11px;color:#94a3b8;margin-top:2px;">${c.yoe} yrs experience</div>`:''}
-          <div class="cp-action">
-            <button class="cp-btn cp-approve" onclick="cpDecision('${c.id}','approve')">✓ Approve</button>
-            <button class="cp-btn cp-reject" onclick="cpDecision('${c.id}','reject')">✗ Decline</button>
-            <button class="cp-btn cp-note" onclick="cpToggleNote('${c.id}')">+ Note</button>
-          </div>
-          <div id="cp-note-${c.id}" style="display:${fb.note?'block':'none'};">
-            <textarea class="cp-feedback-area" placeholder="Leave feedback for the recruiter..." onblur="cpSaveNote('${c.id}',this.value)">${fb.note||''}</textarea>
-            <div class="cp-feedback-saved" id="cp-saved-${c.id}">Saved ✓</div>
-          </div>
-        </div>
-      </div>`;
-    });
-  });
-
-  if(!sectHtml)sectHtml='<div style="text-align:center;padding:60px;color:#64748b;font-size:14px;">No active candidates in the pipeline yet.</div>';
-  document.getElementById('cp-sections').innerHTML=sectHtml;
+function cpTab(tab, btn){
+  _cpTab = tab;
+  document.querySelectorAll('.cp-nav-btn').forEach(function(b){ b.classList.remove('on'); });
+  if(btn) btn.classList.add('on');
+  renderCPContent();
 }
 
-function cpDecision(candId,decision){
-  const fb=JSON.parse(localStorage.getItem('tb_client_feedback')||'{}');
-  if(!fb[candId])fb[candId]={};
-  fb[candId].decision=decision;
-  fb[candId].ts=Date.now();
-  localStorage.setItem('tb_client_feedback',JSON.stringify(fb));
-  renderClientPortal();
+// ── DATA HELPERS ───────────────────────────────────────────────
+var _cpCands=[], _cpJobs=[], _cpFeedback={};
+
+function _cpLoad(){
+  try{ _cpCands = JSON.parse(localStorage.getItem('tb_cands_v3')||'[]'); }catch(e){ _cpCands=[]; }
+  try{ _cpJobs  = JSON.parse(localStorage.getItem('tb_jobs_v3') ||'[]'); }catch(e){ _cpJobs=[]; }
+  try{ _cpFeedback = JSON.parse(localStorage.getItem('tb_client_feedback')||'{}'); }catch(e){ _cpFeedback={}; }
+}
+
+var _cpAVC=[['rgba(59,130,246,.2)','#60a5fa'],['rgba(34,197,94,.2)','#22c55e'],['rgba(245,158,11,.2)','#f59e0b'],['rgba(139,92,246,.2)','#a78bf5'],['rgba(20,184,166,.2)','#2dd4bf']];
+function _cpColor(c){ var i=Math.abs(((c.first||'A').charCodeAt(0)+(c.last||'B').charCodeAt(0)))%_cpAVC.length; return _cpAVC[i]; }
+function _cpEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function _cpFmt(ts){ return ts?new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}):''; }
+
+// ── MAIN RENDER ────────────────────────────────────────────────
+function renderClientPortal(){
+  _cpLoad();
+  var active      = _cpCands.filter(function(c){ return !['Rejected','Hired'].includes(c.status); });
+  var interviewing= _cpCands.filter(function(c){ return c.status==='Interviewing'; }).length;
+  var offer       = _cpCands.filter(function(c){ return c.status==='Offer'; }).length;
+  var openJobs    = _cpJobs.filter(function(j){ return j.status==='Open'; }).length;
+  var pending     = active.filter(function(c){ return !_cpFeedback[c.id]; }).length;
+
+  // Header right
+  var hdr = document.getElementById('cp-header-right');
+  if(hdr) hdr.innerHTML = openJobs+' open role'+(openJobs!==1?'s':'')+'<br>'+active.length+' active candidates';
+
+  // Metrics
+  var metricsEl = document.getElementById('cp-metrics');
+  if(metricsEl){
+    var metrics = [
+      {label:'Active Pipeline', val:active.length,   color:'#60a5fa', sub:'Candidates in process'},
+      {label:'Interviewing',    val:interviewing,     color:'#f59e0b', sub:'In interview rounds'},
+      {label:'Offer Stage',     val:offer,            color:'#22c55e', sub:'Ready to decide'},
+      {label:'Awaiting Review', val:pending,          color:'#ef4444', sub:'Need your feedback'},
+    ];
+    metricsEl.innerHTML = metrics.map(function(m){
+      return '<div class="cp-metric" style="border-left:3px solid '+m.color+';">' +
+        '<div class="cp-metric-label">'+m.label+'</div>' +
+        '<div class="cp-metric-val" style="color:'+m.color+';">'+m.val+'</div>' +
+        '<div class="cp-metric-sub">'+m.sub+'</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  renderCPContent();
+}
+
+function renderCPContent(){
+  var el = document.getElementById('cp-content');
+  if(!el) return;
+  if(_cpTab==='overview')    el.innerHTML = _cpOverview();
+  else if(_cpTab==='candidates') el.innerHTML = _cpCandidates();
+  else if(_cpTab==='roles')  el.innerHTML = _cpRoles();
+  else if(_cpTab==='activity') el.innerHTML = _cpActivity();
+  // Rebind feedback textareas
+  el.querySelectorAll('[data-note-cid]').forEach(function(ta){
+    ta.onblur = function(){ cpSaveNote(ta.dataset.noteCid, ta.value); };
+  });
+}
+
+// ── OVERVIEW TAB ───────────────────────────────────────────────
+function _cpOverview(){
+  var html = '';
+
+  // Actions required
+  var needAction = _cpCands.filter(function(c){
+    return ['Offer','Interviewing','Screening'].includes(c.status) && !_cpFeedback[c.id];
+  });
+  if(needAction.length){
+    html += '<div class="cp-sh">Actions Required ('+needAction.length+')</div>';
+    html += needAction.slice(0,5).map(function(c){
+      var urgency = c.status==='Offer';
+      return '<div class="cp-action-item'+(urgency?'':' amber')+'" onclick="_cpTab=\'candidates\';cpTab(\'candidates\',document.querySelector(\'.cp-nav-btn:nth-child(2)\'))">' +
+        '<span class="cp-action-icon">'+(urgency?'🟢':'🟡')+'</span>' +
+        '<div><div class="cp-action-text">Review '+_cpEsc(c.first+' '+c.last)+'</div>' +
+        '<div class="cp-action-sub">'+_cpEsc(c.status)+' · '+_cpEsc(c.title||'')+(c.company?' · '+_cpEsc(c.company):'')+'</div></div>' +
+        '<span style="font-size:11px;font-weight:700;color:'+(urgency?'#ef4444':'#f59e0b')+';">'+(urgency?'Offer Pending':'Awaiting Feedback')+'</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  // Pipeline kanban (4 key stages)
+  var STAGES = ['Screening','Interviewing','Offer','Hired'];
+  var STAGE_COLORS = {Screening:'#60a5fa',Interviewing:'#f59e0b',Offer:'#22c55e',Hired:'#a78bf5'};
+  var STAGE_LABELS = {Screening:'Under Review',Interviewing:'Interviewing',Offer:'Offer',Hired:'Placed'};
+
+  html += '<div class="cp-sh">Pipeline</div>';
+  html += '<div class="cp-kanban">';
+  STAGES.forEach(function(stage){
+    var col = _cpCands.filter(function(c){ return c.status===stage; });
+    var color = STAGE_COLORS[stage];
+    html += '<div class="cp-col">' +
+      '<div class="cp-col-head">' +
+        '<span class="cp-col-name" style="color:'+color+';">'+STAGE_LABELS[stage]+'</span>' +
+        '<span class="cp-col-count">'+col.length+'</span>' +
+      '</div>' +
+      '<div class="cp-col-body">';
+    if(col.length){
+      html += col.slice(0,4).map(function(c){
+        var fb = _cpFeedback[c.id]||{};
+        var fbMark = fb.decision==='approve'?'<span style="color:#22c55e;float:right;font-size:11px;">✓</span>':fb.decision==='reject'?'<span style="color:#ef4444;float:right;font-size:11px;">✗</span>':'';
+        return '<div class="cp-mini-card">'+fbMark+
+          '<div class="cp-mini-name">'+_cpEsc(c.first+' '+c.last)+'</div>' +
+          '<div class="cp-mini-role">'+_cpEsc(c.title||'—')+'</div>' +
+        '</div>';
+      }).join('');
+      if(col.length>4) html+='<div style="font-size:11px;color:#64748b;text-align:center;padding:4px 0;">+' +(col.length-4)+' more</div>';
+    } else {
+      html += '<div style="font-size:12px;color:#374151;text-align:center;padding:16px 0;">—</div>';
+    }
+    html += '</div></div>';
+  });
+  html += '</div>';
+
+  // Top candidates to review
+  var topCands = _cpCands
+    .filter(function(c){ return ['Offer','Interviewing'].includes(c.status); })
+    .slice(0,3);
+  if(topCands.length){
+    html += '<div class="cp-sh">Top Candidates to Review</div>';
+    html += topCands.map(function(c){ return _cpCandCard(c, true); }).join('');
+  }
+
+  return html;
+}
+
+// ── CANDIDATES TAB ─────────────────────────────────────────────
+function _cpCandidates(){
+  var SHOW = ['Offer','Interviewing','Screening','New'];
+  var LABELS = {Offer:'Ready to Close',Interviewing:'In Interview',Screening:'Under Review',New:'New Submissions'};
+  var COLORS = {Offer:'#22c55e',Interviewing:'#f59e0b',Screening:'#60a5fa',New:'#94a3b8'};
+  var html = '';
+  SHOW.forEach(function(stage){
+    var group = _cpCands.filter(function(c){ return c.status===stage; });
+    if(!group.length) return;
+    html += '<div class="cp-sh" style="color:'+COLORS[stage]+';">'+LABELS[stage]+' ('+group.length+')</div>';
+    html += group.map(function(c){ return _cpCandCard(c, false); }).join('');
+  });
+  if(!html) html = '<div style="text-align:center;padding:60px;color:#64748b;font-size:14px;">No active candidates in the pipeline.</div>';
+  return html;
+}
+
+function _cpCandCard(c, compact){
+  var fb       = _cpFeedback[c.id]||{};
+  var bgFb     = fb.decision==='approve'?'cp-cand-approved':fb.decision==='reject'?'cp-cand-rejected':'';
+  var cpColors = _cpColor(c);
+  var initials = ((c.first||'?')[0]+(c.last||'?')[0]).toUpperCase();
+  var statusColors = {Offer:'#22c55e',Interviewing:'#f59e0b',Screening:'#60a5fa',New:'#94a3b8'};
+  var sColor   = statusColors[c.status]||'#94a3b8';
+  var fbText   = fb.decision==='approve'?'<span style="color:#22c55e;font-size:12px;font-weight:700;">✓ Approved</span>':
+                 fb.decision==='reject' ?'<span style="color:#ef4444;font-size:12px;font-weight:700;">✗ Declined</span>':'';
+
+  // Build a clean summary from resume or notes — no internal jargon
+  var summary = c.resume
+    ? c.resume.slice(0,220).replace(/\n/g,' ').trim() + (c.resume.length>220?'…':'')
+    : c.notes
+      ? c.notes.slice(0,200).replace(/\n/g,' ').trim() + (c.notes.length>200?'…':'')
+      : '';
+
+  return '<div class="cp-cand-card '+bgFb+'">' +
+    '<div style="display:flex;align-items:flex-start;gap:14px;">' +
+      '<div class="cp-av" style="background:'+cpColors[0]+';color:'+cpColors[1]+';">'+initials+'</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">' +
+          '<span class="cp-cand-name">'+_cpEsc(c.first+' '+c.last)+'</span>' +
+          '<span class="cp-badge" style="background:'+sColor+'18;color:'+sColor+';border:1px solid '+sColor+'44;">'+c.status+'</span>' +
+          (c.location?'<span style="font-size:11px;color:#64748b;">📍 '+_cpEsc(c.location)+'</span>':'') +
+          fbText +
+        '</div>' +
+        '<div class="cp-cand-title">'+_cpEsc(c.title||'')+(c.company?' · '+_cpEsc(c.company):'')+'</div>' +
+        (summary && !compact ? '<div class="cp-cand-summary">'+_cpEsc(summary)+'</div>' : '') +
+        '<div class="cp-btns">' +
+          '<button class="cp-btn cp-approve-btn" onclick="cpDecision(\''+c.id+'\',\'approve\')">✓ Approve</button>' +
+          '<button class="cp-btn cp-reject-btn" onclick="cpDecision(\''+c.id+'\',\'reject\')">✗ Decline</button>' +
+          '<button class="cp-btn cp-note-btn" onclick="cpToggleNote(\''+c.id+'\')">Leave Note</button>' +
+        '</div>' +
+        '<div id="cp-note-'+c.id+'" style="display:'+(fb.note?'block':'none')+';">' +
+          '<textarea class="cp-feedback-area" data-note-cid="'+c.id+'" placeholder="Feedback for the recruiter…">'+_cpEsc(fb.note||'')+'</textarea>' +
+          '<div class="cp-feedback-saved" id="cp-saved-'+c.id+'">Saved ✓</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+// ── ROLES TAB ──────────────────────────────────────────────────
+function _cpRoles(){
+  var open = _cpJobs.filter(function(j){ return j.status==='Open'; });
+  if(!open.length) return '<div style="text-align:center;padding:60px;color:#64748b;">No open roles at this time.</div>';
+  return '<div class="cp-sh">Active Roles ('+open.length+')</div>' +
+  open.map(function(j){
+    var assigned = _cpCands.filter(function(c){ return c.role&&c.role.includes(j.title); });
+    var inProcess = assigned.filter(function(c){ return ['Screening','Interviewing','Offer'].includes(c.status); }).length;
+    return '<div class="cp-role-card">' +
+      '<div style="width:42px;height:42px;border-radius:8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);display:grid;place-items:center;flex-shrink:0;">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" style="width:18px;height:18px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>' +
+      '</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div class="cp-role-title">'+_cpEsc(j.title)+'</div>' +
+        '<div class="cp-role-meta">'+_cpEsc(j.company||'')+(j.location?' · '+_cpEsc(j.location):'')+(j.dept?' · '+_cpEsc(j.dept):'')+'</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">' +
+          '<span class="cp-role-stat">Req #'+_cpEsc(j.reqNum||'—')+'</span>' +
+          (inProcess?'<span class="cp-role-stat" style="color:#f59e0b;">'+inProcess+' candidate'+(inProcess>1?'s':'')+' in process</span>':'') +
+          '<span class="cp-role-stat" style="color:#22c55e;">Open</span>' +
+        '</div>' +
+        (j.description?'<div style="font-size:12px;color:#64748b;margin-top:8px;line-height:1.5;">'+_cpEsc(j.description.slice(0,180))+(j.description.length>180?'…':'')+'</div>':'') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ── ACTIVITY TAB ───────────────────────────────────────────────
+function _cpActivity(){
+  // Collect all activity entries across candidates
+  var events = [];
+  _cpCands.forEach(function(c){
+    (c.activity||[]).forEach(function(a){
+      // Filter out internal system entries not relevant to clients
+      var txt = a.text||'';
+      if(txt.includes('Auto: follow-up')||txt.includes('Auto-matched')||txt.startsWith('Auto:')) return;
+      events.push({
+        ts: a.ts||0,
+        cand: c.first+' '+c.last,
+        text: txt,
+        status: c.status,
+      });
+    });
+  });
+  events.sort(function(a,b){ return b.ts-a.ts; });
+  var recent = events.slice(0,30);
+  if(!recent.length) return '<div style="text-align:center;padding:60px;color:#64748b;">No activity yet.</div>';
+
+  return '<div class="cp-sh">Recent Activity</div>' +
+    '<div style="background:#111827;border:1px solid #1e2d45;border-radius:10px;padding:8px 20px;">' +
+    recent.map(function(e){
+      return '<div class="cp-activity-item">' +
+        '<div class="cp-activity-dot"></div>' +
+        '<div>' +
+          '<div class="cp-activity-text"><strong>'+_cpEsc(e.cand)+'</strong> — '+_cpEsc(e.text)+'</div>' +
+          '<div class="cp-activity-time">'+_cpFmt(e.ts)+'</div>' +
+        '</div>' +
+      '</div>';
+    }).join('')+
+    '</div>';
+}
+
+// ── FEEDBACK FUNCTIONS (unchanged logic) ─────────────────────
+function cpDecision(candId, decision){
+  var fb = JSON.parse(localStorage.getItem('tb_client_feedback')||'{}');
+  if(!fb[candId]) fb[candId]={};
+  fb[candId].decision = decision;
+  fb[candId].ts = Date.now();
+  localStorage.setItem('tb_client_feedback', JSON.stringify(fb));
+  _cpFeedback = fb;
+  renderCPContent();
 }
 
 function cpToggleNote(candId){
-  const el=document.getElementById('cp-note-'+candId);
-  if(el)el.style.display=el.style.display==='none'?'block':'none';
+  var el = document.getElementById('cp-note-'+candId);
+  if(el) el.style.display = el.style.display==='none'?'block':'none';
 }
 
-function cpSaveNote(candId,note){
-  const fb=JSON.parse(localStorage.getItem('tb_client_feedback')||'{}');
-  if(!fb[candId])fb[candId]={};
-  fb[candId].note=note;
-  fb[candId].ts=Date.now();
-  localStorage.setItem('tb_client_feedback',JSON.stringify(fb));
-  const saved=document.getElementById('cp-saved-'+candId);
-  if(saved){saved.style.display='block';setTimeout(()=>{saved.style.display='none';},2000);}
+function cpSaveNote(candId, note){
+  var fb = JSON.parse(localStorage.getItem('tb_client_feedback')||'{}');
+  if(!fb[candId]) fb[candId]={};
+  fb[candId].note = note;
+  fb[candId].ts = Date.now();
+  localStorage.setItem('tb_client_feedback', JSON.stringify(fb));
+  _cpFeedback = fb;
+  var saved = document.getElementById('cp-saved-'+candId);
+  if(saved){ saved.style.display='block'; setTimeout(function(){ saved.style.display='none'; },2000); }
 }
 </script>
 
