@@ -1292,6 +1292,7 @@ function addToPipeline() {
   }
 
   // ── STEP 6+7: Suggest + auto-tag matching candidates ────────
+  // ── STEPS 5–7: Match candidates, generate outreach, log activity ──
   const cands = _tbLoad(TB_CANDS);
   const titleWords = jobTitle.toLowerCase().split(/\W+/).filter(w => w.length > 3);
   const matched = cands.filter(c => {
@@ -1299,12 +1300,16 @@ function addToPipeline() {
     return titleWords.some(w => blob.includes(w));
   }).slice(0, 5);
 
-  // Tag top matches with the new job
-  let taggedCount = 0;
+  let outreachCount = 0;
   matched.forEach(c => {
-    if (!c.role) { c.role = jobTitle; taggedCount++; }
+    // Assign role if unset
+    if (!c.role) c.role = jobTitle;
+    // Generate outreach + log activity + schedule follow-up
+    autoSendOutreach(c, jobObj);
+    outreachCount++;
   });
-  if (taggedCount > 0) _tbSave(TB_CANDS, cands);
+  // Persist all candidate changes (outreach, lastMessage, activity, lastContacted)
+  if (matched.length > 0) _tbSave(TB_CANDS, cands);
 
   // ── STEP 8: Revenue already tracked via job.expectedFee ─────
   // TalentBase getRevenueStats() picks it up automatically on next render.
@@ -1316,9 +1321,10 @@ function addToPipeline() {
     '✓ COMPANY  →  ' + company,
     '✓ FEE TRACKED  →  $' + fee.toLocaleString(),
     '✓ REQ #  →  ' + reqNum,
-    matched.length
-      ? '✓ ' + matched.length + ' CANDIDATE MATCH' + (matched.length > 1 ? 'ES' : '') + ' FLAGGED'
+    outreachCount > 0
+      ? '✓ OUTREACH QUEUED  →  ' + outreachCount + ' CANDIDATE' + (outreachCount > 1 ? 'S' : '')
       : '○ NO CANDIDATE MATCHES YET',
+    outreachCount > 0 ? '✓ FOLLOW-UPS SCHEDULED  →  +2 DAYS' : '',
     duplicate ? '⚠ ALREADY IN PIPELINE' : ''
   ].filter(Boolean).join('\n');
 
@@ -1338,15 +1344,51 @@ function addToPipeline() {
 
   // Update bar fee line
   document.getElementById('pb-fee').textContent =
-    'Added · Req ' + reqNum + ' · ' + matched.length + ' candidate match' + (matched.length !== 1 ? 'es' : '')
+    'Added · Req ' + reqNum
+    + (outreachCount > 0 ? ' · ' + outreachCount + ' outreach queued' : '')
     + ' · Opening TalentBase...';
 
   setTimeout(() => { window.open(tbUrl, '_blank'); }, 1200);
 }
 
+function generateOutreach(c, job) {
+  const skills = (c.skills || []).slice(0, 3).join(', ') || 'your background';
+  return {
+    subject: 'Quick intro \u2014 ' + job.title,
+    email: 'Hi ' + (c.first || 'there') + ',\n\n'
+      + 'I came across your background and thought you might be a strong fit for a '
+      + job.title + ' opportunity we\'re working on.\n\n'
+      + 'This role is with ' + (job.company || 'our client')
+      + ' and aligns well with your experience in ' + skills + '.\n\n'
+      + 'Would you be open to a quick conversation?\n\n'
+      + 'Best,\nJonah'
+  };
+}
+
+function autoSendOutreach(c, job) {
+  const msg = generateOutreach(c, job);
+  if (!c.activity) c.activity = [];
+  // Outreach sent entry — now
+  c.activity.push({ ts: Date.now(), text: 'Outreach sent: ' + job.title + ' @ ' + (job.company || '') });
+  // Follow-up scheduled entry — 2 days out
+  c.activity.push({ ts: Date.now() + 2 * 86400000, text: 'Follow up scheduled: ' + job.title });
+  // CRM fields
+  c.lastContacted = Date.now();
+  c.lastMessage = msg;
+  return msg;
+}
+
+function openEmail(candId) {
+  var stored = _tbLoad(TB_CANDS);
+  var c = stored.find(function(x) { return x.id === candId; });
+  if (!c || !c.lastMessage) return;
+  var url = 'mailto:' + (c.email || '')
+    + '?subject=' + encodeURIComponent(c.lastMessage.subject)
+    + '&body=' + encodeURIComponent(c.lastMessage.email);
+  window.open(url);
+}
+
 function pipelineViewTB() {
-  // Open TalentBase in new tab — user navigates to same origin
-  // Works when both files are served from same host
   const tbUrl = window.location.href.replace(/HappyHunting\.html.*/, 'TalentBase_TheStaffingSpecialist.html')
     .replace(/happy-hunting.*/, 'talentbase')
     .replace(/happyhunting.*/, 'talentbase');
