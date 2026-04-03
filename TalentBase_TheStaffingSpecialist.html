@@ -347,17 +347,28 @@ a{color:var(--text3);text-decoration:none;}
         <div class="gate-logo-by">by The Staffing Specialist</div>
       </div>
     </div>
-    <div class="gate-title">Enter your access code</div>
-    <div class="gate-sub">TalentBase is available to clients and partners of The Staffing Specialist. Enter the code provided to you to get started.</div>
+    <div class="gate-title">Sign in</div>
+    <div class="gate-sub">Enter your email and password to access TalentBase.</div>
+    <div class="gate-input-wrap" style="margin-bottom:8px;">
+      <input class="gate-input" id="gate-email" type="email" placeholder="you@email.com"
+        style="letter-spacing:normal;text-align:left;"
+        onkeydown="if(event.key==='Enter')document.getElementById('gate-input').focus()"
+        autocomplete="email"/>
+    </div>
     <div class="gate-input-wrap">
-      <input class="gate-input" id="gate-input" type="password" placeholder="· · · · · · · ·" maxlength="30" onkeydown="if(event.key==='Enter')document.querySelector('.gate-btn').click()" autocomplete="off" autocorrect="off" spellcheck="false"/>
-      <button class="gate-eye" onclick="toggleGateEye()" id="gate-eye-btn" title="Show/hide code">
+      <input class="gate-input" id="gate-input" type="password" placeholder="Password"
+        onkeydown="if(event.key==='Enter')gateLogin()"
+        autocomplete="current-password"/>
+      <button class="gate-eye" onclick="toggleGateEye()" id="gate-eye-btn" title="Show/hide password">
         <svg id="gate-eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
     </div>
-    <button class="gate-btn" onclick="(function(){var inp=document.getElementById('gate-input');var val=(inp?inp.value:'').trim();if(val.toUpperCase()==='TSS2026'){sessionStorage.setItem('tb_access_v1','1');var g=document.getElementById('gate');var a=document.getElementById('app-shell');if(g)g.style.cssText='display:none!important';if(a)a.style.cssText='display:flex!important';try{loadData();}catch(e){}try{nav('dashboard');}catch(e){}}else{if(inp){inp.value='';inp.focus();}var err=document.getElementById('gate-err');if(err){err.textContent='Incorrect code — try again.';setTimeout(function(){err.textContent='';},2000);}}})()">Access TalentBase →</button>
+    <button class="gate-btn" id="gate-btn" onclick="gateLogin()" style="margin-top:12px;">Sign In →</button>
     <div class="gate-err" id="gate-err"></div>
-    <div class="gate-footer">Don't have a code? <a href="/cdn-cgi/l/email-protection#cca6a3a2ada48cb8a4a9bfb8adaaaaa5a2abbfbca9afa5ada0a5bfb8e2afa3a1">Contact Jonah</a></div>
+    <div class="gate-footer">Need access? <a href="mailto:jonah@thestaffingspecialist.com">Contact Jonah</a></div>
+    <div id="gate-fallback" style="display:none;margin-top:16px;padding:12px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;font-size:11px;color:var(--amber);line-height:1.5;">
+      Supabase not configured. Go to Settings → Database to add your project URL and anon key, then refresh.
+    </div>
   </div>
 </div>
 
@@ -754,7 +765,7 @@ a{color:var(--text3);text-decoration:none;}
     <div class="tb-spacer"></div>
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="q" placeholder='Boolean: "PMO" AND ("FDA" OR "IVD") NOT "Junior"' oninput="doSearch()"/>
+      <input type="text" id="q" placeholder='Boolean: "PMO" AND ("FDA" OR "IVD") NOT "Junior"' oninput="debouncedSearch()"/>
     </div>
     <button class="btn btn-ghost" id="adv-search-btn" onclick="toggleAdvSearch()" style="color:var(--text3);border-color:var(--accent-border);">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>Filters
@@ -1695,6 +1706,52 @@ var _sb = null;          // Supabase client instance (null = use localStorage)
 var _sbUser = null;      // Authenticated user (null = no Supabase auth)
 var _sbReady = false;    // True once init attempted
 
+// ── GATE LOGIN — replaces hardcoded access code ───────────────
+async function gateLogin() {
+  var email = (document.getElementById('gate-email')||{}).value||'';
+  var pass  = (document.getElementById('gate-input')||{}).value||'';
+  var btn   = document.getElementById('gate-btn');
+  var err   = document.getElementById('gate-err');
+  email = email.trim(); pass = pass.trim();
+
+  if(!email || !pass){
+    if(err) err.textContent = 'Email and password required.';
+    return;
+  }
+
+  // If Supabase not configured, show fallback and stop
+  if(!_sb){
+    var fb = document.getElementById('gate-fallback');
+    if(fb) fb.style.display = 'block';
+    if(err) err.textContent = 'Configure Supabase first (see below).';
+    return;
+  }
+
+  if(btn){ btn.disabled = true; btn.textContent = 'Signing in…'; }
+  if(err) err.textContent = '';
+
+  var result = await sbSignIn(email, pass);
+  if(result.error){
+    if(err) err.textContent = result.error.message || 'Sign in failed.';
+    if(btn){ btn.disabled = false; btn.textContent = 'Sign In →'; }
+    return;
+  }
+
+  // Auth succeeded — route by role
+  var role = (_sbUser && _sbUser.user_metadata && _sbUser.user_metadata.role) || 'admin';
+  if(role === 'client'){
+    document.getElementById('gate').style.cssText = 'display:none!important';
+    var cp = document.getElementById('client-portal');
+    if(cp) cp.style.display = 'block';
+    renderClientPortal();
+  } else {
+    document.getElementById('gate').style.cssText = 'display:none!important';
+    document.getElementById('app-shell').style.cssText = 'display:flex!important';
+    try{ loadData(); }catch(e){}
+    try{ nav('dashboard'); }catch(e){}
+  }
+}
+
 function sbInit() {
   const url = localStorage.getItem(SB_URL_KEY) || '';
   const key = localStorage.getItem(SB_KEY_KEY) || '';
@@ -1703,6 +1760,10 @@ function sbInit() {
   }
   _sbReady = true;
   _updateSbStatus();
+
+  // Show/hide fallback message on gate based on SB config
+  var fb = document.getElementById('gate-fallback');
+  if(fb) fb.style.display = _sb ? 'none' : 'block';
 }
 
 function _updateSbStatus() {
@@ -1727,14 +1788,18 @@ function _updateSbStatus() {
 
 // ── ASYNC LOAD ────────────────────────────────────────────────
 // Try Supabase first. On any failure, fall back to localStorage.
+// Always filters by user_id — prevents cross-user data leaks.
 async function sbLoad(key) {
   const table = SB_TABLE[key] || key;
   if (_sb && _sbUser) {
     try {
-      const { data, error } = await _sb.from(table).select('id, data');
+      const { data, error } = await _sb
+        .from(table)
+        .select('id, data')
+        .eq('user_id', _sbUser.id)          // ← SECURITY: own records only
+        .order('created_at', { ascending: false })
+        .limit(500);                          // ← PERF: cap initial load
       if (error) throw error;
-      // Unwrap jsonb envelope: each row is {id, data:{...full record}}
-      // Fall back gracefully if rows don't have a data column (flat schema)
       return (data || []).map(row => row.data && typeof row.data === 'object' ? row.data : row);
     } catch(e) {
       console.warn('[Supabase] load failed, using localStorage:', e.message);
@@ -1859,8 +1924,8 @@ function getCandidateValue(c){
 function getNextAction(c){
   const now=Date.now();
   const lastActivity=(c.activity&&c.activity.length)
-    ?Math.max(...c.activity.map(a=>a.ts))
-    :c.created;
+    ? c.activity.reduce(function(m,a){ return a.ts>m?a.ts:m; }, 0)
+    : c.created;
   const daysIdle=(now-lastActivity)/(1000*60*60*24);
   const actCount=(c.activity||[]).length;
   const hasResume=!!(c.resume&&c.resume.length>50);
@@ -1911,10 +1976,27 @@ function getNextAction(c){
 // ── CRM COMPUTED FIELDS ────────────────────────────────────────
 // engagementScore, temperature, lastContacted — all derived, never stored.
 // Reads: c.opened, c.responded, c.engagementBoost, c.forcedTemperature (set by webhooks)
+// Memoized: cache keyed on id + lastActivity ts + engagementBoost to avoid
+// recomputing on every keystroke across 26k candidates.
+var _crmCache = Object.create(null);
+function _crmCacheKey(c){
+  var lastTs = (c.activity&&c.activity.length)
+    ? c.activity.reduce(function(m,a){ return a.ts>m?a.ts:m; }, 0)
+    : (c.created||0);
+  return c.id+'|'+lastTs+'|'+(c.engagementBoost||0)+'|'+(c.responded?1:0)+'|'+c.status;
+}
+function clearCRMCache(){ _crmCache = Object.create(null); }
+
 function getCRMFields(c){
+  var ck = _crmCacheKey(c);
+  if(_crmCache[ck]) return _crmCache[ck];
+
   const now=Date.now();
   const acts=c.activity||[];
-  const lastTs=acts.length?Math.max(...acts.map(a=>a.ts)):c.created;
+  // FIXED: reduce instead of Math.max(...spread) — no call stack limit
+  const lastTs=acts.length
+    ? acts.reduce(function(m,a){ return a.ts>m?a.ts:m; }, 0)
+    : (c.created||now);
   const daysIdle=(now-lastTs)/(1000*60*60*24);
 
   // engagementScore: base from activity count + stage bonus, decays with idle time
@@ -1935,7 +2017,9 @@ function getCRMFields(c){
   // lastContacted: most recent activity timestamp
   const lastContacted=lastTs;
 
-  return{engagementScore,temperature,lastContacted,daysIdle};
+  var result = {engagementScore,temperature,lastContacted,daysIdle};
+  _crmCache[ck] = result;
+  return result;
 }
 
 function tempDot(temperature){
@@ -2015,7 +2099,7 @@ async function loadData(){
 // ── SAVE WRAPPERS ─────────────────────────────────────────────
 // Fire-and-forget: UI never waits on these.
 // localStorage write is synchronous (instant), Supabase write is async.
-function saveCands(){ sbSave(CK, cands).catch(()=>{}); }
+function saveCands(){ clearCRMCache(); sbSave(CK, cands).catch(()=>{}); }
 function saveJobsStore(){ sbSave(JK, jobs).catch(()=>{}); }
 function saveDeals(){ sbSave(DK, deals).catch(()=>{}); }
 
@@ -2467,20 +2551,16 @@ function moveDealStage(dealId, newStage){
 }
 
 function _dealActivate(d){
-  // ── STEP 1: Create job (no duplicates) ──────────────────────
+  // ── STEP 1: Create job — dedup by dealId linkage, not name+time ──
   if(!d.jobId){
-    // Check if a job for this deal already exists (same company+title within 5 min)
-    var existing = jobs.find(function(j){
-      return j.company===d.company
-        && j.title===(d.jobTitle||d.role||'Open Role')
-        && j.source==='Deals CRM'
-        && (Date.now()-j.created)<300000;
-    });
+    // If a job was already created for this exact deal, reuse it
+    var existing = jobs.find(function(j){ return j.dealId === d.id; });
     if(existing){
       d.jobId = existing.id;
     } else {
       var newJob = {
         id          : uid(),
+        dealId      : d.id,             // permanent link — survives renames
         title       : d.jobTitle || d.role || 'Open Role',
         company     : d.company || '',
         dept        : '',
@@ -2497,7 +2577,6 @@ function _dealActivate(d){
       };
       jobs.unshift(newJob);
       saveJobsStore();
-      // ── STEP 2: Link deal → job ────────────────────────────
       d.jobId = newJob.id;
     }
   }
@@ -2505,61 +2584,54 @@ function _dealActivate(d){
   var linkedJob = jobs.find(function(j){ return j.id===d.jobId; });
   if(!linkedJob) return;
 
-  // ── STEP 3: Match candidates (title + skills) ───────────────
+  // ── STEP 2: Weighted candidate matching — title (×2) + skills (×3) ──
   var titleWords = (d.jobTitle||d.role||'').toLowerCase()
     .split(/\W+/).filter(function(w){ return w.length>3; });
 
   var scored = cands.map(function(c){
-    var blob = [
-      c.title||'', c.role||'',
-      (c.skills||[]).join(' '),
-      c.notes||''
-    ].join(' ').toLowerCase();
-    var score = titleWords.reduce(function(s,w){
-      return s + (blob.includes(w)?1:0);
-    }, 0);
-    return { c:c, score:score };
+    var titleBlob = (c.title||'').toLowerCase() + ' ' + (c.role||'').toLowerCase();
+    var skillBlob = (c.skills||[]).join(' ').toLowerCase();
+    var noteBlob  = (c.notes||'').toLowerCase();
+    var titleHits = titleWords.filter(function(w){ return titleBlob.includes(w); }).length;
+    var skillHits = titleWords.filter(function(w){ return skillBlob.includes(w); }).length;
+    var noteHits  = titleWords.filter(function(w){ return noteBlob.includes(w); }).length;
+    return { c:c, score: titleHits*2 + skillHits*3 + noteHits };
   }).filter(function(x){
-    // Must match at least 1 word and not already assigned to this exact job
-    return x.score>0 && x.c.role!==linkedJob.title;
-  }).sort(function(a,b){ return b.score-a.score; })
-    .slice(0,10)
+    return x.score > 0 && x.c.role !== linkedJob.title;
+  }).sort(function(a,b){ return b.score - a.score; })
+    .slice(0, 10)
     .map(function(x){ return x.c; });
 
-  // ── STEP 4: Attach candidateIds to deal ─────────────────────
+  // ── STEP 3: Attach candidateIds and log activity ─────────────
   d.candidateIds = scored.map(function(c){ return c.id; });
 
-  // ── STEP 5+6: Assign to job pipeline + log activity ─────────
   scored.forEach(function(c){
-    // Assign role if not yet set for this job
     if(!c.role) c.role = linkedJob.title;
     if(!c.activity) c.activity = [];
-    // Avoid duplicate entries
-    var alreadyLogged = c.activity.some(function(a){
-      return a.text && a.text.includes('Auto: ready for outreach') && a.text.includes(d.company);
-    });
-    if(!alreadyLogged){
-      c.activity.push({
-        ts  : Date.now(),
-        text: 'Auto: ready for outreach — ' + d.company + ' · ' + linkedJob.title
-      });
+    var logKey = 'Auto: ready for outreach — ' + d.company + ' · ' + linkedJob.title;
+    if(!c.activity.some(function(a){ return a.text===logKey; })){
+      c.activity.push({ ts: Date.now(), text: logKey });
     }
   });
   if(scored.length) saveCands();
 
-  // Log on deal itself
+  // ── STEP 4: Log on deal ───────────────────────────────────────
   if(!d.activity) d.activity=[];
   d.activity.push({
     ts  : Date.now(),
-    text: '⚡ Activated — Job created: Req #' + linkedJob.reqNum
+    text: '⚡ Activated — Req #' + linkedJob.reqNum
       + (scored.length ? ' · ' + scored.length + ' candidate'+(scored.length>1?'s':'')+' matched' : ' · No candidates matched yet')
   });
 
   saveDeals();
   renderDeals();
-
-  // Refresh detail panel if open
   if(_openDealId===d.id) openDealDetail(d.id);
+
+  // ── STEP 5: Non-blocking navigation — no alert() ─────────────
+  setTimeout(function(){
+    nav('jobs');
+    setTimeout(function(){ selJob(d.jobId); }, 200);
+  }, 80);
 }
 
 function openAddDealModal(){
@@ -2750,6 +2822,17 @@ function setChip(st){
   if(map[st])document.getElementById(map[st]).classList.add('on');
   doSearch();
 }
+// ── SEARCH DEBOUNCE ─────────────────────────────────────────
+var _searchTimer = null;
+function debouncedSearch(){
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(doSearch, 160);
+}
+
+// ── VIRTUAL RENDER STATE ─────────────────────────────────────
+var _candRenderPage = 0;
+var _CAND_PAGE_SIZE = 60;
+
 function doSearch(){
   const raw=(document.getElementById('q').value||'').trim();
   const st=document.getElementById('fr')?document.getElementById('fr').value:'';
@@ -2758,11 +2841,12 @@ function doSearch(){
   const terms=extractTerms(raw);
   const advF = getAdvFilters();
   const hasAdv = Object.values(advF).some(v=>v);
+
+  // For CRM temp filters: pre-compute scores once, not per-candidate in the sort
   fil=cands.filter(c=>{
-    // CRM smart filters
-    if(chip==='__hot'){const crm=getCRMFields(c);return crm.temperature==='hot';}
-    if(chip==='__warm'){const crm=getCRMFields(c);return crm.temperature==='warm';}
-    if(chip==='__cold'){const crm=getCRMFields(c);return crm.temperature==='cold';}
+    if(chip==='__hot'){return getCRMFields(c).temperature==='hot';}
+    if(chip==='__warm'){return getCRMFields(c).temperature==='warm';}
+    if(chip==='__cold'){return getCRMFields(c).temperature==='cold';}
     if(chip==='__stale'){const crm=getCRMFields(c);return crm.daysIdle>5&&!['Hired','Rejected'].includes(c.status);}
     if(chip&&c.status!==chip)return false;
     if(st&&c.status!==st)return false;
@@ -2770,11 +2854,11 @@ function doSearch(){
     if(!fn)return true;
     return fn(c);
   }).sort((a,b)=>{
-    // Hot/stale: sort by engagement score desc/asc
     if(chip==='__hot'){return getCRMFields(b).engagementScore-getCRMFields(a).engagementScore;}
     if(chip==='__stale'){return getCRMFields(b).daysIdle-getCRMFields(a).daysIdle;}
     return b.created-a.created;
   });
+
   const rc=document.getElementById('res-ct');
   if(rc)rc.textContent=fil.length+' of '+cands.length;
   const fc=document.getElementById('adv-filter-count');
@@ -2782,24 +2866,82 @@ function doSearch(){
     const count=Object.values(advF).filter(v=>v).length;
     fc.textContent=count>0?count+' filter'+(count>1?'s':'')+' active · '+fil.length+' results':'';
   }
+  _candRenderPage = 0;
   renderCandList(terms);
 }
+
 function renderCandList(terms){
   const list=document.getElementById('cand-list');
   if(!list)return;
-  if(!fil.length){list.innerHTML=`<div class="empty-state"><div class="empty-state-icon">🔍</div>${cands.length?'No candidates match.':'Add your first candidate!'}</div>`;return;}
-  list.innerHTML=fil.map(c=>{
-    const[bg,fg]=avColor(c);
-    return`<div class="cand-row${selCandId===c.id?' on':''}" onclick="selCand('${c.id}')">
-      <div class="av" style="width:34px;height:34px;background:${bg};color:${fg};">${ini(c)}</div>
-      <div class="cand-info">
-        <div class="cand-name" style="display:flex;align-items:center;gap:6px;">${(()=>{const crm=getCRMFields(c);const now=Date.now();const DAY=864e5;const lastAct=c.activity&&c.activity.length?Math.max(...c.activity.map(a=>a.ts)):(c.created||now);const daysIdle=(now-lastAct)/DAY;let flags='';if(c.responded)flags+='<span title="Hot lead — replied to outreach" style="font-size:11px;">🔥</span>';else if(daysIdle>=2&&['Screening','Interviewing','Offer'].includes(c.status))flags+='<span title="Follow-up due ('+Math.floor(daysIdle)+'d idle)" style="font-size:11px;">⏱</span>';return tempDot(crm.temperature)+flags;})()}${hlText(c.first+' '+c.last,terms)}</div>
-        <div class="cand-sub">${hlText([c.title,c.company,c.location].filter(Boolean).join(' · '),terms)}</div>
-        ${nextActionCompact(c,'11px')}
-      </div>
-      <div class="cand-meta">${badgeHtml(c.status)}<span class="cand-date">${fmtDate(c.created)}</span></div>
-    </div>`;
-  }).join('');
+  if(!fil.length){
+    list.innerHTML=`<div class="empty-state"><div class="empty-state-icon">🔍</div>${cands.length?'No candidates match.':'Add your first candidate!'}</div>`;
+    return;
+  }
+  // Render first page immediately, attach scroll sentinel for lazy loading
+  list.innerHTML='';
+  _appendCandPage(list, terms, 0);
+  _installCandSentinel(list, terms);
+}
+
+function _buildCandRow(c, terms){
+  const[bg,fg]=avColor(c);
+  const crm=getCRMFields(c);
+  const now=Date.now(); const DAY=864e5;
+  const lastAct=c.activity&&c.activity.length
+    ? c.activity.reduce(function(m,a){return a.ts>m?a.ts:m;},0)
+    : (c.created||now);
+  const daysIdle=(now-lastAct)/DAY;
+  let flags='';
+  if(c.responded) flags+='<span title="Hot lead — replied to outreach" style="font-size:11px;">🔥</span>';
+  else if(daysIdle>=2&&['Screening','Interviewing','Offer'].includes(c.status))
+    flags+='<span title="Follow-up due ('+Math.floor(daysIdle)+'d idle)" style="font-size:11px;">⏱</span>';
+
+  return`<div class="cand-row${selCandId===c.id?' on':''}" onclick="selCand('${c.id}')">
+    <div class="av" style="width:34px;height:34px;background:${bg};color:${fg};">${ini(c)}</div>
+    <div class="cand-info">
+      <div class="cand-name" style="display:flex;align-items:center;gap:6px;">${tempDot(crm.temperature)}${flags}${hlText(c.first+' '+c.last,terms)}</div>
+      <div class="cand-sub">${hlText([c.title,c.company,c.location].filter(Boolean).join(' · '),terms)}</div>
+      ${nextActionCompact(c,'11px')}
+    </div>
+    <div class="cand-meta">${badgeHtml(c.status)}<span class="cand-date">${fmtDate(c.created)}</span></div>
+  </div>`;
+}
+
+function _appendCandPage(list, terms, page){
+  const start = page * _CAND_PAGE_SIZE;
+  const slice = fil.slice(start, start + _CAND_PAGE_SIZE);
+  if(!slice.length) return false;
+  const frag = document.createDocumentFragment();
+  slice.forEach(c=>{
+    const div = document.createElement('div');
+    div.innerHTML = _buildCandRow(c, terms);
+    frag.appendChild(div.firstChild);
+  });
+  list.appendChild(frag);
+  return true;
+}
+
+var _candSentinelObs = null;
+function _installCandSentinel(list, terms){
+  // Remove old sentinel
+  var old = document.getElementById('cand-sentinel');
+  if(old) old.remove();
+  if(_candSentinelObs){ _candSentinelObs.disconnect(); _candSentinelObs=null; }
+
+  if(fil.length <= _CAND_PAGE_SIZE) return; // everything fits, no sentinel needed
+
+  var sentinel = document.createElement('div');
+  sentinel.id = 'cand-sentinel';
+  sentinel.style.cssText = 'height:1px;';
+  list.parentNode.appendChild(sentinel);
+
+  _candSentinelObs = new IntersectionObserver(function(entries){
+    if(!entries[0].isIntersecting) return;
+    _candRenderPage++;
+    var more = _appendCandPage(list, terms, _candRenderPage);
+    if(!more){ _candSentinelObs.disconnect(); _candSentinelObs=null; sentinel.remove(); }
+  }, { rootMargin: '200px' });
+  _candSentinelObs.observe(sentinel);
 }
 function selCand(id){
   selCandId=id;
@@ -3490,6 +3632,7 @@ const EMAIL_FROM_NAME_KEY= 'tb_email_from_name';
 const EMAIL_FROM_ADDR_KEY= 'tb_email_from_addr';
 const EMAIL_APPROVAL_KEY = 'tb_email_approval';  // "1" = require approval
 const EMAIL_QUEUE_KEY    = 'tb_email_queue';      // pending approval queue
+const EMAIL_SECRET_KEY   = 'tb_email_secret';     // shared secret for send-email.js
 
 function getEmailConfig(){
   return {
@@ -3497,6 +3640,7 @@ function getEmailConfig(){
     fromName : localStorage.getItem(EMAIL_FROM_NAME_KEY)||'Jonah Adelman',
     fromAddr : localStorage.getItem(EMAIL_FROM_ADDR_KEY)||'',
     approval : localStorage.getItem(EMAIL_APPROVAL_KEY)==='1',
+    secret   : localStorage.getItem(EMAIL_SECRET_KEY)||'',
   };
 }
 
@@ -3506,17 +3650,19 @@ function saveEmailConfig(){
   var name   = (document.getElementById('email-from-name')||{}).value||'';
   var addr   = (document.getElementById('email-from-addr')||{}).value||'';
   var appr   = !!(document.getElementById('email-approval-toggle')||{}).checked;
+  var secret = (document.getElementById('email-secret-field')||{}).value||'';
   localStorage.setItem(EMAIL_PROXY_KEY,    url.trim());
   localStorage.setItem('tb_vercel_domain', domain.trim());
   localStorage.setItem(EMAIL_FROM_NAME_KEY,name.trim()||'Jonah Adelman');
   localStorage.setItem(EMAIL_FROM_ADDR_KEY,addr.trim());
   localStorage.setItem(EMAIL_APPROVAL_KEY, appr?'1':'0');
+  if(secret.trim()) localStorage.setItem(EMAIL_SECRET_KEY, secret.trim());
   refreshEmailStatusCard();
   _updateEmailToggleUI();
 }
 
 function clearEmailConfig(){
-  [EMAIL_PROXY_KEY,EMAIL_FROM_NAME_KEY,EMAIL_FROM_ADDR_KEY,EMAIL_APPROVAL_KEY].forEach(k=>localStorage.removeItem(k));
+  [EMAIL_PROXY_KEY,EMAIL_FROM_NAME_KEY,EMAIL_FROM_ADDR_KEY,EMAIL_APPROVAL_KEY,EMAIL_SECRET_KEY].forEach(k=>localStorage.removeItem(k));
   refreshEmailStatusCard();
 }
 
@@ -3541,11 +3687,13 @@ function refreshEmailStatusCard(){
   var n = document.getElementById('email-from-name');
   var a = document.getElementById('email-from-addr');
   var t = document.getElementById('email-approval-toggle');
+  var s = document.getElementById('email-secret-field');
   if(u) u.value = cfg.proxyUrl;
   if(d) d.value = localStorage.getItem('tb_vercel_domain')||'';
   if(n) n.value = cfg.fromName;
   if(a) a.value = cfg.fromAddr;
   if(t) t.checked = cfg.approval;
+  if(s) s.value = cfg.secret ? '••••••••' : ''; // mask — show placeholder only
   _updateEmailToggleUI();
 }
 
@@ -3595,7 +3743,10 @@ async function sendEmail({ to, subject, html, text, candidateId }){
   try {
     var res = await fetch(cfg.proxyUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(cfg.secret ? { 'x-tb-secret': cfg.secret } : {}),
+      },
       body: JSON.stringify({
         to,
         subject,
@@ -5612,7 +5763,7 @@ function renderDash(){
     const PIPE_STAGES=['New','Screening','Interviewing','Offer','Hired'];
     const pipeColors={New:'var(--blue)',Screening:'var(--purple)',Interviewing:'var(--amber)',Offer:'var(--teal)',Hired:'var(--green)'};
     const stageCounts=PIPE_STAGES.map(s=>cands.filter(c=>c.status===s).length);
-    const maxCount=Math.max(...stageCounts,1);
+    const maxCount=Math.max(stageCounts.reduce(function(m,v){return v>m?v:m;},0),1);
     document.getElementById('dash-pipeline').innerHTML=PIPE_STAGES.map((s,i)=>{
       const n=stageCounts[i]; const col=pipeColors[s];
       return`<div class="pipe-col" onclick="nav('pipeline')"><div class="pipe-col-name">${s}</div><div class="pipe-col-num" style="color:${col};">${n}</div><div class="pipe-col-bar"><div class="pipe-col-fill" style="background:${col};width:${Math.round(n/maxCount*100)}%;"></div></div></div>`;
@@ -5707,13 +5858,13 @@ function renderAnalytics(){
 
   const byRole={};cands.forEach(c=>{if(c.role){const k=c.role.slice(0,28);byRole[k]=(byRole[k]||0)+1;}});
   const roleEntries=Object.entries(byRole).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const maxR=Math.max(...roleEntries.map(e=>e[1]),1);
+  const maxR=Math.max(roleEntries.reduce(function(m,e){return e[1]>m?e[1]:m;},0),1);
   document.getElementById('an-roles').innerHTML=roleEntries.map(([r,n])=>`
     <div class="source-row"><div class="source-name" style="font-size:11.5px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(r)}</div><div class="source-bar-wrap"><div class="source-bar" style="width:${Math.round(n/maxR*100)+'%'};"></div></div><div class="source-pct">${n}</div></div>`).join('')||'<div style="font-size:12px;color:var(--text4);">No role data.</div>';
 
   const bySrc={};cands.forEach(c=>{const k=c.source||'Unknown';bySrc[k]=(bySrc[k]||0)+1;});
   const srcEntries=Object.entries(bySrc).sort((a,b)=>b[1]-a[1]);
-  const maxS=Math.max(...srcEntries.map(e=>e[1]),1);
+  const maxS=Math.max(srcEntries.reduce(function(m,e){return e[1]>m?e[1]:m;},0),1);
   document.getElementById('an-velocity').innerHTML=`<div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:10px;">Source of Hire</div>`+srcEntries.map(([s,n])=>`
     <div class="source-row"><div class="source-name">${esc(s)}</div><div class="source-bar-wrap"><div class="source-bar" style="width:${Math.round(n/maxS*100)+'%'};background:var(--teal);"></div></div><div class="source-pct">${n} (${Math.round(n/total*100)}%)</div></div>`).join('');
 
@@ -9160,6 +9311,15 @@ CREATE POLICY "service_activity" ON activity FOR INSERT WITH CHECK (true);</pre>
         <div class="ws-label">From Address <span style="color:var(--text4);font-weight:400;">(must be verified in Resend)</span></div>
         <input class="ws-input" id="email-from-addr" placeholder="jonah@thestaffingspecialist.com" />
         <div style="font-size:11px;color:var(--text4);margin-top:4px;">Add and verify this domain in Resend → Domains</div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <div class="ws-label">Email Secret <span style="color:var(--text4);font-weight:400;">Security token for send-email.js</span></div>
+        <input class="ws-input" id="email-secret-field" type="password" placeholder="Paste your EMAIL_SECRET value here" style="font-family:'DM Mono',monospace;font-size:12px;"/>
+        <div style="font-size:11px;color:var(--text4);margin-top:4px;">
+          Generate once: <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">openssl rand -hex 32</code> →
+          add as <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">EMAIL_SECRET</code> in Vercel env vars, and paste the same value here.
+          Prevents anyone else from using your email relay.
+        </div>
       </div>
 
       <div style="display:flex;gap:8px;margin-bottom:24px;">
