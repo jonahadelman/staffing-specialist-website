@@ -9070,181 +9070,126 @@ function deleteDocInstance(instId){
 
 function setLibCat(cat, btn){
   libCat = cat;
-  // Update button active state
   document.querySelectorAll('.lib-cat-btn').forEach(function(b){ b.classList.remove('on'); });
   if(btn) btn.classList.add('on');
   renderLibrary();
 }
 
+function openLibraryModal(id){
+  // Use the real libraryItems array (has body field)
+  var item = libraryItems.find(function(x){ return x.id === id; });
+  if(!item){ console.error('[Library] item not found:', id); return; }
+
+  var modal = document.getElementById('lib-modal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'lib-modal';
+    document.body.appendChild(modal);
+  }
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+
+  // Render body content - convert newlines to visible lines
+  var bodyHtml = (item.body || item.content || '(No content)')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  var catColors = {email:'#60a5fa',offer:'#22c55e',jd:'#3b82f6',script:'#f59e0b',playbook:'#14b8a6',compliance:'#a78bf5',onboarding:'#f97316',candidate:'#ec4899',misc:'#94a3b8'};
+  var catColor = catColors[item.cat] || '#94a3b8';
+  var catLabel = {email:'Email',offer:'Offer Letter',jd:'Job Description',script:'Script',playbook:'Playbook',compliance:'Compliance',onboarding:'Onboarding',candidate:'Candidate',misc:'Other'};
+
+  modal.innerHTML =
+    '<div style="background:var(--bg2,#111827);border:1px solid var(--border2,#1e2d45);border-radius:10px;max-width:900px;width:100%;max-height:90vh;display:flex;flex-direction:column;position:relative;">' +
+
+      // Header
+      '<div style="padding:20px 24px 16px;border-bottom:1px solid var(--border2,#1e2d45);flex-shrink:0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">' +
+        '<div>' +
+          '<div style="font-size:11px;font-weight:700;color:'+catColor+';text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">'+(item.icon||'')+'  '+(catLabel[item.cat]||item.cat||'')+'</div>' +
+          '<div style="font-size:18px;font-weight:700;color:var(--text,#f1f5f9);line-height:1.3;">'+(item.title||'Untitled')+'</div>' +
+          (item.subject ? '<div style="font-size:12px;color:var(--text4,#64748b);margin-top:6px;">Subject: '+item.subject.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</div>' : '') +
+        '</div>' +
+        '<div style="display:flex;gap:6px;flex-shrink:0;">' +
+          '<button onclick="navigator.clipboard.writeText(libraryItems.find(function(x){return x.id===\''+id+'\'})||{}).body||\'\')" style="padding:6px 12px;background:var(--bg3,#1c2333);border:1px solid var(--border2,#1e2d45);border-radius:6px;color:var(--text2,#94a3b8);font-size:12px;cursor:pointer;font-family:inherit;">📋 Copy</button>' +
+          '<button onclick="openDocGenerator(\''+id+'\')" style="padding:6px 12px;background:var(--accent,#3b82f6);border:none;border-radius:6px;color:#fff;font-size:12px;cursor:pointer;font-family:inherit;">⚡ Generate</button>' +
+          '<button onclick="closeLibraryModal()" style="padding:6px 10px;background:none;border:1px solid var(--border2,#1e2d45);border-radius:6px;color:var(--text3,#64748b);font-size:16px;cursor:pointer;line-height:1;">✕</button>' +
+        '</div>' +
+      '</div>' +
+
+      // Body
+      '<div style="padding:24px 28px;overflow-y:auto;flex:1;">' +
+        '<pre style="margin:0;white-space:pre-wrap;font-family:DM Mono,ui-monospace,monospace;font-size:13px;color:var(--text2,#94a3b8);line-height:1.75;">'+bodyHtml+'</pre>' +
+      '</div>' +
+
+    '</div>';
+
+  // Close on backdrop click
+  modal.onclick = function(e){ if(e.target === modal) closeLibraryModal(); };
+}
+
+function closeLibraryModal(){
+  var modal = document.getElementById('lib-modal');
+  if(modal) modal.remove();
+}
+
 function renderLibrary(){
   var el = document.getElementById('lib-list');
-  if(!el){ console.warn('[Library] #lib-list not found'); return; }
+  if(!el) return;
 
-  var q = (document.getElementById('lib-search')||{}).value||'';
+  var q = ((document.getElementById('lib-search')||{}).value||'').toLowerCase();
   var currentCat = libCat || 'all';
 
-  var filtered = (libraryItems||[]).filter(function(item){
-    if(!item || !item.id || !item.title) return false;
+  var filtered = libraryItems.filter(function(item){
+    if(!item || !item.id) return false;
     if(currentCat !== 'all' && item.cat !== currentCat) return false;
     if(q){
-      var ql = q.toLowerCase();
-      var inTitle = (item.title||'').toLowerCase().includes(ql);
-      var inTags  = (item.tags||[]).some(function(t){ return t.toLowerCase().includes(ql); });
+      var inTitle = (item.title||'').toLowerCase().includes(q);
+      var inTags  = (item.tags||[]).some(function(t){ return t.toLowerCase().includes(q); });
       if(!inTitle && !inTags) return false;
     }
     return true;
   });
 
   var countEl = document.getElementById('lib-file-count');
-  if(countEl) countEl.textContent = filtered.length + ' of ' + (libraryItems||[]).length + ' files';
+  if(countEl) countEl.textContent = filtered.length + ' of ' + libraryItems.length + ' files';
 
   if(!filtered.length){
-    el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text4);font-size:13px;">No files found for this category.</div>';
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text4);font-size:13px;">No files found.</div>';
     return;
   }
 
-  var catLabel = {email:'Email',offer:'Offer Letter',candidate:'Candidate',
-    compliance:'Compliance',onboarding:'Onboarding',jd:'Job Description',
-    script:'Script',playbook:'Playbook',misc:'Other'};
-  var catIcons = {email:'EMAIL',offer:'OFFER',script:'SCRIPT',jd:'JD',
-    playbook:'PLAYBOOK',misc:'FILE',candidate:'CAND',compliance:'COMP',onboarding:'ON'};
+  var catLabel = {email:'Email',offer:'Offer Letter',candidate:'Candidate',compliance:'Compliance',onboarding:'Onboarding',jd:'Job Description',script:'Script',playbook:'Playbook',misc:'Other'};
+  var catIcons = {email:'EMAIL',offer:'OFFER',script:'SCRIPT',jd:'JD',playbook:'PLAYBOOK',misc:'FILE',candidate:'CAND',compliance:'COMP',onboarding:'ON'};
 
-  var html = '';
-  filtered.forEach(function(item){
-    var sel = libSelectedId === item.id;
-    var rowBg  = sel ? 'background:var(--accent-dim);border-left:3px solid var(--accent);' : 'border-left:3px solid transparent;';
-    var titleC = sel ? 'color:var(--accent2);' : 'color:var(--text);';
+  el.innerHTML = filtered.map(function(item){
     var id = item.id;
-    var escapedId = id.replace(/'/g,"\\'");
-    var icon = catIcons[item.cat] || 'FILE';
-    var label = catLabel[item.cat] || item.cat || '';
-    var title = (item.title||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    var icon  = catIcons[item.cat]  || 'FILE';
+    var label = catLabel[item.cat]  || item.cat || '';
+    var title = (item.title||'Untitled').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     var tags  = (item.tags||[]).slice(0,3).join(' · ').replace(/&/g,'&amp;');
-
-    html += '<div style="'+rowBg+'display:grid;grid-template-columns:1fr 100px 115px;gap:0;'+
-      'padding:9px 16px;border-bottom:1px solid var(--border2);cursor:pointer;align-items:center;" '+
-      'onclick="viewLibItem(\''+escapedId+'\')">';
-
-    // Title + icon column
-    html += '<div style="display:flex;align-items:center;gap:8px;min-width:0;">'+
-      '<span style="font-size:10px;background:var(--bg4);border:1px solid var(--border2);'+
-      'padding:2px 5px;border-radius:3px;font-family:DM Mono,monospace;color:var(--text3);'+
-      'flex-shrink:0;letter-spacing:.03em;">'+icon+'</span>'+
-      '<div style="min-width:0;">'+
-        '<div style="font-size:12px;font-weight:500;'+titleC+
-        'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+title+'</div>'+
-        '<div style="font-size:11px;color:var(--text4);white-space:nowrap;overflow:hidden;'+
-        'text-overflow:ellipsis;">'+tags+'</div>'+
-      '</div>'+
-    '</div>';
-
-    // Category column
-    html += '<div><span style="font-size:11px;color:var(--text3);background:var(--bg3);'+
-      'border:1px solid var(--border2);padding:2px 6px;border-radius:4px;">'+label+'</span></div>';
-
-    // Actions column — stopPropagation on each button individually
-    html += '<div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;" '+
-      'onclick="event.stopPropagation()">';
-    html += '<button class="btn btn-ghost btn-xs" onclick="copyLibItem(\''+escapedId+'\')">Copy</button>';
-    if(item.subject){
-      html += '<button class="btn btn-ghost btn-xs" onclick="copyLibItemFull(\''+escapedId+'\')">+Subj</button>';
-    }
-    html += '<button class="btn btn-ghost btn-xs" style="color:var(--red);" '+
-      'onclick="deleteLibItem(\''+escapedId+'\')">&#x2715;</button>';
-    html += '</div>';
-
-    html += '</div>'; // end row
-  });
-
-  el.innerHTML = html;
+    var isSelected = libSelectedId === id;
+    var rowStyle = isSelected
+      ? 'background:var(--accent-dim);border-left:3px solid var(--accent);'
+      : 'border-left:3px solid transparent;';
+    return (
+      '<div onclick="openLibraryModal(\''+id+'\')" style="'+rowStyle+'display:grid;grid-template-columns:1fr 100px 115px;gap:0;padding:9px 16px;border-bottom:1px solid var(--border2);cursor:pointer;align-items:center;transition:background .08s;" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\''+(isSelected?'var(--accent-dim)':'transparent')+'\'">'+
+        '<div style="display:flex;align-items:center;gap:8px;min-width:0;">'+
+          '<span style="font-size:10px;background:var(--bg4);border:1px solid var(--border2);padding:2px 5px;border-radius:3px;font-family:DM Mono,monospace;color:var(--text3);flex-shrink:0;">'+icon+'</span>'+
+          '<div style="min-width:0;">'+
+            '<div style="font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+title+'</div>'+
+            '<div style="font-size:11px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+tags+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div><span style="font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border2);padding:2px 6px;border-radius:4px;">'+label+'</span></div>'+
+        '<div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;" onclick="event.stopPropagation()">'+
+          '<button class="btn btn-ghost btn-xs" onclick="copyLibItem(\''+id+'\')">Copy</button>'+
+          (item.subject ? '<button class="btn btn-ghost btn-xs" onclick="copyLibItemFull(\''+id+'\')">+Subj</button>' : '')+
+          '<button class="btn btn-ghost btn-xs" style="color:var(--red);" onclick="deleteLibItem(\''+id+'\')">&#x2715;</button>'+
+        '</div>'+
+      '</div>'
+    );
+  }).join('');
 }
 
-function viewLibItem(id){
-  libSelectedId = id;
-  const item = libraryItems.find(x=>x.id===id);
-  if(!item) return;
+function viewLibItem(id){ openLibraryModal(id); }
 
-  // Highlight selected row without rebuilding the whole list
-  document.querySelectorAll('#lib-list > div').forEach(function(row){
-    var isSelected = row.getAttribute('onclick') && row.getAttribute('onclick').includes("'"+id+"'");
-    row.style.background = isSelected ? 'var(--accent-dim)' : '';
-    row.style.borderLeft = isSelected ? '3px solid var(--accent)' : '3px solid transparent';
-  });
-
-  const viewer = document.getElementById('lib-viewer');
-  if(!viewer) return;
-  viewer.style.display = 'flex';
-  viewer.style.flexDirection = 'column';
-
-  // Render body as beautiful document — highlight {{variables}} in teal
-  function renderBody(body){
-    return (body||'')
-      .split('\n')
-      .map(line=>{
-        // Highlight section headers (lines ending with ━ or all-caps lines)
-        var escaped = line
-          .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        // Highlight {{variable}} tokens
-        escaped = escaped.replace(/\{\{([^}]+)\}\}/g,
-          '<span style="background:var(--bg4);color:var(--text);font-weight:600;padding:1px 6px;border-radius:4px;font-family:DM Mono,monospace;font-size:11px;">{{$1}}</span>');
-        // Style section dividers (━━━ lines)
-        if(/^━+/.test(line)){
-          return '<div style="height:1px;background:var(--border2);margin:16px 0;"></div>';
-        }
-        // Style section header lines (ALL CAPS words)
-        if(/^[A-Z\s&\/\-–—·•]+$/.test(line.trim()) && line.trim().length > 3 && line.trim().length < 60){
-          return '<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.12em;margin:20px 0 8px;">' + escaped + '</div>';
-        }
-        // Style checkbox lines
-        if(/^⬜/.test(line)){
-          return '<div style="display:flex;gap:10px;align-items:flex-start;padding:4px 0;">' +
-            '<span style="color:var(--border3);font-size:14px;flex-shrink:0;">⬜</span>' +
-            '<span style="font-size:13px;color:#ccccee;line-height:1.6;">' + escaped.slice(1).trim() + '</span>' +
-          '</div>';
-        }
-        // Empty line = spacer
-        if(!line.trim()) return '<div style="height:8px;"></div>';
-        // Normal line
-        return '<div style="font-size:13px;color:#ccccee;line-height:1.7;">' + escaped + '</div>';
-      }).join('');
-  }
-
-  const catColors = {
-    email:'var(--accent2)',offer:'var(--green)',script:'#f59e0b',
-    jd:'var(--blue)',playbook:'var(--teal)',misc:'var(--text3)'
-  };
-  const catColor = catColors[item.cat]||'var(--text3)';
-
-  viewer.innerHTML =
-    '<div style="padding:20px 28px;border-bottom:1px solid var(--border2);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0;background:var(--bg2);">' +
-      '<div>' +
-        '<div style="font-size:11px;font-weight:700;color:'+catColor+';text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;">' + (item.cat||'').toUpperCase() + '</div>' +
-        '<div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;">' + (item.icon||'') + ' ' + esc(item.title) + '</div>' +
-        (((item.tags||[]).length) ? ('<div style="display:flex;gap:5px;flex-wrap:wrap;">' + (item.tags||[]).map(function(t){return '<span class="lib-tag">'+t+'</span>';}).join('') + '</div>') : '') +
-      '</div>' +
-      '<div style="display:flex;gap:6px;flex-shrink:0;">' +
-        '<button class="btn btn-primary btn-sm" onclick="openDocGenerator(\'' + id + '\')" >⚡ Generate</button>' + '<button class="btn btn-ghost btn-sm" onclick="copyLibItem(\'' + id + '\')" >📋 Copy</button>' +
-        (item.subject ? '<button class="btn btn-ghost btn-sm" onclick="copyLibItemFull(\'' + id + '\')" >Copy + Subject</button>' : '') +
-        '<button class="btn btn-ghost btn-sm" onclick="editLibItem(\'' + id + '\')" >Edit</button>' +
-        '<button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteLibItem(\'' + id + '\')" >✕</button>' +
-      '</div>' +
-    '</div>' +
-    (item.subject ?
-      '<div style="padding:12px 28px;background:var(--bg3);border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;flex-shrink:0;">' +
-        '<span style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;">Subject Line:</span>' +
-        '<span style="font-size:13px;color:#e8f0ff;font-weight:500;">' + esc(item.subject) + '</span>' +
-      '</div>' : '') +
-    ((item.vars||[]).length ?
-      '<div style="padding:10px 28px;background:rgba(59,130,246,.08);border-bottom:1px solid var(--accent-border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;">' +
-        '<span style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.08em;white-space:nowrap;">FILL IN:</span>' +
-        (item.vars||[]).map(function(v){
-          return '<span style="background:var(--bg4);color:var(--text2);border:1px solid var(--border2);padding:2px 8px;border-radius:4px;font-size:11px;font-family:DM Mono,monospace;font-weight:500;">{{'+v+'}}</span>';
-        }).join('') +
-      '</div>' : '') +
-    '<div style="padding:32px 40px;flex:1;overflow-y:auto;max-width:760px;">' +
-      renderBody(item.body||'') +
-    '</div>';
-}
 
 function copyLibItem(id){
   const item = libraryItems.find(x=>x.id===id);
