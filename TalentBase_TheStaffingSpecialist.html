@@ -611,41 +611,31 @@ a{color:var(--text3);text-decoration:none;}
      DEALS CRM — Sales pipeline from HappyHunting to Closed
 ═══════════════════════════════════════════════════════════ -->
 <div class="view" id="v-deals" style="flex-direction:column;overflow:hidden;">
+
+  <!-- Topbar -->
   <div class="topbar">
-    <div>
-      <div class="topbar-title">Deals</div>
-      <div class="topbar-sub">Sales pipeline · From prospect to closed</div>
-    </div>
+    <div><div class="topbar-title">Deals</div></div>
     <div class="tb-spacer"></div>
-    <button class="btn btn-ghost btn-sm" onclick="openAddDealModal()">+ Add Deal</button>
+    <button class="btn btn-ghost btn-sm" onclick="openAddDealModal()">+ New Deal</button>
   </div>
 
-  <!-- Stage filter pills -->
-  <div style="padding:10px 20px;border-bottom:1px solid var(--border2);background:var(--bg2);display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:wrap;">
-    <button class="filter-chip on" onclick="setDealStageFilter('all',this)">All</button>
-    <button class="filter-chip" onclick="setDealStageFilter('Prospect',this)">Prospect</button>
-    <button class="filter-chip" onclick="setDealStageFilter('Contacted',this)">Contacted</button>
-    <button class="filter-chip" onclick="setDealStageFilter('Meeting',this)">Meeting</button>
-    <button class="filter-chip" onclick="setDealStageFilter('Active',this)">Active</button>
-    <button class="filter-chip" onclick="setDealStageFilter('Closed',this)">Closed</button>
-    <span id="deals-count" style="margin-left:auto;font-size:12px;color:var(--text4);"></span>
+  <!-- Metrics row -->
+  <div id="deals-metrics" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border2);border-bottom:1px solid var(--border2);flex-shrink:0;"></div>
+
+  <!-- Kanban board -->
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+    <div id="deals-board" style="flex:1;overflow-x:auto;overflow-y:hidden;padding:16px 20px 0;display:flex;gap:12px;align-items:flex-start;"></div>
   </div>
 
-  <!-- Pipeline funnel bar -->
-  <div id="deals-funnel" style="padding:12px 20px;border-bottom:1px solid var(--border2);background:var(--bg2);display:flex;gap:8px;flex-shrink:0;overflow-x:auto;"></div>
+</div>
 
-  <!-- Deals table -->
-  <div style="flex:1;overflow-y:auto;">
-    <div style="display:grid;grid-template-columns:1fr 1.2fr 100px 130px 1fr 100px;gap:0;padding:7px 20px;border-bottom:1px solid var(--border2);background:var(--bg2);position:sticky;top:0;z-index:2;">
-      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;">Company</div>
-      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;">Role</div>
-      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;">Fee</div>
-      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;">Stage</div>
-      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;">Move Stage</div>
-      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;text-align:right;">Added</div>
-    </div>
-    <div id="deals-list"></div>
+<!-- ═══ DEAL DETAIL PANEL ═══ -->
+<div id="deal-detail-panel" style="display:none;position:fixed;top:0;right:0;width:420px;height:100vh;background:var(--bg2);border-left:1px solid var(--border3);z-index:200;flex-direction:column;overflow:hidden;">
+  <div style="padding:16px 20px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+    <div id="ddp-title" style="font-size:15px;font-weight:700;color:var(--text);"></div>
+    <button onclick="closeDealDetail()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;line-height:1;">✕</button>
   </div>
+  <div style="flex:1;overflow-y:auto;padding:18px 20px;" id="ddp-body"></div>
 </div>
 
 <!-- ═══ ADD DEAL MODAL ═══ -->
@@ -661,6 +651,7 @@ a{color:var(--text3);text-decoration:none;}
         <option>Prospect</option><option>Contacted</option><option>Meeting</option><option>Active</option><option>Closed</option>
       </select>
     </div>
+    <div class="field"><label>Probability %</label><input id="ad-prob" type="number" placeholder="e.g. 50" min="0" max="100" class="ws-input"/></div>
     <div class="field"><label>Source</label><input id="ad-source" placeholder="e.g. Happy Hunting / Referral / Cold" class="ws-input"/></div>
     <div class="field"><label>Notes</label><textarea id="ad-notes" rows="3" placeholder="Optional context..." class="ws-input" style="resize:vertical;"></textarea></div>
     <div class="modal-footer">
@@ -2024,101 +2015,258 @@ var dealStageFilter = 'all';
 
 function setDealStageFilter(stage, btn){
   dealStageFilter = stage;
-  document.querySelectorAll('#v-deals .filter-chip').forEach(function(b){ b.classList.remove('on'); });
-  if(btn) btn.classList.add('on');
   renderDeals();
 }
 
-function renderDeals(){
-  var listEl   = document.getElementById('deals-list');
-  var countEl  = document.getElementById('deals-count');
-  var funnelEl = document.getElementById('deals-funnel');
-  if(!listEl) return;
+// ── DEAL TEMPERATURE ──────────────────────────────────────────
+function _dealTemp(d){
+  var daysOld = (Date.now()-(d.stageUpdatedAt||d.createdAt||0))/(1000*60*60*24);
+  var stage   = d.stage||'Prospect';
+  if(stage==='Active'||stage==='Meeting') return 'hot';
+  if(daysOld<7||stage==='Contacted') return 'warm';
+  return 'cold';
+}
+function _dealTempDot(t){
+  var col={hot:'var(--green)',warm:'var(--amber)',cold:'var(--text4)'}[t]||'var(--text4)';
+  return '<span title="'+t+'" style="width:7px;height:7px;border-radius:50%;background:'+col+';display:inline-block;flex-shrink:0;"></span>';
+}
+function _dealNextAction(d){
+  var stage = d.stage||'Prospect';
+  var actions={
+    Prospect : {text:'Reach out to hiring manager',   urgency:'high'},
+    Contacted: {text:'Follow up — no response yet',   urgency:'medium'},
+    Meeting  : {text:'Prep + confirm meeting',        urgency:'high'},
+    Active   : {text:'Submit candidates this week',   urgency:'high'},
+    Closed   : {text:'Request referral / review',     urgency:'low'},
+  };
+  return actions[stage]||{text:'Take next step',urgency:'medium'};
+}
 
-  // Sort: Active first, then by recency
-  var stageOrder = {Active:0,Meeting:1,Contacted:2,Prospect:3,Closed:4};
-  var sorted = deals.slice().sort(function(a,b){
-    var so = (stageOrder[a.stage]||3) - (stageOrder[b.stage]||3);
-    if(so!==0) return so;
-    return (b.createdAt||0)-(a.createdAt||0);
+function renderDeals(){
+  var metricsEl = document.getElementById('deals-metrics');
+  var boardEl   = document.getElementById('deals-board');
+  if(!boardEl) return;
+
+  var badge = document.getElementById('nb-deals');
+  if(badge) badge.textContent = deals.length||'';
+
+  // ── METRICS ───────────────────────────────────────────────
+  var pipeline=0, expected=0, activeCount=0, closingMonth=0;
+  var now = Date.now();
+  var monthEnd = new Date(); monthEnd.setDate(monthEnd.getDate()+30);
+  deals.forEach(function(d){
+    var fee = d.fee||d.estimatedFee||0;
+    var prob = (d.probability||50)/100;
+    if(d.stage!=='Closed'){ pipeline+=fee; expected+=fee*prob; }
+    if(d.stage==='Active') activeCount++;
+    if(d.stage==='Meeting'||d.stage==='Active') closingMonth+=fee;
+  });
+  if(metricsEl){
+    var metrics = [
+      {label:'Pipeline Value',   value:fmtMoney(pipeline),  sub:deals.filter(function(d){return d.stage!=='Closed';}).length+' open deals',  color:'var(--teal)'},
+      {label:'Expected Revenue', value:fmtMoney(expected),  sub:'Probability-weighted',         color:'var(--green)'},
+      {label:'Active Searches',  value:activeCount,          sub:'Running now',                  color:'var(--amber)'},
+      {label:'Closing 30 Days',  value:fmtMoney(closingMonth), sub:'Meeting + Active stage',    color:'var(--blue)'},
+    ];
+    metricsEl.innerHTML = metrics.map(function(m){
+      return '<div style="padding:14px 20px;background:var(--bg2);">' +
+        '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">'+m.label+'</div>' +
+        '<div style="font-size:22px;font-weight:700;color:'+m.color+';letter-spacing:-.5px;line-height:1;">'+m.value+'</div>' +
+        '<div style="font-size:11px;color:var(--text4);margin-top:4px;">'+m.sub+'</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  // ── KANBAN ────────────────────────────────────────────────
+  // Build per-stage columns
+  var stageDeals = {};
+  DEAL_STAGES.forEach(function(s){ stageDeals[s]=[]; });
+  deals.forEach(function(d){
+    var s = d.stage||'Prospect';
+    if(stageDeals[s]) stageDeals[s].push(d);
   });
 
-  var filtered = dealStageFilter==='all'
-    ? sorted
-    : sorted.filter(function(d){ return d.stage===dealStageFilter; });
+  var SC = DEAL_STAGE_COLORS;
 
-  if(countEl) countEl.textContent = filtered.length+' deal'+(filtered.length!==1?'s':'')+
-    (dealStageFilter!=='all'?' · '+dealStageFilter:'');
+  boardEl.innerHTML = DEAL_STAGES.map(function(stage){
+    var stageDealList = stageDeals[stage];
+    // Sort: highest fee first
+    stageDealList.sort(function(a,b){ return (b.fee||b.estimatedFee||0)-(a.fee||a.estimatedFee||0); });
+    var sc = SC[stage];
+    var stageTotal = stageDealList.reduce(function(s,d){return s+(d.fee||d.estimatedFee||0);},0);
 
-  // Funnel bar
-  if(funnelEl){
-    var stageCounts = {};
-    var stageFees   = {};
-    DEAL_STAGES.forEach(function(s){ stageCounts[s]=0; stageFees[s]=0; });
-    deals.forEach(function(d){
-      if(stageCounts[d.stage]!==undefined){
-        stageCounts[d.stage]++;
-        stageFees[d.stage]+=(d.fee||d.estimatedFee||0);
-      }
-    });
-    funnelEl.innerHTML = DEAL_STAGES.map(function(s){
-      var sc = DEAL_STAGE_COLORS[s];
-      return '<div style="background:'+sc.bg+';border:1px solid '+sc.border+';border-radius:6px;padding:7px 14px;display:flex;flex-direction:column;gap:2px;min-width:110px;cursor:pointer;" onclick="setDealStageFilter(\''+s+'\',document.querySelector(\'[onclick*=&quot;\\\''+s+'\\\'&quot;]\'))">' +
-        '<div style="font-size:11px;font-weight:700;color:'+sc.text+';">'+s+'</div>' +
-        '<div style="font-size:11px;color:var(--text3);">'+stageCounts[s]+' deal'+(stageCounts[s]!==1?'s':'')+
-        (stageFees[s]?' · '+fmtMoney(stageFees[s]):'')+'</div>' +
-        '</div>';
-    }).join('<div style="color:var(--text4);align-self:center;font-size:12px;">›</div>');
-  }
+    var cards = stageDealList.map(function(d){
+      var fee    = d.fee||d.estimatedFee||0;
+      var prob   = d.probability||50;
+      var temp   = _dealTemp(d);
+      var na     = _dealNextAction(d);
+      var tempDot= _dealTempDot(temp);
+      var naColors = {high:'var(--red)',medium:'var(--amber)',low:'var(--text4)'};
+      var naCol  = naColors[na.urgency]||'var(--text4)';
+      var naBg   = {high:'rgba(239,68,68,.1)',medium:'rgba(245,158,11,.1)',low:'var(--bg4)'}[na.urgency];
+      var currentIdx = DEAL_STAGES.indexOf(stage);
+      var nextStage  = currentIdx < DEAL_STAGES.length-1 ? DEAL_STAGES[currentIdx+1] : null;
 
-  if(!filtered.length){
-    listEl.innerHTML='<div style="padding:48px;text-align:center;color:var(--text4);font-size:13px;">No deals yet.<br><br>Decode a job in <a href="HappyHunting.html" target="_blank" style="color:var(--accent);">Happy Hunting</a> and click Build Deal, or click + Add Deal above.</div>';
-    return;
-  }
+      return '<div class="deal-card" onclick="openDealDetail(\''+d.id+'\')" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:14px;margin-bottom:8px;cursor:pointer;transition:border-color .1s;" onmouseover="this.style.borderColor=\'var(--border3)\'" onmouseout="this.style.borderColor=\'var(--border2)\'">' +
+        // Header: temp + company
+        '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;">' +
+          tempDot +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.3;">'+esc(d.company||'—')+'</div>' +
+            '<div style="font-size:11px;color:var(--text4);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(d.jobTitle||d.role||'—')+'</div>' +
+          '</div>' +
+        '</div>' +
+        // Fee + Probability
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+          '<div style="font-family:\'DM Mono\',monospace;font-size:14px;font-weight:700;color:var(--teal);">'+(fee?fmtMoney(fee):'—')+'</div>' +
+          '<div style="font-size:11px;color:var(--text4);background:var(--bg4);border:1px solid var(--border2);padding:2px 7px;border-radius:10px;">'+prob+'%</div>' +
+        '</div>' +
+        // Next action — dominant
+        '<div style="background:'+naBg+';border-left:3px solid '+naCol+';border-radius:0 4px 4px 0;padding:7px 9px;margin-bottom:10px;">' +
+          '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Next Action</div>' +
+          '<div style="font-size:12px;font-weight:600;color:'+naCol+';">'+na.text+'</div>' +
+        '</div>' +
+        // Advance button
+        (nextStage?
+          '<button onclick="event.stopPropagation();moveDealStage(\''+d.id+'\',\''+nextStage+'\')" style="width:100%;padding:6px;background:transparent;border:1px solid var(--border2);border-radius:5px;color:var(--text3);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .1s;" onmouseover="this.style.borderColor=\'var(--border3)\';this.style.color=\'var(--text)\'" onmouseout="this.style.borderColor=\'var(--border2)\';this.style.color=\'var(--text3)\'">'+(nextStage==='Active'?'⚡ ':'')+nextStage+' →</button>':
+          '<div style="text-align:center;font-size:11px;color:var(--teal);font-weight:600;">✓ Closed</div>'
+        ) +
+      '</div>';
+    }).join('');
 
-  var rows = filtered.map(function(d){
-    var sc = DEAL_STAGE_COLORS[d.stage]||DEAL_STAGE_COLORS.Prospect;
-    var currentIdx = DEAL_STAGES.indexOf(d.stage);
-    var nextStage  = currentIdx < DEAL_STAGES.length-1 ? DEAL_STAGES[currentIdx+1] : null;
-    var prevStage  = currentIdx > 0 ? DEAL_STAGES[currentIdx-1] : null;
-    var linkedJob  = d.jobId ? jobs.find(function(j){return j.id===d.jobId;}) : null;
-    var matchCount = d.jobId ? cands.filter(function(c){return c.role&&c.role.toLowerCase().includes((d.jobTitle||'').toLowerCase().split(' ')[0]);}).length : 0;
+    var emptyCard = '<div style="border:2px dashed var(--border2);border-radius:8px;padding:20px;text-align:center;color:var(--text4);font-size:12px;cursor:pointer;" onclick="openAddDealModal()">+ Add deal</div>';
 
-    return '<div style="display:grid;grid-template-columns:1fr 1.2fr 100px 130px 1fr 100px;gap:0;padding:12px 20px;border-bottom:1px solid var(--border2);align-items:center;" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'\'">' +
-      // Company
-      '<div>' +
-        '<div style="font-size:13px;font-weight:700;color:var(--text);">'+esc(d.company||'—')+'</div>' +
-        '<div style="font-size:11px;color:var(--text4);margin-top:2px;">'+(d.source?esc(d.source):'')+(d.urgency?' · '+esc(d.urgency):'')+'</div>' +
+    return '<div style="width:220px;flex-shrink:0;display:flex;flex-direction:column;max-height:calc(100vh - 220px);">' +
+      // Column header
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px;">' +
+        '<div style="display:flex;align-items:center;gap:6px;">' +
+          '<span style="font-size:11px;font-weight:700;color:'+sc.text+';background:'+sc.bg+';border:1px solid '+sc.border+';padding:2px 8px;border-radius:4px;">'+stage+'</span>' +
+          '<span style="font-size:11px;color:var(--text4);">'+stageDealList.length+'</span>' +
+        '</div>' +
+        (stageTotal?'<span style="font-size:11px;font-family:\'DM Mono\',monospace;color:var(--text4);">'+fmtMoney(stageTotal)+'</span>':'') +
       '</div>' +
-      // Role
-      '<div>' +
-        '<div style="font-size:12px;color:var(--text2);">'+esc(d.jobTitle||d.role||'—')+'</div>' +
-        (linkedJob?'<div style="font-size:11px;color:var(--accent);margin-top:2px;">↗ Job linked · Req #'+esc(linkedJob.reqNum||'—')+'</div>':
-         d.stage==='Active'?'<div style="font-size:11px;color:var(--amber);margin-top:2px;">⚡ No job yet — will create on Active</div>':
-         matchCount?'<div style="font-size:11px;color:var(--text4);margin-top:2px;">'+matchCount+' potential match'+(matchCount!==1?'es':'')+'</div>':'') +
+      // Cards (scrollable)
+      '<div style="flex:1;overflow-y:auto;padding-right:2px;">' +
+        (cards||emptyCard) +
       '</div>' +
-      // Fee
-      '<div style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--teal);">' +
-        (d.fee||d.estimatedFee?fmtMoney(d.fee||d.estimatedFee):'—') +
-      '</div>' +
-      // Stage badge
-      '<div><span style="font-size:11px;font-weight:700;color:'+sc.text+';background:'+sc.bg+';border:1px solid '+sc.border+';padding:3px 10px;border-radius:4px;">'+esc(d.stage||'Prospect')+'</span></div>' +
-      // Stage actions
-      '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
-        (prevStage?'<button class="btn btn-ghost btn-xs" onclick="moveDealStage(\''+d.id+'\',\''+prevStage+'\')">← '+prevStage+'</button>':'')+
-        (nextStage?'<button class="btn btn-primary btn-xs" onclick="moveDealStage(\''+d.id+'\',\''+nextStage+'\')">'+(nextStage==='Active'?'⚡ ':'')+''+nextStage+' →</button>':'')+
-        '<button class="btn btn-ghost btn-xs" style="color:var(--red);" onclick="deleteDeal(\''+d.id+'\')">✕</button>' +
-      '</div>' +
-      // Date
-      '<div style="font-size:11px;color:var(--text4);text-align:right;">'+fmtDate(d.createdAt)+'</div>' +
     '</div>';
   }).join('');
+}
 
-  listEl.innerHTML = rows;
+// ── DEAL DETAIL PANEL ─────────────────────────────────────────
+var _openDealId = null;
 
-  // Update badge
-  var badge = document.getElementById('nb-deals');
-  if(badge) badge.textContent = deals.length || '';
+function openDealDetail(dealId){
+  var d = deals.find(function(x){return x.id===dealId;});
+  if(!d) return;
+  _openDealId = dealId;
+  var panel = document.getElementById('deal-detail-panel');
+  if(!panel) return;
+
+  var sc = DEAL_STAGE_COLORS[d.stage]||DEAL_STAGE_COLORS.Prospect;
+  var na = _dealNextAction(d);
+  var temp = _dealTemp(d);
+  var naColors = {high:'var(--red)',medium:'var(--amber)',low:'var(--text4)'};
+  var naBg = {high:'rgba(239,68,68,.1)',medium:'rgba(245,158,11,.1)',low:'var(--bg4)'}[na.urgency];
+  var currentIdx = DEAL_STAGES.indexOf(d.stage);
+  var nextStage  = currentIdx < DEAL_STAGES.length-1 ? DEAL_STAGES[currentIdx+1] : null;
+  var prevStage  = currentIdx > 0 ? DEAL_STAGES[currentIdx-1] : null;
+  var linkedJob  = d.jobId ? jobs.find(function(j){return j.id===d.jobId;}) : null;
+  var fee = d.fee||d.estimatedFee||0;
+
+  var titleEl = document.getElementById('ddp-title');
+  if(titleEl) titleEl.textContent = d.company||'Deal';
+
+  var bodyEl = document.getElementById('ddp-body');
+  if(!bodyEl) return;
+
+  bodyEl.innerHTML =
+    // Stage badge
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">' +
+      '<span style="font-size:11px;font-weight:700;color:'+sc.text+';background:'+sc.bg+';border:1px solid '+sc.border+';padding:3px 10px;border-radius:4px;">'+esc(d.stage)+'</span>' +
+      _dealTempDot(temp)+' <span style="font-size:11px;color:var(--text4);">'+temp+'</span>' +
+      '<span style="margin-left:auto;font-size:11px;color:var(--text4);">'+fmtDate(d.createdAt)+'</span>' +
+    '</div>' +
+
+    // Next action — dominant
+    '<div style="background:'+naBg+';border-left:3px solid '+naColors[na.urgency]+';border-radius:0 6px 6px 0;padding:12px 14px;margin-bottom:18px;">' +
+      '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Next Action</div>' +
+      '<div style="font-size:14px;font-weight:700;color:'+naColors[na.urgency]+';">'+na.text+'</div>' +
+    '</div>' +
+
+    // Deal facts
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">' +
+      '<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;">' +
+        '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Fee</div>' +
+        '<div style="font-size:18px;font-weight:700;color:var(--teal);font-family:\'DM Mono\',monospace;">'+(fee?fmtMoney(fee):'—')+'</div>' +
+      '</div>' +
+      '<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;">' +
+        '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Probability</div>' +
+        '<div style="font-size:18px;font-weight:700;color:var(--text);">'+(d.probability||50)+'%</div>' +
+      '</div>' +
+    '</div>' +
+
+    // Role + source
+    '<div style="margin-bottom:14px;">' +
+      '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Role</div>' +
+      '<div style="font-size:13px;color:var(--text2);">'+esc(d.jobTitle||d.role||'—')+'</div>' +
+    '</div>' +
+    '<div style="margin-bottom:18px;">' +
+      '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Source</div>' +
+      '<div style="font-size:13px;color:var(--text2);">'+esc(d.source||'—')+'</div>' +
+    '</div>' +
+
+    // Actions row
+    '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;">' +
+      (nextStage?'<button class="btn btn-primary" style="width:100%;" onclick="moveDealStage(\''+d.id+'\',\''+nextStage+'\');openDealDetail(\''+d.id+'\')">'+(nextStage==='Active'?'⚡ ':'')+' Move to '+nextStage+'</button>':'')+
+      (prevStage?'<button class="btn btn-ghost btn-sm" style="width:100%;" onclick="moveDealStage(\''+d.id+'\',\''+prevStage+'\');openDealDetail(\''+d.id+'\')"">← Back to '+prevStage+'</button>':'')+
+      (linkedJob?'<button class="btn btn-ghost btn-sm" style="width:100%;color:var(--accent);" onclick="closeDealDetail();nav(\'jobs\');setTimeout(()=>selJob(\''+linkedJob.id+'\'),200)">↗ Open Pipeline</button>':'')+
+      '<button class="btn btn-ghost btn-sm" style="width:100%;" onclick="openAITool(\'outreach\')">✉ Send Message</button>' +
+      '<button class="btn btn-ghost btn-sm" style="width:100%;color:var(--red);" onclick="deleteDeal(\''+d.id+'\');closeDealDetail()">Delete Deal</button>' +
+    '</div>' +
+
+    // Notes
+    (d.notes?'<div style="margin-bottom:18px;"><div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Notes</div><div style="font-size:12px;color:var(--text3);line-height:1.6;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;white-space:pre-wrap;">'+esc(d.notes)+'</div></div>':'')+
+
+    // Add note
+    '<div style="margin-bottom:18px;">' +
+      '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Add Note</div>' +
+      '<textarea id="ddp-note-input" rows="3" placeholder="What happened? What\'s the status?" class="ws-input" style="resize:vertical;margin-bottom:6px;"></textarea>' +
+      '<button class="btn btn-ghost btn-sm" style="width:100%;" onclick="addDealNote(\''+d.id+'\')">Save Note</button>' +
+    '</div>' +
+
+    // Activity
+    (d.activity&&d.activity.length?
+      '<div><div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Activity</div>' +
+      d.activity.slice().reverse().map(function(a){
+        return '<div style="display:flex;gap:10px;margin-bottom:10px;">' +
+          '<div style="width:5px;height:5px;border-radius:50%;background:var(--border3);margin-top:5px;flex-shrink:0;"></div>' +
+          '<div><div style="font-size:12px;color:var(--text3);line-height:1.5;">'+esc(a.text||'')+'</div><div style="font-size:11px;color:var(--text4);margin-top:2px;">'+fmtDate(a.ts)+'</div></div>' +
+        '</div>';
+      }).join('')+'</div>' : '');
+
+  panel.style.display = 'flex';
+}
+
+function closeDealDetail(){
+  var p = document.getElementById('deal-detail-panel');
+  if(p) p.style.display='none';
+  _openDealId = null;
+}
+
+function addDealNote(dealId){
+  var d = deals.find(function(x){return x.id===dealId;});
+  if(!d) return;
+  var inp = document.getElementById('ddp-note-input');
+  var txt = inp ? inp.value.trim() : '';
+  if(!txt) return;
+  if(!d.activity) d.activity=[];
+  d.activity.push({ts:Date.now(), text:txt});
+  // Append to main notes field
+  d.notes = (d.notes?(d.notes+'\n\n'):'') + new Date().toLocaleDateString()+': '+txt;
+  saveDeals();
+  openDealDetail(dealId); // refresh panel
+  renderDeals();
 }
 
 function moveDealStage(dealId, newStage){
@@ -2212,6 +2360,7 @@ function saveNewDeal(){
   var role    = (document.getElementById('ad-role')||{}).value||'';
   var fee     = parseInt((document.getElementById('ad-fee')||{}).value||'0')||0;
   var stage   = (document.getElementById('ad-stage')||{}).value||'Prospect';
+  var prob    = parseInt((document.getElementById('ad-prob')||{}).value||'50')||50;
   var source  = (document.getElementById('ad-source')||{}).value||'Manual';
   var notes   = (document.getElementById('ad-notes')||{}).value||'';
   if(!company){ alert('Company name is required.'); return; }
@@ -2222,6 +2371,7 @@ function saveNewDeal(){
     role: role.trim(),
     fee: fee,
     estimatedFee: fee,
+    probability: Math.min(100,Math.max(0,prob)),
     stage: stage,
     source: source.trim()||'Manual',
     notes: notes.trim(),
