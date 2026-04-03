@@ -2670,11 +2670,13 @@ function getEmailConfig(){
 }
 
 function saveEmailConfig(){
-  var url   = (document.getElementById('email-proxy-url')||{}).value||'';
-  var name  = (document.getElementById('email-from-name')||{}).value||'';
-  var addr  = (document.getElementById('email-from-addr')||{}).value||'';
-  var appr  = !!(document.getElementById('email-approval-toggle')||{}).checked;
+  var url    = (document.getElementById('email-proxy-url')||{}).value||'';
+  var domain = (document.getElementById('email-vercel-domain')||{}).value||'';
+  var name   = (document.getElementById('email-from-name')||{}).value||'';
+  var addr   = (document.getElementById('email-from-addr')||{}).value||'';
+  var appr   = !!(document.getElementById('email-approval-toggle')||{}).checked;
   localStorage.setItem(EMAIL_PROXY_KEY,    url.trim());
+  localStorage.setItem('tb_vercel_domain', domain.trim());
   localStorage.setItem(EMAIL_FROM_NAME_KEY,name.trim()||'Jonah Adelman');
   localStorage.setItem(EMAIL_FROM_ADDR_KEY,addr.trim());
   localStorage.setItem(EMAIL_APPROVAL_KEY, appr?'1':'0');
@@ -2704,10 +2706,12 @@ function refreshEmailStatusCard(){
   }
   // Populate form fields
   var u = document.getElementById('email-proxy-url');
+  var d = document.getElementById('email-vercel-domain');
   var n = document.getElementById('email-from-name');
   var a = document.getElementById('email-from-addr');
   var t = document.getElementById('email-approval-toggle');
   if(u) u.value = cfg.proxyUrl;
+  if(d) d.value = localStorage.getItem('tb_vercel_domain')||'';
   if(n) n.value = cfg.fromName;
   if(a) a.value = cfg.fromAddr;
   if(t) t.checked = cfg.approval;
@@ -2740,9 +2744,14 @@ async function sendEmail({ to, subject, html, text, candidateId }){
     ? (candidateId + '-' + Date.now())
     : ('anon-' + Date.now());
 
-  // Build proxy base URL from proxyUrl (strip /api/send-email to get origin)
-  var proxyOrigin = cfg.proxyUrl.replace(/\/api\/send-email.*$/, '');
-  var pixelUrl    = proxyOrigin + '/api/track-open?id=' + encodeURIComponent(trackingId)
+  // Fix 1: Pixel URL uses explicit VERCEL_DOMAIN config, not derived from proxyUrl.
+  // Set in Workspace Settings → Email → Vercel Domain field.
+  // Falls back to proxyOrigin so existing installs keep working.
+  var vercelDomain = localStorage.getItem('tb_vercel_domain') || '';
+  var pixelBase = vercelDomain
+    ? vercelDomain.replace(/\/$/, '')
+    : cfg.proxyUrl.replace(/\/api\/send-email.*$/, '');
+  var pixelUrl = pixelBase + '/api/track-open?id=' + encodeURIComponent(trackingId)
     + (candidateId ? '&uid=' + encodeURIComponent(candidateId) : '');
 
   // Inject tracking pixel at bottom of email HTML (hidden 1x1 image)
@@ -7205,6 +7214,11 @@ CREATE POLICY "service_activity" ON activity FOR INSERT WITH CHECK (true);</pre>
       </div>
 
       <!-- Proxy endpoint -->
+      <div style="margin-bottom:16px;">
+        <div class="ws-label">Vercel Domain <span style="color:var(--text4);font-weight:400;">For tracking pixel</span></div>
+        <input class="ws-input" id="email-vercel-domain" placeholder="https://your-site.vercel.app" style="font-family:'DM Mono',monospace;font-size:12px;"/>
+        <div style="font-size:11px;color:var(--text4);margin-top:4px;">Your Vercel deployment URL — used for open-tracking pixel. Must match your deployed domain exactly.</div>
+      </div>
       <div style="margin-bottom:16px;">
         <div class="ws-label">Email Proxy URL</div>
         <input class="ws-input" id="email-proxy-url" placeholder="https://your-site.vercel.app/api/send-email" style="font-family:'DM Mono',monospace;font-size:12px;"/>

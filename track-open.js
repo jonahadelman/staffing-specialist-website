@@ -1,21 +1,38 @@
 // api/track-open.js — Vercel Edge Function
-// Receives open-tracking pixel requests, logs to Supabase, returns 1x1 GIF.
-// URL format: /api/track-open?id=<candidateId>-<timestamp>&uid=<userId>
-// Set SUPABASE_URL and SUPABASE_SERVICE_KEY in Vercel env vars.
-// Use the SERVICE key (not anon) so server writes bypass RLS safely.
+// Open-tracking pixel. Returns 1x1 GIF instantly, logs to Supabase async.
+// Fix 1: URL is always absolute — configured via VERCEL_URL env var.
+// Fix 4: Supabase writes retry once before failing silently.
 
 export const config = { runtime: 'edge' };
 
-// Minimal 1×1 transparent GIF (base64)
 const PIXEL_GIF = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
-export default async function handler(req) {
-  const url    = new URL(req.url);
-  const rawId  = url.searchParams.get('id')  || '';
-  const userId = url.searchParams.get('uid') || null;
+// Fix 4: retry helper — tries once, waits 300ms, tries again, then gives up
+async function sbWrite(url, opts, attempt) {
+  attempt = attempt || 1;
+  try {
+    const r = await fetch(url, opts);
+    if (!r.ok && attempt < 2) {
+      await new Promise(res => setTimeout(res, 300));
+      return sbWrite(url, opts, 2);
+    }
+    return r;
+  } catch(e) {
+    if (attempt < 2) {
+      await new Promise(res => setTimeout(res, 300));
+      return sbWrite(url, opts, 2);
+    }
+    throw e; // fail silently at call site
+  }
+}
 
-  // Always respond with the pixel immediately — never block the email client
-  const respond = () => new Response(
+export default async function handler(req) {
+  const url     = new URL(req.url);
+  const rawId   = url.searchParams.get('id') || '';
+  const userId  = url.searchParams.get('uid') || null;
+
+  // Always respond with pixel immediately
+  const pixelResponse = () => new Response(
     Buffer.from(PIXEL_GIF, 'base64'),
     { status: 200, headers: {
       'Content-Type'  : 'image/gif',
@@ -24,33 +41,31 @@ export default async function handler(req) {
     }}
   );
 
-  // Parse trackingId: format is "<candidateId>-<timestamp>"
-  const dashIdx    = rawId.lastIndexOf('-');
+  // Fix 3: derive candidateId from trackingId only — no email fallback
+  const dashIdx     = rawId.lastIndexOf('-');
   const candidateId = dashIdx > 0 ? rawId.slice(0, dashIdx) : rawId;
-  const timestamp   = dashIdx > 0 ? rawId.slice(dashIdx + 1) : '';
 
-  if (!candidateId) return respond();
+  if (!candidateId) return pixelResponse();
 
   const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY; // service role — bypasses RLS
+  const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.SUPABASE_SERVICE_KEY;
 
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    console.warn('[track-open] Supabase env vars not set');
-    return respond();
-  }
+  if (!SUPABASE_URL || !SUPABASE_KEY) return pixelResponse();
 
-  // Fire-and-forget: don't await so pixel returns instantly
+  const headers = {
+    'apikey'       : SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Content-Type' : 'application/json',
+    'Prefer'       : 'return=minimal',
+  };
+
+  // Fire async — never block the pixel response
   (async () => {
     try {
-      // 1. Log activity
-      await fetch(`${SUPABASE_URL}/rest/v1/activity`, {
+      // Fix 4: Log activity with retry
+      await sbWrite(`${SUPABASE_URL}/rest/v1/activity`, {
         method : 'POST',
-        headers: {
-          'apikey'       : SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-          'Content-Type' : 'application/json',
-          'Prefer'       : 'return=minimal',
-        },
+        headers,
         body: JSON.stringify({
           candidate_id: candidateId,
           user_id     : userId,
@@ -60,40 +75,33 @@ export default async function handler(req) {
         }),
       });
 
-      // 2. Update candidate opened flag + boost engagementScore
-      // Read current candidate data first
-      const getRes = await fetch(
+      // Fix 4: Read + patch candidate with retry
+      const getRes = await sbWrite(
         `${SUPABASE_URL}/rest/v1/candidates?id=eq.${encodeURIComponent(candidateId)}&select=id,data`,
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+        { headers }
       );
       const rows = await getRes.json();
-      if (rows && rows[0]) {
-        const candData = rows[0].data || {};
-        // Only boost if not already marked opened (de-dupe pixel fires)
-        if (!candData.opened) {
-          candData.opened           = true;
-          candData.openedAt         = Date.now();
-          candData.engagementBoost  = (candData.engagementBoost || 0) + 10;
-          if (!candData.activity) candData.activity = [];
-          candData.activity.push({ ts: Date.now(), text: 'Email opened (tracked)' });
+      if (!rows || !rows[0]) return;
 
-          await fetch(`${SUPABASE_URL}/rest/v1/candidates?id=eq.${encodeURIComponent(candidateId)}`, {
-            method : 'PATCH',
-            headers: {
-              'apikey'       : SUPABASE_KEY,
-              'Authorization': `Bearer ${SUPABASE_KEY}`,
-              'Content-Type' : 'application/json',
-              'Prefer'       : 'return=minimal',
-            },
-            body: JSON.stringify({ data: candData }),
-          });
-        }
-      }
+      const cdata = rows[0].data || {};
+      if (cdata.opened) return; // de-dupe
+
+      cdata.opened          = true;
+      cdata.openedAt        = Date.now();
+      cdata.engagementBoost = (cdata.engagementBoost || 0) + 10;
+      if (!cdata.activity) cdata.activity = [];
+      cdata.activity.push({ ts: Date.now(), text: 'Email opened (tracked)' });
+
+      // Fix 4: Patch with retry
+      await sbWrite(
+        `${SUPABASE_URL}/rest/v1/candidates?id=eq.${encodeURIComponent(candidateId)}`,
+        { method: 'PATCH', headers, body: JSON.stringify({ data: cdata }) }
+      );
     } catch(e) {
-      console.error('[track-open] Supabase update failed:', e.message);
+      console.error('[track-open] Supabase failed after retry:', e.message);
       // Never throws — pixel already sent
     }
   })();
 
-  return respond();
+  return pixelResponse();
 }
