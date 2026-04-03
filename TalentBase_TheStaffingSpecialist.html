@@ -589,7 +589,7 @@ a{color:var(--text3);text-decoration:none;}
       </div>
 
       <div class="gate-foot">
-        Need access? <a href="/cdn-cgi/l/email-protection#e2888d8c838aa2968a8791968384848b8c85919287818b838e8b9196cc818d8f">Contact Jonah</a>
+        Need access? <a href="mailto:jonah@thestaffingspecialist.com">Contact Jonah</a>
       </div>
     </div>
 
@@ -649,7 +649,7 @@ a{color:var(--text3);text-decoration:none;}
       <div class="gate-foot" style="margin-top:16px;">
         Need a Supabase account? <a href="https://supabase.com" target="_blank">Create one free →</a>
         &nbsp;·&nbsp;
-        <a href="/cdn-cgi/l/email-protection#b0dadfded1d8f0c4d8d5c3c4d1d6d6d9ded7c3c0d5d3d9d1dcd9c3c49ed3dfdd">Contact Jonah</a>
+        <a href="mailto:jonah@thestaffingspecialist.com">Contact Jonah</a>
       </div>
     </div>
 
@@ -1957,7 +1957,7 @@ a{color:var(--text3);text-decoration:none;}
 </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 
 <!-- ═══ SUPABASE CLIENT (CDN — UMD build, synchronous global) ═══ -->
 <!-- Using the UMD/IIFE build so window.supabase is available synchronously -->
@@ -11323,4 +11323,12 @@ function cpSaveNote(candId, note){
   if(!fb[candId]) fb[candId]={};
   fb[candId].note = note;
   fb[candId].ts = Date.now();
-  localStorage.setItem('tb_client_feedback', JSON.stringify(f
+  localStorage.setItem('tb_client_feedback', JSON.stringify(fb));
+  _cpFeedback = fb;
+  var saved = document.getElementById('cp-saved-'+candId);
+  if(saved){ saved.style.display='block'; setTimeout(function(){ saved.style.display='none'; },2000); }
+}
+</script>
+
+</body>
+</html>
