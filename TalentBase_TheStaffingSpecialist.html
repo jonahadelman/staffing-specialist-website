@@ -9149,7 +9149,14 @@ function viewLibItem(id){
   libSelectedId = id;
   const item = libraryItems.find(x=>x.id===id);
   if(!item) return;
-  renderLibrary();
+
+  // Highlight selected row without rebuilding the whole list
+  document.querySelectorAll('#lib-list > div').forEach(function(row){
+    var isSelected = row.getAttribute('onclick') && row.getAttribute('onclick').includes("'"+id+"'");
+    row.style.background = isSelected ? 'var(--accent-dim)' : '';
+    row.style.borderLeft = isSelected ? '3px solid var(--accent)' : '3px solid transparent';
+  });
+
   const viewer = document.getElementById('lib-viewer');
   if(!viewer) return;
   viewer.style.display = 'flex';
