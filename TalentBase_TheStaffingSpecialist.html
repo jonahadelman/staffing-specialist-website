@@ -106,14 +106,17 @@ a{color:var(--text3);text-decoration:none;}
 .btn-icon{width:30px;height:30px;padding:0;justify-content:center;}
 
 /* ── AI TOOLS HUB ── */
-.ait-card{display:flex;align-items:flex-start;gap:14px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:18px 16px;cursor:pointer;transition:all .12s;position:relative;}
+.ait-card{display:flex;align-items:center;gap:16px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);padding:20px 18px;cursor:pointer;transition:all .12s;}
 .ait-card:hover{background:var(--bg3);border-color:var(--border3);transform:translateY(-1px);}
-.ait-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.ait-icon svg{width:20px;height:20px;}
+.ait-primary{padding:22px 20px;border-color:var(--border3);}
+.ait-primary:hover{border-color:var(--accent-border);background:var(--bg3);}
+.ait-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ait-icon svg{width:21px;height:21px;}
 .ait-body{flex:1;min-width:0;}
-.ait-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:5px;}
+.ait-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.ait-sub{font-size:12px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ait-desc{font-size:12px;color:var(--text4);line-height:1.5;}
-.ait-arrow{font-size:16px;color:var(--text4);align-self:center;flex-shrink:0;transition:color .1s;}
+.ait-arrow{font-size:16px;color:var(--text4);flex-shrink:0;transition:color .1s;}
 .ait-card:hover .ait-arrow{color:var(--accent2);}
 
 
@@ -484,198 +487,113 @@ a{color:var(--text3);text-decoration:none;}
 
 <!-- ── DASHBOARD ── -->
 <!-- ══════════════════════════════════════════════════════════
-     AI TOOLS HUB — every tool in one place
+     AI TOOLS — COMMAND CENTER
 ═══════════════════════════════════════════════════════════ -->
 <div class="view" id="v-aitools" style="flex-direction:column;overflow:hidden;">
   <div class="topbar">
-    <div>
-      <div class="topbar-title">⚡ AI Tools</div>
-      <div class="topbar-sub">Every tool in one place — click to launch</div>
-    </div>
+    <div><div class="topbar-title">⚡ AI Tools</div></div>
   </div>
-  <div style="flex:1;overflow-y:auto;padding:24px;">
+  <div style="flex:1;overflow-y:auto;padding:28px 32px;max-width:860px;">
 
-    <!-- SECTION: BUILD & WRITE -->
-    <div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">Build &amp; Write</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:28px;">
+    <!-- ── SECTION 1: RUN HIRING ── -->
+    <div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;">Run Hiring</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:32px;">
 
-      <!-- Job Description -->
-      <div class="ait-card" onclick="nav('library');setTimeout(()=>setLibCat('jd',document.querySelector('.lib-cat-btn[onclick*=\"jd\"]')),200)">
+      <div class="ait-card ait-primary" onclick="nav('jobs');setTimeout(()=>openAddJob(),150)">
+        <div class="ait-icon" style="background:var(--accent-dim);color:var(--accent2);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+        </div>
+        <div class="ait-body">
+          <div class="ait-title">Build Job + Pipeline</div>
+          <div class="ait-sub">Create a req and start moving candidates</div>
+        </div>
+        <div class="ait-arrow">→</div>
+      </div>
+
+      <div class="ait-card ait-primary" onclick="nav('nlsearch')">
+        <div class="ait-icon" style="background:var(--teal-bg);color:var(--teal);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <div class="ait-body">
+          <div class="ait-title">Find Candidates</div>
+          <div class="ait-sub">AI search across your entire database</div>
+        </div>
+        <div class="ait-arrow">→</div>
+      </div>
+
+      <div class="ait-card ait-primary" onclick="openAITool('outreach')">
+        <div class="ait-icon" style="background:var(--green-bg);color:var(--green);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <div class="ait-body">
+          <div class="ait-title">Send Outreach</div>
+          <div class="ait-sub">AI writes the message — you send it</div>
+        </div>
+        <div class="ait-arrow">→</div>
+      </div>
+
+      <div class="ait-card ait-primary" onclick="nav('match')">
+        <div class="ait-icon" style="background:var(--purple-bg);color:var(--purple);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        </div>
+        <div class="ait-body">
+          <div class="ait-title">Review Candidates</div>
+          <div class="ait-sub">Score and rank against any open role</div>
+        </div>
+        <div class="ait-arrow">→</div>
+      </div>
+
+    </div>
+
+    <!-- ── SECTION 2: CREATE ── -->
+    <div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;">Create</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:32px;">
+
+      <div class="ait-card" onclick="nav('library');setTimeout(()=>setLibCat('jd',document.querySelector('[onclick*=\"setLibCat(\'jd\'\"')),200)">
         <div class="ait-icon" style="background:var(--purple-bg);color:var(--purple);">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
         </div>
         <div class="ait-body">
-          <div class="ait-title">Write a Job Description</div>
-          <div class="ait-desc">106 ready-made MedDevice JDs. Click any title, hit Generate, fill in your client details, export to PDF.</div>
+          <div class="ait-title">Job Description</div>
+          <div class="ait-sub">106 MedDevice JDs ready</div>
         </div>
-        <div class="ait-arrow">→</div>
       </div>
 
-      <!-- Offer Letter -->
-      <div class="ait-card" onclick="nav('offer')">
-        <div class="ait-icon" style="background:var(--green-bg);color:var(--green);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        </div>
-        <div class="ait-body">
-          <div class="ait-title">Build an Offer Letter</div>
-          <div class="ait-desc">AI-generated offer letter. Select candidate + job, enter salary and start date, generate in seconds, export PDF.</div>
-        </div>
-        <div class="ait-arrow">→</div>
-      </div>
-
-      <!-- Resume Rewriter -->
       <div class="ait-card" onclick="openAITool('resume')">
         <div class="ait-icon" style="background:var(--accent-dim);color:var(--accent2);">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
         </div>
         <div class="ait-body">
-          <div class="ait-title">Rewrite a Resume</div>
-          <div class="ait-desc">Paste a resume + target JD. AI rewrites it to match the role, adds keywords, quantifies bullets, top 1% output.</div>
+          <div class="ait-title">Resume Rewrite</div>
+          <div class="ait-sub">Match any resume to any role</div>
         </div>
-        <div class="ait-arrow">→</div>
       </div>
 
-      <!-- Outreach Email -->
-      <div class="ait-card" onclick="openAITool('outreach')">
-        <div class="ait-icon" style="background:var(--teal-bg);color:var(--teal);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        </div>
-        <div class="ait-body">
-          <div class="ait-title">Write Candidate Outreach</div>
-          <div class="ait-desc">Cold LinkedIn message, email, or text. Human, specific, high-converting. Paste candidate background + role and go.</div>
-        </div>
-        <div class="ait-arrow">→</div>
-      </div>
-
-      <!-- Candidate Submission -->
       <div class="ait-card" onclick="openAITool('submission')">
         <div class="ait-icon" style="background:var(--amber-bg);color:var(--amber);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.4 1.13 2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         </div>
         <div class="ait-body">
-          <div class="ait-title">Write Candidate Submission</div>
-          <div class="ait-desc">Professional submission email to hiring manager. Snapshot table, top 3 fit reasons, pre-addressed concerns.</div>
+          <div class="ait-title">Submission Email</div>
+          <div class="ait-sub">Submit a candidate to the client</div>
         </div>
-        <div class="ait-arrow">→</div>
-      </div>
-
-      <!-- Client Pitch -->
-      <div class="ait-card" onclick="openAITool('pitch')">
-        <div class="ait-icon" style="background:var(--red-bg);color:var(--red);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        </div>
-        <div class="ait-body">
-          <div class="ait-title">Write a Client Pitch</div>
-          <div class="ait-desc">Cold outreach to a hiring manager pitching TSS. Specific, data-backed, never generic. Email, LinkedIn, or voicemail.</div>
-        </div>
-        <div class="ait-arrow">→</div>
       </div>
 
     </div>
 
-    <!-- SECTION: SCREEN & EVALUATE -->
-    <div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">Screen &amp; Evaluate</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:28px;">
-
-      <!-- Interview Questions -->
-      <div class="ait-card" onclick="openAITool('interview')">
-        <div class="ait-icon" style="background:var(--purple-bg);color:var(--purple);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        </div>
-        <div class="ait-body">
-          <div class="ait-title">Generate Interview Questions</div>
-          <div class="ait-desc">Role-specific technical, behavioral, and situational questions with a scoring rubric and red flags list.</div>
-        </div>
-        <div class="ait-arrow">→</div>
-      </div>
-
-      <!-- AI Match -->
-      <div class="ait-card" onclick="nav('match')">
-        <div class="ait-icon" style="background:var(--accent-dim);color:var(--accent2);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
-        </div>
-        <div class="ait-body">
-          <div class="ait-title">AI Candidate Match</div>
-          <div class="ait-desc">Score every candidate against a job opening. Ranked match list with skill gap analysis and recommendation.</div>
-        </div>
-        <div class="ait-arrow">→</div>
-      </div>
-
-      <!-- Scorecards -->
-      <div class="ait-card" onclick="nav('scorecard')">
-        <div class="ait-icon" style="background:var(--green-bg);color:var(--green);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-        </div>
-        <div class="ait-body">
-          <div class="ait-title">Build a Scorecard</div>
-          <div class="ait-desc">Structured evaluation form for any role. Rate candidates consistently. Share with hiring managers.</div>
-        </div>
-        <div class="ait-arrow">→</div>
-      </div>
-
-      <!-- AI Sourcing -->
-      <div class="ait-card" onclick="nav('nlsearch')">
-        <div class="ait-icon" style="background:var(--teal-bg);color:var(--teal);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </div>
-        <div class="ait-body">
-          <div class="ait-title">Source Candidates with AI</div>
-          <div class="ait-desc">Natural language search across your entire database. "Find QA engineers in Boston with FDA experience."</div>
-        </div>
-        <div class="ait-arrow">→</div>
-      </div>
-
+    <!-- ── SECTION 3: TEMPLATES & DOCS ── -->
+    <div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;">Templates &amp; Docs</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="nav('library');setTimeout(()=>setLibCat('email',document.querySelector('[onclick*=\"email\"]')),200)">📧 Email Templates</button>
+      <button class="btn btn-ghost btn-sm" onclick="nav('offer')">📄 Offer Letter</button>
+      <button class="btn btn-ghost btn-sm" onclick="nav('library');setTimeout(()=>setLibCat('compliance',document.querySelector('[onclick*=\"compliance\"]')),200)">🔒 Compliance Docs</button>
+      <button class="btn btn-ghost btn-sm" onclick="nav('library');setTimeout(()=>setLibCat('onboarding',document.querySelector('[onclick*=\"onboarding\"]')),200)">🎉 Onboarding</button>
+      <button class="btn btn-ghost btn-sm" onclick="openAITool('interview')">🎤 Interview Questions</button>
+      <button class="btn btn-ghost btn-sm" onclick="openAITool('pitch')">🎯 Client Pitch</button>
+      <button class="btn btn-ghost btn-sm" onclick="nav('prompts')">✏️ 100 AI Prompts</button>
+      <button class="btn btn-ghost btn-sm" onclick="nav('scorecard')">✅ Scorecards</button>
     </div>
 
-    <!-- SECTION: TEMPLATES & DOCS -->
-    <div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">Templates &amp; Docs</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:28px;">
-
-      <div class="ait-card" onclick="nav('library');setTimeout(()=>setLibCat('email',document.querySelector('.lib-cat-btn[onclick*=\"\'email\'\"]')),200)">
-        <div class="ait-icon" style="background:var(--accent-dim);color:var(--accent2);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        </div>
-        <div class="ait-body">
-          <div class="ait-title">Email Templates</div>
-          <div class="ait-desc">Cold outreach, follow-ups, interview confirmations, offer congrats. Copy-paste ready.</div>
-        </div>
-        <div class="ait-arrow">→</div>
-      </div>
-
-      <div class="ait-card" onclick="nav('library');setTimeout(()=>setLibCat('compliance',document.querySelector('.lib-cat-btn[onclick*=\"compliance\"]')),200)">
-        <div class="ait-icon" style="background:var(--red-bg);color:var(--red);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
-        <div class="ait-body">
-          <div class="ait-title">Compliance Documents</div>
-          <div class="ait-desc">Background check auth, at-will statements, EEO self-ID. FCRA and OFCCP compliant.</div>
-        </div>
-        <div class="ait-arrow">→</div>
-      </div>
-
-      <div class="ait-card" onclick="nav('library');setTimeout(()=>setLibCat('onboarding',document.querySelector('.lib-cat-btn[onclick*=\"onboarding\"]')),200)">
-        <div class="ait-icon" style="background:var(--teal-bg);color:var(--teal);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-        </div>
-        <div class="ait-body">
-          <div class="ait-title">Onboarding Documents</div>
-          <div class="ait-desc">Welcome letters, 30-60-90 day plans, first day instructions. Fully templated with variables.</div>
-        </div>
-        <div class="ait-arrow">→</div>
-      </div>
-
-      <div class="ait-card" onclick="nav('prompts')">
-        <div class="ait-icon" style="background:var(--amber-bg);color:var(--amber);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        </div>
-        <div class="ait-body">
-          <div class="ait-title">100 AI Prompts</div>
-          <div class="ait-desc">Sourcing scripts, DM templates, BD playbooks, closing tactics. Every prompt built for MedDevice recruiting.</div>
-        </div>
-        <div class="ait-arrow">→</div>
-      </div>
-
-    </div>
   </div>
 </div>
 
