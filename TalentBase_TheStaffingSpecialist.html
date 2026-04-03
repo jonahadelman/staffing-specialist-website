@@ -307,29 +307,214 @@ a{color:var(--text3);text-decoration:none;}
 .empty-state-icon{font-size:32px;opacity:.2;margin-bottom:10px;}
 .spinner-wrap{display:flex;align-items:center;justify-content:center;padding:30px;gap:10px;color:var(--text3);font-size:13px;}
 /* ── ACCESS GATE ── */
-#gate{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;}
-.gate-box{width:100%;max-width:380px;padding:0 24px;text-align:center;}
-.gate-logo{display:inline-flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:36px;}
-.gate-logo-mark{width:44px;height:44px;background:var(--accent);border-radius:8px;display:grid;place-items:center;}
-.gate-logo-mark svg{width:22px;height:22px;}
-.gate-logo-name{font-size:16px;font-weight:600;color:#fff;letter-spacing:-.3px;}
-.gate-logo-by{font-size:11px;color:#7a7a9e;}
-.gate-title{font-size:24px;font-weight:700;color:#fff;letter-spacing:-.5px;margin-bottom:8px;}
-.gate-sub{font-size:13px;color:#9898bc;margin-bottom:32px;line-height:1.6;}
-.gate-input-wrap{position:relative;margin-bottom:12px;}
-.gate-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:14px 46px 14px 16px;font-size:16px;color:var(--text);outline:none;font-family:'DM Mono',monospace;letter-spacing:.15em;text-align:center;transition:border .15s;}
-.gate-input:focus{border-color:var(--accent);background:var(--bg4);}
-.gate-input.shake{animation:gshake .35s;}
-.gate-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;color:#7a7a9e;background:none;border:none;padding:4px;line-height:0;}
-.gate-eye:hover{color:#9898bc;}
-.gate-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;letter-spacing:.02em;}
-.gate-btn:hover{background:var(--accent2);}
-.gate-btn:active{transform:scale(.98);}
-.gate-err{font-size:12px;color:#ff5b5b;margin-top:10px;height:16px;}
-.gate-footer{font-size:11px;color:#7a7a9e;margin-top:28px;}
-.gate-footer a{color:var(--accent2);text-decoration:none;}
-.gate-footer a:hover{color:var(--accent);}
-@keyframes gshake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+/* ══════════════════════════════════════════════════════
+   ACCESS GATE — Premium redesign
+   Two states: login-state (SB configured) / setup-state (SB missing)
+   ══════════════════════════════════════════════════════ */
+#gate{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  /* Subtle noise texture via SVG */
+  background-image:radial-gradient(ellipse 80% 60% at 50% -10%, rgba(59,130,246,.12) 0%, transparent 70%);
+}
+.gate-wrap{
+  width:100%;max-width:420px;padding:0 24px;
+}
+
+/* ── LOGO ── */
+.gate-logomark{
+  width:48px;height:48px;
+  background:var(--accent);
+  border-radius:12px;
+  display:grid;place-items:center;
+  margin:0 auto 20px;
+  box-shadow:0 0 0 1px rgba(59,130,246,.4), 0 8px 24px rgba(59,130,246,.25);
+}
+.gate-logomark svg{width:24px;height:24px;}
+
+/* ── CARD ── */
+.gate-card{
+  background:var(--bg2);
+  border:1px solid var(--border2);
+  border-radius:16px;
+  padding:36px 32px;
+  box-shadow:0 4px 24px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.04) inset;
+}
+
+/* ── HEADINGS ── */
+.gate-headline{
+  font-size:22px;font-weight:700;
+  color:var(--text);
+  letter-spacing:-.4px;
+  line-height:1.2;
+  margin-bottom:8px;
+  text-align:center;
+}
+.gate-subline{
+  font-size:13.5px;
+  color:var(--text3);
+  text-align:center;
+  line-height:1.55;
+  margin-bottom:28px;
+}
+
+/* ── INPUTS ── */
+.gate-field{margin-bottom:12px;}
+.gate-label{
+  display:block;
+  font-size:11.5px;font-weight:600;
+  color:var(--text3);
+  text-transform:uppercase;letter-spacing:.07em;
+  margin-bottom:5px;
+}
+.gate-input{
+  width:100%;
+  background:var(--bg3);
+  border:1px solid var(--border2);
+  border-radius:8px;
+  padding:11px 14px;
+  font-size:14.5px;
+  color:var(--text);
+  outline:none;
+  font-family:'DM Sans',sans-serif;
+  transition:border-color .15s, background .15s;
+}
+.gate-input:focus{
+  border-color:var(--accent);
+  background:var(--bg4);
+  box-shadow:0 0 0 3px rgba(59,130,246,.1);
+}
+.gate-input-wrap{position:relative;}
+.gate-input-wrap .gate-input{padding-right:42px;}
+.gate-eye{
+  position:absolute;right:13px;top:50%;
+  transform:translateY(-50%);
+  cursor:pointer;color:var(--text4);
+  background:none;border:none;padding:4px;line-height:0;
+  transition:color .1s;
+}
+.gate-eye:hover{color:var(--text3);}
+
+/* ── BUTTON ── */
+.gate-submit{
+  width:100%;
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  padding:12px;
+  font-size:14.5px;font-weight:600;
+  cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  transition:background .15s, transform .1s, box-shadow .15s;
+  margin-top:8px;
+  letter-spacing:.01em;
+  box-shadow:0 2px 8px rgba(59,130,246,.3);
+}
+.gate-submit:hover{background:#2563eb;box-shadow:0 4px 14px rgba(59,130,246,.4);}
+.gate-submit:active{transform:scale(.98);}
+.gate-submit:disabled{opacity:.6;cursor:default;transform:none;}
+
+/* ── ERROR ── */
+.gate-err{
+  min-height:20px;
+  font-size:12.5px;
+  color:var(--red);
+  text-align:center;
+  margin-top:10px;
+  line-height:1.4;
+}
+
+/* ── FOOTER ── */
+.gate-foot{
+  text-align:center;
+  font-size:12px;
+  color:var(--text4);
+  margin-top:20px;
+}
+.gate-foot a{color:var(--text3);text-decoration:none;transition:color .1s;}
+.gate-foot a:hover{color:var(--text2);}
+
+/* ── SETUP STATE ── */
+.gate-setup{display:none;}
+.gate-setup-icon{
+  width:48px;height:48px;
+  background:rgba(245,158,11,.1);
+  border:1px solid rgba(245,158,11,.3);
+  border-radius:12px;
+  display:grid;place-items:center;
+  margin:0 auto 20px;
+}
+.gate-setup-icon svg{width:22px;height:22px;color:#f59e0b;}
+.gate-setup-title{
+  font-size:20px;font-weight:700;
+  color:var(--text);
+  letter-spacing:-.35px;
+  text-align:center;
+  margin-bottom:8px;
+}
+.gate-setup-body{
+  font-size:13.5px;color:var(--text3);
+  text-align:center;line-height:1.6;
+  margin-bottom:24px;
+}
+.gate-setup-steps{
+  background:var(--bg3);
+  border:1px solid var(--border2);
+  border-radius:10px;
+  padding:16px 18px;
+  margin-bottom:20px;
+  text-align:left;
+}
+.gate-setup-step{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:13px;color:var(--text2);line-height:1.5;
+  padding:5px 0;
+}
+.gate-setup-step+.gate-setup-step{border-top:1px solid var(--border);}
+.gate-step-num{
+  width:20px;height:20px;
+  background:var(--accent-dim);
+  border:1px solid var(--accent-border);
+  border-radius:50%;
+  display:grid;place-items:center;
+  font-size:10px;font-weight:700;
+  color:var(--accent2);
+  flex-shrink:0;margin-top:1px;
+}
+.gate-setup-btn{
+  width:100%;
+  background:var(--bg3);
+  border:1px solid var(--border2);
+  color:var(--text2);
+  border-radius:8px;
+  padding:12px;
+  font-size:14px;font-weight:600;
+  cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  transition:all .15s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.gate-setup-btn:hover{background:var(--bg4);border-color:var(--border3);color:var(--text);}
+
+/* ── TRUST ROW ── */
+.gate-trust{
+  display:flex;align-items:center;justify-content:center;
+  gap:16px;margin-top:18px;
+}
+.gate-trust-item{
+  display:flex;align-items:center;gap:5px;
+  font-size:11.5px;color:var(--text4);
+}
+.gate-trust-dot{
+  width:5px;height:5px;border-radius:50%;
+  background:var(--green);flex-shrink:0;
+}
+
+@keyframes gshake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 #app-shell{display:none;}
 </style>
 </head>
@@ -337,40 +522,90 @@ a{color:var(--text3);text-decoration:none;}
 
 <!-- ═══ ACCESS GATE ═══ -->
 <div id="gate">
-  <div class="gate-box">
-    <div class="gate-logo">
-      <div class="gate-logo-mark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+  <div class="gate-wrap">
+
+    <!-- ── LOGO MARK ── -->
+    <div class="gate-logomark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    </div>
+
+    <!-- ════ STATE 1: LOGIN (shown when Supabase is configured) ════ -->
+    <div id="gate-login-state">
+      <div class="gate-card">
+        <div class="gate-headline">Run your hiring system</div>
+        <div class="gate-subline">Sign in to access your pipeline,<br>candidates, and deals.</div>
+
+        <div class="gate-field">
+          <label class="gate-label" for="gate-email">Email</label>
+          <input class="gate-input" id="gate-email" type="email"
+            placeholder="you@company.com"
+            onkeydown="if(event.key==='Enter')document.getElementById('gate-input').focus()"
+            autocomplete="email"/>
+        </div>
+
+        <div class="gate-field">
+          <label class="gate-label" for="gate-input">Password</label>
+          <div class="gate-input-wrap">
+            <input class="gate-input" id="gate-input" type="password"
+              placeholder="••••••••••••"
+              onkeydown="if(event.key==='Enter')gateLogin()"
+              autocomplete="current-password"/>
+            <button class="gate-eye" onclick="toggleGateEye()" id="gate-eye-btn" title="Show password">
+              <svg id="gate-eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <button class="gate-submit" id="gate-btn" onclick="gateLogin()">Sign in to TalentBase</button>
+        <div class="gate-err" id="gate-err"></div>
       </div>
-      <div>
-        <div class="gate-logo-name">TalentBase</div>
-        <div class="gate-logo-by">by The Staffing Specialist</div>
+
+      <div class="gate-trust">
+        <div class="gate-trust-item"><div class="gate-trust-dot"></div>Supabase Auth</div>
+        <div class="gate-trust-item"><div class="gate-trust-dot"></div>Row-Level Security</div>
+        <div class="gate-trust-item"><div class="gate-trust-dot"></div>Encrypted</div>
+      </div>
+
+      <div class="gate-foot">
+        Need access? <a href="mailto:jonah@thestaffingspecialist.com">Contact Jonah</a>
       </div>
     </div>
-    <div class="gate-title">Sign in</div>
-    <div class="gate-sub">Enter your email and password to access TalentBase.</div>
-    <div class="gate-input-wrap" style="margin-bottom:8px;">
-      <input class="gate-input" id="gate-email" type="email" placeholder="you@email.com"
-        style="letter-spacing:normal;text-align:left;"
-        onkeydown="if(event.key==='Enter')document.getElementById('gate-input').focus()"
-        autocomplete="email"/>
+
+    <!-- ════ STATE 2: SETUP (shown when Supabase is NOT configured) ════ -->
+    <div id="gate-setup-state" class="gate-setup">
+      <div class="gate-card">
+        <div class="gate-setup-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="gate-setup-title">Setup Required</div>
+        <div class="gate-setup-body">TalentBase needs a database connection to run. This takes about 2 minutes.</div>
+
+        <div class="gate-setup-steps">
+          <div class="gate-setup-step">
+            <div class="gate-step-num">1</div>
+            <div>Go to <strong style="color:var(--text);">Settings → Database</strong></div>
+          </div>
+          <div class="gate-setup-step">
+            <div class="gate-step-num">2</div>
+            <div>Paste your <strong style="color:var(--text);">Supabase URL</strong> and <strong style="color:var(--text);">anon key</strong></div>
+          </div>
+          <div class="gate-setup-step">
+            <div class="gate-step-num">3</div>
+            <div>Click <strong style="color:var(--text);">Connect</strong> — then refresh this page</div>
+          </div>
+        </div>
+
+        <button class="gate-setup-btn" onclick="gateOpenSettings()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+          Open Settings
+        </button>
+      </div>
+
+      <div class="gate-foot" style="margin-top:16px;">
+        Need help? <a href="mailto:jonah@thestaffingspecialist.com">Contact Jonah</a>
+      </div>
     </div>
-    <div class="gate-input-wrap">
-      <input class="gate-input" id="gate-input" type="password" placeholder="Password"
-        onkeydown="if(event.key==='Enter')gateLogin()"
-        autocomplete="current-password"/>
-      <button class="gate-eye" onclick="toggleGateEye()" id="gate-eye-btn" title="Show/hide password">
-        <svg id="gate-eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-      </button>
-    </div>
-    <button class="gate-btn" id="gate-btn" onclick="gateLogin()" style="margin-top:12px;">Sign In →</button>
-    <div class="gate-err" id="gate-err"></div>
-    <div class="gate-footer">Need access? <a href="mailto:jonah@thestaffingspecialist.com">Contact Jonah</a></div>
-    <div id="gate-fallback" style="display:none;margin-top:14px;padding:10px 14px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:8px;font-size:11px;color:#93c5fd;line-height:1.6;">
-      <strong style="display:block;margin-bottom:2px;">Dev mode available</strong>
-      Supabase not configured — use <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px;">dev@local</code> / <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px;">dev</code> to open the app locally.<br>
-      Add Supabase credentials in Settings → Database to enable real auth.
-    </div>
+
   </div>
 </div>
 
@@ -1751,7 +1986,7 @@ function _gateSetLoading(loading) {
   var btn = document.getElementById('gate-btn');
   if (!btn) return;
   btn.disabled    = loading;
-  btn.textContent = loading ? 'Signing in…' : 'Sign In →';
+  btn.textContent = loading ? 'Signing in…' : 'Sign in to TalentBase';
 }
 function _gateSetError(msg) {
   var err = document.getElementById('gate-err');
@@ -1794,7 +2029,7 @@ async function gateLogin() {
   var email = ((document.getElementById('gate-email')||{}).value||'').trim();
   var pass  = ((document.getElementById('gate-input')||{}).value||'').trim();
 
-  if (!email || !pass) { _gateSetError('Email and password required.'); return; }
+  if (!email || !pass) { _gateSetError('Email and password are required.'); return; }
 
   _gateSetLoading(true);
   _gateSetError('');
@@ -1803,7 +2038,11 @@ async function gateLogin() {
   if (_sb) {
     var result = await sbSignIn(email, pass);
     if (result.error) {
-      _gateSetError(result.error.message || 'Sign in failed.');
+      // Strip technical Supabase prefixes for a cleaner message
+      var msg = (result.error.message || 'Sign in failed.')
+        .replace('Invalid login credentials', 'Incorrect email or password.')
+        .replace('Email not confirmed', 'Check your inbox — confirm your email first.');
+      _gateSetError(msg);
       _gateSetLoading(false);
       return;
     }
@@ -1812,16 +2051,16 @@ async function gateLogin() {
     return;
   }
 
-  // ── CASE 2: No Supabase — dev fallback ────────────────────
+  // ── CASE 2: No Supabase — dev fallback (silent, not exposed in UI) ──
   if (email === DEV_MODE_EMAIL && pass === DEV_MODE_PASS) {
     _setDevSession(email);
     _unlockApp('admin');
     return;
   }
 
-  // ── CASE 3: No Supabase, wrong credentials ─────────────────
-  _gateSetError('Supabase not configured. Use dev@local / dev to continue in dev mode.');
+  // ── CASE 3: No Supabase, not dev creds — show setup state ──
   _gateSetLoading(false);
+  _updateGateState(); // switches to setup panel
 }
 
 // ── CREATE USER ───────────────────────────────────────────────
@@ -1842,10 +2081,31 @@ function sbInit() {
   }
   _sbReady = true;
   _updateSbStatus();
+  _updateGateState();
+}
 
-  // Always show dev hint when no Supabase configured
-  var fb = document.getElementById('gate-fallback');
-  if (fb) fb.style.display = _sb ? 'none' : 'block';
+// Switch gate between login-state and setup-state based on SB config
+function _updateGateState() {
+  var loginState = document.getElementById('gate-login-state');
+  var setupState = document.getElementById('gate-setup-state');
+  if (!loginState || !setupState) return;
+  if (_sb) {
+    loginState.style.display = 'block';
+    setupState.style.display = 'none';
+  } else {
+    loginState.style.display = 'none';
+    setupState.style.display = 'block';
+  }
+}
+
+// Open settings from the setup screen (unlocks app in dev mode first)
+function gateOpenSettings() {
+  // Use dev session to get into the app so user can configure DB
+  _setDevSession('setup@local');
+  document.getElementById('gate').style.cssText = 'display:none!important';
+  document.getElementById('app-shell').style.cssText = 'display:flex!important';
+  try { loadData(); } catch(e) {}
+  try { nav('workspace'); setTimeout(function(){ switchWsTab('database'); }, 100); } catch(e) {}
 }
 
 function _updateSbStatus() {
@@ -2087,7 +2347,8 @@ async function sbSignOut() {
   var err = document.getElementById('gate-err');
   if (err) err.textContent = '';
   var btn = document.getElementById('gate-btn');
-  if (btn) { btn.disabled = false; btn.textContent = 'Sign In →'; }
+  if (btn) { btn.disabled = false; btn.textContent = 'Sign in to TalentBase'; }
+  _updateGateState(); // ensure correct state shown
 }
 
 async function sbRestoreSession() {
@@ -9197,6 +9458,7 @@ window.addEventListener('DOMContentLoaded', async function(){
 
   // Init Supabase first so sbRestoreSession can check credentials
   sbInit();
+  _updateGateState(); // show login or setup screen immediately
 
   // Try to restore a live Supabase session (handles page refresh)
   await sbRestoreSession();
@@ -11467,12 +11729,16 @@ function sbConnect(){
   var url = (document.getElementById('sb-url-input')||{}).value||'';
   var key = (document.getElementById('sb-key-input')||{}).value||'';
   url = url.trim(); key = key.trim();
-  if(!url||!key){ alert('Enter both Supabase URL and anon key.'); return; }
+  if(!url||!key){ wsToast('Enter both Supabase URL and anon key.'); return; }
   localStorage.setItem(SB_URL_KEY, url);
   localStorage.setItem(SB_KEY_KEY, key);
   sbInit();
   _updateSbStatusCard();
-  alert(_sb ? 'Supabase client initialized. Sign in below to start syncing.' : 'Connection failed — check URL and key.');
+  if(_sb){
+    wsToast('Connected — sign out and sign in with your Supabase account.');
+  } else {
+    wsToast('Connection failed — check your URL and anon key.');
+  }
 }
 
 function sbDisconnect(){
