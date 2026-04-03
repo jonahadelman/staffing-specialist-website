@@ -376,83 +376,100 @@ a{color:var(--text3);text-decoration:none;}
     </div>
   </div>
   <div class="nav">
-    <div class="nav-section-label">Workspace</div>
+
+    <!-- PRIMARY 4 -->
     <div class="ni on" onclick="nav('dashboard')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
       Dashboard
     </div>
     <div class="ni" onclick="nav('deals')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-      Deals
-      <span class="ni-badge" id="nb-deals">0</span>
+      Find Deals
+      <span class="ni-badge" id="nb-deals"></span>
     </div>
     <div class="ni" onclick="nav('candidates')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
-      Candidates
-      <span class="ni-badge" id="nb-cands">0</span>
+      Run Hiring
+      <span class="ni-badge" id="nb-cands"></span>
     </div>
     <div class="ni" onclick="nav('pipeline')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
       Pipeline
     </div>
-    <div class="ni" onclick="nav('jobs')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
-      Jobs
-      <span class="ni-badge" id="nb-jobs">0</span>
+
+    <!-- TOOLS EXPANDER -->
+    <div style="height:1px;background:var(--border2);margin:10px 0;"></div>
+    <div class="ni" id="ni-tools-toggle" onclick="toggleNavTools(this)" style="color:var(--text4);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      More
     </div>
-    <div class="ni" onclick="nav('match')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
-      AI Match
+
+    <!-- COLLAPSED TOOLS (hidden by default) -->
+    <div id="nav-tools-drawer" style="display:none;">
+      <div class="nav-section-label" style="padding-top:6px;">Hiring</div>
+      <div class="ni" onclick="nav('jobs')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+        Jobs
+        <span class="ni-badge" id="nb-jobs"></span>
+      </div>
+      <div class="ni" onclick="nav('match')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
+        AI Match
+      </div>
+      <div class="ni" onclick="nav('offer')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Offer Builder
+      </div>
+      <div class="ni" onclick="nav('scorecard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Scorecards
+      </div>
+      <div class="ni" onclick="nav('nlsearch')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M8 11h6M11 8v6"/></svg>
+        AI Sourcing
+      </div>
+      <div class="nav-section-label" style="padding-top:10px;">Content</div>
+      <div class="ni" onclick="nav('library')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        Doc Library
+      </div>
+      <div class="ni" id="ni-prompts" onclick="nav('prompts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Prompt Library
+      </div>
+      <div class="nav-section-label" style="padding-top:10px;">Reports</div>
+      <div class="ni" onclick="nav('campaigns')" style="color:var(--amber);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        Campaigns
+      </div>
+      <div class="ni" onclick="nav('analytics')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Analytics
+      </div>
+      <div class="ni" onclick="nav('headcount')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Headcount
+      </div>
+      <div class="nav-section-label" style="padding-top:10px;">System</div>
+      <div class="ni" onclick="nav('aitools')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        AI Tools
+      </div>
+      <div class="ni" onclick="nav('integrations')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+        Integrations
+      </div>
+      <div class="ni" onclick="nav('tutorial')" style="color:var(--teal);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Tutorial
+      </div>
     </div>
-    <div class="nav-section-label">Tools</div>
-    <div class="ni" onclick="nav('aitools')" style="color:var(--green);border-color:var(--green-border);background:var(--green-bg);font-weight:700;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1010 10A10 10 0 0012 2z"/><path d="M12 8v4l3 3"/></svg>
-      ⚡ AI Tools
-    </div>
-    <div class="ni" onclick="nav('nlsearch')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M8 11h6M11 8v6"/></svg>
-      AI Sourcing
-    </div>
-    <div class="ni" onclick="nav('scorecard')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-      Scorecards
-    </div>
-    <div class="ni" onclick="nav('offer')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      Offer Builder
-    </div>
-    <div class="ni" onclick="nav('library')" style="color:var(--accent2);border-color:var(--accent-border);background:var(--accent-dim);">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-      Doc Library
-    </div>
-    <div class="ni" onclick="nav('headcount')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-      Headcount
-    </div>
-    <div class="nav-section-label">Reports</div>
-    <div class="ni" onclick="nav('campaigns')" style="color:var(--amber);border-color:var(--amber-border);background:var(--amber-bg);">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-      Campaigns
-    </div>
-    <div class="ni" onclick="nav('analytics')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Analytics
-    </div>
-    <div class="ni" id="ni-prompts" onclick="nav('prompts')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-      Prompt Library
-    </div>
-    <div class="ni" onclick="nav('integrations')">
+
+    <!-- SETTINGS always visible at bottom -->
+    <div style="flex:1;"></div>
+    <div class="ni" onclick="nav('workspace')" id="ni-workspace">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07M8.46 8.46a5 5 0 000 7.07"/></svg>
-      Integrations
-    </div>
-    <div class="ni" onclick="nav('tutorial')" style="color:var(--teal);border-color:var(--teal-border);background:var(--teal-bg);">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      Tutorial
-    </div>
-    <div class="ni" onclick="nav('workspace')" id="ni-workspace" style="margin-top:4px;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07M8.46 8.46a5 5 0 000 7.07"/></svg>
-      Workspace Settings
+      Settings
     </div>
   </div>
   <div class="sidebar-bottom">
@@ -693,57 +710,38 @@ a{color:var(--text3);text-decoration:none;}
         <div class="pipeline-stages" id="dash-pipeline"></div>
       </div>
     </div>
-    <!-- LOWER ROW: Today's Actions + Top Candidates + Open Jobs -->
-    <div style="display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:12px;">
-      <!-- TODAY / BLOCKED / HOT -->
-      <div class="panel" id="dash-action-panel">
-        <div class="panel-header"><div class="panel-title">Action Queue</div></div>
-        <div id="dash-action-content"></div>
+    <!-- LOWER: Needs Attention + Top Deals (both hide when empty) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div id="dash-attention-panel" style="display:none;">
+        <div class="panel" style="border-left:3px solid var(--red);">
+          <div class="panel-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="panel-title">Needs Attention</div>
+              <span id="dash-attention-count" style="font-size:10px;font-weight:700;color:var(--red);background:var(--red-bg);border:1px solid var(--red-border);padding:1px 7px;border-radius:10px;"></span>
+            </div>
+          </div>
+          <div id="dash-attention-list"></div>
+        </div>
       </div>
-      <!-- TOP CANDIDATES -->
+      <div id="dash-top-deals-panel" style="display:none;">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Top Deals</div>
+            <button class="btn btn-ghost btn-sm" onclick="nav('deals')">View All →</button>
+          </div>
+          <div id="dash-top-deals"></div>
+        </div>
+      </div>
+    </div>
+    <!-- SECONDARY: Top Candidates + Open Jobs (hidden when both empty) -->
+    <div id="dash-secondary-row" style="display:none;grid-template-columns:1.4fr 1fr;gap:12px;margin-top:12px;">
       <div class="panel">
         <div class="panel-header"><div class="panel-title">Top Candidates</div><button class="btn btn-ghost btn-sm" onclick="nav('candidates')">All →</button></div>
         <div class="recent-list" id="dash-top-cands"></div>
       </div>
-      <!-- OPEN JOBS -->
       <div class="panel">
-        <div class="panel-header"><div class="panel-title">Open Positions</div><button class="btn btn-ghost btn-sm" onclick="openAddJob()">+ Add</button></div>
+        <div class="panel-header"><div class="panel-title">Open Roles</div><button class="btn btn-ghost btn-sm" onclick="openAddJob()">+ Add</button></div>
         <div id="dash-jobs"></div>
-      </div>
-    </div>
-    <!-- NEEDS ATTENTION — hot leads + at-risk deals + stale follow-ups -->
-    <div id="dash-attention-panel" style="display:none;margin-top:8px;">
-      <div class="panel" style="border-left:3px solid var(--red);">
-        <div class="panel-header">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div class="panel-title">Needs Attention</div>
-            <span id="dash-attention-count" style="font-size:10px;font-weight:700;color:var(--red);background:var(--red-bg);border:1px solid var(--red-border);padding:1px 7px;border-radius:10px;"></span>
-          </div>
-        </div>
-        <div id="dash-attention-list"></div>
-      </div>
-    </div>
-    <!-- TOP DEALS TO CLOSE — score-sorted, always visible when deals exist -->
-    <div id="dash-top-deals-panel" style="display:none;margin-top:8px;">
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">Top Deals to Close</div>
-          <button class="btn btn-ghost btn-sm" onclick="nav('deals')">View All →</button>
-        </div>
-        <div id="dash-top-deals"></div>
-      </div>
-    </div>
-    <!-- HAPPY HUNTING DEALS — shown when HH has pushed jobs -->
-    <div id="dash-hh-panel" style="display:none;margin-top:8px;">
-      <div class="panel">
-        <div class="panel-header">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div class="panel-title">From Happy Hunting</div>
-            <span style="font-family:'DM Mono',monospace;font-size:10px;color:#ff4d00;background:rgba(255,77,0,.1);border:1px solid rgba(255,77,0,.25);padding:2px 8px;border-radius:3px;">AUTO PIPELINE</span>
-          </div>
-          <a href="HappyHunting.html#decode" target="_blank" style="font-size:11px;color:#ff4d00;text-decoration:none;font-weight:600;">Decode more →</a>
-        </div>
-        <div id="dash-hh-deals"></div>
       </div>
     </div>
   </div>
@@ -2639,6 +2637,14 @@ function seedJobs(){
 // ═══════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════
+function toggleNavTools(btn){
+  var drawer = document.getElementById('nav-tools-drawer');
+  if(!drawer) return;
+  var open = drawer.style.display !== 'none';
+  drawer.style.display = open ? 'none' : 'block';
+  btn.style.color = open ? 'var(--text4)' : 'var(--text2)';
+}
+
 function nav(v){
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('on'));
   const view=document.getElementById('v-'+v);
@@ -2860,6 +2866,12 @@ function _renderCandDetail(c){
       </button>
       <button class="btn btn-ghost btn-sm" onclick="swDTab(document.querySelector('.dtab:last-child'),'dt-submit')" style="color:var(--text3);border-color:var(--accent-border);">✉ Submit</button>
         <button class="btn btn-red btn-sm btn-icon" onclick="delCand('${c.id}')">✕</button>
+      </div>
+      <!-- AI Tools — contextual, inline -->
+      <div style="display:flex;gap:4px;width:100%;padding-top:2px;border-top:1px solid var(--border2);margin-top:2px;">
+        <button class="btn btn-ghost btn-xs" onclick="openAITool('outreach')" style="color:var(--text4);font-size:11px;" title="Write outreach for this candidate">✉ Write Outreach</button>
+        <button class="btn btn-ghost btn-xs" onclick="openAITool('resume')" style="color:var(--text4);font-size:11px;" title="Rewrite resume for a role">✏ Rewrite Resume</button>
+        <button class="btn btn-ghost btn-xs" onclick="openAITool('submission')" style="color:var(--text4);font-size:11px;" title="Write submission email">📋 Submission Email</button>
       </div>
     </div>
     <div class="dtabs">
@@ -4468,6 +4480,13 @@ function selJob(id){
         <button class="btn btn-primary btn-sm" onclick="nav('match');setTimeout(()=>runMatch('${j.id}'),100)">AI Match ↗</button>
       </div>
     </div>
+    <!-- Contextual AI tools for this job -->
+    <div style="display:flex;gap:4px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border2);">
+      <button class="btn btn-ghost btn-xs" onclick="nav('library');setTimeout(()=>setLibCat('jd',null),200)" style="color:var(--text4);font-size:11px;">📄 Write JD</button>
+      <button class="btn btn-ghost btn-xs" onclick="openAITool('outreach')" style="color:var(--text4);font-size:11px;">✉ Outreach</button>
+      <button class="btn btn-ghost btn-xs" onclick="openAITool('interview')" style="color:var(--text4);font-size:11px;">🎤 Interview Qs</button>
+      <button class="btn btn-ghost btn-xs" onclick="openAITool('pitch')" style="color:var(--text4);font-size:11px;">🎯 Client Pitch</button>
+    </div>
 
     ${j.source==='Happy Hunting'&&j.hiringManagers&&j.hiringManagers.length?`
     <div style="background:var(--bg3);border:1px solid var(--border3);border-left:3px solid #ff4d00;border-radius:var(--r-sm);padding:14px 16px;margin-bottom:14px;">
@@ -5519,13 +5538,15 @@ function runAutomation(){
 }
 
 function renderDash(){
-  const total=cands.length;
-  const hired=cands.filter(c=>c.status==='Hired').length;
-  const interviewing=cands.filter(c=>c.status==='Interviewing').length;
-  const openJobs=jobs.filter(j=>j.status==='Open').length;
-  const offer=cands.filter(c=>c.status==='Offer').length;
+  const total        = cands.length;
+  const hired        = cands.filter(c=>c.status==='Hired').length;
+  const interviewing = cands.filter(c=>c.status==='Interviewing').length;
+  const openJobs     = jobs.filter(j=>j.status==='Open').length;
+  const offer        = cands.filter(c=>c.status==='Offer').length;
+  const rev          = getRevenueStats();
+  const hasRevData   = rev.pipelineValue>0||rev.closedRevenue>0;
 
-  // ── RUN AUTOMATION ENGINE ──────────────────────────────────
+  // ── AUTOMATION ENGINE ──────────────────────────────────────
   var attnItems = runAutomation();
   var attnPanel = document.getElementById('dash-attention-panel');
   var attnList  = document.getElementById('dash-attention-list');
@@ -5533,19 +5554,19 @@ function renderDash(){
   if(attnPanel && attnList){
     if(attnItems.length){
       attnPanel.style.display = 'block';
-      if(attnCount) attnCount.textContent = attnItems.length + ' item'+(attnItems.length>1?'s':'');
+      if(attnCount) attnCount.textContent = attnItems.length+(attnItems.length>1?' items':' item');
       var urgColors = {high:'var(--red)',medium:'var(--amber)',low:'var(--text4)'};
       var urgBgs    = {high:'rgba(239,68,68,.07)',medium:'rgba(245,158,11,.07)',low:'var(--bg3)'};
       attnList.innerHTML = attnItems.map(function(item){
         var col = urgColors[item.urgency]||'var(--text4)';
         var bg  = urgBgs[item.urgency]||'var(--bg3)';
-        return '<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border2);">' +
-          '<span style="font-size:16px;flex-shrink:0;width:22px;text-align:center;">'+item.icon+'</span>' +
-          '<div style="flex:1;min-width:0;">' +
-            '<div style="font-size:13px;font-weight:700;color:var(--text);">'+esc(item.label)+'</div>' +
-            '<div style="font-size:11px;color:'+col+';font-weight:600;margin-top:2px;">'+esc(item.subtext)+'</div>' +
-          '</div>' +
-          '<button onclick="('+item.action.toString()+'()); return false;" style="background:'+bg+';border:1px solid '+col+';color:'+col+';font-size:11px;font-weight:700;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:inherit;white-space:nowrap;">'+esc(item.actionLabel)+'</button>' +
+        return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border2);">'+
+          '<span style="font-size:15px;flex-shrink:0;width:20px;text-align:center;">'+item.icon+'</span>'+
+          '<div style="flex:1;min-width:0;">'+
+            '<div style="font-size:13px;font-weight:700;color:var(--text);">'+esc(item.label)+'</div>'+
+            '<div style="font-size:11px;color:'+col+';margin-top:2px;">'+esc(item.subtext)+'</div>'+
+          '</div>'+
+          '<button onclick="('+item.action.toString()+'());return false;" style="background:'+bg+';border:1px solid '+col+';color:'+col+';font-size:11px;font-weight:700;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:inherit;white-space:nowrap;">'+esc(item.actionLabel)+'</button>'+
         '</div>';
       }).join('');
     } else {
@@ -5553,19 +5574,24 @@ function renderDash(){
     }
   }
 
+  // ── STAT ROW — hide entirely when no data ─────────────────
+  var statsEl = document.getElementById('dash-stats');
+  if(statsEl){
+    if(total===0 && openJobs===0){
+      statsEl.style.display = 'none';
+    } else {
+      statsEl.style.display = '';
+      var stats = [];
+      if(total>0)        stats.push(`<div class="stat"><div class="stat-label">Pipeline</div><div class="stat-value">${total}</div><div class="stat-delta"><span class="up">Active candidates</span></div></div>`);
+      if(openJobs>0)     stats.push(`<div class="stat"><div class="stat-label">Open Jobs</div><div class="stat-value">${openJobs}</div><div class="stat-delta">${jobs.length} total reqs</div></div>`);
+      if(interviewing>0) stats.push(`<div class="stat"><div class="stat-label">Interviewing</div><div class="stat-value">${interviewing}</div><div class="stat-delta">${Math.round(interviewing/Math.max(total,1)*100)}% of pipeline</div></div>`);
+      if(hired>0)        stats.push(`<div class="stat"><div class="stat-label">Hired</div><div class="stat-value">${hired}</div><div class="stat-delta"><span class="up">${Math.round(hired/Math.max(total,1)*100)}% conversion</span></div></div>`);
+      statsEl.innerHTML = stats.join('');
+    }
+  }
 
-  const rev=getRevenueStats();
-  const hasRevData=rev.pipelineValue>0||rev.closedRevenue>0;
-
-  // STAT BLOCKS — 4 core metrics + revenue row if fee data exists
-  document.getElementById('dash-stats').innerHTML=`
-    <div class="stat"><div class="stat-label">Pipeline</div><div class="stat-value">${total}</div><div class="stat-delta"><span class="up">Active candidates</span></div></div>
-    <div class="stat"><div class="stat-label">Open Jobs</div><div class="stat-value">${openJobs}</div><div class="stat-delta">${jobs.length} total reqs</div></div>
-    <div class="stat"><div class="stat-label">Interviewing</div><div class="stat-value">${interviewing}</div><div class="stat-delta">${Math.round(interviewing/Math.max(total,1)*100)}% of pipeline</div></div>
-    <div class="stat"><div class="stat-label">Hired</div><div class="stat-value">${hired}</div><div class="stat-delta"><span class="up">${Math.round(hired/Math.max(total,1)*100)}% conversion</span></div></div>`;
-
-  // REVENUE ROW — only shown when fee data has been entered on jobs
-  const revRow=document.getElementById('dash-revenue-row');
+  // ── REVENUE ROW — only when fee data exists ───────────────
+  var revRow = document.getElementById('dash-revenue-row');
   if(revRow){
     if(hasRevData){
       revRow.style.display='grid';
@@ -5579,169 +5605,84 @@ function renderDash(){
     }
   }
 
-  // PIPELINE — dominant, full-width, 5 stages with blue accent
-  const PIPE_STAGES=['New','Screening','Interviewing','Offer','Hired'];
-  const pipeColors={New:'var(--blue)',Screening:'var(--purple)',Interviewing:'var(--amber)',Offer:'var(--teal)',Hired:'var(--green)'};
-  const stageCounts=PIPE_STAGES.map(s=>cands.filter(c=>c.status===s).length);
-  const maxCount=Math.max(...stageCounts,1);
-  document.getElementById('dash-pipeline').innerHTML=PIPE_STAGES.map((s,i)=>{
-    const n=stageCounts[i];const col=pipeColors[s];
-    return`<div class="pipe-col" onclick="nav('pipeline')"><div class="pipe-col-name">${s}</div><div class="pipe-col-num" style="color:${col};">${n}</div><div class="pipe-col-bar"><div class="pipe-col-fill" style="background:${col};width:${Math.round(n/maxCount*100)}%;"></div></div></div>`;
-  }).join('');
-
-  // ACTION PANEL — Today / Blocked / Hot, driven by Next Action Engine
-  // Sort all active candidates by urgency: red > amber > blue
-  const urgencyRank=(c)=>{const u=_naUrgency(c);return u==='var(--red)'?0:u==='var(--amber)'?1:2;};
-  const activeCands=cands.filter(c=>!['Hired','Rejected'].includes(c.status));
-  const todayCands=activeCands.slice().sort((a,b)=>urgencyRank(a)-urgencyRank(b)).slice(0,3);
-  const blockedCands=cands.filter(c=>c.status==='Offer').slice(0,2);
-  const hotCands=activeCands.filter(c=>{
-    const last=(c.activity&&c.activity.length)?Math.max(...c.activity.map(a=>a.ts)):c.created;
-    return (Date.now()-last)<(24*60*60*1000*1); // active in last 24h
-  }).slice(0,2);
-
-  let actionHtml='';
-
-  // TODAY — sorted by urgency
-  actionHtml+=`<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Today</div>`;
-  if(todayCands.length){
-    actionHtml+=todayCands.map(c=>{
-      const col=_naUrgency(c);
-      return`<div class="recent-item" style="margin-bottom:4px;" onclick="nav('candidates');setTimeout(()=>selCand('${c.id}'),100)">
-        <div style="flex:1;min-width:0;">
-          <div class="recent-name">${esc(c.first)} ${esc(c.last)}</div>
-          <div style="font-size:11px;color:${col};font-weight:500;margin-top:1px;display:flex;align-items:center;gap:3px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="2.5" style="width:8px;height:8px;flex-shrink:0;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            ${getNextAction(c)}
-          </div>
-        </div>
-        ${badgeHtml(c.status)}
-      </div>`;
+  // ── PIPELINE SNAPSHOT — hide when no candidates ───────────
+  var pipeRow = document.querySelector('.pipeline-full-row');
+  if(pipeRow) pipeRow.style.display = total>0 ? '' : 'none';
+  if(total>0){
+    const PIPE_STAGES=['New','Screening','Interviewing','Offer','Hired'];
+    const pipeColors={New:'var(--blue)',Screening:'var(--purple)',Interviewing:'var(--amber)',Offer:'var(--teal)',Hired:'var(--green)'};
+    const stageCounts=PIPE_STAGES.map(s=>cands.filter(c=>c.status===s).length);
+    const maxCount=Math.max(...stageCounts,1);
+    document.getElementById('dash-pipeline').innerHTML=PIPE_STAGES.map((s,i)=>{
+      const n=stageCounts[i]; const col=pipeColors[s];
+      return`<div class="pipe-col" onclick="nav('pipeline')"><div class="pipe-col-name">${s}</div><div class="pipe-col-num" style="color:${col};">${n}</div><div class="pipe-col-bar"><div class="pipe-col-fill" style="background:${col};width:${Math.round(n/maxCount*100)}%;"></div></div></div>`;
     }).join('');
-  } else {
-    actionHtml+=`<div style="font-size:12px;color:var(--text4);padding:6px 0;">No active candidates</div>`;
   }
 
-  // BLOCKED — offer stage candidates
-  actionHtml+=`<div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.1em;margin:12px 0 6px;">Blocked</div>`;
-  if(blockedCands.length){
-    actionHtml+=blockedCands.map(c=>`<div class="recent-item" style="margin-bottom:4px;border-color:var(--red-border);" onclick="nav('candidates');setTimeout(()=>selCand('${c.id}'),100)">
-      <div style="flex:1;min-width:0;"><div class="recent-name">${esc(c.first)} ${esc(c.last)}</div>
-      <div style="font-size:11px;color:var(--red);font-weight:500;margin-top:1px;">${getNextAction(c)}</div></div>
-      <span style="font-size:11px;font-weight:600;color:var(--red);">Offer</span>
-    </div>`).join('');
-  } else {
-    actionHtml+=`<div style="font-size:12px;color:var(--text4);padding:6px 0;">Nothing blocked</div>`;
-  }
-
-  // HOT — recently active candidates
-  actionHtml+=`<div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.1em;margin:12px 0 6px;">Hot</div>`;
-  if(hotCands.length){
-    actionHtml+=hotCands.map(c=>`<div class="recent-item" style="margin-bottom:4px;border-color:var(--green-border);" onclick="nav('candidates');setTimeout(()=>selCand('${c.id}'),100)">
-      <div style="flex:1;min-width:0;"><div class="recent-name">${esc(c.first)} ${esc(c.last)}</div>
-      <div style="font-size:11px;color:var(--green);font-weight:500;margin-top:1px;">${getNextAction(c)}</div></div>
-      ${badgeHtml(c.status)}
-    </div>`).join('');
-  } else {
-    actionHtml+=`<div style="font-size:12px;color:var(--text4);padding:6px 0;">No recent activity</div>`;
-  }
-  document.getElementById('dash-action-content').innerHTML=actionHtml;
-
-  // TOP CANDIDATES — name + role + match score + next action
-  const topCands=cands.filter(c=>['Interviewing','Offer','Screening'].includes(c.status)).slice(0,6);
-  document.getElementById('dash-top-cands').innerHTML=topCands.map(c=>{
-    const[bg,fg]=avColor(c);
-    const matchScore=c.matchScore?`<span style="font-size:11px;font-weight:700;font-family:'DM Mono',monospace;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);padding:2px 6px;border-radius:4px;">${c.matchScore}%</span>`:'';
-    return`<div class="recent-item" onclick="nav('candidates');setTimeout(()=>selCand('${c.id}'),100)">
-      <div class="av" style="width:32px;height:32px;font-size:12px;background:${bg};color:${fg};">${ini(c)}</div>
-      <div class="recent-info">
-        <div class="recent-name">${esc(c.first)} ${esc(c.last)}</div>
-        <div class="recent-meta">${esc(c.title||'')}${c.company?' · '+esc(c.company):''}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">${matchScore}${badgeHtml(c.status)}</div>
-    </div>`;
-  }).join('')||'<div style="font-size:13px;color:var(--text4);padding:8px 0;">Add candidates to see them here.</div>';
-
-  // OPEN JOBS — with fee/probability if set
-  document.getElementById('dash-jobs').innerHTML=jobs.filter(j=>j.status==='Open').map(j=>`
-    <div class="recent-item" style="margin-bottom:4px;" onclick="nav('jobs');setTimeout(()=>selJob('${j.id}'),100)">
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:600;color:var(--text);">${esc(j.title)}${j.source==='Happy Hunting'?` <span style="font-family:'DM Mono',monospace;font-size:10px;color:#ff4d00;">HH</span>`:''}</div>
-        <div style="font-size:12px;color:var(--text3);">Req #${esc(j.reqNum||'—')} · ${esc(j.location||'')}${j.expectedFee?` · <span style="color:var(--teal);">${fmtMoney(j.expectedFee)}${j.probability?' @ '+j.probability+'%':''}</span>`:''}</div>
-      </div>
-      <span style="font-size:11px;font-weight:600;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);padding:3px 8px;border-radius:10px;">Open</span>
-    </div>`).join('')||'<div style="font-size:13px;color:var(--text4);">No open jobs.</div>';
-
-  // HAPPY HUNTING DEALS PANEL
-  // ── TOP DEALS TO CLOSE ────────────────────────────────────
+  // ── TOP DEALS — hide when no open deals ──────────────────
   var topDealsPanel = document.getElementById('dash-top-deals-panel');
   var topDealsEl    = document.getElementById('dash-top-deals');
   var openDeals = deals.filter(function(d){ return d.stage!=='Closed'; });
   if(openDeals.length && topDealsPanel && topDealsEl){
-    // Score and sort
     var scored = openDeals.map(function(d){
       return {d:d, score:getDealScore(d)};
     }).sort(function(a,b){ return b.score-a.score; }).slice(0,5);
-
     topDealsPanel.style.display = 'block';
     topDealsEl.innerHTML = scored.map(function(x){
-      var d = x.d;
-      var score    = x.score;
-      var priority = getDealPriority(score);
-      var na       = _dealNextAction(d);
-      var fee      = d.fee||d.estimatedFee||0;
-      var naColors = {high:'var(--red)',medium:'var(--amber)',low:'var(--text4)'};
-      var naCol    = naColors[na.urgency]||'var(--text4)';
-      var sc       = DEAL_STAGE_COLORS[d.stage]||DEAL_STAGE_COLORS.Prospect;
-      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border2);cursor:pointer;" onclick="nav(\'deals\');setTimeout(()=>openDealDetail(\''+d.id+'\'),200)" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'\'">' +
-        // Score ring
-        '<div style="width:36px;height:36px;border-radius:50%;background:conic-gradient('+priority.color+' '+score+'%,var(--border2) 0);display:grid;place-items:center;flex-shrink:0;">' +
-          '<div style="width:26px;height:26px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;">' +
-            '<span style="font-size:9px;font-weight:800;color:'+priority.color+';">'+score+'</span>' +
-          '</div>' +
-        '</div>' +
-        // Info
-        '<div style="flex:1;min-width:0;">' +
-          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">' +
-            '<span style="font-size:13px;font-weight:700;color:var(--text);">'+esc(d.company||'—')+'</span>' +
-            '<span style="font-size:10px;font-weight:700;color:'+sc.text+';background:'+sc.bg+';border:1px solid '+sc.border+';padding:1px 6px;border-radius:3px;">'+esc(d.stage)+'</span>' +
-            '<span style="font-size:10px;font-weight:700;color:'+priority.color+';background:'+priority.bg+';border:1px solid '+priority.border+';padding:1px 6px;border-radius:3px;">'+priority.label+'</span>' +
-          '</div>' +
-          '<div style="font-size:11px;color:'+naCol+';font-weight:600;">→ '+na.text+'</div>' +
-        '</div>' +
-        // Fee
-        (fee?'<div style="font-family:\'DM Mono\',monospace;font-size:13px;font-weight:700;color:var(--teal);flex-shrink:0;">'+fmtMoney(fee)+'</div>':'') +
+      var d=x.d, score=x.score;
+      var priority=getDealPriority(score);
+      var na=_dealNextAction(d);
+      var fee=d.fee||d.estimatedFee||0;
+      var naCol={high:'var(--red)',medium:'var(--amber)',low:'var(--text4)'}[na.urgency]||'var(--text4)';
+      var sc=DEAL_STAGE_COLORS[d.stage]||DEAL_STAGE_COLORS.Prospect;
+      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border2);cursor:pointer;" onclick="nav(\'deals\');setTimeout(()=>openDealDetail(\''+d.id+'\'),200)" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'\'">'+
+        '<div style="width:34px;height:34px;border-radius:50%;background:conic-gradient('+priority.color+' '+score+'%,var(--border2) 0);display:grid;place-items:center;flex-shrink:0;">'+
+          '<div style="width:24px;height:24px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;">'+
+            '<span style="font-size:9px;font-weight:800;color:'+priority.color+';">'+score+'</span>'+
+          '</div>'+
+        '</div>'+
+        '<div style="flex:1;min-width:0;">'+
+          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">'+
+            '<span style="font-size:13px;font-weight:700;color:var(--text);">'+esc(d.company||'—')+'</span>'+
+            '<span style="font-size:10px;font-weight:700;color:'+sc.text+';background:'+sc.bg+';border:1px solid '+sc.border+';padding:1px 6px;border-radius:3px;">'+esc(d.stage)+'</span>'+
+          '</div>'+
+          '<div style="font-size:11px;color:'+naCol+';font-weight:600;">'+esc(na.text)+'</div>'+
+        '</div>'+
+        (fee?'<div style="font-family:\'DM Mono\',monospace;font-size:13px;font-weight:700;color:var(--teal);flex-shrink:0;">'+fmtMoney(fee)+'</div>':'')+
       '</div>';
     }).join('');
   } else if(topDealsPanel){
     topDealsPanel.style.display = 'none';
   }
 
-  const hhPanel=document.getElementById('dash-hh-panel');
-  const hhDealsEl=document.getElementById('dash-hh-deals');
-  const hhJobs=jobs.filter(j=>j.source==='Happy Hunting').slice(0,6);
-  if(hhJobs.length&&hhPanel&&hhDealsEl){
-    hhPanel.style.display='block';
-    hhDealsEl.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;">
-      ${hhJobs.map(j=>{
-        const matchedCands=cands.filter(c=>c.role===j.title||(j.reqNum&&(c.role||'').includes(j.reqNum))).length;
-        const na=j.hiringManagers&&j.hiringManagers.length?j.hiringManagers[0]:{};
-        return`<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:12px 14px;cursor:pointer;transition:border-color .1s;" onclick="nav('jobs');setTimeout(()=>selJob('${j.id}'),100)" onmouseover="this.style.borderColor='rgba(255,77,0,.4)'" onmouseout="this.style.borderColor='var(--border2)'">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;">
-            <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.3;">${esc(j.title)}</div>
-            ${j.expectedFee?`<span style="font-family:'DM Mono',monospace;font-size:12px;color:#ff4d00;font-weight:700;flex-shrink:0;">${fmtMoney(j.expectedFee)}</span>`:''}
-          </div>
-          <div style="font-size:12px;color:var(--text3);margin-bottom:6px;">${esc(j.company||'')}${j.location?' · '+esc(j.location):''}</div>
-          ${na.title?`<div style="font-size:11px;color:var(--text4);margin-bottom:4px;">Target: ${esc(na.title)}</div>`:''}
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
-            <span style="font-size:11px;color:${matchedCands?'var(--green)':'var(--text4)'};">${matchedCands?matchedCands+' candidate match'+(matchedCands>1?'es':''):'No matches yet'}</span>
-            <span style="font-size:10px;color:var(--text4);font-family:'DM Mono',monospace;">${j.probability||70}% prob</span>
-          </div>
+  // ── SECONDARY ROW (Top Candidates + Open Roles) ───────────
+  // Only shown when there's meaningful data
+  const topCands = cands.filter(c=>['Interviewing','Offer','Screening'].includes(c.status)).slice(0,5);
+  const openJobsList = jobs.filter(j=>j.status==='Open');
+  var secRow = document.getElementById('dash-secondary-row');
+  if(secRow){
+    if(topCands.length>0 || openJobsList.length>0){
+      secRow.style.display = 'grid';
+      document.getElementById('dash-top-cands').innerHTML = topCands.map(c=>{
+        const[bg,fg]=avColor(c);
+        const ms=c.matchScore?`<span style="font-size:11px;font-weight:700;font-family:'DM Mono',monospace;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);padding:2px 6px;border-radius:4px;">${c.matchScore}%</span>`:'';
+        return`<div class="recent-item" onclick="nav('candidates');setTimeout(()=>selCand('${c.id}'),100)">
+          <div class="av" style="width:32px;height:32px;font-size:12px;background:${bg};color:${fg};">${ini(c)}</div>
+          <div class="recent-info"><div class="recent-name">${esc(c.first)} ${esc(c.last)}</div><div class="recent-meta">${esc(c.title||'')}${c.company?' · '+esc(c.company):''}</div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">${ms}${badgeHtml(c.status)}</div>
         </div>`;
-      }).join('')}
-    </div>`;
-  } else if(hhPanel) {
-    hhPanel.style.display='none';
+      }).join('')||'<div style="font-size:13px;color:var(--text4);padding:8px 0;">No active candidates.</div>';
+      document.getElementById('dash-jobs').innerHTML = openJobsList.map(j=>`
+        <div class="recent-item" style="margin-bottom:4px;" onclick="nav('jobs');setTimeout(()=>selJob('${j.id}'),100)">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;color:var(--text);">${esc(j.title)}</div>
+            <div style="font-size:12px;color:var(--text3);">${esc(j.company||'')}${j.expectedFee?` · <span style="color:var(--teal);">${fmtMoney(j.expectedFee)}</span>`:''}</div>
+          </div>
+          <span style="font-size:11px;font-weight:600;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);padding:3px 8px;border-radius:10px;">Open</span>
+        </div>`).join('')||'<div style="font-size:13px;color:var(--text4);">No open jobs.</div>';
+    } else {
+      secRow.style.display = 'none';
+    }
   }
 }
 
