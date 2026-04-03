@@ -440,65 +440,53 @@ a{color:var(--text3);text-decoration:none;}
 
 /* ── SETUP STATE ── */
 .gate-setup{display:none;}
-.gate-setup-icon{
-  width:48px;height:48px;
-  background:rgba(245,158,11,.1);
-  border:1px solid rgba(245,158,11,.3);
-  border-radius:12px;
+
+/* Connect form inside setup state */
+.gate-connect-icon{
+  width:52px;height:52px;
+  background:linear-gradient(135deg,rgba(59,130,246,.2) 0%,rgba(99,102,241,.2) 100%);
+  border:1px solid rgba(59,130,246,.3);
+  border-radius:14px;
   display:grid;place-items:center;
   margin:0 auto 20px;
 }
-.gate-setup-icon svg{width:22px;height:22px;color:#f59e0b;}
-.gate-setup-title{
-  font-size:20px;font-weight:700;
-  color:var(--text);
-  letter-spacing:-.35px;
-  text-align:center;
-  margin-bottom:8px;
-}
-.gate-setup-body{
-  font-size:13.5px;color:var(--text3);
-  text-align:center;line-height:1.6;
-  margin-bottom:24px;
-}
-.gate-setup-steps{
+.gate-connect-icon svg{width:24px;height:24px;color:var(--accent2);}
+.gate-connect-hint{
+  display:flex;align-items:flex-start;gap:8px;
   background:var(--bg3);
   border:1px solid var(--border2);
-  border-radius:10px;
-  padding:16px 18px;
+  border-radius:8px;
+  padding:12px 14px;
   margin-bottom:20px;
-  text-align:left;
+  font-size:12.5px;
+  color:var(--text3);
+  line-height:1.5;
 }
-.gate-setup-step{
-  display:flex;align-items:flex-start;gap:10px;
-  font-size:13px;color:var(--text2);line-height:1.5;
-  padding:5px 0;
+.gate-connect-hint svg{width:14px;height:14px;color:var(--accent2);flex-shrink:0;margin-top:1px;}
+.gate-connect-hint a{color:var(--accent2);text-decoration:none;}
+.gate-connect-hint a:hover{color:var(--text);}
+.gate-connect-success{
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  padding:8px 0 4px;
+  gap:10px;
 }
-.gate-setup-step+.gate-setup-step{border-top:1px solid var(--border);}
-.gate-step-num{
-  width:20px;height:20px;
-  background:var(--accent-dim);
-  border:1px solid var(--accent-border);
+.gate-connect-success-icon{
+  width:48px;height:48px;
+  background:rgba(34,197,94,.1);
+  border:1px solid rgba(34,197,94,.3);
   border-radius:50%;
   display:grid;place-items:center;
-  font-size:10px;font-weight:700;
-  color:var(--accent2);
-  flex-shrink:0;margin-top:1px;
 }
-.gate-setup-btn{
-  width:100%;
-  background:var(--bg3);
-  border:1px solid var(--border2);
-  color:var(--text2);
-  border-radius:8px;
-  padding:12px;
-  font-size:14px;font-weight:600;
-  cursor:pointer;
-  font-family:'DM Sans',sans-serif;
-  transition:all .15s;
-  display:flex;align-items:center;justify-content:center;gap:8px;
+.gate-connect-success-icon svg{width:22px;height:22px;color:var(--green);}
+.gate-connect-success-text{
+  font-size:15px;font-weight:600;color:var(--text);
+  text-align:center;
 }
-.gate-setup-btn:hover{background:var(--bg4);border-color:var(--border3);color:var(--text);}
+.gate-connect-success-sub{
+  font-size:13px;color:var(--text3);text-align:center;
+}
 
 /* ── TRUST ROW ── */
 .gate-trust{
@@ -515,6 +503,7 @@ a{color:var(--text3);text-decoration:none;}
 }
 
 @keyframes gshake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 #app-shell{display:none;}
 </style>
 </head>
@@ -571,38 +560,63 @@ a{color:var(--text3);text-decoration:none;}
       </div>
     </div>
 
-    <!-- ════ STATE 2: SETUP (shown when Supabase is NOT configured) ════ -->
+    <!-- ════ STATE 2: SETUP (inline connect form — no navigation required) ════ -->
     <div id="gate-setup-state" class="gate-setup">
       <div class="gate-card">
-        <div class="gate-setup-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        </div>
-        <div class="gate-setup-title">Setup Required</div>
-        <div class="gate-setup-body">TalentBase needs a database connection to run. This takes about 2 minutes.</div>
 
-        <div class="gate-setup-steps">
-          <div class="gate-setup-step">
-            <div class="gate-step-num">1</div>
-            <div>Go to <strong style="color:var(--text);">Settings → Database</strong></div>
-          </div>
-          <div class="gate-setup-step">
-            <div class="gate-step-num">2</div>
-            <div>Paste your <strong style="color:var(--text);">Supabase URL</strong> and <strong style="color:var(--text);">anon key</strong></div>
-          </div>
-          <div class="gate-setup-step">
-            <div class="gate-step-num">3</div>
-            <div>Click <strong style="color:var(--text);">Connect</strong> — then refresh this page</div>
-          </div>
+        <!-- Icon -->
+        <div class="gate-connect-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         </div>
 
-        <button class="gate-setup-btn" onclick="gateOpenSettings()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
-          Open Settings
-        </button>
+        <!-- Headings -->
+        <div class="gate-headline">Connect your database</div>
+        <div class="gate-subline">Paste your Supabase credentials below.<br>Takes 30 seconds.</div>
+
+        <!-- Where to find them hint -->
+        <div class="gate-connect-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>Find both values at <a href="https://supabase.com/dashboard" target="_blank">supabase.com/dashboard</a> → your project → Settings → API</span>
+        </div>
+
+        <!-- URL field -->
+        <div class="gate-field">
+          <label class="gate-label" for="gate-sb-url">Project URL</label>
+          <input class="gate-input" id="gate-sb-url" type="url"
+            placeholder="https://xxxx.supabase.co"
+            onkeydown="if(event.key==='Enter')document.getElementById('gate-sb-key').focus()"
+            autocomplete="off" spellcheck="false" autocorrect="off"/>
+        </div>
+
+        <!-- Key field -->
+        <div class="gate-field">
+          <label class="gate-label" for="gate-sb-key">Anon Key <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text4);">(anon public)</span></label>
+          <input class="gate-input" id="gate-sb-key" type="password"
+            placeholder="eyJhbGciOiJIUzI1NiIs..."
+            onkeydown="if(event.key==='Enter')gateConnectDB()"
+            autocomplete="off" spellcheck="false" autocorrect="off"
+            style="font-family:'DM Mono',monospace;font-size:13px;letter-spacing:.02em;"/>
+        </div>
+
+        <!-- Connect button -->
+        <button class="gate-submit" id="gate-connect-btn" onclick="gateConnectDB()">Connect Database →</button>
+        <div class="gate-err" id="gate-connect-err"></div>
+
+        <!-- Success state (hidden until connected) -->
+        <div class="gate-connect-success" id="gate-connect-success">
+          <div class="gate-connect-success-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="gate-connect-success-text">Database connected</div>
+          <div class="gate-connect-success-sub">Taking you to sign in…</div>
+        </div>
+
       </div>
 
       <div class="gate-foot" style="margin-top:16px;">
-        Need help? <a href="mailto:jonah@thestaffingspecialist.com">Contact Jonah</a>
+        Need a Supabase account? <a href="https://supabase.com" target="_blank">Create one free →</a>
+        &nbsp;·&nbsp;
+        <a href="mailto:jonah@thestaffingspecialist.com">Contact Jonah</a>
       </div>
     </div>
 
@@ -2098,14 +2112,117 @@ function _updateGateState() {
   }
 }
 
-// Open settings from the setup screen (unlocks app in dev mode first)
-function gateOpenSettings() {
-  // Use dev session to get into the app so user can configure DB
-  _setDevSession('setup@local');
-  document.getElementById('gate').style.cssText = 'display:none!important';
-  document.getElementById('app-shell').style.cssText = 'display:flex!important';
-  try { loadData(); } catch(e) {}
-  try { nav('workspace'); setTimeout(function(){ switchWsTab('database'); }, 100); } catch(e) {}
+// ── DATABASE CONNECT FROM GATE ────────────────────────────────
+// Validates, saves, initialises Supabase, syncs settings, transitions to login.
+async function gateConnectDB() {
+  var url    = ((document.getElementById('gate-sb-url')||{}).value||'').trim();
+  var key    = ((document.getElementById('gate-sb-key')||{}).value||'').trim();
+  var btn    = document.getElementById('gate-connect-btn');
+  var errEl  = document.getElementById('gate-connect-err');
+
+  if (errEl) errEl.textContent = '';
+
+  // ── Validate URL ─────────────────────────────────────────
+  if (!url) {
+    if (errEl) errEl.textContent = 'Enter your Supabase Project URL.';
+    document.getElementById('gate-sb-url').focus();
+    return;
+  }
+  if (!url.startsWith('https://') || !url.includes('.supabase.co')) {
+    if (errEl) errEl.textContent = 'URL should look like: https://xxxx.supabase.co';
+    document.getElementById('gate-sb-url').focus();
+    return;
+  }
+  // ── Validate key ─────────────────────────────────────────
+  if (!key) {
+    if (errEl) errEl.textContent = 'Enter your Supabase anon key.';
+    document.getElementById('gate-sb-key').focus();
+    return;
+  }
+  if (!key.startsWith('eyJ')) {
+    if (errEl) errEl.textContent = 'Anon key should start with eyJ — check you copied the right value.';
+    document.getElementById('gate-sb-key').focus();
+    return;
+  }
+
+  // ── Loading state ─────────────────────────────────────────
+  if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
+
+  // ── Try initialising ─────────────────────────────────────
+  var testClient = null;
+  try {
+    if (typeof window.__initSupabase === 'function') {
+      testClient = window.__initSupabase(url, key);
+    }
+  } catch(e) { testClient = null; }
+
+  if (!testClient) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Connect Database →'; }
+    if (errEl) errEl.textContent = 'Connection failed — check your URL and anon key, then try again.';
+    return;
+  }
+
+  // ── Verify connectivity with a lightweight ping ───────────
+  try {
+    var ping = await Promise.race([
+      testClient.from('candidates').select('id').limit(1),
+      new Promise(function(_, rej){ setTimeout(function(){ rej(new Error('timeout')); }, 6000); })
+    ]);
+    // Any response (even empty, even RLS error) means the project exists
+    // Only hard-fail on network errors
+  } catch(e) {
+    if (e.message === 'timeout') {
+      if (btn) { btn.disabled = false; btn.textContent = 'Connect Database →'; }
+      if (errEl) errEl.textContent = 'Connection timed out — check your Project URL and try again.';
+      return;
+    }
+    // Other errors (like RLS policy errors) still mean the DB is reachable
+  }
+
+  // ── Save to localStorage ──────────────────────────────────
+  localStorage.setItem(SB_URL_KEY, url);
+  localStorage.setItem(SB_KEY_KEY, key);
+
+  // ── Sync to Settings → Database inputs ───────────────────
+  var urlInput = document.getElementById('sb-url-input');
+  var keyInput = document.getElementById('sb-key-input');
+  if (urlInput) urlInput.value = url;
+  if (keyInput) keyInput.value = key;
+
+  // ── Apply to running app ──────────────────────────────────
+  _sb = testClient;
+  _sbReady = true;
+  _updateSbStatus();
+
+  // ── Success animation ─────────────────────────────────────
+  if (btn) btn.style.display = 'none';
+  if (errEl) errEl.style.display = 'none';
+  var successEl = document.getElementById('gate-connect-success');
+  if (successEl) {
+    successEl.style.display = 'flex';
+    successEl.style.animation = 'fadeSlideIn .3s ease';
+  }
+
+  // ── Transition to login after brief pause ─────────────────
+  setTimeout(function() {
+    // Clear the connect form for cleanliness
+    var urlField = document.getElementById('gate-sb-url');
+    var keyField = document.getElementById('gate-sb-key');
+    if (urlField) urlField.value = '';
+    if (keyField) keyField.value = '';
+    if (successEl) successEl.style.display = 'none';
+    if (btn) { btn.style.display = ''; btn.disabled = false; btn.textContent = 'Connect Database →'; }
+    if (errEl) errEl.style.display = '';
+
+    // Switch to login state
+    _updateGateState();
+
+    // Focus email field
+    setTimeout(function(){
+      var ef = document.getElementById('gate-email');
+      if (ef) ef.focus();
+    }, 100);
+  }, 1600);
 }
 
 function _updateSbStatus() {
