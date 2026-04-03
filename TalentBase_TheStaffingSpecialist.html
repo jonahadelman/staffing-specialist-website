@@ -711,6 +711,16 @@ a{color:var(--text3);text-decoration:none;}
         <div id="dash-jobs"></div>
       </div>
     </div>
+    <!-- TOP DEALS TO CLOSE — score-sorted, always visible when deals exist -->
+    <div id="dash-top-deals-panel" style="display:none;margin-top:8px;">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Top Deals to Close</div>
+          <button class="btn btn-ghost btn-sm" onclick="nav('deals')">View All →</button>
+        </div>
+        <div id="dash-top-deals"></div>
+      </div>
+    </div>
     <!-- HAPPY HUNTING DEALS — shown when HH has pushed jobs -->
     <div id="dash-hh-panel" style="display:none;margin-top:8px;">
       <div class="panel">
@@ -2030,16 +2040,80 @@ function _dealTempDot(t){
   var col={hot:'var(--green)',warm:'var(--amber)',cold:'var(--text4)'}[t]||'var(--text4)';
   return '<span title="'+t+'" style="width:7px;height:7px;border-radius:50%;background:'+col+';display:inline-block;flex-shrink:0;"></span>';
 }
+
+// ── DEAL SCORING ENGINE ────────────────────────────────────────
+function getDealScore(d){
+  var score = 0;
+  var now   = Date.now();
+  var DAY   = 1000*60*60*24;
+
+  // Engagement: time since last activity (0–30)
+  var lastAct = d.stageUpdatedAt || d.createdAt || now;
+  var daysIdle = (now - lastAct) / DAY;
+  if(daysIdle < 2)      score += 30;
+  else if(daysIdle < 5) score += 20;
+  else                  score += 10;
+
+  // Pipeline strength: matched candidates (0–25)
+  score += Math.min(((d.candidateIds||[]).length) * 5, 25);
+
+  // Recency: how new the deal is (0–15)
+  var daysOld = (now - (d.createdAt||now)) / DAY;
+  score += daysOld < 7 ? 15 : 5;
+
+  // Deal size (0–15)
+  var fee = d.fee || d.estimatedFee || 0;
+  if(fee > 100000)      score += 15;
+  else if(fee > 50000)  score += 10;
+  else                  score += 5;
+
+  // Stage (0–15)
+  var stageScore = {Prospect:5, Contacted:8, Meeting:15, Active:12, Closed:0};
+  score += stageScore[d.stage||'Prospect'] || 5;
+
+  return Math.min(score, 100);
+}
+
+function getDealPriority(score){
+  if(score > 80) return {label:'High',   color:'var(--red)',   bg:'rgba(239,68,68,.12)',   border:'rgba(239,68,68,.3)'};
+  if(score > 50) return {label:'Medium', color:'var(--amber)', bg:'rgba(245,158,11,.12)',  border:'rgba(245,158,11,.3)'};
+  return               {label:'Low',    color:'var(--text4)', bg:'var(--bg4)',             border:'var(--border2)'};
+}
+
 function _dealNextAction(d){
+  var score = getDealScore(d);
   var stage = d.stage||'Prospect';
-  var actions={
-    Prospect : {text:'Reach out to hiring manager',   urgency:'high'},
-    Contacted: {text:'Follow up — no response yet',   urgency:'medium'},
-    Meeting  : {text:'Prep + confirm meeting',        urgency:'high'},
-    Active   : {text:'Submit candidates this week',   urgency:'high'},
-    Closed   : {text:'Request referral / review',     urgency:'low'},
+
+  // Score-driven action overrides
+  if(score > 80){
+    var urgent = {
+      Prospect : {text:'Call immediately — high potential',  urgency:'high'},
+      Contacted: {text:'Call immediately — follow up now',   urgency:'high'},
+      Meeting  : {text:'Prep hard — this deal can close',    urgency:'high'},
+      Active   : {text:'Submit your best candidates today',  urgency:'high'},
+      Closed   : {text:'Ask for referrals while hot',        urgency:'medium'},
+    };
+    return urgent[stage] || {text:'Call immediately',urgency:'high'};
+  }
+  if(score > 50){
+    var medium = {
+      Prospect : {text:'Send intro email this week',         urgency:'medium'},
+      Contacted: {text:'Follow up — waiting on response',    urgency:'medium'},
+      Meeting  : {text:'Confirm meeting + prep agenda',      urgency:'medium'},
+      Active   : {text:'Submit 2–3 candidates',              urgency:'medium'},
+      Closed   : {text:'Request a LinkedIn review',          urgency:'low'},
+    };
+    return medium[stage] || {text:'Follow up',urgency:'medium'};
+  }
+  // Low score
+  var low = {
+    Prospect : {text:'Nurture — add to outreach sequence',  urgency:'low'},
+    Contacted: {text:'One more touch, then move on',        urgency:'low'},
+    Meeting  : {text:'Confirm they still want to meet',     urgency:'medium'},
+    Active   : {text:'Check in on search progress',         urgency:'low'},
+    Closed   : {text:'Archive or re-engage in 90 days',     urgency:'low'},
   };
-  return actions[stage]||{text:'Take next step',urgency:'medium'};
+  return low[stage] || {text:'Nurture',urgency:'low'};
 }
 
 function renderDeals(){
@@ -2090,35 +2164,46 @@ function renderDeals(){
 
   boardEl.innerHTML = DEAL_STAGES.map(function(stage){
     var stageDealList = stageDeals[stage];
-    // Sort: highest fee first
-    stageDealList.sort(function(a,b){ return (b.fee||b.estimatedFee||0)-(a.fee||a.estimatedFee||0); });
+    // Sort by score descending (highest priority first in each column)
+    stageDealList.sort(function(a,b){ return getDealScore(b)-getDealScore(a); });
     var sc = SC[stage];
     var stageTotal = stageDealList.reduce(function(s,d){return s+(d.fee||d.estimatedFee||0);},0);
 
     var cards = stageDealList.map(function(d){
-      var fee    = d.fee||d.estimatedFee||0;
-      var prob   = d.probability||50;
-      var temp   = _dealTemp(d);
-      var na     = _dealNextAction(d);
-      var tempDot= _dealTempDot(temp);
+      var fee      = d.fee||d.estimatedFee||0;
+      var prob     = d.probability||50;
+      var temp     = _dealTemp(d);
+      var na       = _dealNextAction(d);
+      var tempDot  = _dealTempDot(temp);
+      var score    = getDealScore(d);
+      var priority = getDealPriority(score);
       var naColors = {high:'var(--red)',medium:'var(--amber)',low:'var(--text4)'};
-      var naCol  = naColors[na.urgency]||'var(--text4)';
-      var naBg   = {high:'rgba(239,68,68,.1)',medium:'rgba(245,158,11,.1)',low:'var(--bg4)'}[na.urgency];
+      var naCol    = naColors[na.urgency]||'var(--text4)';
+      var naBg     = {high:'rgba(239,68,68,.1)',medium:'rgba(245,158,11,.1)',low:'var(--bg4)'}[na.urgency];
       var currentIdx = DEAL_STAGES.indexOf(stage);
       var nextStage  = currentIdx < DEAL_STAGES.length-1 ? DEAL_STAGES[currentIdx+1] : null;
 
       return '<div class="deal-card" onclick="openDealDetail(\''+d.id+'\')" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:14px;margin-bottom:8px;cursor:pointer;transition:border-color .1s;" onmouseover="this.style.borderColor=\'var(--border3)\'" onmouseout="this.style.borderColor=\'var(--border2)\'">' +
-        // Header: temp + company
+        // Header: temp dot + company + score ring
         '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;">' +
           tempDot +
           '<div style="flex:1;min-width:0;">' +
             '<div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.3;">'+esc(d.company||'—')+'</div>' +
             '<div style="font-size:11px;color:var(--text4);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(d.jobTitle||d.role||'—')+'</div>' +
           '</div>' +
+          // Score ring
+          '<div title="Deal score: '+score+'/100" style="width:32px;height:32px;border-radius:50%;background:conic-gradient('+priority.color+' '+score+'%,var(--border2) 0);display:grid;place-items:center;flex-shrink:0;">' +
+            '<div style="width:22px;height:22px;border-radius:50%;background:var(--bg3);display:grid;place-items:center;">' +
+              '<span style="font-size:9px;font-weight:800;color:'+priority.color+';">'+score+'</span>' +
+            '</div>' +
+          '</div>' +
         '</div>' +
-        // Fee + Probability
+        // Priority badge + fee + prob
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
-          '<div style="font-family:\'DM Mono\',monospace;font-size:14px;font-weight:700;color:var(--teal);">'+(fee?fmtMoney(fee):'—')+'</div>' +
+          '<div style="display:flex;align-items:center;gap:6px;">' +
+            '<div style="font-family:\'DM Mono\',monospace;font-size:13px;font-weight:700;color:var(--teal);">'+(fee?fmtMoney(fee):'—')+'</div>' +
+            '<span style="font-size:10px;font-weight:700;color:'+priority.color+';background:'+priority.bg+';border:1px solid '+priority.border+';padding:1px 6px;border-radius:3px;">'+priority.label+'</span>' +
+          '</div>' +
           '<div style="font-size:11px;color:var(--text4);background:var(--bg4);border:1px solid var(--border2);padding:2px 7px;border-radius:10px;">'+prob+'%</div>' +
         '</div>' +
         // Next action — dominant
@@ -2166,6 +2251,8 @@ function openDealDetail(dealId){
   var sc = DEAL_STAGE_COLORS[d.stage]||DEAL_STAGE_COLORS.Prospect;
   var na = _dealNextAction(d);
   var temp = _dealTemp(d);
+  var score    = getDealScore(d);
+  var priority = getDealPriority(score);
   var naColors = {high:'var(--red)',medium:'var(--amber)',low:'var(--text4)'};
   var naBg = {high:'rgba(239,68,68,.1)',medium:'rgba(245,158,11,.1)',low:'var(--bg4)'}[na.urgency];
   var currentIdx = DEAL_STAGES.indexOf(d.stage);
@@ -2181,9 +2268,11 @@ function openDealDetail(dealId){
   if(!bodyEl) return;
 
   bodyEl.innerHTML =
-    // Stage badge
-    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">' +
+    // Stage badge + score + priority
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">' +
       '<span style="font-size:11px;font-weight:700;color:'+sc.text+';background:'+sc.bg+';border:1px solid '+sc.border+';padding:3px 10px;border-radius:4px;">'+esc(d.stage)+'</span>' +
+      '<span style="font-size:11px;font-weight:700;color:'+priority.color+';background:'+priority.bg+';border:1px solid '+priority.border+';padding:3px 10px;border-radius:4px;">'+priority.label+' Priority</span>' +
+      '<span style="font-size:11px;font-weight:800;color:'+priority.color+';">'+score+'/100</span>' +
       _dealTempDot(temp)+' <span style="font-size:11px;color:var(--text4);">'+temp+'</span>' +
       '<span style="margin-left:auto;font-size:11px;color:var(--text4);">'+fmtDate(d.createdAt)+'</span>' +
     '</div>' +
@@ -5441,6 +5530,50 @@ function renderDash(){
     </div>`).join('')||'<div style="font-size:13px;color:var(--text4);">No open jobs.</div>';
 
   // HAPPY HUNTING DEALS PANEL
+  // ── TOP DEALS TO CLOSE ────────────────────────────────────
+  var topDealsPanel = document.getElementById('dash-top-deals-panel');
+  var topDealsEl    = document.getElementById('dash-top-deals');
+  var openDeals = deals.filter(function(d){ return d.stage!=='Closed'; });
+  if(openDeals.length && topDealsPanel && topDealsEl){
+    // Score and sort
+    var scored = openDeals.map(function(d){
+      return {d:d, score:getDealScore(d)};
+    }).sort(function(a,b){ return b.score-a.score; }).slice(0,5);
+
+    topDealsPanel.style.display = 'block';
+    topDealsEl.innerHTML = scored.map(function(x){
+      var d = x.d;
+      var score    = x.score;
+      var priority = getDealPriority(score);
+      var na       = _dealNextAction(d);
+      var fee      = d.fee||d.estimatedFee||0;
+      var naColors = {high:'var(--red)',medium:'var(--amber)',low:'var(--text4)'};
+      var naCol    = naColors[na.urgency]||'var(--text4)';
+      var sc       = DEAL_STAGE_COLORS[d.stage]||DEAL_STAGE_COLORS.Prospect;
+      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border2);cursor:pointer;" onclick="nav(\'deals\');setTimeout(()=>openDealDetail(\''+d.id+'\'),200)" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'\'">' +
+        // Score ring
+        '<div style="width:36px;height:36px;border-radius:50%;background:conic-gradient('+priority.color+' '+score+'%,var(--border2) 0);display:grid;place-items:center;flex-shrink:0;">' +
+          '<div style="width:26px;height:26px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;">' +
+            '<span style="font-size:9px;font-weight:800;color:'+priority.color+';">'+score+'</span>' +
+          '</div>' +
+        '</div>' +
+        // Info
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">' +
+            '<span style="font-size:13px;font-weight:700;color:var(--text);">'+esc(d.company||'—')+'</span>' +
+            '<span style="font-size:10px;font-weight:700;color:'+sc.text+';background:'+sc.bg+';border:1px solid '+sc.border+';padding:1px 6px;border-radius:3px;">'+esc(d.stage)+'</span>' +
+            '<span style="font-size:10px;font-weight:700;color:'+priority.color+';background:'+priority.bg+';border:1px solid '+priority.border+';padding:1px 6px;border-radius:3px;">'+priority.label+'</span>' +
+          '</div>' +
+          '<div style="font-size:11px;color:'+naCol+';font-weight:600;">→ '+na.text+'</div>' +
+        '</div>' +
+        // Fee
+        (fee?'<div style="font-family:\'DM Mono\',monospace;font-size:13px;font-weight:700;color:var(--teal);flex-shrink:0;">'+fmtMoney(fee)+'</div>':'') +
+      '</div>';
+    }).join('');
+  } else if(topDealsPanel){
+    topDealsPanel.style.display = 'none';
+  }
+
   const hhPanel=document.getElementById('dash-hh-panel');
   const hhDealsEl=document.getElementById('dash-hh-deals');
   const hhJobs=jobs.filter(j=>j.source==='Happy Hunting').slice(0,6);
