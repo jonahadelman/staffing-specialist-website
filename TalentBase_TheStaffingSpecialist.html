@@ -8460,51 +8460,42 @@ See you {{start_date}}.
 // items that are missing. This ensures the 140-item vault always
 // appears even after a browser refresh or cache hit.
 (function(){
-  var SEED_VERSION = 'v5-withbody'; // bumped: forces re-merge to restore body fields
+  // Build seed lookup — seed is the source of truth for body/vars/subject/icon/cat
+  var seedMap = {};
+  libraryItems.forEach(function(s){ if(s && s.id) seedMap[s.id] = s; });
+
+  // Load any user-added items or title/tag edits from localStorage
   var stored = null;
   try { stored = JSON.parse(localStorage.getItem('tb_library')); } catch(e) {}
-
-  // Strip nulls from stored data
-  if (Array.isArray(stored)) {
+  if(Array.isArray(stored)){
     stored = stored.filter(function(x){ return x && x.id; });
   }
 
-  // Always merge: stored items keep user edits but get body/vars/subject from seed if missing
-  var storedVersion = localStorage.getItem('tb_library_version') || '';
-  if (!stored || stored.length === 0 || storedVersion !== SEED_VERSION) {
-    // Build seed lookup for fast access
-    var seedMap = {};
-    libraryItems.forEach(function(s){ if(s && s.id) seedMap[s.id] = s; });
-
-    if (!stored || stored.length === 0) {
-      libraryItems = libraryItems.slice();
-    } else {
-      // Merge stored items: restore body/vars/subject/icon from seed if missing
-      var merged = stored.map(function(item){
-        var seed = seedMap[item.id];
-        if(seed){
-          if(!item.body && seed.body) item.body = seed.body;
-          if(!item.vars && seed.vars) item.vars = seed.vars;
-          if(!item.subject && seed.subject) item.subject = seed.subject;
-          if(!item.icon && seed.icon) item.icon = seed.icon;
-          if(!item.cat && seed.cat) item.cat = seed.cat;
-        }
-        return item;
-      });
-      // Add any seed items not in stored at all
-      var storedIds = new Set(stored.map(function(i){ return i.id; }));
-      libraryItems.forEach(function(seedItem){
-        if(!storedIds.has(seedItem.id)) merged.push(seedItem);
-      });
-      libraryItems = merged;
-    }
-    localStorage.setItem('tb_library', JSON.stringify(libraryItems));
-    localStorage.setItem('tb_library_version', SEED_VERSION);
-  } else {
-    libraryItems = stored;
+  if(stored && stored.length > 0){
+    // Merge: for every stored item, ALWAYS take body/vars/subject/icon/cat from seed
+    // This guarantees content is never missing regardless of what localStorage has
+    var merged = stored.map(function(item){
+      var seed = seedMap[item.id];
+      if(seed){
+        item.body    = seed.body    || item.body    || '';
+        item.vars    = seed.vars    || item.vars    || [];
+        item.subject = seed.subject || item.subject || '';
+        item.icon    = seed.icon    || item.icon    || '';
+        item.cat     = seed.cat     || item.cat     || 'misc';
+        item.tags    = item.tags    || seed.tags    || [];
+      }
+      return item;
+    });
+    // Add seed items not present in stored at all
+    var storedIds = new Set(stored.map(function(i){ return i.id; }));
+    libraryItems.forEach(function(s){
+      if(s && s.id && !storedIds.has(s.id)) merged.push(s);
+    });
+    libraryItems = merged;
   }
-  // Final safety: strip nulls
+  // Always re-save with full body content
   libraryItems = libraryItems.filter(function(x){ return x && x.id; });
+  try { localStorage.setItem('tb_library', JSON.stringify(libraryItems)); } catch(e){}
 })();
 
 function saveLibrary(){ localStorage.setItem('tb_library', JSON.stringify(libraryItems)); }
