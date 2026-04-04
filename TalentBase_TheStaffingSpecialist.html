@@ -1743,7 +1743,7 @@ a{color:var(--text3);text-decoration:none;}
     <div id="scorecard-list"></div>
   </div>
   <!-- Scorecard editor panel -->
-  <div id="scorecard-editor" style="display:none;position:fixed;inset:0;left:210px;background:var(--bg);z-index:50;display:none;flex-direction:column;overflow-y:auto;">
+  <div id="scorecard-editor" style="display:none;position:fixed;inset:0;left:210px;background:var(--bg);z-index:50;flex-direction:column;overflow-y:auto;">
     <div class="topbar" style="flex-shrink:0;">
       <button class="btn btn-ghost btn-sm" onclick="closeScorecard()">← Back</button>
       <input id="sc-role-name" style="background:none;border:none;font-size:16px;font-weight:700;color:var(--text);outline:none;flex:1;margin:0 16px;" placeholder="Role name e.g. Senior Program Manager"/>
@@ -3883,7 +3883,16 @@ function nav(v){
   if(v==='scorecard')renderScorecards();
   if(v==='templates')renderTemplates();
   if(v==='integrations')checkIntegrationStatus();
-  if(v==='library'){renderLibrary();}
+  if(v==='library'){
+    // Ensure window alias is current before rendering
+    window.libraryItems = libraryItems;
+    if(!libraryItems.length && window._LIB_SEED && window._LIB_SEED.length){
+      libraryItems = window._LIB_SEED.slice();
+      window.libraryItems = libraryItems;
+    }
+    console.log('[Library] items:', libraryItems.length, '| group:', libGroup);
+    renderLibrary();
+  }
   if(v==='prompts'){renderPromptLib();}
   if(v==='tutorial')renderTutorial();
   if(v==='campaigns')renderCampaigns();
@@ -7631,7 +7640,7 @@ Score 0-100. Only include candidates scoring 50+. Sort by score descending. Max 
 let scorecards = JSON.parse(localStorage.getItem('tb_scorecards')||'[]');
 let editingSC = null;
 
-function saveScorecards(){ localStorage.setItem('tb_scorecards', JSON.stringify(scorecards)); }
+function saveScorecards(){ localStorage.setItem('tb_scorecards', JSON.stringify(scorecards)); window.scorecards = scorecards; }
 
 function renderScorecards(){
   const el = document.getElementById('scorecard-list');
@@ -9400,11 +9409,24 @@ var libraryItems = _LIB_SEED.slice();
     });
     libraryItems = merged;
   }
+
   libraryItems = libraryItems.filter(function(x){ return x && x.id; });
+
+  // SAFETY: if localStorage corruption produced empty array, always fall back to seed
+  if(!libraryItems.length){
+    console.warn('[Library] libraryItems empty after merge — resetting from _LIB_SEED');
+    libraryItems = _LIB_SEED.slice();
+    try { localStorage.removeItem('tb_library'); } catch(e){}
+  }
+
   try { localStorage.setItem('tb_library', JSON.stringify(libraryItems)); } catch(e){}
 })();
 
 function saveLibrary(){ localStorage.setItem('tb_library', JSON.stringify(libraryItems)); }
+
+// Safety alias — ensures window.libraryItems always mirrors the local array
+window.libraryItems = libraryItems;
+console.log('[Library] Loaded', libraryItems.length, 'items');
 
 // ═══ AI TOOL LAUNCHER ════════════════════════════════════════
 // Opens a full-screen modal for any AI writing tool.
@@ -10154,17 +10176,47 @@ function renderLibrary(){
 }
 
 function viewLibItem(id){
+  console.log('[Library] Opening item:', id);
   libSelectedId = id;
-  var item = libraryItems.find(function(x){ return x.id === id; });
-  if(!item){ return; }
 
-  // Re-render list to update selection highlight
-  renderLibrary();
+  // Ensure window.libraryItems mirrors the local array (safety alias)
+  if(!window.libraryItems || window.libraryItems !== libraryItems){
+    window.libraryItems = libraryItems;
+  }
+
+  var item = libraryItems.find(function(x){ return x.id === id; });
+  if(!item){
+    console.warn('[Library] Item not found:', id, '— total items:', libraryItems.length);
+    return;
+  }
+
+  // Update selection highlight directly on existing DOM — DO NOT call renderLibrary()
+  // which rebuilds innerHTML and destroys event context mid-click
+  document.querySelectorAll('.lib-row').forEach(function(row){
+    var rowId = row.getAttribute('data-lib-id');
+    if(rowId === id){
+      row.style.background = 'rgba(59,130,246,.1)';
+      row.style.borderLeft = '2px solid var(--accent)';
+    } else {
+      row.style.background = 'transparent';
+      row.style.borderLeft = '2px solid transparent';
+    }
+  });
 
   var viewer = document.getElementById('lib-viewer');
-  if(!viewer) return;
+  if(!viewer){
+    console.error('[Library] #lib-viewer not found');
+    return;
+  }
 
-  var body = item.body || item.content || '';
+  // Ensure viewer is visible
+  viewer.style.display = 'flex';
+  viewer.style.flexDirection = 'column';
+  viewer.style.flex = '1';
+  viewer.style.minHeight = '0';
+  viewer.style.overflowY = 'auto';
+
+  var body = item.body || item.content || '(No content for this template)';
   var gk = (LIB_GROUPS[item.cat]||{}).group || 'playbook';
   var meta = LIB_GROUPS_META[gk] || {label:'Template',icon:'📄',color:'var(--text4)'};
   var isJD = item.cat === 'jd';
@@ -10175,7 +10227,6 @@ function viewLibItem(id){
       '<div style="font-size:10.5px;font-weight:700;color:'+meta.color+';text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">'+meta.icon+' '+meta.label+'</div>'+
       '<div style="font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.4px;line-height:1.3;margin-bottom:12px;">'+(item.icon?item.icon+' ':'')+esc(item.title)+'</div>'+
       (item.subject?'<div style="font-size:12px;color:var(--text4);margin-bottom:12px;">Subject: <span style="color:var(--text2);">'+esc(item.subject)+'</span></div>':'')+
-      // Actions row
       '<div style="display:flex;align-items:center;gap:8px;padding-bottom:14px;">'+
         '<button onclick="copyLibItem(\''+id+'\')" class="btn btn-ghost btn-sm">📋 Copy</button>'+
         (isJD?'<button onclick="openDocGenerator(\''+id+'\')" class="btn btn-primary btn-sm">⚡ Generate</button>':
@@ -10183,7 +10234,6 @@ function viewLibItem(id){
         '<button onclick="editLibItem(\''+id+'\')" class="btn btn-ghost btn-sm">Edit</button>'+
         '<button onclick="deleteLibItem(\''+id+'\')" class="btn btn-ghost btn-sm" style="color:var(--red);">Delete</button>'+
       '</div>'+
-      // Tabs (JD only)
       (isJD?
         '<div style="display:flex;gap:0;">'+
           ['Full','Summary','Requirements','Notes'].map(function(tab,i){
@@ -10195,17 +10245,13 @@ function viewLibItem(id){
         : '')+
     '</div>';
 
-  // Build body
   var bodyHtml = body.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
   var contentHtml =
     '<div id="lib-doc-content" style="padding:28px 32px;flex:1;overflow-y:auto;">'+
       '<pre style="margin:0;white-space:pre-wrap;font-family:DM Mono,ui-monospace,monospace;font-size:12.5px;line-height:1.8;color:var(--text2);">'+bodyHtml+'</pre>'+
     '</div>';
 
   viewer.innerHTML = headerHtml + contentHtml;
-  viewer.style.display = 'flex';
-  viewer.style.flexDirection = 'column';
 }
 
 function libShowTab(itemId, tab){
@@ -10603,10 +10649,43 @@ document.querySelectorAll('.overlay, .modal-overlay').forEach(function(ov){
 // ═══════════════════════════════════════════════
 
 async function launchApp(){
-  try { await loadData(); } catch(e){ console.warn('loadData error:', e); }
+  // ── STEP 1: Load candidate/job/deal data ──────────────────
+  try { await loadData(); } catch(e){ console.warn('[launchApp] loadData error:', e); }
 
-  // ── AUTO PIPELINE HOOK — from Happy Hunting redirect ────────
-  // If ?newJob=<id> is in the URL, open Jobs view and highlight the job
+  // ── STEP 2: Guarantee library data ───────────────────────
+  // _LIB_SEED is declared at parse time (140 items). libraryItems = _LIB_SEED.slice()
+  // also at parse time. This just ensures window alias is live.
+  if(typeof _LIB_SEED !== 'undefined' && _LIB_SEED.length){
+    if(!libraryItems || !libraryItems.length){
+      libraryItems = _LIB_SEED.slice();
+    }
+    window.libraryItems = libraryItems;
+  } else {
+    console.error('[launchApp] _LIB_SEED missing or empty');
+  }
+
+  // ── STEP 3: Scorecards — localStorage or empty state ─────
+  // scorecards is loaded from localStorage at parse time.
+  // Empty = no scorecards created yet (correct behavior — not a bug).
+  // Expose on window for debug access.
+  window.scorecards = scorecards;
+
+  // ── STEP 4: Tutorial ──────────────────────────────────────
+  // TUTORIAL_STEPS is a const defined at parse time — always has content.
+  // Expose on window for debug access.
+  window.tutorialSteps = (typeof TUTORIAL_STEPS !== 'undefined') ? TUTORIAL_STEPS : [];
+
+  // ── STEP 5: Debug log ─────────────────────────────────────
+  console.log('[TalentBase] Init complete:',
+    '| Library:', (window.libraryItems||[]).length, 'items',
+    '| Scorecards:', (window.scorecards||[]).length,
+    '| Tutorial:', (window.tutorialSteps||[]).length, 'steps',
+    '| Candidates:', cands.length,
+    '| Jobs:', jobs.length,
+    '| Deals:', deals.length
+  );
+
+  // ── STEP 6: Happy Hunting redirect ───────────────────────
   try {
     const params = new URLSearchParams(window.location.search);
     const newJobId = params.get('newJob');
@@ -10634,7 +10713,8 @@ async function launchApp(){
     }
   } catch(e){}
 
-  try { nav('dashboard'); } catch(e){ console.warn('nav error:', e); }
+  // ── STEP 7: Navigate to dashboard ────────────────────────
+  try { nav('dashboard'); } catch(e){ console.warn('[launchApp] nav error:', e); }
 }
 
 function toggleGateEye(){
@@ -10670,20 +10750,16 @@ window.addEventListener('DOMContentLoaded', async function(){
     setTimeout(function(){ var i=document.getElementById('gate-email'); if(i)i.focus(); }, 150);
   }
 
-  // Global event delegation for library rows — survives any DOM re-render
+  // Global event delegation for library rows — fires even after DOM re-renders
   document.addEventListener('click', function(e){
     var row = e.target.closest('.lib-row');
     if(!row) return;
-    // Don't fire if user clicked a button inside the row
+    // Ignore button clicks inside rows (Copy, Delete etc.)
     if(e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
-    var id = row.getAttribute('data-lib-id') || row.getAttribute('data-id') || row.getAttribute('onclick');
+    var id = row.getAttribute('data-lib-id');
     if(!id) return;
-    // Extract id from onclick attr as fallback: onclick="openLibraryModal('libXX')"
-    if(id.includes('openLibraryModal')){
-      var m = id.match(/openLibraryModal\('([^']+)'\)/);
-      if(m) id = m[1];
-    }
-    openLibraryModal(id);
+    e.stopPropagation();
+    viewLibItem(id);
   });
 });
 </script>
