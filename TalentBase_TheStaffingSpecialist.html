@@ -9159,7 +9159,7 @@ function renderLibrary(){
       ? 'background:var(--accent-dim);border-left:3px solid var(--accent);'
       : 'border-left:3px solid transparent;';
     return (
-      '<div onclick="openLibraryModal(\''+id+'\')" style="'+rowStyle+'display:grid;grid-template-columns:1fr 100px 115px;gap:0;padding:9px 16px;border-bottom:1px solid var(--border2);cursor:pointer;align-items:center;transition:background .08s;" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\''+(isSelected?'var(--accent-dim)':'transparent')+'\'">'+
+      '<div class="lib-row" data-lib-id="'+id+'" onclick="openLibraryModal(\''+id+'\')" style="'+rowStyle+'display:grid;grid-template-columns:1fr 100px 115px;gap:0;padding:9px 16px;border-bottom:1px solid var(--border2);cursor:pointer;align-items:center;transition:background .08s;" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\''+(isSelected?'var(--accent-dim)':'transparent')+'\'">'+
         '<div style="display:flex;align-items:center;gap:8px;min-width:0;">'+
           '<span style="font-size:10px;background:var(--bg4);border:1px solid var(--border2);padding:2px 5px;border-radius:3px;font-family:DM Mono,monospace;color:var(--text3);flex-shrink:0;">'+icon+'</span>'+
           '<div style="min-width:0;">'+
@@ -9590,6 +9590,22 @@ window.addEventListener('DOMContentLoaded', async function(){
     if(a) a.style.cssText = 'display:none!important';
     setTimeout(function(){ var i=document.getElementById('gate-email'); if(i)i.focus(); }, 150);
   }
+
+  // Global event delegation for library rows — survives any DOM re-render
+  document.addEventListener('click', function(e){
+    var row = e.target.closest('.lib-row');
+    if(!row) return;
+    // Don't fire if user clicked a button inside the row
+    if(e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+    var id = row.getAttribute('data-lib-id') || row.getAttribute('data-id') || row.getAttribute('onclick');
+    if(!id) return;
+    // Extract id from onclick attr as fallback: onclick="openLibraryModal('libXX')"
+    if(id.includes('openLibraryModal')){
+      var m = id.match(/openLibraryModal\('([^']+)'\)/);
+      if(m) id = m[1];
+    }
+    openLibraryModal(id);
+  });
 });
 </script>
 
