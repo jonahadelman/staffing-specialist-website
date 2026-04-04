@@ -10761,46 +10761,13 @@ document.querySelectorAll('.overlay, .modal-overlay').forEach(function(ov){
 // ═══════════════════════════════════════════════
 
 async function launchApp(){
-  // ── STEP 1: Load candidate/job/deal data ──────────────────
-  try { await loadData(); } catch(e){ console.warn('[launchApp] loadData error:', e); }
+  // All data guaranteed via initAppData
+  try { await initAppData(); } catch(e){ console.warn('[launchApp] initAppData error:', e); }
 
-  // ── STEP 2: Guarantee library data ───────────────────────
-  // _LIB_SEED is declared at parse time (140 items). libraryItems = _LIB_SEED.slice()
-  // also at parse time. This just ensures window alias is live.
-  if(typeof _LIB_SEED !== 'undefined' && _LIB_SEED.length){
-    if(!libraryItems || !libraryItems.length){
-      libraryItems = _LIB_SEED.slice();
-    }
-    window.libraryItems = libraryItems;
-  } else {
-    console.error('[launchApp] _LIB_SEED missing or empty');
-  }
-
-  // ── STEP 3: Scorecards — localStorage or empty state ─────
-  // scorecards is loaded from localStorage at parse time.
-  // Empty = no scorecards created yet (correct behavior — not a bug).
-  // Expose on window for debug access.
-  window.scorecards = scorecards;
-
-  // ── STEP 4: Tutorial ──────────────────────────────────────
-  // TUTORIAL_STEPS is a const defined at parse time — always has content.
-  // Expose on window for debug access.
-  window.tutorialSteps = (typeof TUTORIAL_STEPS !== 'undefined') ? TUTORIAL_STEPS : [];
-
-  // ── STEP 5: Debug log ─────────────────────────────────────
-  console.log('[TalentBase] Init complete:',
-    '| Library:', (window.libraryItems||[]).length, 'items',
-    '| Scorecards:', (window.scorecards||[]).length,
-    '| Tutorial:', (window.tutorialSteps||[]).length, 'steps',
-    '| Candidates:', cands.length,
-    '| Jobs:', jobs.length,
-    '| Deals:', deals.length
-  );
-
-  // ── STEP 6: Happy Hunting redirect ───────────────────────
+  // Happy Hunting redirect (?newJob=id in URL)
   try {
-    const params = new URLSearchParams(window.location.search);
-    const newJobId = params.get('newJob');
+    var params = new URLSearchParams(window.location.search);
+    var newJobId = params.get('newJob');
     if(newJobId){
       try { nav('jobs'); } catch(e){}
       setTimeout(function(){
@@ -10808,12 +10775,10 @@ async function launchApp(){
           selJob(newJobId);
           var banner = document.createElement('div');
           banner.id = 'hh-pipeline-banner';
-          banner.style.cssText = [
-            'position:fixed','top:0','left:0','right:0','z-index:9999',
-            'background:#0d2010','border-bottom:1px solid #00c853',
-            'color:#00e676','font-family:DM Mono,monospace','font-size:12px',
-            'letter-spacing:.05em','padding:10px 24px',
-            'display:flex','align-items:center','justify-content:space-between'
+          banner.style.cssText = ['position:fixed','top:0','left:0','right:0','z-index:9999',
+            'background:#0d2010','border-bottom:1px solid #00c853','color:#00e676',
+            'font-family:DM Mono,monospace','font-size:12px','letter-spacing:.05em',
+            'padding:10px 24px','display:flex','align-items:center','justify-content:space-between'
           ].join(';');
           banner.innerHTML = '<span>&#10003; PIPELINE CREATED &mdash; JOB ADDED FROM HAPPY HUNTING. READY TO EXECUTE.</span>'
             + '<button onclick="this.parentNode.remove()" style="background:none;border:none;color:#00e676;cursor:pointer;font-size:16px;line-height:1;">&times;</button>';
@@ -10825,7 +10790,6 @@ async function launchApp(){
     }
   } catch(e){}
 
-  // ── STEP 7: Navigate to dashboard ────────────────────────
   try { nav('dashboard'); } catch(e){ console.warn('[launchApp] nav error:', e); }
 }
 
@@ -10841,32 +10805,96 @@ function toggleGateEye(){
   }
 }
 
+// ═══════════════════════════════════════════════════════════
+// SINGLE STARTUP GATE — everything flows through here
+// ═══════════════════════════════════════════════════════════
+async function initAppData(){
+  // 1. Supabase client (no-op if unconfigured)
+  try { sbInit(); } catch(e){}
+
+  // 2. Restore session from localStorage/Supabase
+  try { await sbRestoreSession(); } catch(e){}
+
+  // 3. Load candidates/jobs/deals (Supabase → localStorage fallback inside sbLoad)
+  try {
+    var results = await Promise.all([sbLoad(CK), sbLoad(JK), sbLoad(DK)]);
+    cands = results[0] || [];
+    jobs  = results[1] || [];
+    deals = results[2] || [];
+  } catch(e){
+    console.warn('[initAppData] data load failed:', e);
+    cands = cands && cands.length ? cands : [];
+    jobs  = jobs  && jobs.length  ? jobs  : [];
+    deals = deals && deals.length ? deals : [];
+  }
+
+  // 4. Seed demo data if empty
+  try { if(!cands.length) seedCands(); } catch(e){}
+  try { if(!jobs.length)  seedJobs();  } catch(e){}
+
+  // 5. Restore API key
+  try {
+    var k = localStorage.getItem(AK) || '';
+    var apiField = document.getElementById('api-key');
+    if(apiField){ apiField.value = k; updateApiDot(k); }
+  } catch(e){}
+
+  // 6. Guarantee library — _LIB_SEED is 140 items declared at parse time
+  try {
+    if(typeof _LIB_SEED !== 'undefined' && _LIB_SEED.length){
+      if(!libraryItems || !libraryItems.length) libraryItems = _LIB_SEED.slice();
+      window.libraryItems = libraryItems;
+    }
+    // Clear corrupted localStorage cache if it produced an empty array
+    if(!libraryItems || !libraryItems.length){
+      console.warn('[initAppData] libraryItems empty — resetting from seed');
+      libraryItems = (window._LIB_SEED||[]).slice();
+      window.libraryItems = libraryItems;
+      try { localStorage.removeItem('tb_library'); } catch(e){}
+    }
+  } catch(e){ console.warn('[initAppData] library init failed:', e); }
+
+  // 7. Scorecards — localStorage or empty (user creates them)
+  window.scorecards = scorecards;
+
+  // 8. Tutorial — always available (const defined at parse time)
+  window.tutorialSteps = (typeof TUTORIAL_STEPS !== 'undefined') ? TUTORIAL_STEPS : [];
+
+  // 9. Single debug log — check this in console after load
+  console.log('[TalentBase] Ready:',
+    'library=' + (window.libraryItems||[]).length,
+    'cands=' + cands.length,
+    'jobs=' + jobs.length,
+    'deals=' + deals.length,
+    'scorecards=' + (scorecards||[]).length,
+    'tutorial=' + (window.tutorialSteps||[]).length
+  );
+}
+
 window.addEventListener('DOMContentLoaded', async function(){
   var g = document.getElementById('gate');
   var a = document.getElementById('app-shell');
 
-  // Init Supabase first so sbRestoreSession can check credentials
-  sbInit();
-  _updateGateState(); // show login or setup screen immediately
+  // Show correct gate state immediately (login vs setup)
+  try { sbInit(); _updateGateState(); } catch(e){}
 
-  // Try to restore a live Supabase session (handles page refresh)
-  await sbRestoreSession();
+  // Restore session — skips gate if user is already logged in
+  var restored = false;
+  try { restored = await sbRestoreSession(); } catch(e){}
 
-  if(_sbUser){
-    var role = (_sbUser.user_metadata && _sbUser.user_metadata.role) || 'admin';
-    _unlockApp(role);   // _unlockApp enforces mutual exclusion — one path only
+  if(_sbUser || restored){
+    var role = (_sbUser && _sbUser.user_metadata && _sbUser.user_metadata.role) || 'admin';
+    _unlockApp(role);
   } else {
-    // No session — show gate
     if(g) g.style.cssText = 'display:flex!important;position:fixed;inset:0;z-index:9999;';
     if(a) a.style.cssText = 'display:none!important';
-    setTimeout(function(){ var i=document.getElementById('gate-email'); if(i)i.focus(); }, 150);
+    setTimeout(function(){ var i=document.getElementById('gate-email'); if(i) i.focus(); }, 150);
   }
 
-  // Global event delegation for library rows — fires even after DOM re-renders
+  // Global event delegation for library rows
   document.addEventListener('click', function(e){
     var row = e.target.closest('.lib-row');
     if(!row) return;
-    // Ignore button clicks inside rows (Copy, Delete etc.)
     if(e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
     var id = row.getAttribute('data-lib-id');
     if(!id) return;
