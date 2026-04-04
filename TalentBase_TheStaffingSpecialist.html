@@ -10184,128 +10184,135 @@ function setLibCat(cat, btn){
 }
 
 function initLibNav(){
-  var qa = document.getElementById('lib-quick-actions');
-  if(qa){
-    qa.innerHTML = '';
-    LIB_QUICK.forEach(function(q){
-      var gk = q.action.replace(/.*'([^']+)'.*/,'$1');
+  // Left nav: quick start + category groups
+  try {
+    var qa = document.getElementById('lib-quick-actions');
+    if(qa){
+      qa.innerHTML = '';
+      LIB_QUICK.forEach(function(q){
+        var gk = q.action.replace(/.*'([^']+)'.*/,'$1');
+        var div = document.createElement('div');
+        div.className = 'lib-nav-item';
+        div.setAttribute('data-group', gk);
+        div.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);';
+        div.innerHTML = '<span style="font-size:13px;">'+q.icon+'</span><span>'+q.label+'</span>';
+        div.onclick = function(){ setLibGroup(gk); };
+        qa.appendChild(div);
+      });
+    }
+  } catch(e){ console.error('[initLibNav] quick actions failed:', e); }
+
+  try {
+    var nc = document.getElementById('lib-nav-cats');
+    if(!nc) return;
+    nc.innerHTML = '';
+
+    function makeItem(gk, icon, label, count){
+      var active = (libGroup === gk);
       var div = document.createElement('div');
       div.className = 'lib-nav-item';
       div.setAttribute('data-group', gk);
-      div.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;';
-      div.innerHTML = '<span style="font-size:13px;">'+q.icon+'</span><span>'+q.label+'</span>';
-      div.onclick = function(){ setLibGroup(gk); };
-      qa.appendChild(div);
+      div.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;'
+        + 'font-weight:'+(active?'600':'500')+';color:'+(active?'var(--text)':'var(--text3)')+';'
+        + 'background:'+(active?'var(--accent-dim)':'transparent')+';';
+      div.innerHTML = '<span style="font-size:13px;">'+icon+'</span><span>'+label+'</span>'
+        + '<span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">'+count+'</span>';
+      div.onclick    = function(){ setLibGroup(gk); };
+      div.onmouseover = function(){ if(libGroup!==gk) div.style.background='var(--bg3)'; };
+      div.onmouseout  = function(){ if(libGroup!==gk) div.style.background='transparent'; };
+      return div;
+    }
+
+    nc.appendChild(makeItem('all','📂','All Templates', libraryItems.length));
+    var groupOrder = ['jobs','outreach','submit','close','playbook'];
+    groupOrder.forEach(function(gk){
+      var meta = LIB_GROUPS_META[gk];
+      if(!meta) return;
+      var count = libraryItems.filter(function(it){ return it && it.cat && (LIB_GROUPS[it.cat]||{}).group===gk; }).length;
+      if(!count) return;
+      nc.appendChild(makeItem(gk, meta.icon, meta.label, count));
     });
-  }
-
-  var nc = document.getElementById('lib-nav-cats');
-  if(!nc) return;
-  nc.innerHTML = '';
-
-  function makeNavItem(gk, icon, label, count){
-    var active = (libGroup === gk);
-    var div = document.createElement('div');
-    div.className = 'lib-nav-item';
-    div.setAttribute('data-group', gk);
-    div.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;font-weight:'+(active?'600':'500')+';color:'+(active?'var(--text)':'var(--text3)')+';background:'+(active?'var(--accent-dim)':'transparent')+';';
-    div.innerHTML = '<span style="font-size:13px;">'+icon+'</span><span>'+label+'</span>'
-      +'<span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">'+count+'</span>';
-    div.onclick    = function(){ setLibGroup(gk); };
-    div.onmouseover = function(){ if(libGroup !== gk) div.style.background='var(--bg3)'; };
-    div.onmouseout  = function(){ if(libGroup !== gk) div.style.background='transparent'; };
-    return div;
-  }
-
-  nc.appendChild(makeNavItem('all','📂','All Templates', libraryItems.length));
-
-  var groupOrder = ['jobs','outreach','submit','close','playbook'];
-  groupOrder.forEach(function(gk){
-    var meta = LIB_GROUPS_META[gk];
-    if(!meta) return;
-    var count = libraryItems.filter(function(item){
-      return item && item.cat && (LIB_GROUPS[item.cat]||{}).group === gk;
-    }).length;
-    if(!count) return;
-    nc.appendChild(makeNavItem(gk, meta.icon, meta.label, count));
-  });
+  } catch(e){ console.error('[initLibNav] categories failed:', e); }
 }
 
 function renderLibrary(){
-  var el = document.getElementById('lib-list');
-  if(!el) return;
+  try {
+    var el = document.getElementById('lib-list');
+    if(!el){ console.error('[renderLibrary] #lib-list not found'); return; }
 
-  // Guarantee data
-  if(!libraryItems || !libraryItems.length){
-    libraryItems = (window._LIB_SEED||[]).slice();
-    window.libraryItems = libraryItems;
-  }
-
-  initLibNav();
-
-  var q = ((document.getElementById('lib-search')||{}).value||'').toLowerCase();
-
-  var filtered = libraryItems.filter(function(item){
-    if(!item || !item.id || !item.title) return false;
-    if(libGroup !== 'all'){
-      var g = (LIB_GROUPS[item.cat]||{}).group;
-      if(g !== libGroup) return false;
+    // Always guarantee data
+    if(!libraryItems || !libraryItems.length){
+      libraryItems = (window._LIB_SEED||[]).slice();
+      window.libraryItems = libraryItems;
     }
-    if(libCat && libCat !== 'all' && item.cat !== libCat) return false;
-    if(q){
-      var hay = ((item.title||'')+' '+(item.tags||[]).join(' ')).toLowerCase();
-      if(hay.indexOf(q) === -1) return false;
-    }
-    return true;
-  });
+    console.log('[renderLibrary] rendering', libraryItems.length, 'items, group:', libGroup);
 
-  var countEl = document.getElementById('lib-file-count');
-  if(countEl) countEl.textContent = filtered.length + ' templates';
+    initLibNav();
 
-  if(!filtered.length){
-    el.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text4);font-size:12.5px;">No templates found</div>';
-    return;
-  }
+    var q = ((document.getElementById('lib-search')||{}).value||'').toLowerCase();
 
-  var grouped = {};
-  var groupOrder = ['jobs','outreach','submit','close','playbook'];
-  filtered.forEach(function(item){
-    var gk = (LIB_GROUPS[item.cat]||{}).group || 'playbook';
-    if(!grouped[gk]) grouped[gk] = [];
-    grouped[gk].push(item);
-  });
-
-  el.innerHTML = '';
-
-  groupOrder.forEach(function(gk){
-    var items = grouped[gk];
-    if(!items || !items.length) return;
-    var meta = LIB_GROUPS_META[gk] || {label:gk, icon:'📄'};
-
-    if(libGroup === 'all'){
-      var hdr = document.createElement('div');
-      hdr.style.cssText = 'padding:10px 16px 4px;position:sticky;top:0;background:var(--bg);z-index:2;';
-      hdr.innerHTML = '<div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;">'+meta.icon+' '+meta.label+'</div>';
-      el.appendChild(hdr);
-    }
-
-    items.forEach(function(item){
-      var sel = (libSelectedId === item.id);
-      var row = document.createElement('div');
-      row.className = 'lib-row';
-      row.setAttribute('data-lib-id', item.id);
-      row.style.cssText = 'padding:9px 16px;cursor:pointer;border-left:2px solid '+(sel?'var(--accent)':'transparent')+';background:'+(sel?'rgba(59,130,246,.1)':'transparent')+';transition:background .08s;';
-      var title = (item.title||'Untitled').replace(/&/g,'&amp;').replace(/</g,'&lt;');
-      var tags  = (item.tags||[]).slice(0,3).join(' · ');
-      row.innerHTML = '<div style="font-size:12.5px;font-weight:500;color:'+(sel?'var(--text)':'var(--text2)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+title+'</div>'
-        +(tags?'<div style="font-size:10.5px;color:var(--text4);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+tags+'</div>':'');
-      row.onmouseover = function(){ if(libSelectedId !== item.id) row.style.background='var(--bg3)'; };
-      row.onmouseout  = function(){ if(libSelectedId !== item.id) row.style.background='transparent'; };
-      row.onclick     = function(){ viewLibItem(item.id); };
-      el.appendChild(row);
+    var filtered = libraryItems.filter(function(item){
+      if(!item || !item.id || !item.title) return false;
+      if(libGroup !== 'all'){
+        if((LIB_GROUPS[item.cat]||{}).group !== libGroup) return false;
+      }
+      if(libCat && libCat !== 'all' && item.cat !== libCat) return false;
+      if(q){
+        var hay = ((item.title||'')+' '+(item.tags||[]).join(' ')).toLowerCase();
+        if(hay.indexOf(q) === -1) return false;
+      }
+      return true;
     });
-  });
+
+    var countEl = document.getElementById('lib-file-count');
+    if(countEl) countEl.textContent = filtered.length + ' templates';
+
+    if(!filtered.length){
+      el.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text4);font-size:12.5px;">No templates found</div>';
+      return;
+    }
+
+    var grouped = {};
+    var groupOrder = ['jobs','outreach','submit','close','playbook'];
+    filtered.forEach(function(item){
+      var gk = (LIB_GROUPS[item.cat]||{}).group || 'playbook';
+      if(!grouped[gk]) grouped[gk] = [];
+      grouped[gk].push(item);
+    });
+
+    el.innerHTML = '';
+    groupOrder.forEach(function(gk){
+      var items = grouped[gk];
+      if(!items || !items.length) return;
+      var meta = LIB_GROUPS_META[gk] || {label:gk, icon:'📄'};
+
+      if(libGroup === 'all'){
+        var hdr = document.createElement('div');
+        hdr.style.cssText = 'padding:10px 16px 4px;position:sticky;top:0;background:var(--bg);z-index:2;';
+        hdr.innerHTML = '<div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;">'+meta.icon+' '+meta.label+'</div>';
+        el.appendChild(hdr);
+      }
+
+      items.forEach(function(item){
+        var sel = (libSelectedId === item.id);
+        var row = document.createElement('div');
+        row.className = 'lib-row';
+        row.setAttribute('data-lib-id', item.id);
+        row.style.cssText = 'padding:10px 16px;cursor:pointer;border-left:2px solid '+(sel?'var(--accent)':'transparent')+';background:'+(sel?'rgba(59,130,246,.1)':'transparent')+';transition:background .08s;';
+        var title = (item.title||'Untitled').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+        var tags  = (item.tags||[]).slice(0,3).join(' · ');
+        row.innerHTML = '<div style="font-size:12.5px;font-weight:500;color:'+(sel?'var(--text)':'var(--text2)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+title+'</div>'
+          +(tags?'<div style="font-size:10.5px;color:var(--text4);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+tags+'</div>':'');
+        row.onmouseover = function(){ if(libSelectedId!==item.id) row.style.background='var(--bg3)'; };
+        row.onmouseout  = function(){ if(libSelectedId!==item.id) row.style.background='transparent'; };
+        row.onclick     = function(){ viewLibItem(item.id); };
+        el.appendChild(row);
+      });
+    });
+    console.log('[renderLibrary] done — rendered', filtered.length, 'rows');
+  } catch(e){ console.error('[renderLibrary] FAILED:', e); }
 }
+
 
 function viewLibItem(id){
   console.log('[Library] Opening item:', id);
@@ -10664,73 +10671,103 @@ const TUTORIAL_STEPS = [
 let currentTutStep = 0;
 
 function renderTutorial(){
-  const step = TUTORIAL_STEPS[currentTutStep];
-  
-  // Update progress
-  const pct = ((currentTutStep+1)/TUTORIAL_STEPS.length*100).toFixed(0);
-  const pb = document.getElementById('tut-progress-bar');
-  const pt = document.getElementById('tut-progress-text');
-  if(pb) pb.style.width = pct+'%';
-  if(pt) pt.textContent = 'Step '+(currentTutStep+1)+' of '+TUTORIAL_STEPS.length;
+  try {
+    // Guard: ensure TUTORIAL_STEPS exists and has content
+    if(!TUTORIAL_STEPS || !TUTORIAL_STEPS.length){
+      console.error('[renderTutorial] TUTORIAL_STEPS empty or undefined');
+      return;
+    }
+    // Guard: clamp currentTutStep to valid range
+    if(typeof currentTutStep !== 'number' || currentTutStep < 0 || currentTutStep >= TUTORIAL_STEPS.length){
+      currentTutStep = 0;
+    }
+    var step = TUTORIAL_STEPS[currentTutStep];
+    if(!step){ console.error('[renderTutorial] step is null at index', currentTutStep); return; }
 
-  // Update hero
-  const badge = document.getElementById('tut-step-badge');
-  const cat = document.getElementById('tut-category');
-  const title = document.getElementById('tut-title');
-  const tagline = document.getElementById('tut-tagline');
-  if(badge) badge.textContent = step.num;
-  if(cat) cat.textContent = step.category;
-  if(title) title.textContent = step.title;
-  if(tagline) tagline.textContent = step.tagline;
+    console.log('[renderTutorial] rendering step', currentTutStep, ':', step.title);
 
-  // Update learn list
-  const learnList = document.getElementById('tut-learn-list');
-  if(learnList) learnList.innerHTML = step.learn.map(l=>`
-    <div style="display:flex;align-items:flex-start;gap:10px;">
-      <div style="width:16px;height:16px;border-radius:50%;background:var(--accent-dim);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="3" style="width:9px;height:9px;"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <span style="font-size:13px;color:#ccccee;line-height:1.5;">${l}</span>
-    </div>`).join('');
+    // Progress bar
+    var pct = ((currentTutStep+1)/TUTORIAL_STEPS.length*100).toFixed(0);
+    var pb = document.getElementById('tut-progress-bar');
+    var pt = document.getElementById('tut-progress-text');
+    if(pb) pb.style.width = pct+'%';
+    if(pt) pt.textContent = 'Step '+(currentTutStep+1)+' of '+TUTORIAL_STEPS.length;
 
-  // Update action steps
-  const stepsList = document.getElementById('tut-steps-list');
-  if(stepsList) stepsList.innerHTML = step.steps.map((s,i)=>`
-    <div style="display:flex;gap:14px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--accent-border)'" onmouseout="this.style.borderColor='var(--border2)'">
-      <div style="width:28px;height:28px;border-radius:8px;background:var(--bg4);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;">${s.icon}</div>
-      <div style="flex:1;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">${i+1}. ${s.action}</div>
-        <div style="font-size:12px;color:var(--text3);line-height:1.6;">${s.detail}</div>
-      </div>
-    </div>`).join('');
+    // Hero section
+    var badge   = document.getElementById('tut-step-badge');
+    var cat     = document.getElementById('tut-category');
+    var title   = document.getElementById('tut-title');
+    var tagline = document.getElementById('tut-tagline');
+    if(badge)   badge.textContent   = step.num   || String(currentTutStep+1).padStart(2,'0');
+    if(cat)     cat.textContent     = step.category || '';
+    if(title)   title.textContent   = step.title    || '';
+    if(tagline) tagline.textContent = step.tagline  || '';
 
-  // Tip
-  const tip = document.getElementById('tut-tip');
-  if(tip) tip.textContent = step.tip;
+    // Learn list
+    var learnList = document.getElementById('tut-learn-list');
+    if(learnList && Array.isArray(step.learn)){
+      learnList.innerHTML = step.learn.map(function(l){
+        return '<div style="display:flex;align-items:flex-start;gap:10px;">'
+          +'<div style="width:16px;height:16px;border-radius:50%;background:var(--accent-dim);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">'
+          +'<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="3" style="width:9px;height:9px;"><polyline points="20 6 9 17 4 12"/></svg>'
+          +'</div><span style="font-size:13px;color:#ccccee;line-height:1.5;">'+l+'</span></div>';
+      }).join('');
+    }
 
-  // Try it button
-  const tryBtn = document.getElementById('tut-try-btn');
-  if(tryBtn) tryBtn.textContent = step.action+' →';
+    // Action steps
+    var stepsList = document.getElementById('tut-steps-list');
+    if(stepsList && Array.isArray(step.steps)){
+      stepsList.innerHTML = step.steps.map(function(s,i){
+        var icon = s.icon || '▶';
+        var action = s.action || '';
+        var detail = s.detail || '';
+        return '<div style="display:flex;gap:14px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;">'
+          +'<div style="width:28px;height:28px;border-radius:8px;background:var(--bg4);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;">'+icon+'</div>'
+          +'<div style="flex:1;">'
+          +'<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">'+(i+1)+'. '+action+'</div>'
+          +'<div style="font-size:12px;color:var(--text3);line-height:1.6;">'+detail+'</div>'
+          +'</div></div>';
+      }).join('');
+    }
 
-  // Prev/Next buttons
-  const prevBtn = document.getElementById('tut-prev-btn');
-  const nextBtn = document.getElementById('tut-next-btn');
-  if(prevBtn) prevBtn.style.opacity = currentTutStep===0?'0.3':'1';
-  if(nextBtn) nextBtn.textContent = currentTutStep===TUTORIAL_STEPS.length-1 ? '🎉 Complete!' : 'Next Step →';
+    // Tip
+    var tip = document.getElementById('tut-tip');
+    if(tip) tip.textContent = step.tip || '';
 
-  // Update step list sidebar
-  const stepList = document.getElementById('tut-step-list');
-  if(stepList) stepList.innerHTML = TUTORIAL_STEPS.map((s,i)=>`
-    <div onclick="currentTutStep=${i};renderTutorial();" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-left:3px solid ${i===currentTutStep?'var(--accent)':'transparent'};background:${i===currentTutStep?'var(--accent-dim)':'transparent'};transition:all .15s;">
-      <div style="width:24px;height:24px;border-radius:6px;background:${i<currentTutStep?'var(--green)':i===currentTutStep?'var(--accent)':'var(--bg4)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#fff;">
-        ${i<currentTutStep?'✓':s.num}
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:600;color:${i===currentTutStep?'var(--text)':'#aaaacc'};">${s.title}</div>
-        <div style="font-size:11px;color:#666688;">${s.category}</div>
-      </div>
-    </div>`).join('');
+    // Try it button
+    var tryBtn = document.getElementById('tut-try-btn');
+    if(tryBtn) tryBtn.textContent = (step.action || 'Try It') + ' →';
+
+    // Prev/Next
+    var prevBtn = document.getElementById('tut-prev-btn');
+    var nextBtn = document.getElementById('tut-next-btn');
+    if(prevBtn) prevBtn.style.opacity = currentTutStep===0 ? '0.3' : '1';
+    if(nextBtn) nextBtn.textContent = currentTutStep===TUTORIAL_STEPS.length-1 ? '🎉 Complete!' : 'Next Step →';
+
+    // Step list sidebar
+    var stepList = document.getElementById('tut-step-list');
+    if(stepList){
+      stepList.innerHTML = TUTORIAL_STEPS.map(function(s,i){
+        var active = (i === currentTutStep);
+        var done   = (i < currentTutStep);
+        return '<div onclick="currentTutStep='+i+';renderTutorial();" '
+          +'style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;'
+          +'border-left:3px solid '+(active?'var(--accent)':'transparent')+';'
+          +'background:'+(active?'var(--accent-dim)':'transparent')+';">'
+          +'<div style="width:24px;height:24px;border-radius:6px;'
+          +'background:'+(done?'var(--green)':active?'var(--accent)':'var(--bg4)')+';'
+          +'display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#fff;">'
+          +(done?'✓':(s.num||String(i+1)))+'</div>'
+          +'<div>'
+          +'<div style="font-size:11px;font-weight:600;color:'+(active?'var(--text)':'#aaaacc')+';">'+s.title+'</div>'
+          +'<div style="font-size:11px;color:#666688;">'+s.category+'</div>'
+          +'</div></div>';
+      }).join('');
+    }
+    console.log('[renderTutorial] done');
+  } catch(e){ console.error('[renderTutorial] FAILED:', e); }
 }
+
 
 function tutStep(dir){
   const next = currentTutStep + dir;
@@ -10811,6 +10848,35 @@ async function launchApp(){
   } catch(e){}
 
   try { nav('dashboard'); } catch(e){ console.warn('[launchApp] nav error:', e); }
+
+  // Self-test: after DOM settles, verify library and tutorial are populated
+  // This fires 800ms after launch — enough time for all async ops to complete
+  setTimeout(function(){
+    // Library check
+    try {
+      var libList = document.getElementById('lib-list');
+      if(libList && !libList.hasChildNodes()){
+        console.warn('[selftest] lib-list is empty — forcing render');
+        if(!libraryItems || !libraryItems.length){
+          libraryItems = (window._LIB_SEED||[]).slice();
+          window.libraryItems = libraryItems;
+        }
+        renderLibrary();
+      }
+    } catch(e){}
+
+    // Tutorial check — force-populate all text fields directly
+    try {
+      var tutTitle = document.getElementById('tut-title');
+      if(tutTitle && !tutTitle.textContent.trim()){
+        console.warn('[selftest] tutorial empty — forcing render');
+        currentTutStep = 0;
+        renderTutorial();
+      }
+    } catch(e){}
+
+    console.log('[selftest] done — library children:', (document.getElementById('lib-list')||{}).childNodes && document.getElementById('lib-list').childNodes.length);
+  }, 800);
 }
 
 function toggleGateEye(){
