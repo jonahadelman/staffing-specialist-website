@@ -994,6 +994,72 @@ a{color:var(--text3);text-decoration:none;}
   border-color:rgba(59,130,246,.3) !important;
   box-shadow:inset 2px 0 0 var(--accent) !important;
 }
+
+/* ═══════════════════════════════════════
+   LAYOUT EXPANSION — FULL WIDTH + AIR
+   ═══════════════════════════════════════ */
+
+/* Body: ensure full width, no x-overflow */
+body, html { width:100%; overflow-x:hidden; }
+
+/* Topbar: more horizontal padding, no text crush */
+.topbar { padding:12px 28px !important; gap:12px !important; }
+.topbar-title { white-space:nowrap; }
+
+/* All buttons: never wrap */
+button, .btn { white-space:nowrap !important; }
+
+/* Dashboard: wider padding, bigger gaps */
+.dash-scroll { padding:20px 28px !important; gap:14px !important; }
+.stats-row { gap:14px !important; margin-bottom:14px !important; }
+.stat { padding:20px 22px !important; min-height:90px; }
+.stat-value { font-size:32px !important; }
+.panels-row { gap:14px !important; }
+.panel { padding:22px 24px !important; }
+.panel-header { margin-bottom:16px !important; }
+
+/* Pipeline columns: taller, more room */
+.pipe-col { padding:20px 10px 16px !important; }
+.pipe-col-num { font-size:40px !important; }
+
+/* Jobs layout: wider list column, more detail padding */
+.jobs-list-col { width:340px !important; }
+.job-detail-col { padding:28px 32px !important; }
+
+/* Candidates layout: wider list */
+.cand-list-col { width:340px !important; }
+.cand-detail { padding:28px 32px !important; }
+
+/* Section heads: more breathing room */
+.section-head { margin:22px 0 10px !important; padding-bottom:8px !important; }
+
+/* Deals metrics: taller cells */
+#deals-metrics > div { padding:22px 28px !important; }
+
+/* Modals: more padding */
+.modal { padding:32px !important; }
+.modal h2 { margin-bottom:24px !important; }
+.modal-lg { max-width:760px !important; }
+
+/* Forms: more field spacing */
+.field { margin-bottom:16px !important; }
+.field input, .field select, .field textarea { padding:10px 13px !important; font-size:13px !important; }
+.field-row { gap:14px !important; }
+
+/* Kanban board: wider cards */
+#deals-board { padding:20px 28px 0 !important; gap:14px !important; }
+
+/* Analytics: more padding */
+.analytics-scroll { padding:24px 28px !important; }
+.analytics-grid { gap:14px !important; }
+
+/* Library list: more row padding */
+#lib-list .lib-row,
+.lib-row { padding:11px 18px !important; }
+
+/* Topbar search: slightly wider */
+.search-box input { width:320px !important; }
+.search-box input:focus { width:380px !important; }
 </style>
 </head>
 <body>
