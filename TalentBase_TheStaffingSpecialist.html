@@ -227,8 +227,8 @@ a{color:var(--text3);text-decoration:none;}
 /* ── CANDIDATES ── */
 .cand-layout{flex:1;display:flex;overflow:hidden;}
 /* ── VIEWS — the core show/hide system ── */
-.view{display:none;flex:1;flex-direction:column;overflow:hidden;}
-.view.on{display:flex;}
+.view{display:none !important;flex:1;flex-direction:column;overflow:hidden;}
+.view.on{display:flex !important;}
 
 /* ── CANDIDATES ── */
 .cand-filters{padding:10px 16px;border-bottom:1px solid var(--border2);display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:wrap;background:var(--bg2);}
@@ -4259,6 +4259,7 @@ function toggleNavTools(btn){
 }
 
 function nav(v){
+  console.log('[nav] Active view:', v);
   // Permission guard — block views the current role cannot access
   var viewPermissions = {
     'deals'      : 'viewDeals',
@@ -4271,9 +4272,12 @@ function nav(v){
     v = 'dashboard';
   }
 
-  document.querySelectorAll('.view').forEach(el=>el.classList.remove('on'));
-  const view=document.getElementById('v-'+v);
-  if(view)view.classList.add('on');
+  document.querySelectorAll('.view').forEach(function(el){
+    el.classList.remove('on');
+    el.style.display = '';  // clear any inline override
+  });
+  var view = document.getElementById('v-'+v);
+  if(view){ view.classList.add('on'); }
   document.querySelectorAll('.ni').forEach(el=>el.classList.remove('on'));
   document.querySelectorAll('.ni').forEach(el=>{if(el.getAttribute('onclick')&&el.getAttribute('onclick').includes("'"+v+"'"))el.classList.add('on');});
   if(v==='dashboard')renderDash();
