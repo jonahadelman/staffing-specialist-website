@@ -7778,7 +7778,7 @@ Score 0-100. Only include candidates scoring 50+. Sort by score descending. Max 
 // ═══════════════════════════════════════════════════
 // INTERVIEW SCORECARDS
 // ═══════════════════════════════════════════════════
-let scorecards = JSON.parse(localStorage.getItem('tb_scorecards')||'[]');
+var scorecards = JSON.parse(localStorage.getItem('tb_scorecards')||'[]');
 let editingSC = null;
 
 function saveScorecards(){ localStorage.setItem('tb_scorecards', JSON.stringify(scorecards)); window.scorecards = scorecards; }
@@ -10561,7 +10561,7 @@ function checkIntegrationStatus(){
 // ═══════════════════════════════════════════════════
 // TALENTBASE TUTORIAL SYSTEM
 // ═══════════════════════════════════════════════════
-const TUTORIAL_STEPS = [
+var TUTORIAL_STEPS = [
   {
     num:'01',
     category:'Getting Started',
@@ -10691,7 +10691,7 @@ const TUTORIAL_STEPS = [
   }
 ];
 
-let currentTutStep = 0;
+var currentTutStep = 0;
 
 function renderTutorial(){
   try {
