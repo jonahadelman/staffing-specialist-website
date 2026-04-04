@@ -1874,58 +1874,60 @@ a{color:var(--text3);text-decoration:none;}
 
 <!-- ═══ EMAIL TEMPLATES ═══ -->
 <div class="view" id="v-library">
-  <div class="topbar">
-    <div><div class="topbar-title">Document Library</div><div class="topbar-sub">Templates, offer letters, compliance docs, onboarding, scripts</div></div>
-    <button class="btn btn-ghost btn-sm" onclick="showDocInstances()" style="margin-right:4px;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Generated Docs
-    </button>
-    <button class="btn btn-primary" onclick="openNewLibraryItem()">+ Add Template</button>
+  <div class="topbar" style="background:var(--bg2);border-bottom:1px solid var(--border);">
+    <div>
+      <div class="topbar-title">Document Library</div>
+      <div class="topbar-sub">Templates, outreach, offers, onboarding</div>
+    </div>
+    <div class="tb-spacer"></div>
+    <div style="position:relative;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--text4);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="lib-search" placeholder="Search templates..." oninput="renderLibrary()"
+        style="background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:6px 12px 6px 32px;font-size:12.5px;color:var(--text);outline:none;width:220px;font-family:inherit;transition:all .15s;"
+        onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(59,130,246,.1)'"
+        onblur="this.style.borderColor='var(--border2)';this.style.boxShadow='none'"/>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openNewLibraryItem()">+ Add Template</button>
   </div>
 
-  <!-- Search + filter bar -->
-  <div style="padding:10px 20px;border-bottom:1px solid var(--border2);background:var(--bg2);display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;">
-    <div style="position:relative;flex:1;min-width:200px;max-width:300px;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);width:12px;height:12px;color:var(--text3);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="lib-search" placeholder="Search files..." style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:6px 10px 6px 28px;font-size:12px;color:var(--text);outline:none;font-family:inherit;" oninput="renderLibrary()"/>
-    </div>
-    <div style="display:flex;gap:4px;flex-wrap:wrap;">
-      <button class="lib-cat-btn on" onclick="setLibCat('all',this)">All</button>
-      <button class="lib-cat-btn" onclick="setLibCat('jd',this)">Job Descriptions</button>
-      <button class="lib-cat-btn" onclick="setLibCat('email',this)">Email</button>
-      <button class="lib-cat-btn" onclick="setLibCat('offer',this)">Offer Letters</button>
-      <button class="lib-cat-btn" onclick="setLibCat('candidate',this)">Candidate Comms</button>
-      <button class="lib-cat-btn" onclick="setLibCat('compliance',this)">Compliance</button>
-      <button class="lib-cat-btn" onclick="setLibCat('onboarding',this)">Onboarding</button>
-      <button class="lib-cat-btn" onclick="setLibCat('script',this)">Scripts</button>
-      <button class="lib-cat-btn" onclick="setLibCat('playbook',this)">Playbooks &amp; AI Engines</button>
-      <button class="lib-cat-btn" onclick="setLibCat('misc',this)">Other</button>
-    </div>
-    <span id="lib-file-count" style="font-size:11px;color:var(--text3);white-space:nowrap;margin-left:auto;"></span>
-  </div>
-
-  <!-- Split panel: file list left, viewer right -->
+  <!-- Main layout: left nav + content -->
   <div style="display:flex;flex:1;overflow:hidden;min-height:0;">
 
-    <!-- Left: file list -->
-    <div style="width:520px;flex-shrink:0;border-right:1px solid var(--border2);overflow-y:auto;background:var(--bg);">
-      <!-- Column headers -->
-      <div style="display:grid;grid-template-columns:1fr 110px 130px;gap:0;padding:7px 16px;border-bottom:1px solid var(--border2);background:var(--bg2);position:sticky;top:0;z-index:2;">
-        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;">Filename</div>
-        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;">Category</div>
-        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;text-align:right;">Actions</div>
-      </div>
-      <div id="lib-list"></div>
-    </div>
+    <!-- Left nav: categories + count -->
+    <div style="width:200px;flex-shrink:0;border-right:1px solid var(--border);background:var(--bg2);overflow-y:auto;padding:16px 10px;">
 
-    <!-- Right: document viewer -->
-    <div id="lib-viewer" style="flex:1;overflow-y:auto;background:var(--bg);display:flex;flex-direction:column;">
-      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text4);padding:40px;text-align:center;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;margin-bottom:12px;opacity:.3;"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-        <div style="font-size:13px;">Select an item from the library to view it</div>
+      <!-- Quick actions -->
+      <div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:0 6px;margin-bottom:8px;">Quick Start</div>
+      <div id="lib-quick-actions" style="display:flex;flex-direction:column;gap:2px;margin-bottom:20px;"></div>
+
+      <!-- Categories -->
+      <div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:0 6px;margin-bottom:8px;">Templates</div>
+      <div id="lib-nav-cats" style="display:flex;flex-direction:column;gap:1px;"></div>
+
+      <!-- Count -->
+      <div style="margin-top:16px;padding:0 6px;">
+        <div id="lib-file-count" style="font-size:11px;color:var(--text4);"></div>
       </div>
     </div>
 
+    <!-- Right: list + viewer split -->
+    <div style="display:flex;flex:1;overflow:hidden;min-height:0;">
+
+      <!-- File list -->
+      <div style="width:300px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;background:var(--bg);">
+        <div id="lib-list"></div>
+      </div>
+
+      <!-- Document viewer -->
+      <div id="lib-viewer" style="flex:1;overflow-y:auto;background:var(--bg);display:flex;flex-direction:column;">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text4);padding:40px;text-align:center;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;margin-bottom:12px;opacity:.2;"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          <div style="font-size:13px;font-weight:500;color:var(--text4);">Select a document to view</div>
+          <div style="font-size:11px;color:var(--text4);margin-top:4px;opacity:.6;">or use Quick Start to jump to what you need</div>
+        </div>
+      </div>
+
+    </div>
   </div>
 </div>
 
@@ -9877,127 +9879,299 @@ function deleteDocInstance(instId){
   showDocInstances();
 }
 
-function setLibCat(cat, btn){
-  libCat = cat;
-  document.querySelectorAll('.lib-cat-btn').forEach(function(b){ b.classList.remove('on'); });
-  if(btn) btn.classList.add('on');
+// ── LIBRARY CATEGORY MAP ─────────────────────────────────────
+// Maps seed cats → 5 clean user-facing groups
+var LIB_GROUPS = {
+  'jd':           {group:'jobs',    label:'Job Templates'},
+  'outreach':     {group:'outreach',label:'Outreach'},
+  'email':        {group:'outreach',label:'Outreach'},
+  'dmscripts':    {group:'outreach',label:'Outreach'},
+  'prospecting':  {group:'outreach',label:'Outreach'},
+  'clientoutreach':{group:'outreach',label:'Outreach'},
+  'candidate':    {group:'submit',  label:'Submissions'},
+  'comms':        {group:'submit',  label:'Submissions'},
+  'evaluation':   {group:'submit',  label:'Submissions'},
+  'script':       {group:'submit',  label:'Submissions'},
+  'offer':        {group:'close',   label:'Offers & Onboarding'},
+  'compliance':   {group:'close',   label:'Offers & Onboarding'},
+  'onboarding':   {group:'close',   label:'Offers & Onboarding'},
+  'closing':      {group:'close',   label:'Offers & Onboarding'},
+  'playbook':     {group:'playbook',label:'Playbooks'},
+  'sourcing':     {group:'playbook',label:'Playbooks'},
+  'jobanalysis':  {group:'playbook',label:'Playbooks'},
+  'expansion':    {group:'playbook',label:'Playbooks'},
+  'brand':        {group:'playbook',label:'Playbooks'},
+  'ops':          {group:'playbook',label:'Playbooks'},
+  'misc':         {group:'playbook',label:'Playbooks'},
+};
+
+var LIB_GROUPS_META = {
+  jobs:     {label:'Job Templates',       icon:'💼', color:'var(--blue)'},
+  outreach: {label:'Outreach',            icon:'✉',  color:'var(--accent2)'},
+  submit:   {label:'Submissions',         icon:'📋', color:'var(--purple)'},
+  close:    {label:'Offers & Onboarding', icon:'📄', color:'var(--green)'},
+  playbook: {label:'Playbooks',           icon:'⚡', color:'var(--amber)'},
+};
+
+var LIB_QUICK = [
+  {icon:'💼', label:'Build a Job',       action:"setLibGroup('jobs')",    color:'var(--blue)'},
+  {icon:'✉',  label:'Send Outreach',     action:"setLibGroup('outreach')",color:'var(--accent2)'},
+  {icon:'📋', label:'Submit Candidate',  action:"setLibGroup('submit')",  color:'var(--purple)'},
+  {icon:'📄', label:'Close / Offer',     action:"setLibGroup('close')",   color:'var(--green)'},
+];
+
+var libGroup = 'all';
+
+function setLibGroup(group){
+  libGroup = group;
+  libCat = 'all'; // reset old cat filter
+  libSelectedId = null;
+  // Update nav highlight
+  document.querySelectorAll('.lib-nav-item').forEach(function(el){
+    var active = el.getAttribute('data-group') === group;
+    el.style.background = active ? 'var(--accent-dim)' : 'transparent';
+    el.style.color = active ? 'var(--text)' : 'var(--text3)';
+    el.style.fontWeight = active ? '600' : '500';
+  });
   renderLibrary();
 }
 
-function openLibraryModal(id){
-  // Use the real libraryItems array (has body field)
-  var item = libraryItems.find(function(x){ return x.id === id; });
-  if(!item){ console.error('[Library] item not found:', id); return; }
-
-  var modal = document.getElementById('lib-modal');
-  if(!modal){
-    modal = document.createElement('div');
-    modal.id = 'lib-modal';
-    document.body.appendChild(modal);
-  }
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
-
-  // Render body content - convert newlines to visible lines
-  var bodyHtml = (item.body || item.content || '(No content)')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-  var catColors = {email:'#60a5fa',offer:'#22c55e',jd:'#3b82f6',script:'#f59e0b',playbook:'#14b8a6',compliance:'#a78bf5',onboarding:'#f97316',candidate:'#ec4899',misc:'#94a3b8'};
-  var catColor = catColors[item.cat] || '#94a3b8';
-  var catLabel = {email:'Email',offer:'Offer Letter',jd:'Job Description',script:'Script',playbook:'Playbook',compliance:'Compliance',onboarding:'Onboarding',candidate:'Candidate',misc:'Other'};
-
-  modal.innerHTML =
-    '<div style="background:var(--bg2,#111827);border:1px solid var(--border2,#1e2d45);border-radius:10px;max-width:900px;width:100%;max-height:90vh;display:flex;flex-direction:column;position:relative;">' +
-
-      // Header
-      '<div style="padding:20px 24px 16px;border-bottom:1px solid var(--border2,#1e2d45);flex-shrink:0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">' +
-        '<div>' +
-          '<div style="font-size:11px;font-weight:700;color:'+catColor+';text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">'+(item.icon||'')+'  '+(catLabel[item.cat]||item.cat||'')+'</div>' +
-          '<div style="font-size:18px;font-weight:700;color:var(--text,#f1f5f9);line-height:1.3;">'+(item.title||'Untitled')+'</div>' +
-          (item.subject ? '<div style="font-size:12px;color:var(--text4,#64748b);margin-top:6px;">Subject: '+item.subject.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</div>' : '') +
-        '</div>' +
-        '<div style="display:flex;gap:6px;flex-shrink:0;">' +
-          '<button onclick="navigator.clipboard.writeText(libraryItems.find(function(x){return x.id===\''+id+'\'})||{}).body||\'\')" style="padding:6px 12px;background:var(--bg3,#1c2333);border:1px solid var(--border2,#1e2d45);border-radius:6px;color:var(--text2,#94a3b8);font-size:12px;cursor:pointer;font-family:inherit;">📋 Copy</button>' +
-          '<button onclick="openDocGenerator(\''+id+'\')" style="padding:6px 12px;background:var(--accent,#3b82f6);border:none;border-radius:6px;color:#fff;font-size:12px;cursor:pointer;font-family:inherit;">⚡ Generate</button>' +
-          '<button onclick="closeLibraryModal()" style="padding:6px 10px;background:none;border:1px solid var(--border2,#1e2d45);border-radius:6px;color:var(--text3,#64748b);font-size:16px;cursor:pointer;line-height:1;">✕</button>' +
-        '</div>' +
-      '</div>' +
-
-      // Body
-      '<div style="padding:24px 28px;overflow-y:auto;flex:1;">' +
-        '<pre style="margin:0;white-space:pre-wrap;font-family:DM Mono,ui-monospace,monospace;font-size:13px;color:var(--text2,#94a3b8);line-height:1.75;">'+bodyHtml+'</pre>' +
-      '</div>' +
-
-    '</div>';
-
-  // Close on backdrop click
-  modal.onclick = function(e){ if(e.target === modal) closeLibraryModal(); };
+function setLibCat(cat, btn){
+  libCat = cat;
+  libGroup = 'all';
+  document.querySelectorAll('.lib-nav-item').forEach(function(el){
+    el.style.background = 'transparent';
+    el.style.color = 'var(--text3)';
+    el.style.fontWeight = '500';
+  });
+  renderLibrary();
 }
 
-function closeLibraryModal(){
-  var modal = document.getElementById('lib-modal');
-  if(modal) modal.remove();
+function initLibNav(){
+  // Quick start buttons
+  var qa = document.getElementById('lib-quick-actions');
+  if(qa) qa.innerHTML = LIB_QUICK.map(function(q){
+    return '<div onclick="'+q.action+'" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;color:var(--text3);font-size:12.5px;font-weight:500;transition:all .1s;" '+
+      'onmouseover="this.style.background=\'var(--bg3)\';this.style.color=\'var(--text)\'" '+
+      'onmouseout="this.style.background=\'transparent\';this.style.color=\'var(--text3)\'">'+
+      '<span style="font-size:13px;">'+q.icon+'</span>'+
+      '<span>'+q.label+'</span>'+
+    '</div>';
+  }).join('');
+
+  // Category nav
+  var nc = document.getElementById('lib-nav-cats');
+  if(!nc) return;
+  var html = '<div class="lib-nav-item" data-group="all" onclick="setLibGroup(\'all\')" '+
+    'style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;'+
+    'color:var(--text3);font-size:12.5px;font-weight:500;background:var(--accent-dim);color:var(--text);font-weight:600;transition:all .1s;" '+
+    'onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="">'+
+    '<span style="font-size:13px;">📂</span><span>All Templates</span>'+
+    '<span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:\'DM Mono\',monospace;">'+libraryItems.length+'</span>'+
+  '</div>';
+
+  Object.keys(LIB_GROUPS_META).forEach(function(gk){
+    var meta = LIB_GROUPS_META[gk];
+    var count = libraryItems.filter(function(item){
+      if(!item || !item.cat) return false;
+      return (LIB_GROUPS[item.cat]||{}).group === gk;
+    }).length;
+    if(!count) return;
+    html += '<div class="lib-nav-item" data-group="'+gk+'" onclick="setLibGroup(\''+gk+'\')" '+
+      'style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;'+
+      'color:var(--text3);font-size:12.5px;font-weight:500;transition:all .1s;" '+
+      'onmouseover="this.style.background=\'var(--bg3)\';this.style.color=\'var(--text)\'" '+
+      'onmouseout="if(document.querySelector(\'[data-group='+gk+']\')){var g=document.querySelector(\'[data-group='+gk+']\').style;if(\''+gk+'\' !==libGroup){g.background=\'transparent\';g.color=\'var(--text3)\';}}">'+
+      '<span style="font-size:13px;">'+meta.icon+'</span>'+
+      '<span>'+meta.label+'</span>'+
+      '<span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:\'DM Mono\',monospace;">'+count+'</span>'+
+    '</div>';
+  });
+  nc.innerHTML = html;
 }
 
 function renderLibrary(){
   var el = document.getElementById('lib-list');
   if(!el) return;
 
+  initLibNav();
+
   var q = ((document.getElementById('lib-search')||{}).value||'').toLowerCase();
-  var currentCat = libCat || 'all';
 
   var filtered = libraryItems.filter(function(item){
-    if(!item || !item.id) return false;
-    if(currentCat !== 'all' && item.cat !== currentCat) return false;
+    if(!item || !item.id || !item.title) return false;
+    // Group filter
+    if(libGroup !== 'all'){
+      var g = (LIB_GROUPS[item.cat]||{}).group;
+      if(g !== libGroup) return false;
+    }
+    // Old cat filter (backwards compat)
+    if(libCat && libCat !== 'all' && item.cat !== libCat) return false;
+    // Search
     if(q){
-      var inTitle = (item.title||'').toLowerCase().includes(q);
-      var inTags  = (item.tags||[]).some(function(t){ return t.toLowerCase().includes(q); });
-      if(!inTitle && !inTags) return false;
+      if(!(item.title||'').toLowerCase().includes(q) &&
+         !(item.tags||[]).some(function(t){ return t.toLowerCase().includes(q); })) return false;
     }
     return true;
   });
 
   var countEl = document.getElementById('lib-file-count');
-  if(countEl) countEl.textContent = filtered.length + ' of ' + libraryItems.length + ' files';
+  if(countEl) countEl.textContent = filtered.length + ' templates';
 
   if(!filtered.length){
-    el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text4);font-size:13px;">No files found.</div>';
+    el.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--text4);font-size:12.5px;">No templates found</div>';
     return;
   }
 
-  var catLabel = {email:'Email',offer:'Offer Letter',candidate:'Candidate',compliance:'Compliance',onboarding:'Onboarding',jd:'Job Description',script:'Script',playbook:'Playbook',misc:'Other'};
-  var catIcons = {email:'EMAIL',offer:'OFFER',script:'SCRIPT',jd:'JD',playbook:'PLAYBOOK',misc:'FILE',candidate:'CAND',compliance:'COMP',onboarding:'ON'};
+  // Group items by their display group for visual sections
+  var grouped = {};
+  filtered.forEach(function(item){
+    var gk = (LIB_GROUPS[item.cat]||{}).group || 'playbook';
+    if(!grouped[gk]) grouped[gk]=[];
+    grouped[gk].push(item);
+  });
 
-  el.innerHTML = filtered.map(function(item){
-    var id = item.id;
-    var icon  = catIcons[item.cat]  || 'FILE';
-    var label = catLabel[item.cat]  || item.cat || '';
-    var title = (item.title||'Untitled').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    var tags  = (item.tags||[]).slice(0,3).join(' · ').replace(/&/g,'&amp;');
-    var isSelected = libSelectedId === id;
-    var rowStyle = isSelected
-      ? 'background:var(--accent-dim);border-left:3px solid var(--accent);'
-      : 'border-left:3px solid transparent;';
-    return (
-      '<div class="lib-row" data-lib-id="'+id+'" onclick="openLibraryModal(\''+id+'\')" style="'+rowStyle+'display:grid;grid-template-columns:1fr 100px 115px;gap:0;padding:9px 16px;border-bottom:1px solid var(--border2);cursor:pointer;align-items:center;transition:background .08s;" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\''+(isSelected?'var(--accent-dim)':'transparent')+'\'">'+
-        '<div style="display:flex;align-items:center;gap:8px;min-width:0;">'+
-          '<span style="font-size:10px;background:var(--bg4);border:1px solid var(--border2);padding:2px 5px;border-radius:3px;font-family:DM Mono,monospace;color:var(--text3);flex-shrink:0;">'+icon+'</span>'+
-          '<div style="min-width:0;">'+
-            '<div style="font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+title+'</div>'+
-            '<div style="font-size:11px;color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+tags+'</div>'+
-          '</div>'+
+  var groupOrder = ['jobs','outreach','submit','close','playbook'];
+  var html = '';
+
+  groupOrder.forEach(function(gk){
+    var items = grouped[gk];
+    if(!items || !items.length) return;
+    var meta = LIB_GROUPS_META[gk] || {label:gk, icon:'📄', color:'var(--text4)'};
+
+    // Section header (only when showing all)
+    if(libGroup === 'all'){
+      html += '<div style="padding:12px 16px 6px;position:sticky;top:0;background:var(--bg);z-index:2;">'+
+        '<div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;">'+
+          meta.icon+' '+meta.label+
         '</div>'+
-        '<div><span style="font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border2);padding:2px 6px;border-radius:4px;">'+label+'</span></div>'+
-        '<div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;" onclick="event.stopPropagation()">'+
-          '<button class="btn btn-ghost btn-xs" onclick="copyLibItem(\''+id+'\')">Copy</button>'+
-          (item.subject ? '<button class="btn btn-ghost btn-xs" onclick="copyLibItemFull(\''+id+'\')">+Subj</button>' : '')+
-          '<button class="btn btn-ghost btn-xs" style="color:var(--red);" onclick="deleteLibItem(\''+id+'\')">&#x2715;</button>'+
-        '</div>'+
-      '</div>'
-    );
-  }).join('');
+      '</div>';
+    }
+
+    items.forEach(function(item){
+      var id = item.id;
+      var title = (item.title||'Untitled').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      var isSelected = libSelectedId === id;
+      var selBg = isSelected ? 'background:rgba(59,130,246,.1);border-left:2px solid var(--accent);' : 'border-left:2px solid transparent;';
+      var selColor = isSelected ? 'color:var(--text);' : 'color:var(--text2);';
+
+      html += '<div class="lib-row" data-lib-id="'+id+'" onclick="viewLibItem(\''+id+'\')" '+
+        'style="'+selBg+'padding:9px 16px;cursor:pointer;transition:background .08s;" '+
+        'onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\''+(isSelected?'rgba(59,130,246,.1)':'transparent')+'\'">'+
+        '<div style="font-size:12.5px;font-weight:500;'+selColor+'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+title+'</div>'+
+        (item.tags&&item.tags.length?'<div style="font-size:10.5px;color:var(--text4);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(item.tags||[]).slice(0,3).join(' · ')+'</div>':'')+
+      '</div>';
+    });
+  });
+
+  el.innerHTML = html;
 }
 
-function viewLibItem(id){ openLibraryModal(id); }
+function viewLibItem(id){
+  libSelectedId = id;
+  var item = libraryItems.find(function(x){ return x.id === id; });
+  if(!item){ return; }
+
+  // Re-render list to update selection highlight
+  renderLibrary();
+
+  var viewer = document.getElementById('lib-viewer');
+  if(!viewer) return;
+
+  var body = item.body || item.content || '';
+  var gk = (LIB_GROUPS[item.cat]||{}).group || 'playbook';
+  var meta = LIB_GROUPS_META[gk] || {label:'Template',icon:'📄',color:'var(--text4)'};
+  var isJD = item.cat === 'jd';
+
+  // Build header
+  var headerHtml =
+    '<div style="padding:24px 32px 0;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;">'+
+      '<div style="font-size:10.5px;font-weight:700;color:'+meta.color+';text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">'+meta.icon+' '+meta.label+'</div>'+
+      '<div style="font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.4px;line-height:1.3;margin-bottom:12px;">'+(item.icon?item.icon+' ':'')+esc(item.title)+'</div>'+
+      (item.subject?'<div style="font-size:12px;color:var(--text4);margin-bottom:12px;">Subject: <span style="color:var(--text2);">'+esc(item.subject)+'</span></div>':'')+
+      // Actions row
+      '<div style="display:flex;align-items:center;gap:8px;padding-bottom:14px;">'+
+        '<button onclick="copyLibItem(\''+id+'\')" class="btn btn-ghost btn-sm">📋 Copy</button>'+
+        (isJD?'<button onclick="openDocGenerator(\''+id+'\')" class="btn btn-primary btn-sm">⚡ Generate</button>':
+              '<button onclick="openDocGenerator(\''+id+'\')" class="btn btn-ghost btn-sm">⚡ Generate</button>')+
+        '<button onclick="editLibItem(\''+id+'\')" class="btn btn-ghost btn-sm">Edit</button>'+
+        '<button onclick="deleteLibItem(\''+id+'\')" class="btn btn-ghost btn-sm" style="color:var(--red);">Delete</button>'+
+      '</div>'+
+      // Tabs (JD only)
+      (isJD?
+        '<div style="display:flex;gap:0;">'+
+          ['Full','Summary','Requirements','Notes'].map(function(tab,i){
+            return '<button onclick="libShowTab(\''+id+'\',\''+tab.toLowerCase()+'\')" data-lib-tab="'+tab.toLowerCase()+'" '+
+              'style="padding:8px 16px;font-size:12px;font-weight:'+(i===0?'600':'500')+';border:none;border-bottom:'+(i===0?'2px solid var(--accent)':'2px solid transparent')+
+              ';background:none;color:'+(i===0?'var(--text)':'var(--text4)')+';cursor:pointer;font-family:inherit;transition:all .1s;">'+tab+'</button>';
+          }).join('')+
+        '</div>'
+        : '')+
+    '</div>';
+
+  // Build body
+  var bodyHtml = body.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  var contentHtml =
+    '<div id="lib-doc-content" style="padding:28px 32px;flex:1;overflow-y:auto;">'+
+      '<pre style="margin:0;white-space:pre-wrap;font-family:DM Mono,ui-monospace,monospace;font-size:12.5px;line-height:1.8;color:var(--text2);">'+bodyHtml+'</pre>'+
+    '</div>';
+
+  viewer.innerHTML = headerHtml + contentHtml;
+  viewer.style.display = 'flex';
+  viewer.style.flexDirection = 'column';
+}
+
+function libShowTab(itemId, tab){
+  var item = libraryItems.find(function(x){ return x.id === itemId; });
+  if(!item) return;
+  var body = item.body || '';
+
+  // Update tab styles
+  document.querySelectorAll('[data-lib-tab]').forEach(function(btn){
+    var isActive = btn.getAttribute('data-lib-tab') === tab;
+    btn.style.fontWeight = isActive ? '600' : '500';
+    btn.style.borderBottom = isActive ? '2px solid var(--accent)' : '2px solid transparent';
+    btn.style.color = isActive ? 'var(--text)' : 'var(--text4)';
+  });
+
+  var content = document.getElementById('lib-doc-content');
+  if(!content) return;
+
+  // Extract sections from body text
+  var lines = body.split('\n');
+  var filtered;
+
+  if(tab === 'full'){
+    filtered = lines;
+  } else if(tab === 'summary'){
+    // First section up to first ━━━ divider
+    var divIdx = lines.findIndex(function(l){ return /^━+/.test(l.trim()); });
+    filtered = divIdx > 0 ? lines.slice(0, divIdx) : lines.slice(0, 20);
+  } else if(tab === 'requirements'){
+    // Lines containing REQUIRED or QUALIF or bullets after those headers
+    var inSection = false;
+    filtered = [];
+    lines.forEach(function(l){
+      var upper = l.toUpperCase();
+      if(upper.includes('REQUIRED') || upper.includes('QUALIF') || upper.includes('MINIMUM')){
+        inSection = true;
+      } else if(/^━+/.test(l.trim()) && inSection){
+        filtered.push(''); inSection = false;
+      }
+      if(inSection || l.startsWith('•') || l.startsWith('-')) filtered.push(l);
+    });
+    if(!filtered.length) filtered = ['No requirements section found in this template.'];
+  } else if(tab === 'notes'){
+    filtered = ['Notes for: '+(item.title||''), '', 'Add your interview notes, hiring manager feedback, or candidate observations here.', '', '— This section is for your personal use and is not sent to anyone.'];
+  }
+
+  var bodyHtml = (filtered||[]).join('\n').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  content.innerHTML = '<pre style="margin:0;white-space:pre-wrap;font-family:DM Mono,ui-monospace,monospace;font-size:12.5px;line-height:1.8;color:var(--text2);">'+bodyHtml+'</pre>';
+}
+
+function openLibraryModal(id){ viewLibItem(id); }
+function closeLibraryModal(){ /* no-op: right panel only */ }
 
 
 function copyLibItem(id){
