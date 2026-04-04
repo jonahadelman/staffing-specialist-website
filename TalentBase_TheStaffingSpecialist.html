@@ -227,8 +227,8 @@ a{color:var(--text3);text-decoration:none;}
 /* ── CANDIDATES ── */
 .cand-layout{flex:1;display:flex;overflow:hidden;}
 /* ── VIEWS — the core show/hide system ── */
-.view{display:none !important;flex:1;flex-direction:column;overflow:hidden;}
-.view.on{display:flex !important;}
+.view{display:none !important;flex:1;flex-direction:column;overflow:hidden;min-height:0;}
+.view.on{display:flex !important;flex:1;flex-direction:column;overflow:hidden;min-height:0;}
 
 /* ── CANDIDATES ── */
 .cand-filters{padding:10px 16px;border-bottom:1px solid var(--border2);display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:wrap;background:var(--bg2);}
@@ -1428,7 +1428,7 @@ button, .btn { white-space:nowrap !important; }
 <!-- ══════════════════════════════════════════════════════════
      AI TOOLS — COMMAND CENTER
 ═══════════════════════════════════════════════════════════ -->
-<div class="view" id="v-aitools" style="flex-direction:column;overflow:hidden;">
+<div class="view" id="v-aitools" style="display:none;flex-direction:column;overflow:hidden;">
   <div class="topbar">
     <div><div class="topbar-title">⚡ AI Tools</div></div>
   </div>
@@ -1545,7 +1545,7 @@ button, .btn { white-space:nowrap !important; }
      DEALS CRM — Sales pipeline from HappyHunting to Closed
 ═══════════════════════════════════════════════════════════ -->
 <!-- ═══ HAPPY HUNTING (embedded) ═══ -->
-<div class="view" id="v-happyhunting" style="flex-direction:column;overflow:hidden;">
+<div class="view" id="v-happyhunting" style="display:none;flex-direction:column;overflow:hidden;">
   <div class="topbar" style="flex-shrink:0;">
     <div>
       <div class="topbar-title">⚡ Happy Hunting</div>
@@ -4275,10 +4275,13 @@ function nav(v){
 
   document.querySelectorAll('.view').forEach(function(el){
     el.classList.remove('on');
-    el.style.display = '';  // clear any inline override
+    el.style.display = 'none';  // explicitly hide all views
   });
   var view = document.getElementById('v-'+v);
-  if(view){ view.classList.add('on'); }
+  if(view){
+    view.classList.add('on');
+    view.style.display = 'flex';
+  }
   document.querySelectorAll('.ni').forEach(el=>el.classList.remove('on'));
   document.querySelectorAll('.ni').forEach(el=>{if(el.getAttribute('onclick')&&el.getAttribute('onclick').includes("'"+v+"'"))el.classList.add('on');});
   if(v==='dashboard')renderDash();
@@ -11218,6 +11221,10 @@ window.addEventListener('DOMContentLoaded', async function(){
   try { restored = await sbRestoreSession(); } catch(e) {}
 
   // STEP 3: Route to app or gate
+  // Force-hide all views except dashboard on init
+  document.querySelectorAll('.view').forEach(function(el){
+    if(el.id !== 'v-dashboard') el.style.display = 'none';
+  });
   if(_sbUser || restored){
     var role = (_sbUser && _sbUser.user_metadata && _sbUser.user_metadata.role) || 'admin';
     _unlockApp(role);
@@ -11356,8 +11363,8 @@ window.addEventListener('DOMContentLoaded', async function(){
         <div>
           <div class="ws-label">Accent Color</div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <input type="color" id="ws-brand-color" value="var(--accent)" onchange="wsBrandPreview()" style="width:48px;height:36px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;background:none;padding:2px;"/>
-            <input id="ws-brand-color-hex" class="ws-input" style="max-width:120px;" placeholder="var(--accent)" oninput="wsBrandColorHex()"/>
+            <input type="color" id="ws-brand-color" value="#3b82f6" onchange="wsBrandPreview()" style="width:48px;height:36px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;background:none;padding:2px;"/>
+            <input id="ws-brand-color-hex" class="ws-input" style="max-width:120px;" placeholder="#3b82f6" oninput="wsBrandColorHex()"/>
             <div style="display:flex;gap:5px;" id="ws-color-presets"></div>
           </div>
         </div>
