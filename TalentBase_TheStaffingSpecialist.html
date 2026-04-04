@@ -1414,10 +1414,10 @@ button, .btn { white-space:nowrap !important; }
     <!-- ── SECTION 3: TEMPLATES & DOCS ── -->
     <div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;">Templates &amp; Docs</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn btn-ghost btn-sm" onclick="nav('library');setTimeout(()=>setLibCat('email',document.querySelector('[onclick*=\"email\"]')),200)">📧 Email Templates</button>
+      <button class="btn btn-ghost btn-sm" onclick="nav('library');setTimeout(function(){setLibGroup('outreach');},100)">📧 Email Templates</button>
       <button class="btn btn-ghost btn-sm" onclick="nav('offer')">📄 Offer Letter</button>
-      <button class="btn btn-ghost btn-sm" onclick="nav('library');setTimeout(()=>setLibCat('compliance',document.querySelector('[onclick*=\"compliance\"]')),200)">🔒 Compliance Docs</button>
-      <button class="btn btn-ghost btn-sm" onclick="nav('library');setTimeout(()=>setLibCat('onboarding',document.querySelector('[onclick*=\"onboarding\"]')),200)">🎉 Onboarding</button>
+      <button class="btn btn-ghost btn-sm" onclick="nav('library');setTimeout(function(){setLibGroup('close');},100)">🔒 Compliance Docs</button>
+      <button class="btn btn-ghost btn-sm" onclick="nav('library');setTimeout(function(){setLibGroup('close');},100)">🎉 Onboarding</button>
       <button class="btn btn-ghost btn-sm" onclick="openAITool('interview')">🎤 Interview Questions</button>
       <button class="btn btn-ghost btn-sm" onclick="openAITool('pitch')">🎯 Client Pitch</button>
       <button class="btn btn-ghost btn-sm" onclick="nav('prompts')">✏️ 100 AI Prompts</button>
