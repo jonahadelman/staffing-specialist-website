@@ -2945,16 +2945,16 @@ async function gateLogin() {
     return;
   }
 
-  // ── CASE 2: No Supabase — dev fallback (silent, not exposed in UI) ──
-  if (email === DEV_MODE_EMAIL && pass === DEV_MODE_PASS) {
+  // ── CASE 2: No Supabase — any credentials work (demo mode) ──
+  if (email && pass) {
     _setDevSession(email);
     _unlockApp('admin');
     return;
   }
 
-  // ── CASE 3: No Supabase, not dev creds — show setup state ──
+  // ── CASE 3: Empty credentials ──
   _gateSetLoading(false);
-  _updateGateState(); // switches to setup panel
+  _gateSetError('Please enter your email and password.');
 }
 
 // ── CREATE USER ───────────────────────────────────────────────
@@ -7602,6 +7602,165 @@ function renderDash(){
   if(dateEl) dateEl.textContent = 'What needs to happen today to close roles — ' + days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate();
 
   var total          = cands.length;
+  // render handled by individual sub-functions
+  try { renderDashKPIs(); }     catch(e){}
+  try { renderDashAttention(); } catch(e){}
+  try { renderDashPipeline(); } catch(e){}
+  try { renderDashHot(); }      catch(e){}
+  try { renderDashDeals(); }    catch(e){}
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD SUB-RENDERS
+// ═══════════════════════════════════════════════
+
+function renderDashKPIs(){
+  var rev = getRevenueStats ? getRevenueStats() : {pipelineValue:0,expectedRevenue:0};
+  var pl  = document.getElementById('dm-pipeline');
+  var ex  = document.getElementById('dm-expected');
+  var cd  = document.getElementById('dm-cands');
+  var cs  = document.getElementById('dm-cands-sub');
+  var ps  = document.getElementById('dm-pipeline-sub');
+  var fmt = function(n){ return n>=1000000?'$'+(n/1000000).toFixed(1)+'M':n>=1000?'$'+(n/1000).toFixed(0)+'K':'$'+n.toFixed(0); };
+  if(pl) pl.textContent = rev.pipelineValue ? fmt(rev.pipelineValue) : '$0';
+  if(ex) ex.textContent = rev.expectedRevenue ? fmt(rev.expectedRevenue) : '$0';
+  var activeCount = cands.filter(function(cc){return cc.status!=='Hired'&&cc.status!=='Rejected';}).length;
+  var interviewCount = cands.filter(function(cc){return cc.status==='Interviewing';}).length;
+  if(cd) cd.textContent = activeCount;
+  if(cs) cs.textContent = interviewCount + ' interviewing';
+  var openJobs = jobs.filter(function(j){return j.status==='Open';}).length;
+  if(ps) ps.textContent = openJobs + ' open role' + (openJobs!==1?'s':'');
+  var dateEl = document.getElementById('dash-date');
+  if(dateEl){
+    var now=new Date();
+    var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    dateEl.textContent = days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate();
+  }
+}
+
+function renderDashAttention(){
+  var list  = document.getElementById('dash-attention-list');
+  var count = document.getElementById('dash-attention-count');
+  var clear = document.getElementById('dash-all-clear');
+  if(!list) return;
+  var items = [];
+  try { items = runAutomation ? runAutomation() : []; } catch(e){}
+  if(items.length){
+    if(count){ count.textContent=items.length; count.style.display=''; }
+    if(clear) clear.style.display='none';
+    var urgColors={high:'var(--red)',medium:'var(--amber)',low:'var(--text4)'};
+    list.innerHTML = items.map(function(item){
+      var col=urgColors[item.urgency]||'var(--text4)';
+      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);" onclick="'+(item.action?'('+item.action.toString()+'())':'')+'">' +
+        '<span style="font-size:18px;flex-shrink:0;">'+item.icon+'</span>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:13px;font-weight:600;color:var(--text);">'+esc(item.label)+'</div>' +
+          '<div style="font-size:11px;color:'+col+';margin-top:2px;">'+esc(item.detail||'')+'</div>' +
+        '</div>' +
+        '<button onclick="('+item.action.toString()+'());event.stopPropagation();" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent2);font-size:11px;padding:4px 10px;border-radius:5px;cursor:pointer;font-family:inherit;white-space:nowrap;">'+esc(item.cta||'Review')+'</button>' +
+      '</div>';
+    }).join('');
+  } else {
+    if(count) count.style.display='none';
+    if(clear) clear.style.display='block';
+    list.innerHTML='';
+  }
+}
+
+function renderDashPipeline(){
+  var el=document.getElementById('dash-pipeline');
+  if(!el) return;
+  var STAGES_SHOW=['New','Screening','Interviewing','Offer','Hired'];
+  var COLORS={New:'var(--blue)',Screening:'var(--purple)',Interviewing:'var(--amber)',Offer:'var(--teal)',Hired:'var(--green)'};
+  var total=cands.length;
+  if(!total){
+    el.innerHTML='<div style="font-size:12px;color:var(--text4);padding:16px 0;text-align:center;">No candidates yet</div>';
+    return;
+  }
+  var rows='';
+  for(var si=0;si<STAGES_SHOW.length;si++){
+    var s=STAGES_SHOW[si];
+    var n=cands.filter(function(cc){return cc.status===s;}).length;
+    var pct=total>0?Math.round(n/total*100):0;
+    var col=COLORS[s];
+    var numColor=n?col:'var(--text4)';
+    rows+='<div style="display:flex;align-items:center;gap:10px;padding:5px 0;cursor:pointer;" onclick="nav(\'pipeline\')">'; 
+    rows+='<div style="font-size:11px;font-weight:600;color:var(--text3);width:82px;flex-shrink:0;">'+s+'</div>';
+    rows+='<div style="flex:1;background:var(--bg3);border-radius:3px;height:5px;overflow:hidden;">';
+    rows+='<div style="width:'+pct+'%;height:100%;background:'+col+';border-radius:3px;transition:width .3s;"></div>';
+    rows+='</div>';
+    rows+='<div style="font-size:12px;font-weight:600;color:'+numColor+';width:22px;text-align:right;">'+n+'</div>';
+    rows+='</div>';
+  }
+  el.innerHTML=rows;
+}
+
+function renderDashHot(){
+  var el=document.getElementById('dash-hot-list');
+  var ct=document.getElementById('dash-hot-count');
+  if(!el) return;
+  var hot=cands.filter(function(cc){return cc.responded||cc.opened;})
+    .sort(function(a,b){return (b.responded?2:b.opened?1:0)-(a.responded?2:a.opened?1:0);})
+    .slice(0,5);
+  if(ct) ct.textContent=hot.length||'';
+  if(!hot.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text4);padding:20px 0;text-align:center;">No engagement signals yet.</div>';
+    return;
+  }
+  var rows='';
+  hot.forEach(function(cc){
+    var badge=cc.responded?'🔥 Replied':cc.opened?'👀 Opened':'';
+    var initials=((cc.first||'?')[0]+(cc.last||'?')[0]).toUpperCase();
+    rows+='<div class="dash-hot-row" data-cid="'+esc(cc.id)+'" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;">';
+    rows+='<div style="width:32px;height:32px;border-radius:50%;background:var(--accent-dim);border:1px solid var(--accent-border);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--accent2);flex-shrink:0;">'+initials+'</div>';
+    rows+='<div style="flex:1;min-width:0;">';
+    rows+='<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(cc.first+' '+cc.last)+'</div>';
+    rows+='<div style="font-size:11px;color:var(--text4);">'+esc(cc.title||cc.status||'')+'</div>';
+    rows+='</div>';
+    if(badge) rows+='<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);">'+badge+'</span>';
+    rows+='</div>';
+  });
+  el.innerHTML=rows;
+  el.querySelectorAll('.dash-hot-row').forEach(function(row){
+    row.addEventListener('click',function(){
+      var cid=row.getAttribute('data-cid');
+      nav('candidates');
+      setTimeout(function(){try{selCand(cid);}catch(e){}},120);
+    });
+  });
+}
+
+function renderDashDeals(){
+  var el=document.getElementById('dash-top-deals');
+  if(!el) return;
+  var active=(deals||[]).filter(function(d){return d.stage!=='Closed Lost';})
+    .sort(function(a,b){return (b.fee||0)*(b.prob||0)-(a.fee||0)*(a.prob||0);})
+    .slice(0,4);
+  if(!active.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text4);padding:20px 0;text-align:center;">No active deals yet.</div>';
+    return;
+  }
+  var fmt=function(n){return n>=1000?'$'+(n/1000).toFixed(0)+'K':'$'+n;};
+  var rows='';
+  active.forEach(function(d){
+    var prob=d.prob||50;
+    var probCol=prob>=70?'var(--green)':prob>=40?'var(--amber)':'var(--red)';
+    rows+='<div class="dash-deal-row" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;">';
+    rows+='<div style="flex:1;min-width:0;">';
+    rows+='<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(d.company||'Unnamed')+'</div>';
+    rows+='<div style="font-size:11px;color:var(--text4);">'+esc(d.role||d.stage||'')+'</div>';
+    rows+='</div>';
+    rows+='<div style="text-align:right;flex-shrink:0;">';
+    rows+='<div style="font-size:13px;font-weight:700;color:var(--teal);">'+fmt(d.fee||0)+'</div>';
+    rows+='<div style="font-size:10px;font-weight:600;color:'+probCol+';">'+prob+'% prob</div>';
+    rows+='</div></div>';
+  });
+  el.innerHTML=rows;
+  el.querySelectorAll('.dash-deal-row').forEach(function(row){
+    row.addEventListener('click',function(){ nav('deals'); });
+  });
+}
 
 // ═══════════════════════════════════════════════
 // ANALYTICS
