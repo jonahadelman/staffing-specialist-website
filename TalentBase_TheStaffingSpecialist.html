@@ -7317,13 +7317,13 @@ function renderDash(){
   var dateEl = document.getElementById('dash-date');
   if(dateEl) dateEl.textContent = 'What needs to happen today to close roles — ' + days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate();
 
-  const total        = cands.length;
-  const hired        = cands.filter(c=>c.status==='Hired').length;
-  const interviewing = cands.filter(c=>c.status==='Interviewing').length;
-  const openJobs     = jobs.filter(j=>j.status==='Open').length;
-  const rev          = getRevenueStats();
-  const hasRevData   = rev.pipelineValue>0||rev.closedRevenue>0;
-  const hasAnyData   = total>0||openJobs>0||deals.length>0;
+  var total          = cands.length;
+  var hired          = cands.filter(function(c){return c.status==='Hired';}).length;
+  var interviewing   = cands.filter(function(c){return c.status==='Interviewing';}).length;
+  var openJobs       = jobs.filter(function(j){return j.status==='Open';}).length;
+  var rev            = getRevenueStats();
+  var hasRevData     = rev && (rev.pipelineValue>0||rev.closedRevenue>0);
+  var hasAnyData     = total>0||openJobs>0||deals.length>0;
 
   // ── EMPTY STATE ────────────────────────────────────────────
   var emptyEl = document.getElementById('dash-empty');
@@ -7459,12 +7459,12 @@ function renderDash(){
     }
   }
 }
-  const hired        = cands.filter(c=>c.status==='Hired').length;
-  const interviewing = cands.filter(c=>c.status==='Interviewing').length;
-  const openJobs     = jobs.filter(j=>j.status==='Open').length;
-  const rev          = getRevenueStats();
-  const hasRevData   = rev.pipelineValue>0||rev.closedRevenue>0;
-  const hasAnyData   = total>0||openJobs>0||deals.length>0;
+  var hired          = cands.filter(function(c){return c.status==='Hired';}).length;
+  var interviewing   = cands.filter(function(c){return c.status==='Interviewing';}).length;
+  var openJobs       = jobs.filter(function(j){return j.status==='Open';}).length;
+  var rev            = getRevenueStats();
+  var hasRevData     = rev && (rev.pipelineValue>0||rev.closedRevenue>0);
+  var hasAnyData     = total>0||openJobs>0||deals.length>0;
 
   // ── EMPTY STATE ───────────────────────────────────────────
   var emptyEl = document.getElementById('dash-empty');
@@ -7766,6 +7766,24 @@ Score 0-100. Only include candidates scoring 50+. Sort by score descending. Max 
 // INTERVIEW SCORECARDS
 // ═══════════════════════════════════════════════════
 var scorecards = JSON.parse(localStorage.getItem('tb_scorecards')||'[]');
+// Seed with default scorecards if empty
+if(!scorecards.length){
+  scorecards = [
+    {id:'sc_default_1', role:'Medical Device Sales Rep', criteria:['Technical Knowledge','Relationship Building','Closing Ability','Territory Management','Compliance'],
+     questions:[
+       {q:'Describe your experience selling into hospital systems or IDNs.',required:true},
+       {q:'How do you manage a complex 6-month sales cycle?',required:true},
+       {q:'Walk me through your top deal last year — size, stakeholders, close.',required:true}
+     ], created:Date.now()},
+    {id:'sc_default_2', role:'Program Manager — MedTech', criteria:['Cross-functional Leadership','Timeline Management','Regulatory Awareness','Stakeholder Communication','Problem Solving'],
+     questions:[
+       {q:'Describe a complex NPI program you managed end-to-end.',required:true},
+       {q:'How do you handle scope creep while keeping a program on track?',required:true},
+       {q:'Tell me about a time you navigated a regulatory challenge.',required:true}
+     ], created:Date.now()}
+  ];
+  try { localStorage.setItem('tb_scorecards', JSON.stringify(scorecards)); } catch(e){}
+}
 let editingSC = null;
 
 function saveScorecards(){ localStorage.setItem('tb_scorecards', JSON.stringify(scorecards)); window.scorecards = scorecards; }
