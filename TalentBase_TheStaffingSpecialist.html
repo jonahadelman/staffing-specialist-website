@@ -2079,11 +2079,23 @@ button, .btn { white-space:nowrap !important; }
 
       <!-- Quick actions -->
       <div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:0 6px;margin-bottom:8px;">Quick Start</div>
-      <div id="lib-quick-actions" style="display:flex;flex-direction:column;gap:2px;margin-bottom:20px;"></div>
+      <div id="lib-quick-actions" style="display:flex;flex-direction:column;gap:2px;margin-bottom:20px;">
+  <div class="lib-nav-item" data-group="jobs" onclick="setLibGroup('jobs')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);">💼 Build a Job</div>
+  <div class="lib-nav-item" data-group="outreach" onclick="setLibGroup('outreach')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);">✉ Send Outreach</div>
+  <div class="lib-nav-item" data-group="submit" onclick="setLibGroup('submit')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);">📋 Submit Candidate</div>
+  <div class="lib-nav-item" data-group="close" onclick="setLibGroup('close')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);">📄 Close / Offer</div>
+</div>
 
       <!-- Categories -->
       <div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:0 6px;margin-bottom:8px;">Templates</div>
-      <div id="lib-nav-cats" style="display:flex;flex-direction:column;gap:1px;"></div>
+      <div id="lib-nav-cats" style="display:flex;flex-direction:column;gap:1px;">
+  <div class="lib-nav-item" data-group="all" onclick="setLibGroup('all')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--text);background:var(--accent-dim);"><span>📂</span><span>All Templates</span><span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">140</span></div>
+  <div class="lib-nav-item" data-group="jobs" onclick="setLibGroup('jobs')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);"><span>💼</span><span>Job Templates</span><span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">108</span></div>
+  <div class="lib-nav-item" data-group="outreach" onclick="setLibGroup('outreach')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);"><span>✉</span><span>Outreach</span><span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">12</span></div>
+  <div class="lib-nav-item" data-group="submit" onclick="setLibGroup('submit')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);"><span>📋</span><span>Submissions</span><span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">8</span></div>
+  <div class="lib-nav-item" data-group="close" onclick="setLibGroup('close')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);"><span>📄</span><span>Offers &amp; Onboarding</span><span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">8</span></div>
+  <div class="lib-nav-item" data-group="playbook" onclick="setLibGroup('playbook')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);"><span>⚡</span><span>Playbooks</span><span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">4</span></div>
+</div>
 
       <!-- Count -->
       <div style="margin-top:16px;padding:0 6px;">
@@ -2096,7 +2108,16 @@ button, .btn { white-space:nowrap !important; }
 
       <!-- File list -->
       <div style="width:300px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;background:var(--bg);">
-        <div id="lib-list"></div>
+        <div id="lib-list">
+  <div style="padding:10px 16px 4px;background:var(--bg);"><div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;">💼 Job Templates</div></div>
+  <div class="lib-row" data-lib-id="lib01" style="padding:10px 16px;cursor:pointer;border-left:2px solid transparent;"><div style="font-size:12.5px;font-weight:500;color:var(--text2);">Senior Program Manager — Medical Device</div><div style="font-size:10.5px;color:var(--text4);margin-top:2px;">program manager · medical device · NPI</div></div>
+  <div class="lib-row" data-lib-id="lib05" style="padding:10px 16px;cursor:pointer;border-left:2px solid transparent;"><div style="font-size:12.5px;font-weight:500;color:var(--text2);">Quality Engineer — MedTech</div><div style="font-size:10.5px;color:var(--text4);margin-top:2px;">quality · FDA · ISO 13485</div></div>
+  <div style="padding:10px 16px 4px;background:var(--bg);"><div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;">✉ Outreach</div></div>
+  <div class="lib-row" data-lib-id="lib01" style="padding:10px 16px;cursor:pointer;border-left:2px solid transparent;"><div style="font-size:12.5px;font-weight:500;color:var(--text2);">Initial Outreach — Cold</div><div style="font-size:10.5px;color:var(--text4);margin-top:2px;">outreach · cold · sourcing</div></div>
+  <div class="lib-row" data-lib-id="lib02" style="padding:10px 16px;cursor:pointer;border-left:2px solid transparent;"><div style="font-size:12.5px;font-weight:500;color:var(--text2);">Follow-Up #1 — No Response</div><div style="font-size:10.5px;color:var(--text4);margin-top:2px;">follow-up · outreach · sequence</div></div>
+  <div style="padding:10px 16px 4px;background:var(--bg);"><div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;">📄 Offers &amp; Onboarding</div></div>
+  <div class="lib-row" data-lib-id="lib33" style="padding:10px 16px;cursor:pointer;border-left:2px solid transparent;"><div style="font-size:12.5px;font-weight:500;color:var(--text2);">Offer Letter — Standard</div><div style="font-size:10.5px;color:var(--text4);margin-top:2px;">offer · letter · compensation</div></div>
+</div>
       </div>
 
       <!-- Document viewer -->
@@ -2289,7 +2310,20 @@ button, .btn { white-space:nowrap !important; }
     <!-- STEP LIST sidebar -->
     <div style="background:var(--bg2);border-right:1px solid var(--border2);overflow-y:auto;padding:16px 0;">
       <div style="padding:0 12px 10px;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;">Chapters</div>
-      <div id="tut-step-list"></div>
+      <div id="tut-step-list">
+  <div onclick="currentTutStep=0;renderTutorial();" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-left:3px solid var(--accent);background:var(--accent-dim);">
+    <div style="width:24px;height:24px;border-radius:6px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">01</div>
+    <div><div style="font-size:11px;font-weight:600;color:var(--text);">Welcome to TalentBase</div><div style="font-size:11px;color:#666688;">Getting Started</div></div>
+  </div>
+  <div onclick="currentTutStep=1;renderTutorial();" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-left:3px solid transparent;">
+    <div style="width:24px;height:24px;border-radius:6px;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">02</div>
+    <div><div style="font-size:11px;font-weight:600;color:#aaaacc;">Adding Candidates</div><div style="font-size:11px;color:#666688;">Building Your Database</div></div>
+  </div>
+  <div onclick="currentTutStep=2;renderTutorial();" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-left:3px solid transparent;">
+    <div style="width:24px;height:24px;border-radius:6px;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">03</div>
+    <div><div style="font-size:11px;font-weight:600;color:#aaaacc;">Creating Jobs</div><div style="font-size:11px;color:#666688;">Job Management</div></div>
+  </div>
+</div>
     </div>
 
     <!-- MAIN content -->
@@ -2301,11 +2335,11 @@ button, .btn { white-space:nowrap !important; }
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
           <div id="tut-step-badge" style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;font-family:'DM Mono',monospace;flex-shrink:0;">01</div>
           <div>
-            <div id="tut-category" style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px;"></div>
-            <div id="tut-title" style="font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.3px;"></div>
+            <div id="tut-category" style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px;">Getting Started</div>
+            <div id="tut-title" style="font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.3px;">Welcome to TalentBase</div>
           </div>
         </div>
-        <div id="tut-tagline" style="font-size:15px;color:var(--text3);line-height:1.6;max-width:620px;"></div>
+        <div id="tut-tagline" style="font-size:15px;color:var(--text3);line-height:1.6;max-width:620px;">The most powerful recruiting system built for embedded recruiters. In 8 steps you will master every feature.</div>
       </div>
 
       <!-- Content body -->
@@ -4023,17 +4057,22 @@ function nav(v){
   if(v==='templates')renderTemplates();
   if(v==='integrations')checkIntegrationStatus();
   if(v==='library'){
-    // Ensure window alias is current before rendering
-    window.libraryItems = libraryItems;
-    if(!libraryItems.length && window._LIB_SEED && window._LIB_SEED.length){
-      libraryItems = window._LIB_SEED.slice();
+    try {
+      // Always rebuild from seed — never trust stale state
+      libraryItems = (typeof _LIB_SEED !== 'undefined' && _LIB_SEED.length) ? _LIB_SEED.slice() : libraryItems;
       window.libraryItems = libraryItems;
-    }
-    console.log('[Library] items:', libraryItems.length, '| group:', libGroup);
-    renderLibrary();
+      console.log('[nav:library] libraryItems=', libraryItems.length);
+      renderLibrary();
+    } catch(e){ console.error('[nav:library] renderLibrary failed:', e); }
   }
   if(v==='prompts'){renderPromptLib();}
-  if(v==='tutorial')renderTutorial();
+  if(v==='tutorial'){
+    try {
+      currentTutStep = (typeof currentTutStep === 'number') ? currentTutStep : 0;
+      console.log('[nav:tutorial] TUTORIAL_STEPS=', TUTORIAL_STEPS.length, 'step=', currentTutStep);
+      renderTutorial();
+    } catch(e){ console.error('[nav:tutorial] renderTutorial failed:', e); }
+  }
   if(v==='campaigns')renderCampaigns();
   if(v==='nlsearch'){}
   if(v==='workspace'){try{loadWsSettings();}catch(e){}}
