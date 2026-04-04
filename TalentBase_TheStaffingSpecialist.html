@@ -2079,8 +2079,7 @@ button, .btn { white-space:nowrap !important; }
 
       <!-- Quick actions -->
       <div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:0 6px;margin-bottom:8px;">Quick Start</div>
-      <div id="lib-quick-actions" style="display:flex;flex-direction:column;gap:2px;margin-bottom:20px;">
-  <div class="lib-nav-item" data-group="jobs" onclick="setLibGroup('jobs')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);">💼 Build a Job</div>
+      <div id="lib-quick-actions" style="display:flex;flex-direction:column;gap:2px;margin-bottom:20px;"></div>
   <div class="lib-nav-item" data-group="outreach" onclick="setLibGroup('outreach')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);">✉ Send Outreach</div>
   <div class="lib-nav-item" data-group="submit" onclick="setLibGroup('submit')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);">📋 Submit Candidate</div>
   <div class="lib-nav-item" data-group="close" onclick="setLibGroup('close')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);">📄 Close / Offer</div>
@@ -2088,8 +2087,7 @@ button, .btn { white-space:nowrap !important; }
 
       <!-- Categories -->
       <div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:0 6px;margin-bottom:8px;">Templates</div>
-      <div id="lib-nav-cats" style="display:flex;flex-direction:column;gap:1px;">
-  <div class="lib-nav-item" data-group="all" onclick="setLibGroup('all')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--text);background:var(--accent-dim);"><span>📂</span><span>All Templates</span><span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">140</span></div>
+      <div id="lib-nav-cats" style="display:flex;flex-direction:column;gap:1px;"></div>
   <div class="lib-nav-item" data-group="jobs" onclick="setLibGroup('jobs')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);"><span>💼</span><span>Job Templates</span><span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">108</span></div>
   <div class="lib-nav-item" data-group="outreach" onclick="setLibGroup('outreach')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);"><span>✉</span><span>Outreach</span><span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">12</span></div>
   <div class="lib-nav-item" data-group="submit" onclick="setLibGroup('submit')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);"><span>📋</span><span>Submissions</span><span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">8</span></div>
@@ -2108,19 +2106,8 @@ button, .btn { white-space:nowrap !important; }
 
       <!-- File list -->
       <div style="width:300px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;background:var(--bg);">
-        <div id="lib-list">
-  <div style="padding:10px 16px 4px;background:var(--bg);"><div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;">💼 Job Templates</div></div>
-  <div class="lib-row" data-lib-id="lib01" style="padding:10px 16px;cursor:pointer;border-left:2px solid transparent;"><div style="font-size:12.5px;font-weight:500;color:var(--text2);">Senior Program Manager — Medical Device</div><div style="font-size:10.5px;color:var(--text4);margin-top:2px;">program manager · medical device · NPI</div></div>
-  <div class="lib-row" data-lib-id="lib05" style="padding:10px 16px;cursor:pointer;border-left:2px solid transparent;"><div style="font-size:12.5px;font-weight:500;color:var(--text2);">Quality Engineer — MedTech</div><div style="font-size:10.5px;color:var(--text4);margin-top:2px;">quality · FDA · ISO 13485</div></div>
-  <div style="padding:10px 16px 4px;background:var(--bg);"><div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;">✉ Outreach</div></div>
-  <div class="lib-row" data-lib-id="lib01" style="padding:10px 16px;cursor:pointer;border-left:2px solid transparent;"><div style="font-size:12.5px;font-weight:500;color:var(--text2);">Initial Outreach — Cold</div><div style="font-size:10.5px;color:var(--text4);margin-top:2px;">outreach · cold · sourcing</div></div>
-  <div class="lib-row" data-lib-id="lib02" style="padding:10px 16px;cursor:pointer;border-left:2px solid transparent;"><div style="font-size:12.5px;font-weight:500;color:var(--text2);">Follow-Up #1 — No Response</div><div style="font-size:10.5px;color:var(--text4);margin-top:2px;">follow-up · outreach · sequence</div></div>
-  <div style="padding:10px 16px 4px;background:var(--bg);"><div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;">📄 Offers &amp; Onboarding</div></div>
-  <div class="lib-row" data-lib-id="lib33" style="padding:10px 16px;cursor:pointer;border-left:2px solid transparent;"><div style="font-size:12.5px;font-weight:500;color:var(--text2);">Offer Letter — Standard</div><div style="font-size:10.5px;color:var(--text4);margin-top:2px;">offer · letter · compensation</div></div>
-</div>
-      </div>
-
-      <!-- Document viewer -->
+        <div id="lib-list"></div>
+<!-- Document viewer -->
       <div id="lib-viewer" style="flex:1;overflow-y:auto;background:var(--bg);display:flex;flex-direction:column;">
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text4);padding:40px;text-align:center;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;margin-bottom:12px;opacity:.2;"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
@@ -2310,9 +2297,7 @@ button, .btn { white-space:nowrap !important; }
     <!-- STEP LIST sidebar -->
     <div style="background:var(--bg2);border-right:1px solid var(--border2);overflow-y:auto;padding:16px 0;">
       <div style="padding:0 12px 10px;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;">Chapters</div>
-      <div id="tut-step-list">
-  <div onclick="currentTutStep=0;renderTutorial();" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-left:3px solid var(--accent);background:var(--accent-dim);">
-    <div style="width:24px;height:24px;border-radius:6px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">01</div>
+      <div id="tut-step-list"></div>
     <div><div style="font-size:11px;font-weight:600;color:var(--text);">Welcome to TalentBase</div><div style="font-size:11px;color:#666688;">Getting Started</div></div>
   </div>
   <div onclick="currentTutStep=1;renderTutorial();" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-left:3px solid transparent;">
@@ -2335,11 +2320,11 @@ button, .btn { white-space:nowrap !important; }
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
           <div id="tut-step-badge" style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;font-family:'DM Mono',monospace;flex-shrink:0;">01</div>
           <div>
-            <div id="tut-category" style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px;">Getting Started</div>
-            <div id="tut-title" style="font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.3px;">Welcome to TalentBase</div>
+            <div id="tut-category" style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px;"></div>
+            <div id="tut-title" style="font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.3px;"></div>
           </div>
         </div>
-        <div id="tut-tagline" style="font-size:15px;color:var(--text3);line-height:1.6;max-width:620px;">The most powerful recruiting system built for embedded recruiters. In 8 steps you will master every feature.</div>
+        <div id="tut-tagline" style="font-size:15px;color:var(--text3);line-height:1.6;max-width:620px;"></div>
       </div>
 
       <!-- Content body -->
@@ -2562,7 +2547,6 @@ button, .btn { white-space:nowrap !important; }
 </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 
 <!-- ═══ SUPABASE CLIENT (CDN — UMD build, synchronous global) ═══ -->
 <!-- Using the UMD/IIFE build so window.supabase is available synchronously -->
@@ -10227,6 +10211,9 @@ function setLibCat(cat, btn){
 }
 
 function initLibNav(){
+  // Guard: bail if globals not ready yet
+  if(typeof LIB_QUICK === 'undefined' || typeof LIB_GROUPS_META === 'undefined') return;
+
   // Left nav: quick start + category groups
   try {
     var qa = document.getElementById('lib-quick-actions');
@@ -10283,9 +10270,15 @@ function renderLibrary(){
     var el = document.getElementById('lib-list');
     if(!el){ console.error('[renderLibrary] #lib-list not found'); return; }
 
+    // Guard: bail if LIB_GROUPS not ready
+    if(typeof LIB_GROUPS === 'undefined'){ console.warn('[renderLibrary] LIB_GROUPS not ready'); return; }
+
+    // Ensure libGroup has a value
+    if(typeof libGroup === 'undefined') libGroup = 'all';
+
     // Always guarantee data
     if(!libraryItems || !libraryItems.length){
-      libraryItems = (window._LIB_SEED||[]).slice();
+      libraryItems = (typeof _LIB_SEED !== 'undefined' ? _LIB_SEED : []).slice();
       window.libraryItems = libraryItems;
     }
     console.log('[renderLibrary] rendering', libraryItems.length, 'items, group:', libGroup);
@@ -10716,7 +10709,7 @@ let currentTutStep = 0;
 function renderTutorial(){
   try {
     // Guard: ensure TUTORIAL_STEPS exists and has content
-    if(!TUTORIAL_STEPS || !TUTORIAL_STEPS.length){
+    if(typeof TUTORIAL_STEPS === 'undefined' || !TUTORIAL_STEPS || !TUTORIAL_STEPS.length){
       console.error('[renderTutorial] TUTORIAL_STEPS empty or undefined');
       return;
     }
@@ -10982,10 +10975,10 @@ async function initAppData(){
   } catch(e){ console.warn('[initAppData] library init failed:', e); }
 
   // 7. Scorecards — localStorage or empty (user creates them)
-  window.scorecards = scorecards;
+  try { window.scorecards = scorecards || []; } catch(e){ window.scorecards = []; }
 
   // 8. Tutorial — always available (const defined at parse time)
-  window.tutorialSteps = (typeof TUTORIAL_STEPS !== 'undefined') ? TUTORIAL_STEPS : [];
+  try { window.tutorialSteps = TUTORIAL_STEPS || []; } catch(e){ window.tutorialSteps = []; }
 
   // 9. Single debug log — check this in console after load
   console.log('[TalentBase] Ready:',
