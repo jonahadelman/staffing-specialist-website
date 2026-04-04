@@ -5723,6 +5723,35 @@ function selJob(id){
       <button class="btn btn-primary btn-xs" onclick="openPostJobModal('${j.id}')" style="font-size:11px;margin-left:auto;">🚀 Post Job Everywhere</button>
     </div>
 
+    <!-- FLOW STATUS BAR -->
+    ${(function(){
+      var flow=j._flow||{};
+      var linkedDeal=deals.find(function(d){return d.id===flow.dealId;});
+      var matchCount=flow.topMatchCount||0;
+      var steps=[
+        {icon:'💼',label:'Job Created',done:true,click:''},
+        {icon:'🔗',label:linkedDeal?('Deal: '+esc(linkedDeal.company)):'Auto-Deal',done:!!linkedDeal,
+          click:linkedDeal?'nav(\'deals\');setTimeout(()=>openDealDetail(\''+linkedDeal.id+'\'),200)':''},
+        {icon:'🎯',label:matchCount?matchCount+' matched':'AI Match',done:!!matchCount,
+          click:'nav(\'match\');setTimeout(()=>runMatch(\''+j.id+'\'),100)'},
+        {icon:'🚀',label:flow.postedAt?'Posted':'Post Everywhere',done:!!flow.postedAt,
+          click:'openPostJobModal(\''+j.id+'\')'},
+        {icon:'📋',label:'Pipeline',done:matched.length>0,
+          click:'nav(\'pipeline\')'},
+        {icon:'📄',label:'Offer',done:false,click:'nav(\'offer\')'},
+      ];
+      return '<div style="display:flex;align-items:center;gap:0;margin-bottom:16px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;overflow:hidden;">'+
+        steps.map(function(s,i){
+          var active=s.done?'var(--green)':'var(--text4)';
+          var bg=s.done?'rgba(34,197,94,.06)':'transparent';
+          return '<div onclick="'+s.click+'" style="flex:1;padding:8px 6px;text-align:center;cursor:pointer;border-right:'+(i<steps.length-1?'1px solid var(--border2)':'none')+';background:'+bg+';transition:background .1s;" onmouseover="this.style.background=\'var(--bg4)\'" onmouseout="this.style.background=\''+bg+'\'">'+
+            '<div style="font-size:13px;margin-bottom:2px;">'+s.icon+'</div>'+
+            '<div style="font-size:9.5px;font-weight:600;color:'+active+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+s.label+'</div>'+
+          '</div>';
+        }).join('')+
+      '</div>';
+    }())}
+
     ${j.source==='Happy Hunting'&&j.hiringManagers&&j.hiringManagers.length?`
     <div style="background:var(--bg3);border:1px solid var(--border3);border-left:3px solid #ff4d00;border-radius:var(--r-sm);padding:14px 16px;margin-bottom:14px;">
       <div style="font-size:10px;font-weight:700;color:#ff4d00;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Happy Hunting Intel</div>
@@ -6010,18 +6039,96 @@ async function saveJob(){
   if(!title){alert('Job title required.');return;}
   const desc=(document.getElementById('jf-desc').value||'').trim();
   let boolStr=(document.getElementById('jf-bool').value||'').trim();
-  const data={title,reqNum:document.getElementById('jf-req').value.trim(),dept:document.getElementById('jf-dept').value.trim(),location:document.getElementById('jf-loc').value.trim(),type:document.getElementById('jf-type').value,status:document.getElementById('jf-status').value,description:desc,boolSearch:boolStr,notes:document.getElementById('jf-notes').value.trim(),expectedFee:parseFloat(document.getElementById('jf-fee').value)||0,probability:parseInt(document.getElementById('jf-prob').value)||0,company:(document.getElementById('jf-company')||{}).value||'',salaryMin:parseFloat((document.getElementById('jf-salary-min')||{}).value)||0,salaryMax:parseFloat((document.getElementById('jf-salary-max')||{}).value)||0};
-  let jid;
-  if(editJobId){const i=jobs.findIndex(x=>x.id===editJobId);if(i>=0)jobs[i]={...jobs[i],...data};jid=editJobId;}
-  else{data.id=uid();data.created=Date.now();jobs.unshift(data);jid=data.id;}
-  saveJobsStore();closeModal('ov-job');renderJobsList();selJob(jid);
+  const data={
+    title,
+    reqNum:      document.getElementById('jf-req').value.trim(),
+    dept:        document.getElementById('jf-dept').value.trim(),
+    location:    document.getElementById('jf-loc').value.trim(),
+    type:        document.getElementById('jf-type').value,
+    status:      document.getElementById('jf-status').value,
+    description: desc,
+    boolSearch:  boolStr,
+    notes:       document.getElementById('jf-notes').value.trim(),
+    expectedFee: parseFloat(document.getElementById('jf-fee').value)||0,
+    probability: parseInt(document.getElementById('jf-prob').value)||0,
+    company:     (document.getElementById('jf-company')||{}).value||'',
+    salaryMin:   parseFloat((document.getElementById('jf-salary-min')||{}).value)||0,
+    salaryMax:   parseFloat((document.getElementById('jf-salary-max')||{}).value)||0,
+  };
+
+  var isNew = !editJobId;
+  var jid;
+  if(editJobId){
+    const i=jobs.findIndex(x=>x.id===editJobId);
+    if(i>=0) jobs[i]={...jobs[i],...data};
+    jid=editJobId;
+  } else {
+    data.id=uid(); data.created=Date.now();
+    data._flow={dealId:null,campaignId:null,matchedAt:null,postedAt:null};
+    jobs.unshift(data); jid=data.id;
+  }
+
+  saveJobsStore(); closeModal('ov-job'); renderJobsList(); selJob(jid);
   document.getElementById('nb-jobs').textContent=jobs.filter(j=>j.status==='Open').length;
+
+  // ── STEP 1: Auto boolean search ───────────────────────────
   if(desc&&!boolStr&&getKey()){
     const j=jobs.find(x=>x.id===jid);
     if(j){
       try{
-        const txt=await callAI([{role:'user',content:`Generate a concise boolean search string for this job posting for use in an ATS or LinkedIn recruiter search. Return ONLY the boolean string, nothing else.\n\nJob: ${j.title}\nDescription: ${j.description}`}],300);
+        const txt=await callAI([{role:'user',content:'Generate a concise boolean search string for this job posting for LinkedIn Recruiter. Return ONLY the boolean string, nothing else.\n\nJob: '+j.title+'\nDescription: '+j.description}],300);
         if(txt){j.boolSearch=txt.trim();saveJobsStore();renderJobsList();selJob(jid);}
+      }catch(e){}
+    }
+  }
+
+  // ── STEP 2: Auto-create linked deal (new jobs only) ───────
+  if(isNew && data.status==='Open'){
+    const j=jobs.find(x=>x.id===jid);
+    if(j && !j._flow.dealId){
+      var autoDeal={
+        id:uid(), company:j.company||j.title, jobTitle:j.title,
+        role:j.title, fee:j.expectedFee||0, estimatedFee:j.expectedFee||0,
+        probability:j.probability||50, stage:'Active',
+        source:'Job Created', notes:'Auto-created from job: '+j.title,
+        createdAt:Date.now(), linkedJobId:jid,
+      };
+      deals.unshift(autoDeal);
+      if(autoDeal.stage==='Active') _dealActivate(autoDeal);
+      saveDeals();
+      j._flow.dealId=autoDeal.id;
+      saveJobsStore();
+      wsToast('Deal created: '+j.company);
+    }
+  }
+
+  // ── STEP 3: Auto-match top candidates (new jobs only) ─────
+  if(isNew && cands.length>0 && getKey()){
+    const j=jobs.find(x=>x.id===jid);
+    if(j && desc){
+      try{
+        const summaries=cands.slice(0,40).map(c=>
+          'ID:'+c.id+'|'+c.first+' '+c.last+'|'+(c.title||'')+'|'+(c.company||'')
+        ).join('\n');
+        const txt=await callAI([{role:'user',content:
+          'Score these candidates for this job. Return a JSON array (max 5 items) of top matches only (score >= 65).\n\nJOB: '+j.title+'\nDESC: '+(j.description||'').slice(0,400)+
+          '\n\nCANDIDATES:\n'+summaries+
+          '\n\nReturn: [{\"id\":\"x\",\"score\":85,\"tier\":\"Strong Fit\",\"summary\":\"2 sentences\"}]\nReturn ONLY the JSON array, nothing else.'}],800);
+        const results=JSON.parse(txt.replace(/```json|```/g,'').trim());
+        if(Array.isArray(results)&&results.length){
+          matchCache[jid]=results;
+          // Assign top candidates to this job's req number
+          results.slice(0,3).forEach(function(r){
+            var c=cands.find(x=>x.id===r.id);
+            if(c&&!c.role){c.role=j.reqNum||j.title;c.matchScore=r.score;}
+          });
+          saveCands();
+          j._flow.matchedAt=Date.now();
+          j._flow.topMatchCount=results.length;
+          saveJobsStore();
+          selJob(jid); // re-render to show matched candidates
+          wsToast(results.length+' candidates matched');
+        }
       }catch(e){}
     }
   }
