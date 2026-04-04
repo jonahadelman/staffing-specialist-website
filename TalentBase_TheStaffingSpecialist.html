@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>The Staffing Specialist — TalentBase</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -2618,48 +2621,29 @@ function _unlockApp(role) {
   var a  = document.getElementById('app-shell');
   var cp = document.getElementById('client-portal');
 
-  // Always hide the gate
-  if (g) g.style.cssText = 'display:none!important';
+  if(g) g.style.cssText = 'display:none!important';
 
-  if (role === 'client') {
-    if (a)  a.style.cssText  = 'display:none!important';
-    if (cp) cp.style.display = 'flex';
-    try { renderClientPortal(); } catch(e) { console.warn('[Portal]', e); }
+  if(role === 'client'){
+    if(a)  a.style.cssText  = 'display:none!important';
+    if(cp) cp.style.display = 'flex';
+    try { renderClientPortal(); } catch(e){}
     _startClientPortalGuard();
     return;
   }
 
-  // ADMIN / RECRUITER
-  if (cp) cp.style.display = 'none';
-  if (a)  a.style.cssText  = 'display:flex!important';
+  if(cp) cp.style.display = 'none';
+  if(a)  a.style.cssText  = 'display:flex!important';
+  try { _syncLibRole(); } catch(e){}
 
-  try { _syncLibRole(); } catch(e) {}
-
-  // Await launchApp so data is ready before any render fires
   (async function(){
-    try {
-      await launchApp();
-    } catch(e) {
+    try { await launchApp(); } catch(e){
       console.warn('[_unlockApp] launchApp failed:', e);
-      try { loadData(); nav('dashboard'); } catch(e2) {}
+      try { nav('dashboard'); } catch(e2){}
     }
-
-    // Force-populate all data-driven screens so nothing is empty
-    try { window.libraryItems = libraryItems; } catch(e) {}
-    try {
-      if(!libraryItems || !libraryItems.length){
-        libraryItems = (window._LIB_SEED||[]).slice();
-        window.libraryItems = libraryItems;
-        try { localStorage.removeItem('tb_library'); } catch(e) {}
-      }
-    } catch(e) {}
-
-    // Render all three data-driven views now that data is guaranteed
-    try { renderDash(); }        catch(e) {}
-    try { renderLibrary(); }     catch(e) {}
-    try { renderScorecards(); }  catch(e) {}
-    try { renderTutorial(); }    catch(e) {}
-
+    // After data is loaded, render all three views so they are never empty
+    try { renderLibrary(); }    catch(e){ console.warn('renderLibrary failed:', e); }
+    try { renderScorecards(); } catch(e){}
+    try { renderTutorial(); }   catch(e){ console.warn('renderTutorial failed:', e); }
     setTimeout(applyNavRestrictions, 50);
   })();
 }
@@ -7661,6 +7645,9 @@ function exportCandidate(id){
 <html>
 <head>
 <meta charset="UTF-8"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
 <title>${c.first} ${c.last} — Candidate Profile</title>
 <style>
   body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;color:#111;line-height:1.6;font-size:14px;}
@@ -9515,7 +9502,10 @@ See you {{start_date}}.
 ];
 
 // libraryItems starts from seed - localStorage may override title/tags but body ALWAYS comes from _LIB_SEED
+// Pin to window immediately so initAppData can always find it
+window._LIB_SEED = _LIB_SEED;
 var libraryItems = _LIB_SEED.slice();
+window.libraryItems = libraryItems;
 
 // ── LIBRARY SEED MERGE ────────────────────────────────────────
 // Merge localStorage edits (title, tags) with seed content (body, vars, subject)
@@ -10691,30 +10681,34 @@ var TUTORIAL_STEPS = [
   }
 ];
 
+// Pin to window immediately
+window.TUTORIAL_STEPS = TUTORIAL_STEPS;
 var currentTutStep = 0;
+window.currentTutStep = currentTutStep;
 
 function renderTutorial(){
   try {
     // Guard: ensure TUTORIAL_STEPS exists and has content
-    if(typeof TUTORIAL_STEPS === 'undefined' || !TUTORIAL_STEPS || !TUTORIAL_STEPS.length){
+    var _TUT = (typeof TUTORIAL_STEPS !== 'undefined' && TUTORIAL_STEPS && TUTORIAL_STEPS.length) ? TUTORIAL_STEPS : (window.TUTORIAL_STEPS||[]);
+    if(!_TUT || !_TUT.length){
       console.error('[renderTutorial] TUTORIAL_STEPS empty or undefined');
       return;
     }
     // Guard: clamp currentTutStep to valid range
-    if(typeof currentTutStep !== 'number' || currentTutStep < 0 || currentTutStep >= TUTORIAL_STEPS.length){
+    if(typeof currentTutStep !== 'number' || currentTutStep < 0 || currentTutStep >= _TUT.length){
       currentTutStep = 0;
     }
-    var step = TUTORIAL_STEPS[currentTutStep];
+    var step = _TUT[currentTutStep];
     if(!step){ console.error('[renderTutorial] step is null at index', currentTutStep); return; }
 
     console.log('[renderTutorial] rendering step', currentTutStep, ':', step.title);
 
     // Progress bar
-    var pct = ((currentTutStep+1)/TUTORIAL_STEPS.length*100).toFixed(0);
+    var pct = ((currentTutStep+1)/_TUT.length*100).toFixed(0);
     var pb = document.getElementById('tut-progress-bar');
     var pt = document.getElementById('tut-progress-text');
     if(pb) pb.style.width = pct+'%';
-    if(pt) pt.textContent = 'Step '+(currentTutStep+1)+' of '+TUTORIAL_STEPS.length;
+    if(pt) pt.textContent = 'Step '+(currentTutStep+1)+' of '+_TUT.length;
 
     // Hero section
     var badge   = document.getElementById('tut-step-badge');
@@ -10765,12 +10759,12 @@ function renderTutorial(){
     var prevBtn = document.getElementById('tut-prev-btn');
     var nextBtn = document.getElementById('tut-next-btn');
     if(prevBtn) prevBtn.style.opacity = currentTutStep===0 ? '0.3' : '1';
-    if(nextBtn) nextBtn.textContent = currentTutStep===TUTORIAL_STEPS.length-1 ? '🎉 Complete!' : 'Next Step →';
+    if(nextBtn) nextBtn.textContent = currentTutStep===_TUT.length-1 ? '🎉 Complete!' : 'Next Step →';
 
     // Step list sidebar
     var stepList = document.getElementById('tut-step-list');
     if(stepList){
-      stepList.innerHTML = TUTORIAL_STEPS.map(function(s,i){
+      stepList.innerHTML = _TUT.map(function(s,i){
         var active = (i === currentTutStep);
         var done   = (i < currentTutStep);
         return '<div onclick="currentTutStep='+i+';renderTutorial();" '
@@ -10841,10 +10835,9 @@ document.querySelectorAll('.overlay, .modal-overlay').forEach(function(ov){
 // ═══════════════════════════════════════════════
 
 async function launchApp(){
-  // All data guaranteed via initAppData
   try { await initAppData(); } catch(e){ console.warn('[launchApp] initAppData error:', e); }
 
-  // Happy Hunting redirect (?newJob=id in URL)
+  // Happy Hunting redirect
   try {
     var params = new URLSearchParams(window.location.search);
     var newJobId = params.get('newJob');
@@ -10854,52 +10847,18 @@ async function launchApp(){
         try {
           selJob(newJobId);
           var banner = document.createElement('div');
-          banner.id = 'hh-pipeline-banner';
-          banner.style.cssText = ['position:fixed','top:0','left:0','right:0','z-index:9999',
-            'background:#0d2010','border-bottom:1px solid #00c853','color:#00e676',
-            'font-family:DM Mono,monospace','font-size:12px','letter-spacing:.05em',
-            'padding:10px 24px','display:flex','align-items:center','justify-content:space-between'
-          ].join(';');
-          banner.innerHTML = '<span>&#10003; PIPELINE CREATED &mdash; JOB ADDED FROM HAPPY HUNTING. READY TO EXECUTE.</span>'
-            + '<button onclick="this.parentNode.remove()" style="background:none;border:none;color:#00e676;cursor:pointer;font-size:16px;line-height:1;">&times;</button>';
+          banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#0d2010;border-bottom:1px solid #00c853;color:#00e676;font-family:DM Mono,monospace;font-size:12px;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;';
+          banner.innerHTML = '<span>&#10003; JOB ADDED FROM HAPPY HUNTING. READY TO EXECUTE.</span>'
+            + '<button onclick="this.parentNode.remove()" style="background:none;border:none;color:#00e676;cursor:pointer;font-size:16px;">&times;</button>';
           document.body.appendChild(banner);
-          setTimeout(function(){ if(banner.parentNode) banner.parentNode.removeChild(banner); }, 6000);
+          setTimeout(function(){ if(banner.parentNode) banner.remove(); }, 6000);
         } catch(e){}
       }, 300);
       return;
     }
   } catch(e){}
 
-  try { nav('dashboard'); } catch(e){ console.warn('[launchApp] nav error:', e); }
-
-  // Self-test: after DOM settles, verify library and tutorial are populated
-  // This fires 800ms after launch — enough time for all async ops to complete
-  setTimeout(function(){
-    // Library check
-    try {
-      var libList = document.getElementById('lib-list');
-      if(libList && !libList.hasChildNodes()){
-        console.warn('[selftest] lib-list is empty — forcing render');
-        if(!libraryItems || !libraryItems.length){
-          libraryItems = (window._LIB_SEED||[]).slice();
-          window.libraryItems = libraryItems;
-        }
-        renderLibrary();
-      }
-    } catch(e){}
-
-    // Tutorial check — force-populate all text fields directly
-    try {
-      var tutTitle = document.getElementById('tut-title');
-      if(tutTitle && !tutTitle.textContent.trim()){
-        console.warn('[selftest] tutorial empty — forcing render');
-        currentTutStep = 0;
-        renderTutorial();
-      }
-    } catch(e){}
-
-    console.log('[selftest] done — library children:', (document.getElementById('lib-list')||{}).childNodes && document.getElementById('lib-list').childNodes.length);
-  }, 800);
+  try { nav('dashboard'); } catch(e){}
 }
 
 function toggleGateEye(){
@@ -10918,64 +10877,47 @@ function toggleGateEye(){
 // SINGLE STARTUP GATE — everything flows through here
 // ═══════════════════════════════════════════════════════════
 async function initAppData(){
-  // 1. Supabase client (no-op if unconfigured)
-  try { sbInit(); } catch(e){}
-
-  // 2. Restore session from localStorage/Supabase
-  try { await sbRestoreSession(); } catch(e){}
-
-  // 3. Load candidates/jobs/deals (Supabase → localStorage fallback inside sbLoad)
+  // 1. Load candidates/jobs/deals
   try {
     var results = await Promise.all([sbLoad(CK), sbLoad(JK), sbLoad(DK)]);
     cands = results[0] || [];
     jobs  = results[1] || [];
     deals = results[2] || [];
   } catch(e){
-    console.warn('[initAppData] data load failed:', e);
-    cands = cands && cands.length ? cands : [];
-    jobs  = jobs  && jobs.length  ? jobs  : [];
-    deals = deals && deals.length ? deals : [];
+    cands = cands || []; jobs = jobs || []; deals = deals || [];
   }
 
-  // 4. Seed demo data if empty
+  // 2. Seed if empty
   try { if(!cands.length) seedCands(); } catch(e){}
   try { if(!jobs.length)  seedJobs();  } catch(e){}
 
-  // 5. Restore API key
+  // 3. Restore API key
   try {
     var k = localStorage.getItem(AK) || '';
     var apiField = document.getElementById('api-key');
     if(apiField){ apiField.value = k; updateApiDot(k); }
   } catch(e){}
 
-  // 6. LIBRARY — always rebuild from seed, never trust localStorage cache
+  // 4. Library — always from window._LIB_SEED (pinned at parse time)
   try {
-    // Always start from _LIB_SEED (140 items, declared at parse time)
-    // localStorage cache is unreliable across deploys — ignore it
-    if(typeof _LIB_SEED !== 'undefined' && _LIB_SEED.length){
-      libraryItems = _LIB_SEED.slice();
+    var seed = window._LIB_SEED || [];
+    if(seed.length){
+      libraryItems = seed.slice();
+      window.libraryItems = libraryItems;
     }
-    window.libraryItems = libraryItems;
-    // Wipe stale cache so next load is also clean
     try { localStorage.removeItem('tb_library'); } catch(e){}
-    console.log('[initAppData] library:', libraryItems.length, 'items');
-  } catch(e){ console.warn('[initAppData] library init failed:', e); }
+  } catch(e){ console.warn('[initAppData] library failed:', e); }
 
-  // 7. Scorecards — localStorage or empty (user creates them)
+  // 5. Scorecards
   try { window.scorecards = scorecards || []; } catch(e){ window.scorecards = []; }
 
-  // 8. Tutorial — always available (const defined at parse time)
-  try { window.tutorialSteps = TUTORIAL_STEPS || []; } catch(e){ window.tutorialSteps = []; }
+  // 6. Tutorial — from window.TUTORIAL_STEPS (pinned at parse time)
+  window.tutorialSteps = window.TUTORIAL_STEPS || [];
 
-  // 9. Single debug log — check this in console after load
-  console.log('[TalentBase] Ready:',
-    'library=' + (window.libraryItems||[]).length,
-    'cands=' + cands.length,
-    'jobs=' + jobs.length,
-    'deals=' + deals.length,
-    'scorecards=' + (scorecards||[]).length,
-    'tutorial=' + (window.tutorialSteps||[]).length
-  );
+  console.log('[TalentBase] Ready: library=' + (window.libraryItems||[]).length
+    + ' cands=' + (cands||[]).length
+    + ' jobs=' + (jobs||[]).length
+    + ' tutorial=' + (window.tutorialSteps||[]).length);
 }
 
 window.addEventListener('DOMContentLoaded', async function(){
@@ -10984,29 +10926,34 @@ window.addEventListener('DOMContentLoaded', async function(){
   var g = document.getElementById('gate');
   var a = document.getElementById('app-shell');
 
-  // Supabase init
-  try { sbInit(); _updateGateState(); } catch(e) { console.warn('Supabase not ready'); }
-  var restored = false;
-  try { restored = await sbRestoreSession(); } catch(e) { console.warn('Session restore failed'); }
-
-  // Bind existing data — DO NOT overwrite, only fill gaps
-  if(typeof _LIB_SEED !== 'undefined' && _LIB_SEED.length){
-    if(!libraryItems || !libraryItems.length) libraryItems = _LIB_SEED.slice();
-    window.libraryItems = libraryItems;
+  // STEP 1: Force-bind all data to window immediately
+  // These were pinned at parse time — read them back safely
+  if(!window.libraryItems || !window.libraryItems.length){
+    window.libraryItems = window._LIB_SEED ? window._LIB_SEED.slice() : [];
   }
-  window.scorecards    = scorecards || [];
-  window.tutorialSteps = (typeof TUTORIAL_STEPS !== 'undefined') ? TUTORIAL_STEPS : [];
+  libraryItems = window.libraryItems;
 
-  // Clear stale library cache so it always rebuilds from seed
+  if(!window.TUTORIAL_STEPS || !window.TUTORIAL_STEPS.length){
+    window.TUTORIAL_STEPS = (typeof TUTORIAL_STEPS !== 'undefined') ? TUTORIAL_STEPS : [];
+  }
+  window.tutorialSteps = window.TUTORIAL_STEPS;
+
+  window.scorecards = (typeof scorecards !== 'undefined') ? scorecards : [];
+
   try { localStorage.removeItem('tb_library'); } catch(e){}
 
   console.log('DATA STATUS:', {
-    library:    (window.libraryItems||[]).length,
-    scorecards: (window.scorecards||[]).length,
-    tutorial:   (window.tutorialSteps||[]).length
+    library:    window.libraryItems.length,
+    scorecards: window.scorecards.length,
+    tutorial:   window.tutorialSteps.length
   });
 
-  // Route
+  // STEP 2: Supabase init + session restore
+  try { sbInit(); _updateGateState(); } catch(e) { console.warn('Supabase not ready'); }
+  var restored = false;
+  try { restored = await sbRestoreSession(); } catch(e) {}
+
+  // STEP 3: Route to app or gate
   if(_sbUser || restored){
     var role = (_sbUser && _sbUser.user_metadata && _sbUser.user_metadata.role) || 'admin';
     _unlockApp(role);
@@ -11016,7 +10963,7 @@ window.addEventListener('DOMContentLoaded', async function(){
     setTimeout(function(){ var i=document.getElementById('gate-email'); if(i) i.focus(); }, 150);
   }
 
-  // Library row click delegation
+  // STEP 4: Library row click delegation
   document.addEventListener('click', function(e){
     var row = e.target.closest('.lib-row');
     if(!row) return;
@@ -11026,8 +10973,7 @@ window.addEventListener('DOMContentLoaded', async function(){
     e.stopPropagation();
     viewLibItem(id);
   });
-});
-</script>
+});</script>
 
 
 
