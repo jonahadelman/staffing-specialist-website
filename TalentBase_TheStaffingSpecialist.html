@@ -1,7 +1,11 @@
 <!DOCTYPE html>
+<!-- TalentBase v4.6 build:20260404-1602 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <meta http-equiv="Expires" content="0"/>
@@ -1114,7 +1118,7 @@ button, .btn { white-space:nowrap !important; }
       </div>
 
       <div class="gate-foot">
-        Need access? <a href="mailto:jonah@thestaffingspecialist.com">Contact Jonah</a>
+        Need access? <a href="/cdn-cgi/l/email-protection#0e6461606f664e7a666b7d7a6f68686760697d7e6b6d676f62677d7a206d6163">Contact Jonah</a>
       </div>
     </div>
 
@@ -1174,7 +1178,7 @@ button, .btn { white-space:nowrap !important; }
       <div class="gate-foot" style="margin-top:16px;">
         Need a Supabase account? <a href="https://supabase.com" target="_blank">Create one free →</a>
         &nbsp;·&nbsp;
-        <a href="mailto:jonah@thestaffingspecialist.com">Contact Jonah</a>
+        <a href="/cdn-cgi/l/email-protection#cfa5a0a1aea78fbba7aabcbbaea9a9a6a1a8bcbfaaaca6aea3a6bcbbe1aca0a2">Contact Jonah</a>
       </div>
     </div>
 
@@ -1256,6 +1260,10 @@ button, .btn { white-space:nowrap !important; }
       <div class="ni" onclick="nav('analytics')" id="ni-analytics">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Analytics
+      </div>
+      <div class="ni" id="ni-happyhunting" onclick="nav('happyhunting')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0;color:#ff4d00;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <span>Happy Hunting</span>
       </div>
       <div class="ni" onclick="nav('nlsearch')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1438,6 +1446,171 @@ button, .btn { white-space:nowrap !important; }
 <!-- ══════════════════════════════════════════════════════════
      DEALS CRM — Sales pipeline from HappyHunting to Closed
 ═══════════════════════════════════════════════════════════ -->
+<!-- ═══ HAPPY HUNTING (embedded) ═══ -->
+<div class="view" id="v-happyhunting" style="flex-direction:column;overflow:hidden;">
+  <div class="topbar" style="flex-shrink:0;">
+    <div>
+      <div class="topbar-title">⚡ Happy Hunting</div>
+      <div class="topbar-sub">Decode any staffing firm posting — find the end client — add to pipeline instantly</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="nav('deals')">View Deals →</button>
+  </div>
+  <div class="hh-embed" style="flex:1;overflow:hidden;display:flex;flex-direction:column;background:#080808;">
+<div id="pg-tool" style="display:none;">
+
+  <div class="tool-nav">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <button class="back-btn" onclick="showHome()">← BACK</button>
+      <div class="vr"></div>
+      <div class="brand-name tool-brand-name">HAPPY <span>HUNTING</span></div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:#aaaaaa;letter-spacing:2px;">DECODER</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <button id="mode-job" onclick="setMode('job')" style="background:#ff4d00;color:#fff;border:none;padding:6px 14px;font-family:'Bebas Neue';font-size:14px;letter-spacing:1px;cursor:pointer;border-radius:3px;">JOB POSTING</button>
+      <button id="mode-url" onclick="setMode('url')" style="background:#111;color:#aaa;border:1px solid #222;padding:6px 14px;font-family:'Bebas Neue';font-size:14px;letter-spacing:1px;cursor:pointer;border-radius:3px;">URL DECODE</button>
+      <button id="mode-profile" onclick="setMode('profile')" style="background:#111;color:#aaa;border:1px solid #222;padding:6px 14px;font-family:'Bebas Neue';font-size:14px;letter-spacing:1px;cursor:pointer;border-radius:3px;">LINKEDIN PROFILE</button>
+      <div class="live-ind" style="margin-left:8px;"><div class="live-dot"></div><span class="live-lbl">LIVE AI</span></div>
+    </div>
+  </div>
+
+  <div class="tool-wrap solo" id="tool-wrap">
+    <div class="input-side" id="input-side">
+
+      <!-- MODE: JOB POSTING -->
+      <div id="mode-job-panel">
+        <div id="input-hdr">
+          <div class="input-title">DECODE A POSTING</div>
+          <div class="input-sub">PASTE ANY STAFFING FIRM JOB POSTING BELOW</div>
+        </div>
+        <textarea id="job-input" placeholder="Paste the full job posting here...&#10;&#10;Works with: CyberCoders · Robert Half · Kforce · Insight Global · TEK Systems · Randstad · Any staffing firm"></textarea>
+        <div style="margin-top:14px;flex-direction:column;display:flex;">
+
+          <!-- PROMINENT API KEY BANNER -->
+          <div id="hh-key-banner" style="width:100%;margin-bottom:12px;background:#1a0e06;border:2px solid #d4703a;border-radius:8px;padding:14px 16px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <span style="font-size:20px;">🔑</span>
+              <div style="font-size:13px;font-weight:700;color:#d4703a;text-transform:uppercase;letter-spacing:.08em;">Step 1: Add Your API Key</div>
+              <div id="hh-key-status" style="margin-left:auto;font-size:12px;"></div>
+            </div>
+            <input id="hh-api-key-input" type="password"
+              placeholder="Paste your Anthropic key here → sk-ant-api03-..."
+              style="width:100%;background:#0e0c0a;border:2px solid #3a2a1a;color:#f0e8dc;font-family:'DM Mono',monospace;font-size:13px;padding:10px 12px;outline:none;border-radius:5px;box-sizing:border-box;margin-bottom:6px;"
+              oninput="hhSaveKey(this.value); hhCheckKey();"
+              autocomplete="off"/>
+            <div style="font-size:11px;color:#8a7860;">Free key at <a href="https://console.anthropic.com" target="_blank" style="color:#d4703a;font-weight:700;">console.anthropic.com</a> &nbsp;·&nbsp; ~$5 gets you hundreds of decodes &nbsp;·&nbsp; Saves automatically in your browser</div>
+          </div>
+
+          <div style="display:flex;gap:8px;">
+            <button class="decode-btn" id="decode-btn" onclick="runDecode()" disabled style="flex:1;">DECODE →</button>
+            <button class="clear-btn" id="clear-btn" onclick="clearTool()" style="display:none;">CLEAR</button>
+          </div>
+        </div>
+    
+      </div>
+
+      <!-- MODE: URL -->
+      <div id="mode-url-panel" style="display:none;">
+        <div>
+          <div class="input-title">DECODE FROM URL</div>
+          <div class="input-sub">PASTE A JOB POSTING URL — AI FETCHES AND DECODES IT</div>
+        </div>
+        <input id="url-input" type="url" placeholder="https://www.cybercoders.com/job/..." style="width:100%;background:#080808;border:1px solid #222;color:#e8e8e8;font-family:'DM Mono',monospace;font-size:13px;padding:14px;margin-top:14px;outline:none;" oninput="document.getElementById('url-decode-btn').disabled=!this.value.trim()"/>
+        <div style="font-size:11px;color:#666;margin-top:6px;">Works on most job boards · Some sites block fetching (LinkedIn, Indeed) — paste text instead</div>
+        <div style="margin-top:14px;">
+          <button class="decode-btn" id="url-decode-btn" onclick="runUrlDecode()" disabled>FETCH &amp; DECODE →</button>
+        </div>
+        <div class="howto" style="margin-top:20px;">
+          <div class="hw"><span class="hw-l">PASTE URL</span><span class="hw-d">Any staffing firm job posting URL from CyberCoders, Kforce, Robert Half, etc.</span></div>
+          <div class="hw"><span class="hw-l">AI FETCHES</span><span class="hw-d">We pull the full posting text automatically</span></div>
+          <div class="hw"><span class="hw-l">DECODE</span><span class="hw-d">Same full decode — client, managers, pitch, fees</span></div>
+        </div>
+      </div>
+
+      <!-- MODE: LINKEDIN PROFILE -->
+      <div id="mode-profile-panel" style="display:none;">
+        <div>
+          <div class="input-title">DECODE A PROFILE</div>
+          <div class="input-sub">PASTE ANY LINKEDIN PROFILE TEXT BELOW</div>
+        </div>
+        <div style="font-size:11px;color:#888;margin-top:8px;margin-bottom:10px;line-height:1.6;">
+          On LinkedIn: open a profile → Ctrl+A → Ctrl+C → paste here. Works on any profile.
+        </div>
+        <textarea id="profile-input" placeholder="Paste the full LinkedIn profile text here...&#10;&#10;Include: name, headline, current role, past roles, education, skills — the more the better" style="min-height:260px;"></textarea>
+        <div style="margin-top:14px;display:flex;align-items:center;">
+          <button class="decode-btn" id="profile-decode-btn" onclick="runProfileDecode()" disabled>ANALYZE PROFILE →</button>
+          <button class="clear-btn" id="profile-clear-btn" onclick="clearProfile()" style="display:none;">CLEAR</button>
+        </div>
+        <div class="howto" style="margin-top:20px;">
+          <div class="hw"><span class="hw-l">OPEN TO MOVE?</span><span class="hw-d">AI reads signals that indicate if they are likely to take a call</span></div>
+          <div class="hw"><span class="hw-l">FEE OPPORTUNITY</span><span class="hw-d">Is their current company a client payer? What would they be worth?</span></div>
+          <div class="hw"><span class="hw-l">BEST PITCH</span><span class="hw-d">Personalized DM and email opening line written instantly</span></div>
+          <div class="hw"><span class="hw-l">MOVE TRIGGERS</span><span class="hw-d">What roles, companies, or situations would make them leave</span></div>
+        </div>
+      </div>
+
+      <div class="err" id="err" style="display:none;margin-top:12px;"></div>
+
+      <div class="load-steps" id="load-steps" style="display:none;margin-top:16px;">
+        <div class="ls" id="s0"><div class="ld" style="background:#1a1a1a;"></div><span class="lt" style="color:#aaaaaa;">Scanning fingerprints...</span></div>
+        <div class="ls" id="s1"><div class="ld" style="background:#1a1a1a;"></div><span class="lt" style="color:#aaaaaa;">Cross-referencing signals...</span></div>
+        <div class="ls" id="s2"><div class="ld" style="background:#1a1a1a;"></div><span class="lt" style="color:#aaaaaa;">Identifying decision makers...</span></div>
+        <div class="ls" id="s3"><div class="ld" style="background:#1a1a1a;"></div><span class="lt" style="color:#aaaaaa;">Calculating opportunity...</span></div>
+        <div class="ls" id="s4"><div class="ld" style="background:#1a1a1a;"></div><span class="lt" style="color:#aaaaaa;">Writing your pitch...</span></div>
+      </div>
+
+    </div>
+
+    <div class="res-side" id="res-side" style="display:none;">
+      <div class="res-banner">
+        <div>
+          <div><span class="res-co" id="r-co"></span><span class="res-ticker" id="r-ticker"></span></div>
+          <div class="res-tags" id="r-tags"></div>
+        </div>
+        <div id="r-badge"></div>
+      </div>
+      <div class="tabs" id="result-tabs">
+        <button class="tab-btn on" onclick="switchTab('client',this)">End Client</button>
+        <button class="tab-btn" onclick="switchTab('managers',this)">Hiring Managers</button>
+        <button class="tab-btn" onclick="switchTab('pitch',this)">Outreach</button>
+        <button class="tab-btn" onclick="switchTab('fees',this)">Fee Intel</button>
+      </div>
+      <div class="tabs" id="profile-tabs" style="display:none;">
+        <button class="tab-btn on" onclick="switchProfileTab('overview',this)">Overview</button>
+        <button class="tab-btn" onclick="switchProfileTab('pitch',this)">Pitch</button>
+        <button class="tab-btn" onclick="switchProfileTab('triggers',this)">Move Triggers</button>
+        <button class="tab-btn" onclick="switchProfileTab('fee',this)">Fee Opportunity</button>
+      </div>
+      <div class="tc">
+        <div id="t-client"></div>
+        <div id="t-managers" style="display:none;"></div>
+        <div id="t-pitch" style="display:none;"></div>
+        <div id="t-fees" style="display:none;"></div>
+        <div id="t-p-overview" style="display:none;"></div>
+        <div id="t-p-pitch" style="display:none;"></div>
+        <div id="t-p-triggers" style="display:none;"></div>
+        <div id="t-p-fee" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end pg-tool -->
+<div class="pipeline-bar" id="pipeline-bar">
+  <div class="pipeline-bar-info">
+    <div class="pipeline-bar-co" id="pb-company">—</div>
+    <div class="pipeline-bar-fee" id="pb-fee">Calculating fee...</div>
+  </div>
+  <button class="pipeline-btn-secondary" id="build-deal-btn" onclick="buildDealOnly()" style="background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#22c55e;">
+    BUILD DEAL →
+  </button>
+  <button class="pipeline-btn-secondary" onclick="pipelineViewTB()">OPEN TALENTBASE ↗</button>
+  <button class="pipeline-btn" id="pipeline-btn" onclick="addToPipeline()">
+    + ADD TO PIPELINE
+  </button>
+</div>
+    <div id="pipeline-toast" style="position:fixed;bottom:80px;right:24px;z-index:9999;pointer-events:none;"></div>
+  </div>
+</div>
+
 <div class="view" id="v-deals" style="flex-direction:column;overflow:hidden;">
 
   <!-- Topbar -->
@@ -2541,7 +2714,7 @@ button, .btn { white-space:nowrap !important; }
 <!-- ═══ SUPABASE CLIENT (CDN — UMD build, synchronous global) ═══ -->
 <!-- Using the UMD/IIFE build so window.supabase is available synchronously -->
 <!-- No import() race with DOMContentLoaded -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 window.__initSupabase = function(url, key) {
   if (!url || !key || url === 'YOUR_URL') return null;
@@ -4033,6 +4206,9 @@ function nav(v){
   }
   if(v==='campaigns')renderCampaigns();
   if(v==='nlsearch'){}
+  if(v==='happyhunting'){
+    try{ window._hhAutoStart && window._hhAutoStart(); }catch(e){}
+  }
   if(v==='workspace'){try{loadWsSettings();}catch(e){}}
   if(v==='command'){try{renderCommandCenter();}catch(e){}}
   const nc=document.getElementById('nb-cands');
@@ -4188,7 +4364,8 @@ function _buildCandRow(c, terms){
     : (c.created||now);
   const daysIdle=(now-lastAct)/DAY;
   let flags='';
-  if(c.responded) flags+='<span title="Hot lead — replied to outreach" style="font-size:11px;">🔥</span>';
+  if(c.responded) flags+='<span title="Hot — replied" style="font-size:11px;">🔥</span>';
+  else if(c.opened&&!c.responded) flags+='<span title="Opened your email" style="font-size:11px;">👀</span>';
   else if(daysIdle>=2&&['Screening','Interviewing','Offer'].includes(c.status))
     flags+='<span title="Follow-up due ('+Math.floor(daysIdle)+'d idle)" style="font-size:11px;">⏱</span>';
 
@@ -12315,6 +12492,58 @@ function loadWsSettings(){
 .cp-activity-dot{width:8px;height:8px;border-radius:50%;background:var(--cp-blue);flex-shrink:0;margin-top:4px;}
 .cp-activity-text{font-size:13px;color:var(--cp-text2);line-height:1.5;}
 .cp-activity-time{font-size:11px;color:var(--cp-text3);margin-top:2px;}
+
+/* ═══ HAPPY HUNTING EMBEDDED ═══ */
+.hh-embed .tool-nav { display:none !important; }
+.hh-embed #pg-home  { display:none !important; }
+.hh-embed #pg-tool  { display:block !important; flex:1; min-height:0; }
+.hh-embed .tool-wrap { display:grid; grid-template-columns:380px 1fr; flex:1; min-height:0; overflow:hidden; }
+.hh-embed .input-side { overflow-y:auto; padding:20px 22px; background:#0a0a0a; border-right:1px solid #1a1a1a; }
+.hh-embed .res-side { overflow-y:auto; background:#060606; display:none; }
+.hh-embed .tool-wrap.show-results .res-side,
+.hh-embed .res-side[style*="display: block"],
+.hh-embed .res-side[style*="display:block"] { display:block !important; }
+.hh-embed textarea { background:#111; border:1px solid #222; color:#e8e8e8; padding:12px; font-family:'DM Mono',monospace; font-size:12px; width:100%; min-height:160px; border-radius:4px; resize:vertical; box-sizing:border-box; }
+.hh-embed .input-title { font-family:'DM Mono',monospace; font-size:12px; font-weight:700; color:#ff4d00; letter-spacing:2px; margin-bottom:4px; }
+.hh-embed .input-sub { font-size:10px; color:#555; letter-spacing:1px; margin-bottom:12px; }
+.hh-embed .decode-btn { background:#ff4d00; color:#fff; border:none; padding:11px 18px; font-family:'DM Mono',monospace; font-size:13px; letter-spacing:2px; cursor:pointer; border-radius:3px; width:100%; margin-top:10px; transition:background .15s; }
+.hh-embed .decode-btn:hover { background:#ff6520; }
+.hh-embed .decode-btn:disabled { background:#333; color:#666; cursor:not-allowed; }
+.hh-embed .clear-btn { background:transparent; border:1px solid #2a2a2a; color:#555; padding:7px 14px; font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; cursor:pointer; border-radius:3px; width:100%; margin-top:6px; display:none; }
+.hh-embed .mode-tabs { display:flex; gap:5px; margin-bottom:12px; }
+.hh-embed .mode-tab { background:#111; border:1px solid #222; color:#777; padding:5px 11px; font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; cursor:pointer; border-radius:3px; transition:all .1s; }
+.hh-embed .mode-tab.active,.hh-embed [style*="background:#ff4d00"][style*="color:#fff"] { background:#ff4d00 !important; border-color:#ff4d00 !important; color:#fff !important; }
+.hh-embed .load-steps { margin-top:12px; display:none; }
+.hh-embed .load-step { display:flex; align-items:center; gap:8px; padding:5px 0; font-size:11px; color:#444; font-family:'DM Mono',monospace; }
+.hh-embed .load-step.active { color:#ff4d00; }
+.hh-embed .load-step.done { color:#22c55e; }
+.hh-embed .pipeline-bar { background:#0a0a0a; border-top:2px solid #ff4d00; padding:10px 18px; display:none; align-items:center; gap:10px; flex-shrink:0; }
+.hh-embed .pipeline-bar-info { flex:1; }
+.hh-embed .pipeline-bar-co { font-size:13px; font-weight:700; color:#f0f0f0; font-family:'DM Mono',monospace; }
+.hh-embed .pipeline-bar-fee { font-size:11px; color:#ff4d00; margin-top:1px; }
+.hh-embed .pipeline-btn { background:#ff4d00; color:#fff; border:none; padding:9px 16px; font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; cursor:pointer; border-radius:3px; white-space:nowrap; transition:background .1s; }
+.hh-embed .pipeline-btn:hover { background:#ff6520; }
+.hh-embed .pipeline-btn:disabled { background:#333; color:#555; cursor:not-allowed; }
+.hh-embed .pipeline-btn-secondary { background:transparent; border:1px solid #2a2a2a; color:#777; padding:7px 12px; font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; cursor:pointer; border-radius:3px; white-space:nowrap; transition:all .1s; }
+.hh-embed .pipeline-btn-secondary:hover { border-color:#ff4d00; color:#ff4d00; }
+.hh-embed .res-tabs { display:flex; gap:3px; padding:12px 14px 0; border-bottom:1px solid #1a1a1a; flex-shrink:0; }
+.hh-embed .res-tab { padding:7px 12px; font-family:'DM Mono',monospace; font-size:11px; color:#555; cursor:pointer; border-bottom:2px solid transparent; letter-spacing:1px; transition:all .1s; }
+.hh-embed .res-tab.active { color:#ff4d00; border-bottom-color:#ff4d00; }
+.hh-embed .res-pane { padding:16px 18px; display:none; overflow-y:auto; }
+.hh-embed .res-pane.active { display:block; }
+.hh-embed .res-co { font-size:20px; font-weight:800; color:#f0f0f0; font-family:'DM Mono',monospace; margin-bottom:6px; }
+.hh-embed .res-tag { display:inline-block; background:#1a1a1a; border:1px solid #2a2a2a; color:#777; padding:2px 7px; border-radius:3px; font-size:10px; font-family:'DM Mono',monospace; margin:2px; }
+.hh-embed .conf-badge { display:inline-block; padding:2px 8px; border-radius:3px; font-size:10px; font-family:'DM Mono',monospace; font-weight:700; letter-spacing:1px; }
+.hh-embed .conf-high { background:rgba(34,197,94,.15); border:1px solid rgba(34,197,94,.3); color:#22c55e; }
+.hh-embed .conf-med  { background:rgba(245,158,11,.15); border:1px solid rgba(245,158,11,.3); color:#f59e0b; }
+.hh-embed .conf-low  { background:rgba(239,68,68,.15);  border:1px solid rgba(239,68,68,.3);  color:#ef4444; }
+.hh-embed .hh-key-banner { background:#111; border:1px solid #333; border-radius:4px; padding:10px 12px; margin-bottom:12px; }
+.hh-embed .hh-key-banner input { background:#0a0a0a; border:1px solid #2a2a2a; color:#f0f0f0; padding:7px 9px; font-family:'DM Mono',monospace; font-size:11px; width:100%; border-radius:3px; margin-top:5px; }
+.hh-embed .live-ind { display:flex; align-items:center; gap:5px; }
+.hh-embed .live-dot { width:5px; height:5px; background:#22c55e; border-radius:50%; animation:hh-pulse 2s infinite; }
+.hh-embed .live-lbl { font-size:10px; color:#22c55e; font-family:'DM Mono',monospace; letter-spacing:2px; }
+@keyframes hh-pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
 </style>
 
 <div id="cp">
@@ -12709,12 +12938,798 @@ function cpSaveNote(candId, note){
   if(!fb[candId]) fb[candId]={};
   fb[candId].note = note;
   fb[candId].ts = Date.now();
-  localStorage.setItem('tb_client_feedback', JSON.stringify(fb));
+  localStorage.setItem('tb_client_feedback', JSON.stringify(b));
   _cpFeedback = fb;
   var saved = document.getElementById('cp-saved-'+candId);
   if(saved){ saved.style.display='block'; setTimeout(function(){ saved.style.display='none'; },2000); }
 }
+
+function getClientCompany(){
+  try{
+    return _sbUser && _sbUser.user_metadata && _sbUser.user_metadata.client_company
+      ? _sbUser.user_metadata.client_company
+      : '';
+  }catch(e){ return ''; }
+}
+
+
+// ═══ HAPPY HUNTING — EMBEDDED ENGINE ═══
+(function(){
+  if(window._hhEmbedInit) return;
+  window._hhEmbedInit = true;
+
+
+
+
+const PROMPT = `Staffing intelligence expert. Decode this job posting in one pass. Return ONLY compact JSON, no markdown:
+{"confidence":"High","end_client":{"company_name":"Name","reasoning":"1-2 sentences max","company_type":"type","headquarters":"City, ST","publicly_traded":false,"ticker":null,"size_estimate":"range","why_using_staffing":"one sentence"},"hiring_managers":[{"rank":1,"name":null,"title":"title","why_them":"one sentence","linkedin_search":"search string","confidence":"High"},{"rank":2,"name":null,"title":"title","why_them":"one sentence","linkedin_search":"search string","confidence":"Medium"}],"outreach_pitches":{"primary":{"subject":"under 8 words","opening":"one sentence","value_prop":"one sentence","cta":"one sentence"},"linkedin_dm":"2 sentences"},"fee_intel":{"estimated_placement_fee":"$XX,000-$XX,000","role_urgency":"High","urgency_reason":"one sentence","competing_firms":"firms"}}`;
+
+// ── MODE SWITCHING ─────────────────────────────────────────────────────────
+let currentMode = 'job';
+function setMode(mode) {
+  currentMode = mode;
+  ['job','url','profile'].forEach(m => {
+    const panel = document.getElementById('mode-'+m+'-panel');
+    const btn = document.getElementById('mode-'+m);
+    if(panel) panel.style.display = m===mode ? 'block' : 'none';
+    if(btn) {
+      btn.style.background = m===mode ? '#ff4d00' : '#111';
+      btn.style.color = m===mode ? '#fff' : '#aaa';
+      btn.style.border = m===mode ? 'none' : '1px solid #222';
+    }
+  });
+  document.getElementById('res-side').style.display = 'none';
+  document.getElementById('err').style.display = 'none';
+  document.getElementById('load-steps').style.display = 'none';
+  const w = document.getElementById('tool-wrap');
+  w.className = 'tool-wrap solo';
+}
+
+// ── URL DECODE ──────────────────────────────────────────────────────────────
+const CORS_PROXIES = [
+  'https://api.allorigins.win/get?url=',
+  'https://corsproxy.io/?',
+];
+
+async function fetchJobUrl(url) {
+  for(const proxy of CORS_PROXIES) {
+    try {
+      const r = await fetch(proxy + encodeURIComponent(url), {signal: AbortSignal.timeout(10000)});
+      if(!r.ok) continue;
+      const data = await r.json().catch(() => null);
+      const html = data ? (data.contents || '') : await r.text();
+      // Strip HTML tags and extract text
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      // Remove scripts/styles
+      tmp.querySelectorAll('script,style,nav,header,footer').forEach(e=>e.remove());
+      const text = tmp.innerText || tmp.textContent || '';
+      if(text.length > 200) return text.slice(0, 5000);
+    } catch(e) { continue; }
+  }
+  throw new Error('Could not fetch that URL. Try pasting the job text directly instead.');
+}
+
+async function runUrlDecode() {
+  const url = document.getElementById('url-input').value.trim();
+  if(!url) return;
+  const btn = document.getElementById('url-decode-btn');
+  btn.disabled = true; btn.textContent = 'FETCHING...';
+  document.getElementById('err').style.display = 'none';
+  document.getElementById("load-steps").style.display="flex";document.getElementById("load-steps").innerHTML="<div style='color:#ff4d00;font-size:13px;font-weight:700;letter-spacing:.05em;'>DECODING — RESULTS IN SECONDS...</div>";
+  try {
+    const text = await fetchJobUrl(url);
+    btn.textContent = 'DECODING...';
+    const res = await callAnthropicDecode(text);
+    renderResults(res);
+  } catch(e) {
+    const errEl = document.getElementById('err');
+    errEl.textContent = e.message || 'Fetch failed — paste the job text directly.';
+    errEl.style.display = 'block';
+  } finally {
+    stopSteps(); btn.disabled = false; btn.textContent = 'FETCH & DECODE →';
+  }
+}
+
+// ── PROFILE DECODE ──────────────────────────────────────────────────────────
+const PROFILE_PROMPT = `You are an expert headhunter and talent intelligence analyst. Analyze this LinkedIn profile and return ONLY valid JSON (no markdown):
+{"candidate":{"name":"","current_title":"","current_company":"","location":"","years_experience":0,"career_summary":"2-3 sentences"},"open_to_move":{"score":0,"score_label":"Hot / Warm / Cold","signals":["signal1","signal2","signal3"],"best_time_to_reach":"e.g. Now — just promoted / Watch — happy but listening"},"move_triggers":["trigger1","trigger2","trigger3"],"target_roles":["role1","role2"],"target_companies":["company type or name"],"pitch":{"email_subject":"Under 8 words","email_opening":"1 personalized sentence referencing their background","linkedin_dm":"2 casual sentences — reference something specific from their profile","talk_track":"3 bullet points for a phone call"},"fee_opportunity":{"estimated_salary":"e.g. $180K-$220K","estimated_fee":"e.g. $36K-$44K at 20%","current_company_pays_fees":"Yes / No / Unknown","reasoning":"Why they would or would not pay fees"}}`;
+
+async function runProfileDecode() {
+  const txt = document.getElementById('profile-input').value.trim();
+  if(!txt) return;
+  const btn = document.getElementById('profile-decode-btn');
+  btn.disabled = true; btn.textContent = 'ANALYZING...';
+  document.getElementById('err').style.display = 'none';
+  document.getElementById("load-steps").style.display="flex";document.getElementById("load-steps").innerHTML="<div style='color:#ff4d00;font-size:13px;font-weight:700;letter-spacing:.05em;'>DECODING — RESULTS IN SECONDS...</div>";
+  try {
+    const apiKey = getApiKey();
+    if(!apiKey) throw new Error('Add your Anthropic API key to use this feature.');
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:700,system:PROFILE_PROMPT,messages:[{role:'user',content:txt.slice(0,2000)}]})
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error.message);
+    const raw = (data.content||[]).map(b=>b.text||'').join('');
+    const result = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderProfileResults(result);
+  } catch(e) {
+    const errEl = document.getElementById('err');
+    errEl.textContent = 'Analysis failed: ' + e.message;
+    errEl.style.display = 'block';
+  } finally {
+    stopSteps(); btn.disabled = false; btn.textContent = 'ANALYZE PROFILE →';
+  }
+}
+
+function clearProfile() {
+  document.getElementById('profile-input').value = '';
+  document.getElementById('profile-decode-btn').disabled = true;
+  document.getElementById('profile-clear-btn').style.display = 'none';
+  document.getElementById('res-side').style.display = 'none';
+  const w = document.getElementById('tool-wrap');
+  w.className = 'tool-wrap solo';
+}
+
+function renderProfileResults(r) {
+  const w = document.getElementById('tool-wrap');
+  w.className = 'tool-wrap';
+  w.style.gridTemplateColumns = '400px 1fr';
+  const is = document.getElementById('input-side');
+  is.style.maxWidth='none'; is.style.margin='0'; is.style.borderRight='1px solid #0f0f0f';
+
+  document.getElementById('r-co').textContent = r.candidate.name || 'Profile Decoded';
+  document.getElementById('r-ticker').textContent = '';
+  document.getElementById('r-tags').innerHTML = [r.candidate.current_title, r.candidate.current_company, r.candidate.location].filter(Boolean).map(t=>`<span class="res-tag">${t}</span>`).join('');
+  document.getElementById('r-badge').innerHTML = mkBadge(r.open_to_move.score_label || 'Medium');
+
+  const scoreColor = {'Hot':'#ff4d00','Warm':'#f59e0b','Cold':'#666'}[r.open_to_move.score_label] || '#aaa';
+
+  document.getElementById('t-p-overview').innerHTML = `
+    <div class="rc" style="text-align:center;padding:28px 22px;">
+      <span class="rl">Open to Move Score</span>
+      <div style="font-size:72px;font-weight:900;color:${scoreColor};font-family:'Bebas Neue';letter-spacing:2px;">${r.open_to_move.score}/10</div>
+      <div style="font-size:18px;color:${scoreColor};font-family:'Bebas Neue';letter-spacing:2px;">${r.open_to_move.score_label}</div>
+      <div style="font-size:13px;color:#aaa;margin-top:8px;">${r.open_to_move.best_time_to_reach}</div>
+    </div>
+    <div class="rc"><span class="rl">Move Signals</span>
+      ${(r.open_to_move.signals||[]).map(s=>`<div style="padding:7px 0;border-bottom:1px solid #111;color:#cccccc;font-size:13px;">→ ${s}</div>`).join('')}
+    </div>
+    <div class="rc"><span class="rl">Career Summary</span><p class="rv">${r.candidate.career_summary}</p></div>`;
+
+  document.getElementById('t-p-pitch').innerHTML = `
+    <div class="rc">
+      <div class="pitch-hd"><span class="rl" style="margin:0;">📧 EMAIL PITCH</span><button class="cpbtn" onclick="cp('Subject: ${hhEsc(r.pitch.email_subject)}\n\n${hhEsc(r.pitch.email_opening)}',this)">COPY</button></div>
+      <div style="margin-bottom:12px;"><span class="rl">Subject</span><div class="subj-box">${r.pitch.email_subject}</div></div>
+      <div><span class="rl">Opening Line</span><p class="rv">${r.pitch.email_opening}</p></div>
+    </div>
+    <div class="rc">
+      <div class="pitch-hd"><span class="rl" style="margin:0;">💼 LINKEDIN DM</span><button class="cpbtn" onclick="cp('${hhEsc(r.pitch.linkedin_dm)}',this)">COPY</button></div>
+      <p class="rv">${r.pitch.linkedin_dm}</p>
+    </div>
+    <div class="rc"><span class="rl">📞 Call Talk Track</span>
+      ${(r.pitch.talk_track||[]).map(t=>`<div style="padding:8px 0;border-bottom:1px solid #111;color:#cccccc;font-size:13px;">• ${t}</div>`).join('')}
+    </div>`;
+
+  document.getElementById('t-p-triggers').innerHTML = `
+    <div class="rc"><span class="rl">What Would Make Them Move</span>
+      ${(r.move_triggers||[]).map(t=>`<div style="padding:8px 0;border-bottom:1px solid #111;color:#cccccc;font-size:13px;">→ ${t}</div>`).join('')}
+    </div>
+    <div class="rc"><span class="rl">Target Role Types</span>
+      ${(r.target_roles||[]).map(t=>`<span class="res-tag" style="margin:3px;display:inline-block;">${t}</span>`).join('')}
+    </div>
+    <div class="rc"><span class="rl">Target Company Types</span>
+      ${(r.target_companies||[]).map(t=>`<span class="res-tag" style="margin:3px;display:inline-block;">${t}</span>`).join('')}
+    </div>`;
+
+  document.getElementById('t-p-fee').innerHTML = `
+    <div class="rc" style="text-align:center;padding:36px 22px;">
+      <span class="rl">Estimated Placement Fee</span>
+      <div class="fee-big">${r.fee_opportunity.estimated_fee}</div>
+      <div class="fee-note">IF YOU PLACE THIS PERSON</div>
+    </div>
+    <div class="rc">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+        <span class="rl" style="margin:0;">Current Company Pays Fees?</span>
+        <span style="color:${r.fee_opportunity.current_company_pays_fees==='Yes'?'#ff4d00':r.fee_opportunity.current_company_pays_fees==='No'?'#666':'#aaa'};font-family:'Bebas Neue';font-size:16px;letter-spacing:1px;">${r.fee_opportunity.current_company_pays_fees}</span>
+      </div>
+      <p class="rv">${r.fee_opportunity.reasoning}</p>
+    </div>
+    <div class="rc"><span class="rl">Estimated Salary Range</span><p class="rv" style="font-size:18px;color:#e8e8e8;">${r.fee_opportunity.estimated_salary}</p></div>`;
+
+  // Show profile tabs, hide job tabs
+  document.getElementById('result-tabs').style.display = 'none';
+  document.getElementById('profile-tabs').style.display = 'flex';
+  document.querySelectorAll('#profile-tabs .tab-btn').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('#profile-tabs .tab-btn')[0].classList.add('on');
+  ['t-client','t-managers','t-pitch','t-fees'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+  ['t-p-overview','t-p-pitch','t-p-triggers','t-p-fee'].forEach((id,i)=>{const e=document.getElementById(id);if(e)e.style.display=i===0?'block':'none';});
+  document.getElementById('res-side').style.display = 'block';
+}
+
+function switchProfileTab(name, btn) {
+  document.querySelectorAll('#profile-tabs .tab-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  ['overview','pitch','triggers','fee'].forEach(t=>{const e=document.getElementById('t-p-'+t);if(e)e.style.display=t===name?'block':'none';});
+}
+
+// ── API KEY HELPER ──────────────────────────────────────────────────────────
+function getApiKey(){ return localStorage.getItem('tb_anthropic_key')||localStorage.getItem('hh_api_key')||''; }
+
+function hhSaveKey(val) {
+  val = val.trim();
+  if(val) localStorage.setItem('hh_api_key', val);
+  else localStorage.removeItem('hh_api_key');
+}
+
+function hhCheckKey(){
+  var key = localStorage.getItem('hh_api_key') || '';
+  var status = document.getElementById('hh-key-status');
+  var banner = document.getElementById('hh-key-banner');
+  var btn = document.getElementById('decode-btn');
+  var inp = document.getElementById('hh-api-key-input');
+
+  if(key && key.startsWith('sk-ant') && key.length > 20){
+    if(status){ status.innerHTML = '<span style="color:#2ea862;font-weight:700;">&#10003; Key saved</span>'; }
+    if(banner){ banner.style.borderColor = '#2ea862'; banner.style.background = '#0a180e'; }
+    if(inp){ inp.style.borderColor = '#2ea862'; }
+    // Enable decode button if there is also content
+    var jobInput = document.getElementById('job-input') || document.getElementById('url-input');
+    if(btn && jobInput && jobInput.value.trim().length > 20) btn.disabled = false;
+  } else if(key.length > 0){
+    if(status){ status.innerHTML = '<span style="color:#f5a623;">Check key format</span>'; }
+    if(banner){ banner.style.borderColor = '#f5a623'; }
+  } else {
+    if(status){ status.innerHTML = ''; }
+    if(banner){ banner.style.borderColor = '#d4703a'; banner.style.background = '#1a0e06'; }
+    if(inp){ inp.style.borderColor = '#3a2a1a'; }
+  }
+}
+
+function hhLoadKey() {
+  var k = localStorage.getItem('hh_api_key') || '';
+  var inp = document.getElementById('hh-api-key-input');
+  if(inp && k) inp.value = k;
+}
+
+// ── ORIGINAL DECODE WITH API KEY SUPPORT ────────────────────────────────────
+async function callAnthropicDecode(txt) {
+  const apiKey = getApiKey();
+  if(!apiKey) throw new Error('Add your Anthropic API key to use AI features.');
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:600,system:PROMPT,messages:[{role:'user',content:txt.slice(0,3000)}]})
+  });
+  const data = await res.json();
+  if(data.error) throw new Error(data.error.message);
+  const raw = (data.content||[]).map(b=>b.text||'').join('');
+  return JSON.parse(raw.replace(/```json|```/g,'').trim());
+}
+
+// Profile textarea listener
+document.addEventListener('DOMContentLoaded', function() {
+  const pi = document.getElementById('profile-input');
+  if(pi) pi.addEventListener('input', function() {
+    const has = this.value.trim().length > 0;
+    document.getElementById('profile-decode-btn').disabled = !has;
+    document.getElementById('profile-clear-btn').style.display = has ? 'inline-block' : 'none';
+  });
+});
+
+function showTool(){ var pt=document.getElementById("pg-tool"); if(pt) pt.style.display=""; }
+function showHome(){ try{ nav('dashboard'); }catch(e){} }
+
+function clearTool() {
+  document.getElementById('job-input').value = '';
+  document.getElementById('decode-btn').disabled = true;
+  document.getElementById('clear-btn').style.display = 'none';
+  document.getElementById('res-side').style.display = 'none';
+  document.getElementById('howto').style.display = 'block';
+  document.getElementById('input-hdr').style.display = 'block';
+  const w = document.getElementById('tool-wrap');
+  w.className = 'tool-wrap solo';
+  const is = document.getElementById('input-side');
+  is.style.maxWidth = '560px'; is.style.margin = '0 auto'; is.style.borderRight = 'none';
+}
+
+let stepIv = null;
+function startSteps() {
+  document.getElementById('load-steps').style.display = 'block';
+  document.getElementById('howto').style.display = 'none';
+  let s = 0; setStep(0);
+  stepIv = setInterval(() => { s = Math.min(s+1,4); setStep(s); }, 800);
+}
+function setStep(i) {
+  for (let j=0;j<=4;j++) {
+    const el = document.getElementById('s'+j);
+    const d = el.querySelector('.ld'), t = el.querySelector('.lt');
+    if (j<i) { d.style.background='#ff4d00'; t.style.color='#444'; el.style.opacity='1'; }
+    else if (j===i) { d.style.background='#ff8c00'; t.style.color='#555'; el.style.opacity='1'; }
+    else { d.style.background='#1a1a1a'; t.style.color='#1a1a1a'; el.style.opacity='0.15'; }
+  }
+}
+function stopSteps() { if(stepIv) clearInterval(stepIv); document.getElementById('load-steps').style.display='none'; }
+
+async function runDecode() {
+  const txt = document.getElementById('job-input').value.trim();
+  if (!txt) return;
+  const btn = document.getElementById('decode-btn');
+  btn.disabled = true; btn.textContent = 'DECODING...';
+  document.getElementById('err').style.display = 'none';
+  document.getElementById('res-side').style.display = 'none';
+  document.getElementById("load-steps").style.display="flex";document.getElementById("load-steps").innerHTML="<div style='color:#ff4d00;font-size:13px;font-weight:700;letter-spacing:.05em;'>DECODING — RESULTS IN SECONDS...</div>";
+  try {
+    const result = await callAnthropicDecode(txt);
+    renderResults(result);
+  } catch(e) {
+    const errEl = document.getElementById('err');
+    errEl.textContent = 'Analysis failed: ' + (e.message||'Please try again.');
+    errEl.style.display = 'block';
+  } finally {
+    stopSteps(); btn.disabled = false; btn.textContent = 'DECODE →';
+  }
+}
+
+function renderResults(r) {
+  const w = document.getElementById('tool-wrap');
+  w.className = 'tool-wrap';
+  w.style.gridTemplateColumns = '400px 1fr';
+  const is = document.getElementById('input-side');
+  is.style.maxWidth='none'; is.style.margin='0'; is.style.borderRight='1px solid #0f0f0f';
+
+  document.getElementById('r-co').textContent = r.end_client.company_name;
+  document.getElementById('r-ticker').textContent = r.end_client.publicly_traded && r.end_client.ticker ? r.end_client.ticker : '';
+  document.getElementById('r-tags').innerHTML = [r.end_client.company_type, r.end_client.headquarters, r.end_client.size_estimate].map(t=>`<span class="res-tag">${t}</span>`).join('');
+  document.getElementById('r-badge').innerHTML = mkBadge(r.confidence);
+
+  document.getElementById('t-client').innerHTML = `
+    <div class="rc"><span class="rl">How We ID'd Them</span><p class="rv">${r.end_client.reasoning}</p></div>
+    <div class="rc"><span class="rl">Why They Use Staffing</span><p class="rv">${r.end_client.why_using_staffing}</p></div>
+    <div class="rc"><div class="rg2">
+      <div><span class="rl">Type</span><span class="rg-v">${r.end_client.company_type}</span></div>
+      <div><span class="rl">HQ</span><span class="rg-v">${r.end_client.headquarters}</span></div>
+      <div><span class="rl">Size</span><span class="rg-v">${r.end_client.size_estimate}</span></div>
+      <div><span class="rl">Market</span><span class="rg-v">${r.end_client.publicly_traded ? (r.end_client.ticker||'Public') : 'Private'}</span></div>
+    </div></div>`;
+
+  document.getElementById('t-managers').innerHTML = r.hiring_managers.map((m,i)=>`
+    <div class="rc">
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+        <div>
+          <div class="t-rank">TARGET #${m.rank}</div>
+          <div class="t-name">${m.name||'Find via LinkedIn'}</div>
+          <div class="t-title">${m.title}</div>
+        </div>${mkBadge(m.confidence)}
+      </div>
+      <div style="margin-bottom:12px;"><span class="rl">Why This Person</span><p class="rv">${m.why_them}</p></div>
+      <div class="li-row">
+        <div class="li-box">🔍 ${m.linkedin_search}</div>
+        <button class="cpbtn" onclick="cp('${hhEsc(m.linkedin_search)}',this)">COPY</button>
+      </div>
+    </div>`).join('');
+
+  const p = r.outreach_pitches.primary;
+  const full = `Subject: ${p.subject}\n\n${p.opening} ${p.value_prop} ${p.cta}`;
+  document.getElementById('t-pitch').innerHTML = `
+    <div class="rc">
+      <div class="pitch-hd"><span class="rl" style="margin:0;">📧 EMAIL PITCH</span><button class="cpbtn" onclick="cp('${hhEsc(full)}',this)">COPY ALL</button></div>
+      <div style="margin-bottom:12px;"><span class="rl">Subject Line</span><div class="subj-box">${p.subject}</div></div>
+      <div style="margin-bottom:10px;"><span class="rl">Opening</span><p class="rv">${p.opening}</p></div>
+      <div style="margin-bottom:10px;"><span class="rl">Value Prop</span><p class="rv">${p.value_prop}</p></div>
+      <div><span class="rl">CTA</span><p class="rv">${p.cta}</p></div>
+    </div>
+    <div class="rc">
+      <div class="pitch-hd"><span class="rl" style="margin:0;">💼 LINKEDIN DM</span><button class="cpbtn" onclick="cp('${hhEsc(r.outreach_pitches.linkedin_dm)}',this)">COPY</button></div>
+      <p class="rv">${r.outreach_pitches.linkedin_dm}</p>
+    </div>`;
+
+  document.getElementById('t-fees').innerHTML = `
+    <div class="rc" style="text-align:center;padding:36px 22px;">
+      <span class="rl">Estimated Placement Fee</span>
+      <div class="fee-big">${r.fee_intel.estimated_placement_fee}</div>
+      <div class="fee-note">IF YOU CLOSE THIS ROLE</div>
+    </div>
+    <div class="rc">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+        <span class="rl" style="margin:0;">Role Urgency</span>${mkBadge(r.fee_intel.role_urgency)}
+      </div>
+      <p class="rv">${r.fee_intel.urgency_reason}</p>
+    </div>
+    <div class="rc"><span class="rl">Competing Firms on This Req</span><p class="rv">${r.fee_intel.competing_firms}</p></div>`;
+
+  // Show job tabs
+  const rt = document.getElementById('result-tabs');
+  const pt = document.getElementById('profile-tabs');
+  if(rt) rt.style.display = 'flex';
+  if(pt) pt.style.display = 'none';
+  document.querySelectorAll('#result-tabs .tab-btn').forEach(b=>b.classList.remove('on'));
+  const firstTab = document.querySelector('#result-tabs .tab-btn');
+  if(firstTab) firstTab.classList.add('on');
+  ['client','managers','pitch','fees'].forEach(t => document.getElementById('t-'+t).style.display = t==='client'?'block':'none');
+  ['t-p-overview','t-p-pitch','t-p-triggers','t-p-fee'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+  document.getElementById('res-side').style.display = 'block';
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  ['client','managers','pitch','fees'].forEach(t => document.getElementById('t-'+t).style.display = t===name?'block':'none');
+}
+
+function mkBadge(l) {
+  const c = {High:'b-high',Medium:'b-medium',Low:'b-low'}[l]||'b-medium';
+  return `<span class="badge ${c}">${l}</span>`;
+}
+function hhEsc(s) { return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n'); }
+function hhCp(text, btn) {
+  navigator.clipboard.writeText(text).then(()=>{
+    const o = btn.textContent;
+    btn.textContent='COPIED ✓'; btn.classList.add('ok');
+    setTimeout(()=>{ btn.textContent=o; btn.classList.remove('ok'); },2000);
+  });
+}
+
+if (window.location.search.includes('decode') || window.location.hash === '#decode') showTool();
+
+
+
+
+// HAPPY HUNTING GATE - SIMPLE AND BULLETPROOF
+
+
+// ── AUTO PIPELINE ENGINE ────────────────────────────────────────
+// Shared localStorage keys (must match TalentBase exactly)
+const TB_CANDS = 'tb_cands_v3';
+const TB_JOBS  = 'tb_jobs_v3';
+const TB_DEALS = 'tb_deals_v1';
+
+// Store last decoded result so the pipeline button can reference it
+var _hhLastResult = null;
+var _hhLastJobText = '';
+
+// Patch renderResults to capture result + show pipeline bar
+const _origRenderResults = window.renderResults;
+window.renderResults = function(r) {
+  _origRenderResults(r);
+  _hhLastResult = r;
+  _hhLastJobText = (document.getElementById('job-input') || {}).value || '';
+  showPipelineBar(r);
+};
+
+function showPipelineBar(r) {
+  const bar = document.getElementById('pipeline-bar');
+  const co  = document.getElementById('pb-company');
+  const fee = document.getElementById('pb-fee');
+  if (!bar || !r) return;
+
+  co.textContent = r.end_client.company_name || 'Unknown Company';
+
+  // Parse fee range to a midpoint number
+  const feeStr = (r.fee_intel && r.fee_intel.estimated_placement_fee) || '';
+  const nums = feeStr.match(/\d[\d,]*/g);
+  if (nums && nums.length >= 2) {
+    const lo = parseInt(nums[0].replace(/,/g,''));
+    const hi = parseInt(nums[nums.length-1].replace(/,/g,''));
+    const mid = Math.round((lo + hi) / 2);
+    fee.textContent = 'Est. fee: $' + mid.toLocaleString() + '  ·  Urgency: ' + (r.fee_intel.role_urgency || 'Unknown');
+    bar._parsedFee = mid;
+  } else {
+    fee.textContent = 'Est. fee: ' + (feeStr || 'Unknown') + '  ·  Urgency: ' + (r.fee_intel.role_urgency || 'Unknown');
+    bar._parsedFee = 0;
+  }
+
+  bar.classList.add('visible');
+  // Reset button in case it was already used
+  const btn = document.getElementById('pipeline-btn');
+  if (btn) { btn.disabled = false; btn.textContent = '+ ADD TO PIPELINE'; }
+}
+
+function _tbUid() {
+  return 'hh_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+}
+
+function _tbLoad(key) {
+  try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { return []; }
+}
+
+function _tbSave(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+// ── BUILD DEAL (Prospect stage — no full pipeline redirect) ──
+// Creates a CRM deal in TalentBase at Prospect stage.
+// Faster path: identify the opportunity, save it, move it forward later.
+function buildDealOnly() {
+  const r = _hhLastResult;
+  if (!r) return;
+
+  const btn = document.getElementById('build-deal-btn');
+  if(btn){ btn.disabled = true; btn.textContent = 'BUILDING...'; }
+
+  const bar = document.getElementById('pipeline-bar');
+  const fee = bar._parsedFee || 0;
+  const company = r.end_client.company_name || 'Unknown';
+  const now = Date.now();
+
+  let jobTitle = 'Open Role';
+  const lines = _hhLastJobText.split('\n').map(l => l.trim()).filter(Boolean);
+  if (lines.length) jobTitle = lines[0].slice(0, 80);
+
+  const dealObj = {
+    id: _tbUid(),
+    company: company,
+    jobTitle: jobTitle,
+    role: jobTitle,
+    fee: fee,
+    estimatedFee: fee,
+    stage: 'Prospect',
+    source: 'Happy Hunting',
+    confidence: r.confidence || 'Medium',
+    urgency: (r.fee_intel && r.fee_intel.role_urgency) || 'Unknown',
+    notes: (r.end_client.why_using_staffing || '') + (r.end_client.reasoning ? '\n\n' + r.end_client.reasoning : ''),
+    hiringManagers: r.hiring_managers || [],
+    feeIntel: r.fee_intel || {},
+    createdAt: now,
+  };
+
+  const deals = _tbLoad(TB_DEALS);
+  // Deduplicate within 5 min
+  const dup = deals.find(d => d.company === company && d.jobTitle === jobTitle && (now - d.createdAt) < 300000);
+  if (!dup) {
+    deals.unshift(dealObj);
+    _tbSave(TB_DEALS, deals);
+  }
+
+  const toast = document.getElementById('pipeline-toast');
+  toast.textContent = (dup ? '⚠ DEAL ALREADY EXISTS  →  ' : '✓ DEAL CREATED  →  ') + company + ' · ' + jobTitle + '\n✓ STAGE  →  Prospect\n✓ FEE TRACKED  →  $' + fee.toLocaleString() + '\n→ Open TalentBase → Deals to move it forward';
+  toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; }, 6000);
+
+  if(btn){
+    btn.textContent = dup ? '✓ EXISTS' : '✓ DEAL SAVED';
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'BUILD DEAL →'; }, 3000);
+  }
+}
+
+function addToPipeline() {
+  const r = _hhLastResult;
+  if (!r) return;
+
+  const btn = document.getElementById('pipeline-btn');
+  btn.disabled = true;
+  btn.textContent = 'ADDING...';
+
+  const bar = document.getElementById('pipeline-bar');
+  const fee = bar._parsedFee || 0;
+  const company = r.end_client.company_name || 'Unknown';
+  const now = Date.now();
+
+  // Extract job title from posting text (first line or fallback)
+  let jobTitle = 'Open Role';
+  const lines = _hhLastJobText.split('\n').map(l => l.trim()).filter(Boolean);
+  if (lines.length) jobTitle = lines[0].slice(0, 80);
+
+  // ── STEP 1: Company object ──────────────────────────────────
+  const companyObj = {
+    id: _tbUid(),
+    name: company,
+    paysFees: true,
+    estimatedFee: fee,
+    source: 'Happy Hunting',
+    headquarters: r.end_client.headquarters || '',
+    companyType: r.end_client.company_type || '',
+    whyStaffing: r.end_client.why_using_staffing || '',
+    createdAt: now
+  };
+
+  // ── STEP 2: Job object (TalentBase format) ──────────────────
+  const reqNum = 'HH-' + now.toString(36).toUpperCase().slice(-5);
+  const jobObj = {
+    id: _tbUid(),
+    title: jobTitle,
+    company: company,
+    dept: '',
+    location: r.end_client.headquarters || '',
+    type: 'Full-time',
+    status: 'Open',
+    reqNum: reqNum,
+    expectedFee: fee,
+    probability: 70,
+    source: 'Happy Hunting',
+    description: _hhLastJobText.slice(0, 2000),
+    notes: 'End client identified via Happy Hunting. ' +
+           (r.end_client.reasoning || '') + '\n\n' +
+           'Why they use staffing: ' + (r.end_client.why_using_staffing || ''),
+    boolSearch: '',
+    created: now,
+    // Hiring manager data from HH
+    hiringManagers: r.hiring_managers || [],
+    outreachPitch: r.outreach_pitches || {},
+    feeIntel: r.fee_intel || {}
+  };
+
+  // ── STEP 3: Deals entry ─────────────────────────────────────
+  const dealObj = {
+    id: _tbUid(),
+    jobId: jobObj.id,
+    companyId: companyObj.id,
+    company: company,
+    jobTitle: jobTitle,
+    fee: fee,
+    probability: 70,
+    status: 'Open',
+    source: 'Happy Hunting',
+    confidence: r.confidence || 'Medium',
+    urgency: (r.fee_intel && r.fee_intel.role_urgency) || 'Unknown',
+    createdAt: now
+  };
+
+  // ── STEP 4: Write job to TalentBase ─────────────────────────
+  const jobs = _tbLoad(TB_JOBS);
+  // Deduplicate: don't add if same company+title added in last 5 min
+  const duplicate = jobs.find(j =>
+    j.company === company &&
+    j.title === jobTitle &&
+    (now - j.created) < 5 * 60 * 1000
+  );
+
+  if (!duplicate) {
+    jobs.unshift(jobObj);
+    _tbSave(TB_JOBS, jobs);
+  }
+
+  // ── STEP 5: Deals database ──────────────────────────────────
+  const deals = _tbLoad(TB_DEALS);
+  if (!duplicate) {
+    deals.unshift(dealObj);
+    _tbSave(TB_DEALS, deals);
+  }
+
+  // ── STEP 6+7: Suggest + auto-tag matching candidates ────────
+  // ── STEPS 5–7: Match candidates, generate outreach, log activity ──
+  const cands = _tbLoad(TB_CANDS);
+  const titleWords = jobTitle.toLowerCase().split(/\W+/).filter(w => w.length > 3);
+  const matched = cands.filter(c => {
+    const blob = [c.title, c.role, (c.skills || []).join(' ')].join(' ').toLowerCase();
+    return titleWords.some(w => blob.includes(w));
+  }).slice(0, 5);
+
+  let outreachCount = 0;
+  matched.forEach(c => {
+    // Assign role if unset
+    if (!c.role) c.role = jobTitle;
+    // Generate outreach + log activity + schedule follow-up
+    autoSendOutreach(c, jobObj);
+    outreachCount++;
+  });
+  // Persist all candidate changes (outreach, lastMessage, activity, lastContacted)
+  if (matched.length > 0) _tbSave(TB_CANDS, cands);
+
+  // ── STEP 8: Revenue already tracked via job.expectedFee ─────
+  // TalentBase getRevenueStats() picks it up automatically on next render.
+
+  // ── SHOW RESULT ─────────────────────────────────────────────
+  const toast = document.getElementById('pipeline-toast');
+  const lines2 = [
+    '✓ JOB CREATED  →  ' + jobTitle,
+    '✓ COMPANY  →  ' + company,
+    '✓ FEE TRACKED  →  $' + fee.toLocaleString(),
+    '✓ REQ #  →  ' + reqNum,
+    outreachCount > 0
+      ? '✓ OUTREACH QUEUED  →  ' + outreachCount + ' CANDIDATE' + (outreachCount > 1 ? 'S' : '')
+      : '○ NO CANDIDATE MATCHES YET',
+    outreachCount > 0 ? '✓ FOLLOW-UPS SCHEDULED  →  +2 DAYS' : '',
+    duplicate ? '⚠ ALREADY IN PIPELINE' : ''
+  ].filter(Boolean).join('\n');
+
+  toast.textContent = lines2;
+  toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; }, 5000);
+
+  // ── STEP 9: Redirect into TalentBase with the new job highlighted ──
+  const tbBase = window.location.href
+    .replace(/HappyHunting\.html.*/, 'TalentBase_TheStaffingSpecialist.html')
+    .replace(/happy-hunting[^?#]*/, 'TalentBase_TheStaffingSpecialist.html');
+  const tbUrl = (tbBase.includes('TalentBase') ? tbBase : 'TalentBase_TheStaffingSpecialist.html')
+    + '?newJob=' + jobObj.id;
+
+  btn.textContent = duplicate ? 'ALREADY ADDED' : '✓ ADDED';
+  btn.disabled = true;
+
+  // Update bar fee line
+  document.getElementById('pb-fee').textContent =
+    'Added · Req ' + reqNum
+    + (outreachCount > 0 ? ' · ' + outreachCount + ' outreach queued' : '')
+    + ' · Opening TalentBase...';
+
+  setTimeout(() => { window.open(tbUrl, '_blank'); }, 1200);
+}
+
+function generateOutreach(c, job) {
+  const skills = (c.skills || []).slice(0, 3).join(', ') || 'your background';
+  return {
+    subject: 'Quick intro \u2014 ' + job.title,
+    email: 'Hi ' + (c.first || 'there') + ',\n\n'
+      + 'I came across your background and thought you might be a strong fit for a '
+      + job.title + ' opportunity we\'re working on.\n\n'
+      + 'This role is with ' + (job.company || 'our client')
+      + ' and aligns well with your experience in ' + skills + '.\n\n'
+      + 'Would you be open to a quick conversation?\n\n'
+      + 'Best,\nJonah'
+  };
+}
+
+async function autoSendOutreach(c, job) {
+  const msg      = generateOutreach(c, job);
+  const proxyUrl = localStorage.getItem('tb_email_proxy') || '';
+  const approval = localStorage.getItem('tb_email_approval') === '1';
+  const fromName = localStorage.getItem('tb_email_from_name') || 'Jonah Adelman';
+  const html     = '<p>' + msg.email.replace(/\n/g, '<br>') + '</p>';
+  if (!c.activity) c.activity = [];
+
+  if (proxyUrl && !approval && c.email && c.email.includes('@')) {
+    // Real send via proxy
+    try {
+      const res = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: c.email, subject: msg.subject, html, from_name: fromName })
+      });
+      const result = await res.json();
+      if (res.ok && result.success) {
+        c.activity.push({ ts: Date.now(), text: 'Email sent: ' + job.title + ' @ ' + (job.company || '') });
+        c.lastMessage = { subject: msg.subject, email: msg.email, sentAt: Date.now(), status: 'sent' };
+      } else { throw new Error(result.error || 'Send failed'); }
+    } catch(e) {
+      c.activity.push({ ts: Date.now(), text: 'Outreach logged (send error): ' + job.title });
+      c.lastMessage = { subject: msg.subject, email: msg.email, sentAt: null, status: 'error' };
+    }
+  } else if (proxyUrl && approval) {
+    // Queue for TalentBase approval
+    const queue = JSON.parse(localStorage.getItem('tb_email_queue') || '[]');
+    queue.push({ id: Date.now().toString(36), candId: c.id, subject: msg.subject, html, queuedAt: Date.now() });
+    localStorage.setItem('tb_email_queue', JSON.stringify(queue));
+    c.activity.push({ ts: Date.now(), text: 'Outreach queued (pending approval): ' + job.title });
+    c.lastMessage = { subject: msg.subject, email: msg.email, sentAt: null, status: 'queued' };
+  } else {
+    // Log only — open in Gmail from TalentBase when ready
+    c.activity.push({ ts: Date.now(), text: 'Outreach sent: ' + job.title + ' @ ' + (job.company || '') });
+    c.lastMessage = { subject: msg.subject, email: msg.email, sentAt: null, status: 'logged' };
+  }
+
+  c.activity.push({ ts: Date.now() + 2 * 86400000, text: 'Follow up scheduled: ' + job.title });
+  c.lastContacted = Date.now();
+  return msg;
+}
+
+function openEmail(candId) {
+  var stored = _tbLoad(TB_CANDS);
+  var c = stored.find(function(x) { return x.id === candId; });
+  if (!c || !c.lastMessage) return;
+  var url = 'mailto:' + (c.email || '')
+    + '?subject=' + encodeURIComponent(c.lastMessage.subject)
+    + '&body=' + encodeURIComponent(c.lastMessage.email);
+  window.open(url);
+}
+
+function pipelineViewTB(){ try{ nav("deals"); }catch(e){} }
+
+
+  // Called by nav('happyhunting') — show tool, bridge API key
+  window._hhAutoStart = function(){
+    try{ showTool(); }catch(e){}
+    var key = localStorage.getItem('tb_anthropic_key') || localStorage.getItem('hh_api_key') || '';
+    var ki = document.getElementById('hh-api-key-input');
+    if(ki && key && !ki.value){ ki.value = key; try{ hhCheckKey(); }catch(e){} }
+    try{ setMode('job'); }catch(e){}
+  };
+})();
 </script>
+
+</div><!-- /app-shell -->
 
 </body>
 </html>
