@@ -2759,6 +2759,7 @@ function _setDevSession(email) {
     id            : 'dev-local-user',
     email         : email,
     user_metadata : { role: 'admin' },
+    exp           : Date.now() + (24 * 60 * 60 * 1000), // 24h
   };
   sessionStorage.setItem('tb_sb_user', JSON.stringify(_sbUser));
   try { localStorage.setItem('tb_sb_user_v2', JSON.stringify(_sbUser)); } catch(e) {}
@@ -2769,6 +2770,7 @@ function _clearSession() {
   _devModeActive = false;
   sessionStorage.removeItem('tb_sb_user');
   try { localStorage.removeItem('tb_sb_user_v2'); } catch(e) {}
+  try { localStorage.removeItem('tb_session_exp'); } catch(e) {}
 }
 
 // ── GATE HELPERS ──────────────────────────────────────────────
@@ -3264,10 +3266,16 @@ async function sbRestoreSession() {
     if (cached) {
       var user = JSON.parse(cached);
       if (user && user.id) {
-        _sbUser = user;
-        if (user.id === 'dev-local-user') _devModeActive = true;
-        _updateSbStatus();
-        return true;
+        // Check 24h expiry for dev sessions
+        if (user.exp && Date.now() > user.exp) {
+          localStorage.removeItem('tb_sb_user_v2');
+          // Expired — fall through to show gate
+        } else {
+          _sbUser = user;
+          if (user.id === 'dev-local-user') _devModeActive = true;
+          _updateSbStatus();
+          return true;
+        }
       }
     }
   } catch(e) {}
