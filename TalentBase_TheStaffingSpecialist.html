@@ -1908,9 +1908,14 @@ a{color:var(--text3);text-decoration:none;}
     <div class="field"><label>Job Title *</label><input id="jf-title" placeholder="Senior Program Manager"/></div>
     <div class="field"><label>Req #</label><input id="jf-req" placeholder="977"/></div>
   </div>
+  <div class="field"><label>Company / Client</label><input id="jf-company" placeholder="e.g. HiARC — Elbit Systems of America"/></div>
   <div class="field-row">
     <div class="field"><label>Department</label><input id="jf-dept" placeholder="R&D"/></div>
     <div class="field"><label>Location</label><input id="jf-loc" placeholder="San Diego, CA"/></div>
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Salary Min ($)</label><input id="jf-salary-min" type="number" placeholder="120000"/></div>
+    <div class="field"><label>Salary Max ($)</label><input id="jf-salary-max" type="number" placeholder="160000"/></div>
   </div>
   <div class="field-row">
     <div class="field"><label>Employment Type</label>
@@ -5327,11 +5332,12 @@ function selJob(id){
       </div>
     </div>
     <!-- Contextual AI tools for this job -->
-    <div style="display:flex;gap:4px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border2);">
+    <div style="display:flex;gap:4px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border2);flex-wrap:wrap;">
       <button class="btn btn-ghost btn-xs" onclick="nav('library');setTimeout(()=>setLibCat('jd',null),200)" style="color:var(--text4);font-size:11px;">📄 Write JD</button>
       <button class="btn btn-ghost btn-xs" onclick="openAITool('outreach')" style="color:var(--text4);font-size:11px;">✉ Outreach</button>
       <button class="btn btn-ghost btn-xs" onclick="openAITool('interview')" style="color:var(--text4);font-size:11px;">🎤 Interview Qs</button>
       <button class="btn btn-ghost btn-xs" onclick="openAITool('pitch')" style="color:var(--text4);font-size:11px;">🎯 Client Pitch</button>
+      <button class="btn btn-primary btn-xs" onclick="openPostJobModal('${j.id}')" style="font-size:11px;margin-left:auto;">🚀 Post Job Everywhere</button>
     </div>
 
     ${j.source==='Happy Hunting'&&j.hiringManagers&&j.hiringManagers.length?`
@@ -5398,6 +5404,195 @@ function selJob(id){
   if(j.sourcingData){renderSourcingContent(j.id,j.sourcingData);}
 }
 function applyBool(str){nav('candidates');setTimeout(()=>{document.getElementById('q').value=str;doSearch();},100);}
+
+// ═══════════════════════════════════════════════
+// POST JOB EVERYWHERE
+// ═══════════════════════════════════════════════
+function openPostJobModal(jobId){
+  var j = jobs.find(function(x){ return x.id === jobId; });
+  if(!j){ wsToast('Job not found','error'); return; }
+
+  var modal = document.getElementById('postjob-modal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'postjob-modal';
+    document.body.appendChild(modal);
+  }
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.onclick = function(e){ if(e.target===modal) modal.remove(); };
+
+  var salary = j.salaryMin && j.salaryMax
+    ? '$'+Math.round(j.salaryMin/1000)+'K–$'+Math.round(j.salaryMax/1000)+'K'
+    : j.salaryMin ? '$'+Math.round(j.salaryMin/1000)+'K+' : '';
+
+  // Check if versions already generated
+  var existing = j._versions || {};
+
+  modal.innerHTML =
+    '<div style="background:var(--bg2,#111827);border:1px solid var(--border2,#1e2d45);border-radius:12px;width:100%;max-width:860px;max-height:92vh;display:flex;flex-direction:column;">'+
+      '<div style="padding:20px 24px 16px;border-bottom:1px solid var(--border2,#1e2d45);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">'+
+        '<div>'+
+          '<div style="font-size:18px;font-weight:700;color:var(--text,#f1f5f9);">🚀 Post Job Everywhere</div>'+
+          '<div style="font-size:12px;color:var(--text4,#64748b);margin-top:3px;">'+esc(j.title)+(j.company?' · '+esc(j.company):'')+(salary?' · '+salary:'')+'</div>'+
+        '</div>'+
+        '<button onclick="document.getElementById(\'postjob-modal\').remove()" style="background:none;border:none;color:var(--text4,#64748b);font-size:20px;cursor:pointer;padding:4px;">✕</button>'+
+      '</div>'+
+
+      // Tab bar
+      '<div style="display:flex;border-bottom:1px solid var(--border2,#1e2d45);flex-shrink:0;" id="pj-tabs">'+
+        '<button class="pj-tab on" data-tab="linkedin" onclick="pjSwitchTab(this,\'linkedin\')" style="padding:10px 18px;background:none;border:none;border-bottom:2px solid var(--accent,#3b82f6);color:var(--text,#f1f5f9);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">💼 LinkedIn</button>'+
+        '<button class="pj-tab" data-tab="indeed" onclick="pjSwitchTab(this,\'indeed\')" style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text4,#64748b);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;">🔍 Indeed</button>'+
+        '<button class="pj-tab" data-tab="email" onclick="pjSwitchTab(this,\'email\')" style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text4,#64748b);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;">✉ Email Blast</button>'+
+        '<button class="pj-tab" data-tab="website" onclick="pjSwitchTab(this,\'website\')" style="padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text4,#64748b);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;">🌐 Website</button>'+
+      '</div>'+
+
+      // Content area
+      '<div style="flex:1;overflow-y:auto;padding:20px 24px;" id="pj-content">'+
+        (existing.linkedin
+          ? pjRenderVersion('linkedin', existing)
+          : '<div style="text-align:center;padding:40px 20px;">'+
+              '<div style="font-size:32px;margin-bottom:12px;">🚀</div>'+
+              '<div style="font-size:14px;font-weight:600;color:var(--text,#f1f5f9);margin-bottom:8px;">Generate all four versions with one click</div>'+
+              '<div style="font-size:12px;color:var(--text4,#64748b);margin-bottom:20px;">AI writes LinkedIn, Indeed, Email, and Website versions from your job description</div>'+
+              '<button onclick="generateJobVersions(\''+jobId+'\')" style="padding:10px 24px;background:var(--accent,#3b82f6);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">⚡ Generate All Versions</button>'+
+            '</div>')+
+      '</div>'+
+    '</div>';
+}
+
+function pjSwitchTab(btn, tab){
+  document.querySelectorAll('.pj-tab').forEach(function(b){
+    b.style.borderBottomColor='transparent';
+    b.style.color='var(--text4,#64748b)';
+    b.style.fontWeight='500';
+  });
+  btn.style.borderBottomColor='var(--accent,#3b82f6)';
+  btn.style.color='var(--text,#f1f5f9)';
+  btn.style.fontWeight='600';
+
+  var jobId = btn.closest('div[style*="position:fixed"]') &&
+    document.getElementById('postjob-modal') &&
+    document.getElementById('pj-content').getAttribute('data-job-id');
+  var j = jobs.find(function(x){ return x._versions; }) || {};
+  var existing = j._versions || {};
+  var content = document.getElementById('pj-content');
+  if(content && existing[tab]){
+    content.innerHTML = pjRenderVersion(tab, existing);
+  }
+}
+
+function pjRenderVersion(activeTab, versions){
+  var content = versions[activeTab] || '';
+  var labels = {linkedin:'💼 LinkedIn Post',indeed:'🔍 Indeed Post',email:'✉ Email Blast',website:'🌐 Website Copy'};
+  var hints = {
+    linkedin:'Short, hook-driven. Copy and paste directly into LinkedIn.',
+    indeed:'SEO-optimized with ATS keywords. Formatted for Indeed.',
+    email:'Candidate outreach email. Sends via your email campaign.',
+    website:'Clean, polished version for your website or job board.'
+  };
+  return (
+    '<div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">'+
+      '<div>'+
+        '<div style="font-size:14px;font-weight:600;color:var(--text,#f1f5f9);">'+(labels[activeTab]||activeTab)+'</div>'+
+        '<div style="font-size:11px;color:var(--text4,#64748b);margin-top:2px;">'+(hints[activeTab]||'')+'</div>'+
+      '</div>'+
+      '<button onclick="navigator.clipboard.writeText(this.previousElementSibling.previousElementSibling.querySelector(\'textarea\')&&\'\');pjCopy(\''+activeTab+'\')" style="padding:6px 14px;background:var(--bg3,#1c2333);border:1px solid var(--border2,#1e2d45);border-radius:6px;color:var(--text2,#94a3b8);font-size:12px;cursor:pointer;font-family:inherit;" id="pj-copy-'+activeTab+'">📋 Copy</button>'+
+    '</div>'+
+    '<textarea id="pj-text-'+activeTab+'" style="width:100%;min-height:320px;background:var(--bg3,#1c2333);border:1px solid var(--border2,#1e2d45);border-radius:8px;padding:14px;font-size:13px;font-family:DM Mono,monospace;color:var(--text2,#94a3b8);line-height:1.7;resize:vertical;outline:none;" onchange="pjSaveEdit(\''+activeTab+'\',this.value)">'+content.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</textarea>'
+  );
+}
+
+function pjCopy(tab){
+  var ta = document.getElementById('pj-text-'+tab);
+  if(!ta) return;
+  navigator.clipboard.writeText(ta.value).then(function(){
+    var btn = document.getElementById('pj-copy-'+tab);
+    if(btn){ btn.textContent='✓ Copied!'; setTimeout(function(){ btn.textContent='📋 Copy'; },2000); }
+  });
+}
+
+function pjSaveEdit(tab, value){
+  // Save user edits back to job._versions
+  var modal = document.getElementById('postjob-modal');
+  if(!modal) return;
+  var jobId = modal.getAttribute('data-job-id');
+  if(!jobId) return;
+  var j = jobs.find(function(x){ return x.id===jobId; });
+  if(j && j._versions) j._versions[tab] = value;
+  saveJobsStore();
+}
+
+function pjSwitchTabDirect(btn, tab, versions){
+  document.querySelectorAll('.pj-tab').forEach(function(b){
+    b.style.borderBottomColor='transparent';
+    b.style.color='var(--text4,#64748b)';
+    b.style.fontWeight='500';
+  });
+  btn.style.borderBottomColor='var(--accent,#3b82f6)';
+  btn.style.color='var(--text,#f1f5f9)';
+  btn.style.fontWeight='600';
+  var content = document.getElementById('pj-content');
+  if(content) content.innerHTML = pjRenderVersion(tab, versions);
+}
+
+async function generateJobVersions(jobId){
+  var j = jobs.find(function(x){ return x.id === jobId; });
+  if(!j){ return; }
+
+  var content = document.getElementById('pj-content');
+  if(!content) return;
+  content.innerHTML = '<div style="text-align:center;padding:40px;"><div style="font-size:24px;margin-bottom:12px;">⚡</div><div style="font-size:13px;color:var(--text4,#64748b);" id="pj-status">Generating LinkedIn version...</div></div>';
+
+  var key = getKey && getKey();
+  if(!key){ content.innerHTML = '<div style="padding:20px;color:var(--red,#ef4444);font-size:13px;">⚠ Add your Anthropic API key in the sidebar to generate versions.</div>'; return; }
+
+  var salary = j.salaryMin && j.salaryMax
+    ? '$'+Math.round(j.salaryMin/1000)+'K–$'+Math.round(j.salaryMax/1000)+'K'
+    : '';
+
+  var baseContext = 'Job Title: '+j.title+'\nCompany: '+(j.company||'[Client Confidential]')+'\nLocation: '+(j.location||'')+'\nDepartment: '+(j.dept||'')+'\nType: '+(j.type||'Full-time')+(salary?'\nSalary: '+salary:'')+'\n\nFull Description:\n'+(j.description||j.title);
+
+  var prompts = {
+    linkedin: 'Write a LinkedIn job post for this role. Make it short (200-300 words), hook-driven, and compelling. Lead with impact not requirements. Use line breaks for readability. No hashtag spam - max 3 relevant hashtags at end.\n\n'+baseContext,
+    indeed: 'Write an Indeed-optimized job posting for this role. Include ATS-friendly keywords naturally. Use standard sections: About the Role, Responsibilities (5-7 bullets), Requirements (5-6 bullets), Nice to Have (3 bullets), What We Offer. Keep it factual and keyword-rich.\n\n'+baseContext,
+    email: 'Write a candidate outreach email for this role. Subject line on first line prefixed "Subject: ". Then the email body. Keep it under 200 words. Be direct, human, and specific about why this role is worth their time. End with a soft CTA.\n\n'+baseContext,
+    website: 'Write a polished website job posting for this role. Professional, clean formatting with clear sections. Should work on a careers page. Include: Position Overview, What You\'ll Do, What You Bring, Why Join Us, Compensation.\n\n'+baseContext,
+  };
+
+  var versions = {};
+  var tabs = ['linkedin','indeed','email','website'];
+  var labels = {linkedin:'LinkedIn',indeed:'Indeed',email:'Email Blast',website:'Website'};
+
+  for(var i=0; i<tabs.length; i++){
+    var tab = tabs[i];
+    var statusEl = document.getElementById('pj-status');
+    if(statusEl) statusEl.textContent = 'Generating '+labels[tab]+' version ('+(i+1)+'/4)...';
+    try {
+      var result = await callAI([{role:'user',content:prompts[tab]}], 600);
+      versions[tab] = result || '';
+    } catch(e) {
+      versions[tab] = '[Generation failed — '+(e.message||'check API key')+']';
+    }
+  }
+
+  // Save to job object
+  j._versions = versions;
+  j._versionsGeneratedAt = Date.now();
+  saveJobsStore();
+
+  // Store jobId on modal for tab switching
+  var modal = document.getElementById('postjob-modal');
+  if(modal) modal.setAttribute('data-job-id', jobId);
+
+  // Render LinkedIn tab first
+  content.setAttribute('data-job-id', jobId);
+  content.innerHTML = pjRenderVersion('linkedin', versions);
+
+  // Update tab bar to show all tabs active
+  document.querySelectorAll('.pj-tab').forEach(function(btn){
+    btn.onclick = function(){ pjSwitchTabDirect(btn, btn.getAttribute('data-tab'), versions); };
+  });
+}
 function openAddJob(){
   editJobId=null;
   document.getElementById('mj-title').textContent='Add Job';
@@ -5422,6 +5617,9 @@ function openEditJob(id){
   document.getElementById('jf-notes').value=j.notes||'';
   document.getElementById('jf-fee').value=j.expectedFee||'';
   document.getElementById('jf-prob').value=j.probability!=null?j.probability:'';
+  if(document.getElementById('jf-company')) document.getElementById('jf-company').value=j.company||'';
+  if(document.getElementById('jf-salary-min')) document.getElementById('jf-salary-min').value=j.salaryMin||'';
+  if(document.getElementById('jf-salary-max')) document.getElementById('jf-salary-max').value=j.salaryMax||'';
   openModal('ov-job');
 }
 async function saveJob(){
@@ -5429,7 +5627,7 @@ async function saveJob(){
   if(!title){alert('Job title required.');return;}
   const desc=(document.getElementById('jf-desc').value||'').trim();
   let boolStr=(document.getElementById('jf-bool').value||'').trim();
-  const data={title,reqNum:document.getElementById('jf-req').value.trim(),dept:document.getElementById('jf-dept').value.trim(),location:document.getElementById('jf-loc').value.trim(),type:document.getElementById('jf-type').value,status:document.getElementById('jf-status').value,description:desc,boolSearch:boolStr,notes:document.getElementById('jf-notes').value.trim(),expectedFee:parseFloat(document.getElementById('jf-fee').value)||0,probability:parseInt(document.getElementById('jf-prob').value)||0};
+  const data={title,reqNum:document.getElementById('jf-req').value.trim(),dept:document.getElementById('jf-dept').value.trim(),location:document.getElementById('jf-loc').value.trim(),type:document.getElementById('jf-type').value,status:document.getElementById('jf-status').value,description:desc,boolSearch:boolStr,notes:document.getElementById('jf-notes').value.trim(),expectedFee:parseFloat(document.getElementById('jf-fee').value)||0,probability:parseInt(document.getElementById('jf-prob').value)||0,company:(document.getElementById('jf-company')||{}).value||'',salaryMin:parseFloat((document.getElementById('jf-salary-min')||{}).value)||0,salaryMax:parseFloat((document.getElementById('jf-salary-max')||{}).value)||0};
   let jid;
   if(editJobId){const i=jobs.findIndex(x=>x.id===editJobId);if(i>=0)jobs[i]={...jobs[i],...data};jid=editJobId;}
   else{data.id=uid();data.created=Date.now();jobs.unshift(data);jid=data.id;}
