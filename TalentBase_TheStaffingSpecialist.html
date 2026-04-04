@@ -339,14 +339,52 @@ a{color:var(--text3);text-decoration:none;}
 #gate{
   position:fixed;inset:0;z-index:9999;
   background:var(--bg);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  /* Subtle noise texture via SVG */
-  background-image:radial-gradient(ellipse 80% 60% at 50% -10%, rgba(59,130,246,.12) 0%, transparent 70%);
+  display:none;
+  background-image:radial-gradient(ellipse 80% 60% at 20% -10%, rgba(59,130,246,.1) 0%, transparent 60%);
+}
+/* Two-column Stripe-style layout */
+.gate-layout{
+  display:grid;
+  grid-template-columns:1fr 460px;
+  height:100vh;
+}
+.gate-brand-panel{
+  display:flex;flex-direction:column;justify-content:center;
+  padding:80px 72px;
+  border-right:1px solid var(--border);
+}
+.gate-brand-logo-row{
+  display:flex;align-items:center;gap:12px;margin-bottom:72px;
+}
+.gate-brand-icon{
+  width:40px;height:40px;border-radius:10px;
+  background:var(--accent);display:grid;place-items:center;
+  box-shadow:0 0 0 1px rgba(59,130,246,.4),0 6px 20px rgba(59,130,246,.25);
+}
+.gate-brand-name-wrap .gate-brand-appname{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-.3px;}
+.gate-brand-name-wrap .gate-brand-by{font-size:11px;color:var(--text4);margin-top:1px;}
+.gate-brand-headline{
+  font-size:42px;font-weight:800;color:var(--text);
+  letter-spacing:-2px;line-height:1.1;margin-bottom:20px;
+}
+.gate-brand-headline span{color:var(--accent2);}
+.gate-brand-desc{font-size:15px;color:var(--text3);line-height:1.7;margin-bottom:48px;max-width:440px;}
+.gate-value-points{display:flex;flex-direction:column;gap:18px;}
+.gate-value-point{display:flex;align-items:flex-start;gap:14px;}
+.gate-value-icon{
+  width:34px;height:34px;border-radius:8px;flex-shrink:0;margin-top:1px;
+  background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.18);
+  display:grid;place-items:center;
+}
+.gate-value-text strong{display:block;font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.gate-value-text span{font-size:12px;color:var(--text4);line-height:1.5;}
+.gate-form-panel{
+  display:flex;flex-direction:column;justify-content:center;
+  padding:80px 56px;background:var(--bg2);
+  border-left:1px solid var(--border);
 }
 .gate-wrap{
-  width:100%;max-width:420px;padding:0 24px;
+  width:100%;max-width:340px;
 }
 
 /* ── LOGO ── */
@@ -371,17 +409,17 @@ a{color:var(--text3);text-decoration:none;}
 
 /* ── HEADINGS ── */
 .gate-headline{
-  font-size:22px;font-weight:700;
+  font-size:24px;font-weight:800;
   color:var(--text);
-  letter-spacing:-.4px;
+  letter-spacing:-.6px;
   line-height:1.2;
   margin-bottom:8px;
-  text-align:center;
+  text-align:left;
 }
 .gate-subline{
-  font-size:13.5px;
+  font-size:13px;
   color:var(--text3);
-  text-align:center;
+  text-align:left;
   line-height:1.55;
   margin-bottom:28px;
 }
@@ -1074,15 +1112,67 @@ button, .btn { white-space:nowrap !important; }
 
 <!-- ═══ ACCESS GATE ═══ -->
 <div id="gate">
-  <div class="gate-wrap">
+  <div class="gate-layout">
 
-    <!-- ── LOGO MARK ── -->
-    <div class="gate-logomark">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    <!-- LEFT: Brand + value props -->
+    <div class="gate-brand-panel">
+      <div class="gate-brand-logo-row">
+        <div class="gate-brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" style="width:20px;height:20px;"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <div class="gate-brand-name-wrap">
+          <div class="gate-brand-appname">TalentBase</div>
+          <div class="gate-brand-by">by The Staffing Specialist</div>
+        </div>
+      </div>
+
+      <div class="gate-brand-headline">The recruiting OS<br>that <span>closes roles.</span></div>
+      <div class="gate-brand-desc">One system to find opportunities, build pipelines, send outreach, track deals, and generate offers — without switching tabs.</div>
+
+      <div class="gate-value-points">
+        <div class="gate-value-point">
+          <div class="gate-value-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2" style="width:16px;height:16px;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <div class="gate-value-text">
+            <strong>Happy Hunting built in</strong>
+            <span>Decode any staffing firm posting — find the end client in seconds</span>
+          </div>
+        </div>
+        <div class="gate-value-point">
+          <div class="gate-value-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2" style="width:16px;height:16px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </div>
+          <div class="gate-value-text">
+            <strong>Pipeline as revenue</strong>
+            <span>Track every deal, fee, and close probability from one dashboard</span>
+          </div>
+        </div>
+        <div class="gate-value-point">
+          <div class="gate-value-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2" style="width:16px;height:16px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div class="gate-value-text">
+            <strong>AI outreach + tracking</strong>
+            <span>Send emails, track opens, know who to call — all automated</span>
+          </div>
+        </div>
+        <div class="gate-value-point">
+          <div class="gate-value-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2" style="width:16px;height:16px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+          </div>
+          <div class="gate-value-text">
+            <strong>Offer builder included</strong>
+            <span>Generate professional offer letters in 30 seconds flat</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- ════ STATE 1: LOGIN (shown when Supabase is configured) ════ -->
-    <div id="gate-login-state">
+    <!-- RIGHT: Login form -->
+    <div class="gate-form-panel">
+      <div class="gate-wrap">
+        <div id="gate-login-state">
       <div class="gate-card">
         <div class="gate-headline">Run your hiring system</div>
         <div class="gate-subline">Sign in to access your pipeline,<br>candidates, and deals.</div>
@@ -1124,7 +1214,7 @@ button, .btn { white-space:nowrap !important; }
     </div>
 
     <!-- ════ STATE 2: SETUP (inline connect form — no navigation required) ════ -->
-    <div id="gate-setup-state" class="gate-setup">
+        <div id="gate-setup-state" class="gate-setup">
       <div class="gate-card">
 
         <!-- Icon -->
@@ -1184,6 +1274,12 @@ button, .btn { white-space:nowrap !important; }
     </div>
 
   </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 </div>
 
 <div id="app-shell">
@@ -7952,18 +8048,45 @@ var scorecards = JSON.parse(localStorage.getItem('tb_scorecards')||'[]');
 // Seed with default scorecards if empty
 if(!scorecards.length){
   scorecards = [
-    {id:'sc_default_1', role:'Medical Device Sales Rep', criteria:['Technical Knowledge','Relationship Building','Closing Ability','Territory Management','Compliance'],
-     questions:[
-       {q:'Describe your experience selling into hospital systems or IDNs.',required:true},
-       {q:'How do you manage a complex 6-month sales cycle?',required:true},
-       {q:'Walk me through your top deal last year — size, stakeholders, close.',required:true}
-     ], created:Date.now()},
-    {id:'sc_default_2', role:'Program Manager — MedTech', criteria:['Cross-functional Leadership','Timeline Management','Regulatory Awareness','Stakeholder Communication','Problem Solving'],
-     questions:[
-       {q:'Describe a complex NPI program you managed end-to-end.',required:true},
-       {q:'How do you handle scope creep while keeping a program on track?',required:true},
-       {q:'Tell me about a time you navigated a regulatory challenge.',required:true}
-     ], created:Date.now()}
+    {
+      id:'sc_default_1', role:'Medical Device Sales Rep',
+      criteria:['Technical Product Knowledge','Hospital/IDN Relationships','Closing Ability','Territory Management','Regulatory/Compliance Awareness'],
+      scoring:{1:'Poor',2:'Below Average',3:'Average',4:'Strong',5:'Exceptional'},
+      questions:[
+        {q:'Walk me through your top deal last year — size, stakeholders, how you closed it.',required:true},
+        {q:'Describe your experience selling into hospital systems or IDNs. Who are the key decision makers?',required:true},
+        {q:'How do you manage a complex 6-12 month sales cycle while keeping momentum?',required:true},
+        {q:"What is your process for getting a new product through a hospital value analysis committee?",required:false},
+        {q:'How do you stay current on clinical evidence and competitive landscape?',required:false}
+      ],
+      created:Date.now()
+    },
+    {
+      id:'sc_default_2', role:'Program Manager — MedTech',
+      criteria:['Cross-functional Leadership','Timeline & Milestone Management','Regulatory/Quality Awareness','Stakeholder Communication','Risk Identification & Mitigation'],
+      scoring:{1:'Poor',2:'Below Average',3:'Average',4:'Strong',5:'Exceptional'},
+      questions:[
+        {q:'Describe a complex NPI program you managed end-to-end. What was the scope, team size, and outcome?',required:true},
+        {q:'How do you manage scope creep while keeping a program on schedule and within budget?',required:true},
+        {q:'Tell me about a time you navigated a significant regulatory or quality challenge during a program.',required:true},
+        {q:'How do you manage cross-functional stakeholders who have conflicting priorities?',required:false},
+        {q:'What tools and methodologies do you use for program tracking and risk management?',required:false}
+      ],
+      created:Date.now()
+    },
+    {
+      id:'sc_default_3', role:'Quality Engineer — Medical Device',
+      criteria:['FDA/ISO Regulatory Knowledge','CAPA & Root Cause Analysis','Design Controls','Audit Experience','Documentation & DHF'],
+      scoring:{1:'Poor',2:'Below Average',3:'Average',4:'Strong',5:'Exceptional'},
+      questions:[
+        {q:'Walk me through your experience with FDA 21 CFR Part 820 and ISO 13485. How have you applied them day-to-day?',required:true},
+        {q:'Describe a significant CAPA you led — the problem, your investigation process, and the outcome.',required:true},
+        {q:'How do you ensure design controls are maintained throughout a product development cycle?',required:true},
+        {q:'Have you been through an FDA inspection or notified body audit? What was your role?',required:false},
+        {q:"How do you handle a situation where a supplier is not meeting quality requirements?",required:false}
+      ],
+      created:Date.now()
+    }
   ];
   try { localStorage.setItem('tb_scorecards', JSON.stringify(scorecards)); } catch(e){}
 }
