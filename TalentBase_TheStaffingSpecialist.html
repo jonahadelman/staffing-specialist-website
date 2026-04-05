@@ -1146,6 +1146,87 @@ button, .btn { white-space:nowrap !important; }
 /* Ensure content fills view */
 .view-body { flex: 1; overflow-y: auto; padding: 24px; }
 
+
+/* ═══ VIEW RENDERING FIXES ═══════════════════════════════════ */
+
+/* All views must be full flex columns */
+.view { flex-direction: column; }
+.view.on { flex-direction: column !important; }
+
+/* Content areas inside views must scroll */
+#v-integrations > div:nth-child(2),
+#v-campaigns   > div:nth-child(2) {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* Library: ensure right panel fills width */
+#lib-viewer {
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow-y: auto;
+}
+
+/* Tutorial grid: fills remaining height */
+#v-tutorial > div:nth-child(2) {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow: hidden;
+}
+
+/* Workspace: content area scrolls */
+#v-workspace > div:nth-child(3) {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* Command / Radar: simple scroll areas */
+#v-command > div:nth-child(2),
+#v-radar   > div:nth-child(2) {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* Ensure viewable content areas */
+.view > div:not(.topbar):not(.modal-overlay) {
+  min-height: 0;
+}
+
+
+/* ═══ CRITICAL VIEW FIXES ════════════════════════════════════ */
+
+/* Library: viewer MUST fill remaining width */
+#v-library { display: flex !important; flex-direction: column; }
+#lib-viewer { flex: 1 !important; min-width: 0 !important; }
+
+/* All .view.on must be flex columns */
+.view.on { display: flex !important; flex-direction: column; flex: 1; height: 100%; }
+
+/* Content areas MUST have flex:1 to fill height */
+#v-integrations > div:nth-child(2),
+#v-workspace > div:last-child { flex: 1; min-height: 0; overflow-y: auto; }
+
+/* Tutorial grid fills remaining height */
+#v-tutorial > div:nth-child(2) {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+}
+
+/* Campaigns, prompts, analytics scroll areas */
+#v-campaigns > div:nth-child(2),
+#v-prompts   > div:nth-child(2),
+#v-analytics > div:nth-child(2) {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
 </style>
 </head>
 <body>
@@ -2365,7 +2446,7 @@ button, .btn { white-space:nowrap !important; }
 
 
 <!-- ═══ EMAIL TEMPLATES ═══ -->
-<div class="view" id="v-library">
+<div class="view" id="v-library" style="flex-direction:column;">
   <div class="topbar" style="background:var(--bg2);border-bottom:1px solid var(--border);">
     <div>
       <div class="topbar-title">Document Library</div>
@@ -2403,13 +2484,14 @@ button, .btn { white-space:nowrap !important; }
     </div>
 
     <!-- Right: list + viewer split -->
-    <div style="display:flex;flex:1;overflow:hidden;min-height:0;">
+    <div style="display:flex;flex:1;overflow:hidden;min-height:0;min-width:0;">
 
       <!-- File list -->
-      <div style="width:280px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;background:var(--bg2);">
+      <div style="width:260px;min-width:260px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;background:var(--bg2);">
         <div id="lib-list"></div>
-<!-- Document viewer -->
-      <div id="lib-viewer" style="flex:1;overflow-y:auto;background:var(--bg);display:flex;flex-direction:column;min-width:0;">
+      </div>
+      <!-- Document viewer -->
+      <div id="lib-viewer" style="flex:1;min-width:0;overflow-y:auto;background:var(--bg);display:flex;flex-direction:column;">
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text4);padding:40px;text-align:center;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;margin-bottom:12px;opacity:.2;"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
           <div style="font-size:13px;font-weight:500;color:var(--text4);">Select a document to view</div>
@@ -2422,114 +2504,79 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ═══ INTEGRATIONS ═══ -->
-<div class="view" id="v-integrations">
+<div class="view" id="v-integrations" style="flex-direction:column;">
   <div class="topbar">
     <div><div class="topbar-title">Integrations</div><div class="topbar-sub">Connect your recruiting stack</div></div>
+    <button class="btn btn-ghost btn-sm" onclick="alert('Email jonah@thestaffingspecialist.com to request an integration.')">Request Integration</button>
   </div>
-  <div style="padding:24px;max-width:900px;">
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px;">
-
-      <!-- LinkedIn -->
-      <div class="panel" style="padding:20px;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-          <div style="width:40px;height:40px;border-radius:10px;background:#0077b5;display:flex;align-items:center;justify-content:center;">
-            <svg viewBox="0 0 24 24" fill="white" style="width:20px;height:20px;"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+  <div style="flex:1;overflow-y:auto;padding:28px 32px;min-height:0;">
+    <div style="max-width:860px;margin:0 auto;">
+      <div style="margin-bottom:28px;">
+        <div style="font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.3px;margin-bottom:6px;">Connect Your Stack</div>
+        <div style="font-size:13px;color:var(--text4);line-height:1.6;">Native integrations are coming soon. In the meantime, all data exports via CSV/JSON from Workspace Settings.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;">
+        <div class="panel" style="padding:18px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div style="width:36px;height:36px;border-radius:8px;background:#0077b5;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-weight:800;font-size:13px;">in</div>
+            <div><div style="font-size:13px;font-weight:700;color:var(--text);">LinkedIn Recruiter</div><div style="font-size:11px;color:var(--text4);">Source &amp; sync candidates</div></div>
+            <span style="margin-left:auto;font-size:10px;background:var(--amber-bg);color:var(--amber);padding:2px 7px;border-radius:999px;font-weight:600;">Soon</span>
           </div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--text);">LinkedIn</div><div style="font-size:11px;color:var(--text3);">Recruiter / Sales Nav</div></div>
-          <span style="margin-left:auto;font-size:11px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);padding:2px 8px;border-radius:999px;">Manual</span>
+          <button class="btn btn-ghost btn-sm" style="width:100%;font-size:11px;" disabled>Connect</button>
         </div>
-        <div style="font-size:12px;color:var(--text3);line-height:1.5;margin-bottom:12px;">Copy candidates from LinkedIn Recruiter using the profile paste feature in candidate profiles. LinkedIn blocks direct API access for individual tools.</div>
-        <button class="btn btn-ghost btn-sm" style="width:100%;" onclick="nav('candidates')">Add LinkedIn Candidate →</button>
-      </div>
-
-      <!-- iCIMS -->
-      <div class="panel" style="padding:20px;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-          <div style="width:40px;height:40px;border-radius:10px;background:#003087;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:white;">iC</div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--text);">iCIMS</div><div style="font-size:11px;color:var(--text3);">ATS Export/Import</div></div>
-          <span style="margin-left:auto;font-size:11px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);padding:2px 8px;border-radius:999px;">CSV Import</span>
+        <div class="panel" style="padding:18px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div style="width:36px;height:36px;border-radius:8px;background:#EA4335;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;">✉</div>
+            <div><div style="font-size:13px;font-weight:700;color:var(--text);">Gmail</div><div style="font-size:11px;color:var(--text4);">Track email opens &amp; replies</div></div>
+            <span style="margin-left:auto;font-size:10px;background:var(--amber-bg);color:var(--amber);padding:2px 7px;border-radius:999px;font-weight:600;">Soon</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="width:100%;font-size:11px;" disabled>Connect</button>
         </div>
-        <div style="font-size:12px;color:var(--text3);line-height:1.5;margin-bottom:12px;">Export candidates from iCIMS as CSV and import directly into TalentBase. All standard fields are mapped automatically.</div>
-        <button class="btn btn-ghost btn-sm" style="width:100%;" onclick="openImport()">Import from iCIMS →</button>
-      </div>
-
-      <!-- Greenhouse -->
-      <div class="panel" style="padding:20px;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-          <div style="width:40px;height:40px;border-radius:10px;background:#24b47e;display:flex;align-items:center;justify-content:center;font-size:18px;">🌿</div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--text);">Greenhouse</div><div style="font-size:11px;color:var(--text3);">ATS Export/Import</div></div>
-          <span style="margin-left:auto;font-size:11px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);padding:2px 8px;border-radius:999px;">CSV Import</span>
+        <div class="panel" style="padding:18px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div style="width:36px;height:36px;border-radius:8px;background:#006BFF;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;">📅</div>
+            <div><div style="font-size:13px;font-weight:700;color:var(--text);">Calendly</div><div style="font-size:11px;color:var(--text4);">Auto-schedule interviews</div></div>
+            <span style="margin-left:auto;font-size:10px;background:var(--amber-bg);color:var(--amber);padding:2px 7px;border-radius:999px;font-weight:600;">Soon</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="width:100%;font-size:11px;" disabled>Connect</button>
         </div>
-        <div style="font-size:12px;color:var(--text3);line-height:1.5;margin-bottom:12px;">Export your candidate pipeline from Greenhouse and import into TalentBase for AI analysis, scoring, and submission emails.</div>
-        <button class="btn btn-ghost btn-sm" style="width:100%;" onclick="openImport()">Import from Greenhouse →</button>
-      </div>
-
-      <!-- Excel/Sheets -->
-      <div class="panel" style="padding:20px;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-          <div style="width:40px;height:40px;border-radius:10px;background:#217346;display:flex;align-items:center;justify-content:center;font-size:18px;">📊</div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--text);">Excel / Google Sheets</div><div style="font-size:11px;color:var(--text3);">Spreadsheet Import</div></div>
-          <span style="margin-left:auto;font-size:11px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);padding:2px 8px;border-radius:999px;">CSV Import</span>
+        <div class="panel" style="padding:18px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div style="width:36px;height:36px;border-radius:8px;background:#4A154B;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;">💬</div>
+            <div><div style="font-size:13px;font-weight:700;color:var(--text);">Slack</div><div style="font-size:11px;color:var(--text4);">Pipeline alerts &amp; notifications</div></div>
+            <span style="margin-left:auto;font-size:10px;background:var(--amber-bg);color:var(--amber);padding:2px 7px;border-radius:999px;font-weight:600;">Soon</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="width:100%;font-size:11px;" disabled>Connect</button>
         </div>
-        <div style="font-size:12px;color:var(--text3);line-height:1.5;margin-bottom:12px;">Save your Excel or Google Sheets as CSV and import. Works with any spreadsheet-based candidate tracker.</div>
-        <button class="btn btn-ghost btn-sm" style="width:100%;" onclick="openImport()">Import Spreadsheet →</button>
-      </div>
-
-      <!-- Email / Gmail -->
-      <div class="panel" style="padding:20px;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-          <div style="width:40px;height:40px;border-radius:10px;background:#ea4335;display:flex;align-items:center;justify-content:center;font-size:18px;">✉</div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--text);">Gmail / Outlook</div><div style="font-size:11px;color:var(--text3);">Email Outreach</div></div>
-          <span style="margin-left:auto;font-size:11px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);padding:2px 8px;border-radius:999px;">Copy & Send</span>
+        <div class="panel" style="padding:18px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div style="width:36px;height:36px;border-radius:8px;background:#FF4A00;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;">⚡</div>
+            <div><div style="font-size:13px;font-weight:700;color:var(--text);">Zapier</div><div style="font-size:11px;color:var(--text4);">Automate your workflow</div></div>
+            <span style="margin-left:auto;font-size:10px;background:var(--amber-bg);color:var(--amber);padding:2px 7px;border-radius:999px;font-weight:600;">Soon</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="width:100%;font-size:11px;" disabled>Connect</button>
         </div>
-        <div style="font-size:12px;color:var(--text3);line-height:1.5;margin-bottom:12px;">All submission emails and outreach generated by TalentBase are copy-ready. Paste directly into Gmail, Outlook, or any email client.</div>
-        <button class="btn btn-ghost btn-sm" style="width:100%;" onclick="nav('library')">Email Templates →</button>
-      </div>
-
-      <!-- Anthropic AI -->
-      <div class="panel" style="padding:20px;border-color:var(--accent-border);background:var(--accent-dim);">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px;">🤖</div>
-          <div><div style="font-size:13px;font-weight:700;color:var(--text);">Anthropic Claude AI</div><div style="font-size:11px;color:var(--text3);">Powers all AI features</div></div>
-          <span style="margin-left:auto;font-size:11px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);padding:2px 8px;border-radius:999px;" id="ai-status-badge">Checking...</span>
+        <div class="panel" style="padding:18px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div style="width:36px;height:36px;border-radius:8px;background:#003A9B;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;">🔍</div>
+            <div><div style="font-size:13px;font-weight:700;color:var(--text);">Indeed</div><div style="font-size:11px;color:var(--text4);">Post jobs &amp; import applicants</div></div>
+            <span style="margin-left:auto;font-size:10px;background:var(--amber-bg);color:var(--amber);padding:2px 7px;border-radius:999px;font-weight:600;">Soon</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="width:100%;font-size:11px;" disabled>Connect</button>
         </div>
-        <div style="font-size:12px;color:var(--text3);line-height:1.5;margin-bottom:12px;">Resume parsing, AI match scoring, natural language sourcing, offer letter generation, and submission emails — all powered by Claude.</div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">API Key: <span id="int-key-status">Not configured</span></div>
-        <button class="btn btn-ghost btn-sm" style="width:100%;" onclick="document.getElementById('api-key').focus()">Configure API Key →</button>
       </div>
-
-    </div>
-
-    <!-- Integration Guide -->
-    <div class="panel" style="padding:24px;">
-      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:16px;">How TalentBase Integrates With Your Existing Stack</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div style="margin-top:32px;padding:18px 22px;background:rgba(59,130,246,.05);border:1px solid var(--accent-border);border-radius:12px;display:flex;align-items:center;gap:14px;">
+        <div style="font-size:22px;">💡</div>
         <div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Importing Data</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;gap:8px;font-size:12px;color:var(--text3);"><span style="color:var(--green);flex-shrink:0;">✓</span>Export candidates from iCIMS/Greenhouse/Lever as CSV → Import into TalentBase</div>
-            <div style="display:flex;gap:8px;font-size:12px;color:var(--text3);"><span style="color:var(--green);flex-shrink:0;">✓</span>Copy/paste LinkedIn profiles into candidate LinkedIn tab for AI analysis</div>
-            <div style="display:flex;gap:8px;font-size:12px;color:var(--text3);"><span style="color:var(--green);flex-shrink:0;">✓</span>Drag &amp; drop resumes (PDF/TXT) for instant AI parsing</div>
-            <div style="display:flex;gap:8px;font-size:12px;color:var(--text3);"><span style="color:var(--green);flex-shrink:0;">✓</span>Bulk import from any spreadsheet saved as CSV</div>
-          </div>
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Exporting Data</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;gap:8px;font-size:12px;color:var(--text3);"><span style="color:var(--green);flex-shrink:0;">✓</span>Export all candidates as CSV (works with any ATS import)</div>
-            <div style="display:flex;gap:8px;font-size:12px;color:var(--text3);"><span style="color:var(--green);flex-shrink:0;">✓</span>Export individual candidate profiles as formatted HTML/PDF</div>
-            <div style="display:flex;gap:8px;font-size:12px;color:var(--text3);"><span style="color:var(--green);flex-shrink:0;">✓</span>Copy submission emails directly to Gmail/Outlook</div>
-            <div style="display:flex;gap:8px;font-size:12px;color:var(--text3);"><span style="color:var(--green);flex-shrink:0;">✓</span>Copy offer letters for e-signature tools (DocuSign, etc.)</div>
-          </div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;">Want a specific integration?</div>
+          <div style="font-size:12px;color:var(--text4);">Email <a href="mailto:jonah@thestaffingspecialist.com" style="color:var(--accent);">jonah@thestaffingspecialist.com</a> and we'll prioritize it.</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-
-
-<!-- ═══ PROMPT LIBRARY ═══ -->
+<!-- ═══ PROMPTS ═══ -->
 <div class="view" id="v-prompts">
   <div class="topbar">
     <div><div class="topbar-title">Prompt Library</div><div class="topbar-sub">100 AI recruiting prompts · DM scripts · BD playbooks — all built for your workflow</div></div>
@@ -2582,7 +2629,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ═══ TUTORIAL ═══ -->
-<div class="view" id="v-tutorial">
+<div class="view" id="v-tutorial" style="flex-direction:column;display:flex;">
   <div class="topbar">
     <div><div class="topbar-title">TalentBase Tutorial</div><div class="topbar-sub">Complete walkthrough — 8 steps to master the system</div></div>
     <div style="display:flex;align-items:center;gap:10px;">
@@ -2703,7 +2750,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 
-<div class="view" id="v-workspace" style="flex-direction:column;overflow:hidden;">
+<div class="view" id="v-workspace" style="flex-direction:column;overflow:hidden;display:flex;">
   <div class="topbar" style="flex-shrink:0;">
     <div>
       <div class="topbar-title">Workspace Settings</div>
