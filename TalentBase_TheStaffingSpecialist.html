@@ -4939,71 +4939,60 @@ function toggleNavTools(btn){
   btn.style.color = open ? 'var(--text4)' : 'var(--text2)';
 }
 
-function nav(v){
-  // ── Permission guard ─────────────────────────────────────
-  var viewPermissions = {
-    'deals'    : 'viewDeals',
-    'analytics': 'viewAnalytics',
-    'aitools'  : 'viewAITools',
-    'workspace': 'viewSettings',
-  };
-  if(viewPermissions[v] && !can(viewPermissions[v])){ v = 'dashboard'; }
+function nav(v) {
+  // Permission guard
+  var perms = { 'deals':'viewDeals','analytics':'viewAnalytics','aitools':'viewAITools','workspace':'viewSettings' };
+  if (perms[v] && !can(perms[v])) v = 'dashboard';
 
-  // ── Hide ALL views — simple and safe ─────────────────────
-  document.querySelectorAll('.view').forEach(function(el){
+  // Hide ALL views
+  document.querySelectorAll('.view').forEach(function(el) {
     el.classList.remove('on');
     el.style.display = 'none';
   });
 
-  // Close any open modals
-  document.querySelectorAll('.modal-overlay, .overlay').forEach(function(m){
-    m.style.display = 'none';
-  });
-
-  // ── Show target view ──────────────────────────────────────
-  var view = document.getElementById('v-' + v);
-  if(view){
-    view.classList.add('on');
-    view.style.display = 'flex';
-    view.style.flex    = '1';
+  // Show selected view
+  var active = document.getElementById('v-' + v);
+  if (active) {
+    active.classList.add('on');
+    active.style.display    = 'flex';
+    active.style.flex       = '1';
+    active.style.flexDirection = 'column';
   } else {
-    console.error('[nav] view not found: v-' + v);
+    console.error('[nav] View not found: v-' + v);
     return;
   }
 
-  // ── Update sidebar highlight ──────────────────────────────
-  document.querySelectorAll('.ni').forEach(function(el){
+  // Update sidebar highlight
+  document.querySelectorAll('.ni').forEach(function(el) {
     el.classList.remove('on');
     var oc = el.getAttribute('onclick') || '';
-    if(oc.indexOf("nav('" + v + "')") !== -1 || oc.indexOf('nav("' + v + '")') !== -1){
-      el.classList.add('on');
-    }
+    if (oc.indexOf("nav('" + v + "')") !== -1) el.classList.add('on');
   });
 
   window._activeView = v;
-  console.log('[nav] active:', v);
 
-  // ── View-specific renders (each isolated) ────────────────
-  if(v==='dashboard')   { try{ renderDash();       }catch(e){ console.error('[nav:dash]',e); } }
-  if(v==='deals')       { try{ renderDeals();      }catch(e){ console.error('[nav:deals]',e); } }
-  if(v==='candidates')  { try{ updateRoleFilter(); doSearch(); }catch(e){ console.error('[nav:cands]',e); } }
-  if(v==='pipeline')    { try{ renderKanban(); updateKbJobFilter(); }catch(e){ console.error('[nav:pipe]',e); } }
-  if(v==='jobs')        { try{ renderJobsList();   }catch(e){ console.error('[nav:jobs]',e); } }
-  if(v==='match')       { try{ renderMatchJobs();  }catch(e){ console.error('[nav:match]',e); } }
-  if(v==='analytics')   { try{ renderAnalytics();  }catch(e){ console.error('[nav:analytics]',e); } }
-  if(v==='offer')       { try{ populateOfferDropdowns(); }catch(e){ console.error('[nav:offer]',e); } }
-  if(v==='headcount')   { try{ renderHeadcount();  }catch(e){ console.error('[nav:headcount]',e); } }
-  if(v==='scorecard')   { try{ renderScorecards(); }catch(e){ console.error('[nav:scorecard]',e); } }
-  if(v==='integrations'){ try{ checkIntegrationStatus(); }catch(e){} }
-  if(v==='library')     { try{ renderLibrary();    }catch(e){ console.error('[nav:library]',e); } }
-  if(v==='prompts')     { try{ renderPromptLib();  }catch(e){ console.error('[nav:prompts]',e); } }
-  if(v==='tutorial')    { try{ currentTutStep=(typeof currentTutStep==='number')?currentTutStep:0; renderTutorial(); }catch(e){ console.error('[nav:tutorial]',e); } }
-  if(v==='campaigns')   { try{ renderCampaigns && renderCampaigns(); }catch(e){} }
-  if(v==='workspace')   { try{ initWorkspaceSettings && initWorkspaceSettings(); }catch(e){} }
-  if(v==='command')     { try{ renderCommandCenter && renderCommandCenter(); }catch(e){} }
-  if(v==='radar')       { try{ renderRadar && renderRadar(); }catch(e){} }
-  if(v==='aitools')     { try{ initAITools && initAITools(); }catch(e){} }
+  // View-specific renders
+  if (v==='dashboard')    { try { renderDash(); }              catch(e) { console.error(e); } }
+  if (v==='deals')        { try { renderDeals(); }             catch(e) { console.error(e); } }
+  if (v==='candidates')   { try { updateRoleFilter(); doSearch(); } catch(e) { console.error(e); } }
+  if (v==='pipeline')     { try { renderKanban(); updateKbJobFilter(); } catch(e) { console.error(e); } }
+  if (v==='jobs')         { try { renderJobsList(); }          catch(e) { console.error(e); } }
+  if (v==='match')        { try { renderMatchJobs(); }         catch(e) { console.error(e); } }
+  if (v==='analytics')    { try { renderAnalytics(); }         catch(e) { console.error(e); } }
+  if (v==='offer')        { try { populateOfferDropdowns(); }  catch(e) { console.error(e); } }
+  if (v==='headcount')    { try { renderHeadcount(); }         catch(e) { console.error(e); } }
+  if (v==='scorecard')    { try { renderScorecards(); }        catch(e) { console.error(e); } }
+  if (v==='library')      { try { renderLibrary(); }           catch(e) { console.error(e); } }
+  if (v==='prompts')      { try { renderPromptLib(); }         catch(e) { console.error(e); } }
+  if (v==='tutorial')     { try { currentTutStep = currentTutStep || 0; renderTutorial(); } catch(e) { console.error(e); } }
+  if (v==='integrations') { try { checkIntegrationStatus(); } catch(e) {} }
+  if (v==='campaigns')    { try { renderCampaigns && renderCampaigns(); } catch(e) {} }
+  if (v==='workspace')    { try { initWorkspaceSettings && initWorkspaceSettings(); } catch(e) {} }
+  if (v==='command')      { try { renderCommandCenter && renderCommandCenter(); } catch(e) {} }
+  if (v==='radar')        { try { renderRadar && renderRadar(); } catch(e) {} }
+  if (v==='aitools')      { try { initAITools && initAITools(); } catch(e) {} }
 }
+
 
 // ═══════════════════════════════════════════════
 // BOOLEAN SEARCH ENGINE
