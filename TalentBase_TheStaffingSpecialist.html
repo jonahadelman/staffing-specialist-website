@@ -1222,7 +1222,7 @@ button, .btn { white-space:nowrap !important; }
 /* ═══ CRITICAL VIEW FIXES ════════════════════════════════════ */
 
 /* Library: viewer MUST fill remaining width */
-#v-library { display: flex !important; flex-direction: column; }
+
 
 
 
@@ -1313,6 +1313,30 @@ button, .btn { white-space:nowrap !important; }
   display: block;
   min-height: 0;
 }
+
+/* ═══ LIBRARY LAYOUT — only when active ════════════════════ */
+#v-library.active { flex-direction: column; }
+#v-library.active > div:nth-child(2) {
+  display: flex !important;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+#v-library.active > div:nth-child(2) > div:last-child {
+  display: flex !important;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+/* Tutorial grid — only when active */
+#v-tutorial.active > div:nth-child(2) {
+  display: grid !important;
+  grid-template-columns: 280px 1fr;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 </style>
 </head>
 <body>
