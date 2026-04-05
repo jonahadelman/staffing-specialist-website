@@ -13,6 +13,32 @@
 <title>The Staffing Specialist — TalentBase</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
+/* ═══ VIEW SYSTEM — SINGLE ACTIVE VIEW ══════════════════════ */
+.view {
+  display: none !important;
+  position: absolute;
+  inset: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+.view.active {
+  display: flex !important;
+  position: relative;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+/* Legacy: .view.on also activates (for any remaining references) */
+.view.on {
+  display: flex !important;
+  position: relative;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
 :root{
   /* V4 — Premium spacing, softer borders, stronger hierarchy */
   --bg:#0b0e14;--bg2:#111827;--bg3:#18202e;--bg4:#1e2a3a;--bg5:#243348;
@@ -40,7 +66,7 @@ a{color:var(--text3);text-decoration:none;}
 /* ── APP SHELL ── */
 .app{display:flex;height:100vh;overflow:hidden;width:100%;}
 .sidebar{width:196px;min-width:196px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
-.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;}
+.main{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;}
 
 /* ── SIDEBAR ── */
 .logo{padding:14px 12px 12px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--border2);}
@@ -226,9 +252,8 @@ a{color:var(--text3);text-decoration:none;}
 
 /* ── CANDIDATES ── */
 .cand-layout{flex:1;display:flex;overflow:hidden;}
-/* ── VIEWS — the core show/hide system ── */
-.view{display:none;flex-direction:column;overflow:hidden;min-height:0;min-width:0;}
-.view.on{display:flex !important;flex-direction:column;flex:1;overflow:hidden;min-height:0;min-width:0;}
+
+
 
 /* ── CANDIDATES ── */
 .cand-filters{padding:10px 16px;border-bottom:1px solid var(--border2);display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:wrap;background:var(--bg2);}
@@ -4939,30 +4964,32 @@ function toggleNavTools(btn){
   btn.style.color = open ? 'var(--text4)' : 'var(--text2)';
 }
 
-function nav(v) {
-  console.log('[nav] active:', v);
+function nav(view) {
+  console.log('[nav]', view);
 
-  // Hide all views
-  document.querySelectorAll('.view').forEach(function(el) {
-    el.classList.remove('on');
-    el.style.display = 'none';
+  // Remove active from ALL views
+  document.querySelectorAll('.view').forEach(function(v) {
+    v.classList.remove('active');
+    v.classList.remove('on');
   });
 
-  // Show selected view
-  var active = document.getElementById('v-' + v);
-  if (!active) { console.error('[nav] Missing view: v-' + v); return; }
-  active.classList.add('on');
-  active.style.display = 'flex';
-  active.style.flex = '1';
-  active.style.flexDirection = 'column';
+  // Activate only the target view
+  var el = document.getElementById('v-' + view);
+  if (!el) {
+    console.error('[nav] Missing view: v-' + view);
+    return;
+  }
+  el.classList.add('active');
+  el.classList.add('on');
 
   // Sidebar highlight
   document.querySelectorAll('.ni').forEach(function(n) { n.classList.remove('on'); });
-  var ni = document.querySelector('[data-nav="' + v + '"]');
+  var ni = document.querySelector('[data-nav="' + view + '"]');
   if (ni) ni.classList.add('on');
-  window._activeView = v;
+  window._activeView = view;
 
-  // View renders — each isolated
+  // View-specific renders — each isolated
+  var v = view;
   if (v==='dashboard')    { try { renderDash(); } catch(e) {} }
   if (v==='deals')        { try { renderDeals(); } catch(e) {} }
   if (v==='candidates')   { try { updateRoleFilter(); doSearch(); } catch(e) {} }
@@ -11895,10 +11922,11 @@ function initApp() {
   }
 }
 document.addEventListener('DOMContentLoaded', function(){ initApp(); });
-// Event delegation — belt AND suspenders nav
+// Event delegation — primary nav trigger
 document.addEventListener('click', function(e) {
   var item = e.target.closest('[data-nav]');
   if (item && item.getAttribute('data-nav')) {
+    e.stopPropagation();
     nav(item.getAttribute('data-nav'));
   }
 });
@@ -14010,20 +14038,10 @@ function downloadScorecard(scId) {
    DEFINITIVE LAYOUT LOCK — overrides everything above
    ══════════════════════════════════════════════════════════════ */
 
-/* 1. Every view is hidden by default — no exceptions */
-.view {
-  display: none;
-}
+
 
 /* 2. Only the active view is shown */
-.view.on {
-  display: flex !important;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-}
+
 
 /* 3. App shell: sidebar + main content side by side */
 .app {
