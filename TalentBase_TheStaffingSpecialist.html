@@ -29,7 +29,7 @@
   --r:8px;--r-sm:6px;--r-lg:12px;--r-xl:16px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;overflow:hidden;}
+html,body{height:100%;overflow:hidden;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;letter-spacing:.01em;font-weight:450;}
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -38,9 +38,9 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif;}
 a{color:var(--text3);text-decoration:none;}
 
 /* ── APP SHELL ── */
-.app{display:flex;height:100vh;}
-.sidebar{width:200px;background:var(--bg2);border-right:1px solid var(--border2);display:flex;flex-direction:column;flex-shrink:0;}
-.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;width:100%;}
+.app{display:flex;height:100vh;overflow:hidden;width:100%;}
+.sidebar{width:196px;min-width:196px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;}
 
 /* ── SIDEBAR ── */
 .logo{padding:14px 12px 12px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--border2);}
@@ -227,7 +227,7 @@ a{color:var(--text3);text-decoration:none;}
 /* ── CANDIDATES ── */
 .cand-layout{flex:1;display:flex;overflow:hidden;}
 /* ── VIEWS — the core show/hide system ── */
-.view{display:none !important;flex:1;flex-direction:column;overflow:hidden;min-height:0;}
+.view{display:none !important;flex:1;flex-direction:column;overflow:hidden;min-height:0;min-width:0;}
 .view.on{display:flex !important;flex:1;flex-direction:column;overflow:hidden;min-height:0;}
 
 /* ── CANDIDATES ── */
@@ -1324,7 +1324,8 @@ button, .btn { white-space:nowrap !important; }
       <span class="ni-badge" id="nb-deals"></span>
     </div>
 
-    <div style="height:1px;background:var(--border);margin:8px 2px;"></div>
+    <div style="height:1px;background:var(--border);margin:10px 8px 4px;"></div>
+    <div style="font-size:9px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.12em;padding:4px 18px 2px;">More</div>
     <div class="ni ni-more" id="ni-tools-toggle" onclick="toggleNavTools(this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       More
@@ -1765,7 +1766,7 @@ button, .btn { white-space:nowrap !important; }
 <div class="view on" id="v-dashboard">
 
   <!-- TOPBAR -->
-  <div style="display:flex;align-items:center;gap:16px;padding:0 40px;height:58px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;">
+  <div class="topbar" style="padding:0 32px;gap:16px;">
     <div style="flex:1;min-width:0;">
       <div style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--text);">Hiring Command Center</div>
       <div id="dash-date" style="font-size:11px;color:var(--text4);margin-top:1px;"></div>
@@ -1783,7 +1784,7 @@ button, .btn { white-space:nowrap !important; }
   </div>
 
   <!-- SCROLL AREA -->
-  <div style="flex:1;overflow-y:auto;background:var(--bg);">
+  <div style="flex:1;overflow-y:auto;overflow-x:hidden;background:var(--bg);">
     <div style="max-width:1400px;margin:0 auto;padding:32px 48px;display:flex;flex-direction:column;gap:24px;">
 
       <!-- KPI BAR — 3 revenue metrics -->
@@ -2350,18 +2351,10 @@ button, .btn { white-space:nowrap !important; }
       <!-- Quick actions -->
       <div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:0 6px;margin-bottom:8px;">Quick Start</div>
       <div id="lib-quick-actions" style="display:flex;flex-direction:column;gap:2px;margin-bottom:20px;"></div>
-  <div class="lib-nav-item" data-group="outreach" onclick="setLibGroup('outreach')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);">✉ Send Outreach</div>
-  <div class="lib-nav-item" data-group="submit" onclick="setLibGroup('submit')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);">📋 Submit Candidate</div>
-  <div class="lib-nav-item" data-group="close" onclick="setLibGroup('close')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);">📄 Close / Offer</div>
 
       <!-- Categories -->
       <div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:0 6px;margin-bottom:8px;">Templates</div>
       <div id="lib-nav-cats" style="display:flex;flex-direction:column;gap:1px;"></div>
-  <div class="lib-nav-item" data-group="jobs" onclick="setLibGroup('jobs')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);"><span>💼</span><span>Job Templates</span><span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">108</span></div>
-  <div class="lib-nav-item" data-group="outreach" onclick="setLibGroup('outreach')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);"><span>✉</span><span>Outreach</span><span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">12</span></div>
-  <div class="lib-nav-item" data-group="submit" onclick="setLibGroup('submit')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);"><span>📋</span><span>Submissions</span><span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">8</span></div>
-  <div class="lib-nav-item" data-group="close" onclick="setLibGroup('close')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);"><span>📄</span><span>Offers &amp; Onboarding</span><span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">8</span></div>
-  <div class="lib-nav-item" data-group="playbook" onclick="setLibGroup('playbook')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);"><span>⚡</span><span>Playbooks</span><span style="margin-left:auto;font-size:10.5px;color:var(--text4);font-family:DM Mono,monospace;">4</span></div>
 
       <!-- Count -->
       <div style="margin-top:16px;padding:0 6px;">
@@ -2373,10 +2366,10 @@ button, .btn { white-space:nowrap !important; }
     <div style="display:flex;flex:1;overflow:hidden;min-height:0;">
 
       <!-- File list -->
-      <div style="width:300px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;background:var(--bg);">
+      <div style="width:280px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;background:var(--bg2);">
         <div id="lib-list"></div>
 <!-- Document viewer -->
-      <div id="lib-viewer" style="flex:1;overflow-y:auto;background:var(--bg);display:flex;flex-direction:column;">
+      <div id="lib-viewer" style="flex:1;overflow-y:auto;background:var(--bg);display:flex;flex-direction:column;min-width:0;">
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text4);padding:40px;text-align:center;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;margin-bottom:12px;opacity:.2;"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
           <div style="font-size:13px;font-weight:500;color:var(--text4);">Select a document to view</div>
@@ -2388,7 +2381,6 @@ button, .btn { white-space:nowrap !important; }
   </div>
 </div>
 
-</div>
 <!-- ═══ INTEGRATIONS ═══ -->
 <div class="view" id="v-integrations">
   <div class="topbar">
@@ -2567,6 +2559,7 @@ button, .btn { white-space:nowrap !important; }
     <div style="background:var(--bg2);border-right:1px solid var(--border2);overflow-y:auto;padding:16px 0;">
       <div style="padding:0 12px 10px;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;">Chapters</div>
       <div id="tut-step-list"></div>
+    </div>
     <!-- MAIN content -->
     <div style="overflow-y:auto;display:flex;flex-direction:column;">
 
@@ -7609,7 +7602,7 @@ function renderDash(){
   var days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var dateEl = document.getElementById('dash-date');
-  if(dateEl) dateEl.textContent = days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate();
+  if(dateEl) dateEl.textContent = days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear();
 
   // Render each panel independently — one failure won't cascade
   try { renderDashKPIs();       } catch(e){ console.warn('KPIs:',e); }
@@ -7650,7 +7643,7 @@ function renderDashKPIs(){
     var now=new Date();
     var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    dateEl.textContent = days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate();
+    dateEl.textContent = days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear();
   }
 }
 
@@ -10564,6 +10557,25 @@ function renderLibrary(){
     var el = document.getElementById('lib-list');
     if(!el){ console.error('[renderLibrary] #lib-list not found'); return; }
 
+    // Render quick-action nav
+    var qaEl = document.getElementById('lib-quick-actions');
+    if(qaEl) qaEl.innerHTML = [
+      {g:'outreach',icon:'✉',label:'Send Outreach'},
+      {g:'submit',  icon:'📋',label:'Submit Candidate'},
+      {g:'close',   icon:'📄',label:'Close / Offer'},
+    ].map(function(it){
+      return '<div class="lib-nav-item" data-group="'+it.g+'" onclick="setLibGroup(this.dataset.group)" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);">'+it.icon+' '+it.label+'</div>';
+    }).join('');
+
+    // Render category nav with live counts
+    var _cats = [{g:'jd',icon:'💼',label:'Job Templates'},{g:'email',icon:'📧',label:'Outreach'},{g:'submit',icon:'📋',label:'Submissions'},{g:'close',icon:'📄',label:'Offers & Onboarding'},{g:'playbook',icon:'⚡',label:'Playbooks'},{g:'compliance',icon:'🔒',label:'Compliance'},{g:'onboarding',icon:'🗓️',label:'Onboarding'}];
+    var catsEl = document.getElementById('lib-nav-cats');
+    if(catsEl) catsEl.innerHTML = _cats.map(function(cat){
+      var n = (window.libraryItems||[]).filter(function(i){ return i.cat===cat.g; }).length;
+      if(!n) return '';
+      return '<div class="lib-nav-item" data-group="'+cat.g+'" onclick="setLibGroup(this.dataset.group)" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--text3);"><span>'+cat.icon+'</span><span style="flex:1">'+cat.label+'</span><span style="font-size:10.5px;color:var(--text4);">'+n+'</span></div>';
+    }).join('');
+
     // Guard: bail if LIB_GROUPS not ready
     if(typeof LIB_GROUPS === 'undefined'){ return; }
 
@@ -12605,6 +12617,91 @@ function loadWsSettings(){
 .hh-embed .live-dot { width:5px; height:5px; background:#22c55e; border-radius:50%; animation:hh-pulse 2s infinite; }
 .hh-embed .live-lbl { font-size:10px; color:#22c55e; font-family:'DM Mono',monospace; letter-spacing:2px; }
 @keyframes hh-pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+
+/* ═══ LAYOUT STABILITY LOCK ═══════════════════════════════ */
+
+/* Sidebar nav items — consistent spacing */
+.ni{
+  display:flex;align-items:center;gap:10px;
+  padding:7px 12px;margin:1px 6px;
+  border-radius:8px;cursor:pointer;
+  font-size:13px;font-weight:500;color:var(--text3);
+  transition:all .12s;white-space:nowrap;overflow:hidden;
+  min-height:34px;
+}
+.ni.on{background:rgba(59,130,246,.12);color:var(--accent2);}
+.ni:hover:not(.on){background:var(--bg3);color:var(--text2);}
+
+/* Topbar — fixed height, no wrap */
+.topbar{
+  display:flex;align-items:center;gap:12px;
+  padding:0 24px;height:56px;flex-shrink:0;
+  border-bottom:1px solid var(--border);
+  background:var(--bg2);
+  min-width:0;
+}
+.topbar-title{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.2px;}
+.topbar-sub{font-size:11.5px;color:var(--text4);margin-top:1px;}
+
+/* Panels — consistent card style */
+.panel{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:18px 20px;
+}
+
+/* Dashboard content area */
+#v-dashboard > div:last-child {
+  flex:1;overflow-y:auto;
+}
+
+/* Library viewer — always fills space */
+#lib-viewer{flex:1;min-width:0;overflow-y:auto;}
+
+/* Library list panel */
+#lib-list-panel{
+  width:280px;min-width:280px;flex-shrink:0;
+  border-right:1px solid var(--border);
+  overflow-y:auto;background:var(--bg2);
+}
+
+/* Lib nav items */
+.lib-nav-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 10px;margin:1px 6px;border-radius:7px;
+  cursor:pointer;font-size:12.5px;color:var(--text3);
+  transition:background .1s;min-height:32px;
+}
+.lib-nav-item:hover{background:var(--bg3);color:var(--text2);}
+.lib-nav-item.on{background:rgba(59,130,246,.1);color:var(--accent2);}
+
+/* Section labels in sidebar */
+.lib-section-label{
+  font-size:9.5px;font-weight:700;color:var(--text4);
+  text-transform:uppercase;letter-spacing:.12em;
+  padding:14px 16px 6px;
+}
+
+/* Tutorial grid */
+#v-tutorial > div:nth-child(2){
+  display:grid;
+  grid-template-columns:280px 1fr;
+  flex:1;overflow:hidden;min-height:0;
+}
+
+/* Ensure views fill main area */
+.view.on{
+  display:flex !important;
+  flex-direction:column;
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+}
+
+/* Scrollable content areas inside views */
+.view-scroll{
+  flex:1;overflow-y:auto;min-height:0;
+}
 
 </style>
 
