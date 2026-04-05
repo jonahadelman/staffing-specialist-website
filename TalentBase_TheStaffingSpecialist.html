@@ -227,8 +227,8 @@ a{color:var(--text3);text-decoration:none;}
 /* ── CANDIDATES ── */
 .cand-layout{flex:1;display:flex;overflow:hidden;}
 /* ── VIEWS — the core show/hide system ── */
-.view{display:none !important;flex:1;flex-direction:column;overflow:hidden;min-height:0;min-width:0;}
-.view.on{display:flex !important;flex:1;flex-direction:column;overflow:hidden;min-height:0;}
+.view{display:none !important;flex-direction:column;overflow:hidden;min-height:0;min-width:0;}
+.view.on{display:flex !important;flex-direction:column;flex:1;overflow:hidden;min-height:0;min-width:0;}
 
 /* ── CANDIDATES ── */
 .cand-filters{padding:10px 16px;border-bottom:1px solid var(--border2);display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:wrap;background:var(--bg2);}
@@ -1144,14 +1144,11 @@ button, .btn { white-space:nowrap !important; }
 #v-integrations > div:nth-child(2) { overflow-y: auto; flex: 1; }
 
 /* Ensure content fills view */
-.view-body { flex: 1; overflow-y: auto; padding: 24px; }
 
 
 /* ═══ VIEW RENDERING FIXES ═══════════════════════════════════ */
 
 /* All views must be full flex columns */
-.view { flex-direction: column; }
-.view.on { flex-direction: column !important; }
 
 /* Content areas inside views must scroll */
 #v-integrations > div:nth-child(2),
@@ -1162,11 +1159,7 @@ button, .btn { white-space:nowrap !important; }
 }
 
 /* Library: ensure right panel fills width */
-#lib-viewer {
-  flex: 1 !important;
-  min-width: 0 !important;
-  overflow-y: auto;
-}
+#lib-viewer {flex:1 !important;min-width:0 !important;overflow-y:auto;}
 
 /* Tutorial grid: fills remaining height */
 #v-tutorial > div:nth-child(2) {
@@ -1191,19 +1184,14 @@ button, .btn { white-space:nowrap !important; }
 }
 
 /* Ensure viewable content areas */
-.view > div:not(.topbar):not(.modal-overlay) {
-  min-height: 0;
-}
 
 
 /* ═══ CRITICAL VIEW FIXES ════════════════════════════════════ */
 
 /* Library: viewer MUST fill remaining width */
 #v-library { display: flex !important; flex-direction: column; }
-#lib-viewer { flex: 1 !important; min-width: 0 !important; }
 
 /* All .view.on must be flex columns */
-.view.on { display: flex !important; flex-direction: column; flex: 1; height: 100%; }
 
 /* Content areas MUST have flex:1 to fill height */
 #v-integrations > div:nth-child(2),
@@ -1225,6 +1213,43 @@ button, .btn { white-space:nowrap !important; }
   flex: 1;
   overflow-y: auto;
   min-height: 0;
+}
+
+
+/* ═══ LIBRARY: FULL WORKSPACE LAYOUT ══════════════════════════ */
+#v-library
+/* Topbar fixed height */
+#v-library > .topbar { flex-shrink: 0; }
+/* Body row: [left-nav 200px] [list 300px] [viewer flex:1] */
+#v-library > .lib-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+#lib-nav-panel {
+  width: 200px;
+  min-width: 200px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  background: var(--bg2);
+}
+#lib-list-panel {
+  width: 300px;
+  min-width: 300px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  background: var(--bg2);
+}
+#lib-viewer {
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow-y: auto;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
 }
 
 </style>
@@ -1298,6 +1323,8 @@ button, .btn { white-space:nowrap !important; }
         <div class="gate-headline">Run your hiring system</div>
         <div class="gate-subline">Sign in to access your pipeline,<br>candidates, and deals.</div>
 
+<form onsubmit="event.preventDefault();gateLogin();" autocomplete="on">
+        <form onsubmit="event.preventDefault();gateLogin();" style="display:contents;">
         <div class="gate-field">
           <label class="gate-label" for="gate-email">Email</label>
           <input class="gate-input" id="gate-email" type="email"
@@ -1316,9 +1343,11 @@ button, .btn { white-space:nowrap !important; }
             <button class="gate-eye" onclick="toggleGateEye()" id="gate-eye-btn" title="Show password">
               <svg id="gate-eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
+</form>
           </div>
         </div>
 
+        </form>
         <button class="gate-submit" id="gate-btn" onclick="gateLogin()">Sign in to TalentBase</button>
         <div class="gate-err" id="gate-err"></div>
       </div>
@@ -1830,7 +1859,7 @@ button, .btn { white-space:nowrap !important; }
   </div>
 </div>
 
-<div class="view" id="v-deals" style="flex-direction:column;overflow:hidden;">
+<div class="view" id="v-deals" style="display:none;flex-direction:column;overflow:hidden;">
 
   <!-- Topbar -->
   <div class="topbar">
@@ -1990,7 +2019,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ── CANDIDATES ── -->
-<div class="view" id="v-candidates">
+<div class="view" style="display:none;" id="v-candidates">
   <div class="topbar">
     <div><div class="topbar-title">Candidates</div></div>
     <div class="tb-spacer"></div>
@@ -2119,7 +2148,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ── PIPELINE KANBAN ── -->
-<div class="view" id="v-pipeline">
+<div class="view" style="display:none;" id="v-pipeline">
   <div class="topbar">
     <div><div class="topbar-title">Pipeline</div><div class="topbar-sub">Drag-to-advance click interface</div></div>
     <div class="tb-spacer"></div>
@@ -2131,7 +2160,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ── JOBS ── -->
-<div class="view" id="v-jobs">
+<div class="view" style="display:none;" id="v-jobs">
   <div class="topbar">
     <div><div class="topbar-title">Jobs</div></div>
     <div class="tb-spacer"></div>
@@ -2148,7 +2177,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ── AI MATCH ── -->
-<div class="view" id="v-match">
+<div class="view" style="display:none;" id="v-match">
   <div class="topbar">
     <div><div class="topbar-title">AI Match</div><div class="topbar-sub">Score and rank candidates against any job</div></div>
   </div>
@@ -2166,7 +2195,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ── ANALYTICS ── -->
-<div class="view" id="v-analytics">
+<div class="view" style="display:none;" id="v-analytics">
   <div class="topbar">
     <div><div class="topbar-title">Analytics</div></div>
   </div>
@@ -2194,7 +2223,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ═══ AI SOURCING (Natural Language) ═══ -->
-<div class="view" id="v-nlsearch">
+<div class="view" style="display:none;" id="v-nlsearch">
   <div class="topbar">
     <div><div class="topbar-title">AI Sourcing</div><div class="topbar-sub">Describe who you need in plain English</div></div>
   </div>
@@ -2212,7 +2241,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ═══ INTERVIEW SCORECARDS ═══ -->
-<div class="view" id="v-scorecard">
+<div class="view" style="display:none;" id="v-scorecard">
   <div class="topbar">
     <div><div class="topbar-title">Interview Scorecards</div></div>
     <button class="btn btn-ghost btn-sm" onclick="downloadScorecard(scorecards&&scorecards[0]?scorecards[0].id:'sc_default_1')" style="margin-right:4px;">↓ Download PDF</button>
@@ -2244,7 +2273,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ═══ OFFER BUILDER ═══ -->
-<div class="view" id="v-offer">
+<div class="view" style="display:none;" id="v-offer">
   <div class="topbar">
     <div><div class="topbar-title">Offer Builder</div><div class="topbar-sub">Professional offer letters — fill fields, generate, edit inline, print or send</div></div>
     <div style="display:flex;gap:8px;" id="ob-action-btns">
@@ -2425,7 +2454,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ═══ HEADCOUNT PLANNING ═══ -->
-<div class="view" id="v-headcount">
+<div class="view" style="display:none;" id="v-headcount">
   <div class="topbar">
     <div><div class="topbar-title">Headcount Planning</div></div>
     <button class="btn btn-primary" onclick="openAddHeadcount()">
@@ -2446,7 +2475,7 @@ button, .btn { white-space:nowrap !important; }
 
 
 <!-- ═══ EMAIL TEMPLATES ═══ -->
-<div class="view" id="v-library" style="flex-direction:column;">
+<div class="view" id="v-library" style="display:none;">
   <div class="topbar" style="background:var(--bg2);border-bottom:1px solid var(--border);">
     <div>
       <div class="topbar-title">Document Library</div>
@@ -2463,48 +2492,36 @@ button, .btn { white-space:nowrap !important; }
     <button class="btn btn-primary btn-sm" onclick="openNewLibraryItem()">+ Add Template</button>
   </div>
 
-  <!-- Main layout: left nav + content -->
-  <div style="display:flex;flex:1;overflow:hidden;min-height:0;">
-
-    <!-- Left nav: categories + count -->
-    <div style="width:200px;flex-shrink:0;border-right:1px solid var(--border);background:var(--bg2);overflow-y:auto;padding:16px 10px;">
-
-      <!-- Quick actions -->
+  <div class="lib-body">
+    <!-- Left nav -->
+    <div id="lib-nav-panel" style="padding:16px 10px;">
       <div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:0 6px;margin-bottom:8px;">Quick Start</div>
       <div id="lib-quick-actions" style="display:flex;flex-direction:column;gap:2px;margin-bottom:20px;"></div>
-
-      <!-- Categories -->
       <div style="font-size:9.5px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:0 6px;margin-bottom:8px;">Templates</div>
       <div id="lib-nav-cats" style="display:flex;flex-direction:column;gap:1px;"></div>
-
-      <!-- Count -->
       <div style="margin-top:16px;padding:0 6px;">
         <div id="lib-file-count" style="font-size:11px;color:var(--text4);"></div>
       </div>
     </div>
 
-    <!-- Right: list + viewer split -->
-    <div style="display:flex;flex:1;overflow:hidden;min-height:0;min-width:0;">
+    <!-- File list -->
+    <div id="lib-list-panel">
+      <div id="lib-list"></div>
+    </div>
 
-      <!-- File list -->
-      <div style="width:260px;min-width:260px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;background:var(--bg2);">
-        <div id="lib-list"></div>
+    <!-- Document viewer — ALWAYS flex:1 -->
+    <div id="lib-viewer">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text4);padding:40px;text-align:center;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;margin-bottom:12px;opacity:.2;"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        <div style="font-size:13px;font-weight:500;color:var(--text4);">Select a document to view</div>
+        <div style="font-size:11px;color:var(--text4);margin-top:4px;opacity:.6;">or use Quick Start to jump to what you need</div>
       </div>
-      <!-- Document viewer -->
-      <div id="lib-viewer" style="flex:1;min-width:0;overflow-y:auto;background:var(--bg);display:flex;flex-direction:column;">
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text4);padding:40px;text-align:center;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;margin-bottom:12px;opacity:.2;"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-          <div style="font-size:13px;font-weight:500;color:var(--text4);">Select a document to view</div>
-          <div style="font-size:11px;color:var(--text4);margin-top:4px;opacity:.6;">or use Quick Start to jump to what you need</div>
-        </div>
-      </div>
-
     </div>
   </div>
 </div>
 
 <!-- ═══ INTEGRATIONS ═══ -->
-<div class="view" id="v-integrations" style="flex-direction:column;">
+<div class="view" id="v-integrations" style="display:none;flex-direction:column;">
   <div class="topbar">
     <div><div class="topbar-title">Integrations</div><div class="topbar-sub">Connect your recruiting stack</div></div>
     <button class="btn btn-ghost btn-sm" onclick="alert('Email jonah@thestaffingspecialist.com to request an integration.')">Request Integration</button>
@@ -2577,7 +2594,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ═══ PROMPTS ═══ -->
-<div class="view" id="v-prompts">
+<div class="view" style="display:none;" id="v-prompts">
   <div class="topbar">
     <div><div class="topbar-title">Prompt Library</div><div class="topbar-sub">100 AI recruiting prompts · DM scripts · BD playbooks — all built for your workflow</div></div>
   </div>
@@ -2629,7 +2646,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ═══ TUTORIAL ═══ -->
-<div class="view" id="v-tutorial" style="flex-direction:column;display:flex;">
+<div class="view" id="v-tutorial" style="display:none;flex-direction:column;display:flex;">
   <div class="topbar">
     <div><div class="topbar-title">TalentBase Tutorial</div><div class="topbar-sub">Complete walkthrough — 8 steps to master the system</div></div>
     <div style="display:flex;align-items:center;gap:10px;">
@@ -2698,7 +2715,7 @@ button, .btn { white-space:nowrap !important; }
 
 
 <!-- ═══ CAMPAIGNS ═══ -->
-<div class="view" id="v-campaigns">
+<div class="view" style="display:none;" id="v-campaigns">
   <div class="topbar">
     <div><div class="topbar-title">Campaigns</div><div class="topbar-sub">Always-On Pipeline · Outreach · Reactivation</div></div>
     <button class="btn btn-primary" onclick="openNewCampaign()">
@@ -2750,7 +2767,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 
-<div class="view" id="v-workspace" style="flex-direction:column;overflow:hidden;display:flex;">
+<div class="view" id="v-workspace" style="display:none;flex-direction:column;overflow:hidden;display:flex;">
   <div class="topbar" style="flex-shrink:0;">
     <div>
       <div class="topbar-title">Workspace Settings</div>
@@ -3294,7 +3311,7 @@ CREATE POLICY "staff_read_feedback" ON client_feedback FOR SELECT
 ═══════════════════════════════════════════════════════════════ -->
 
 <!-- V2: Command Center view (hidden until V2 enabled) -->
-<div class="view" id="v-command" style="flex-direction:column;overflow:hidden;">
+<div class="view" id="v-command" style="display:none;flex-direction:column;overflow:hidden;">
   <div class="topbar" style="display:flex;align-items:center;justify-content:space-between;">
     <div>
       <div class="topbar-title" style="display:flex;align-items:center;gap:8px;">
@@ -3313,7 +3330,7 @@ CREATE POLICY "staff_read_feedback" ON client_feedback FOR SELECT
 </div>
 
 <!-- V2: Talent Radar view -->
-<div class="view" id="v-radar" style="flex-direction:column;">
+<div class="view" id="v-radar" style="display:none;flex-direction:column;">
   <div class="topbar">
     <div><div class="topbar-title">&#128225; Talent Radar</div><div class="topbar-sub">Unassigned candidates — ready to place</div></div>
   </div>
@@ -4923,70 +4940,76 @@ function toggleNavTools(btn){
 }
 
 function nav(v){
-  // Permission guard — block views the current role cannot access
+  // Permission guard
   var viewPermissions = {
-    'deals'      : 'viewDeals',
-    'analytics'  : 'viewAnalytics',
-    'aitools'    : 'viewAITools',
-    'workspace'  : 'viewSettings',
+    'deals'    : 'viewDeals',
+    'analytics': 'viewAnalytics',
+    'aitools'  : 'viewAITools',
+    'workspace': 'viewSettings',
   };
-  if (viewPermissions[v] && !can(viewPermissions[v])) {
-    v = 'dashboard';
-  }
+  if(viewPermissions[v] && !can(viewPermissions[v])){ v = 'dashboard'; }
 
+  // ── HARD RESET: hide every single view ───────────────────
   document.querySelectorAll('.view').forEach(function(el){
     el.classList.remove('on');
+    el.style.cssText = el.style.cssText
+      .replace(/display\s*:\s*[^;]+;?/gi, '')
+      .replace(/flex\s*:\s*[^;]+;?/gi, '');
     el.style.display = 'none';
   });
-  // Close open modals on view switch
-  document.querySelectorAll('.modal-overlay').forEach(function(m){ m.style.display='none'; });
-  var view = document.getElementById('v-'+v);
-  if(view){ view.classList.add('on'); view.style.display = 'flex'; }
-  document.querySelectorAll('.ni').forEach(el=>el.classList.remove('on'));
-  document.querySelectorAll('.ni').forEach(el=>{if(el.getAttribute('onclick')&&el.getAttribute('onclick').includes("'"+v+"'"))el.classList.add('on');});
-  if(v==='dashboard')renderDash();
-  if(v==='deals'){renderDeals();}
-  if(v==='aitools'){}
-  if(v==='candidates'){updateRoleFilter();doSearch();}
-  if(v==='pipeline'){renderKanban();updateKbJobFilter();}
-  if(v==='jobs'){renderJobsList();}
-  if(v==='match')renderMatchJobs();
-  if(v==='analytics')renderAnalytics();
-  if(v==='offer')populateOfferDropdowns();
-  if(v==='headcount')renderHeadcount();
-  if(v==='scorecard')renderScorecards();
-  if(v==='templates')renderTemplates();
-  if(v==='integrations')checkIntegrationStatus();
+
+  // Close modals
+  document.querySelectorAll('.modal-overlay, .overlay').forEach(function(m){
+    m.style.display = 'none';
+  });
+
+  // ── ACTIVATE target view ─────────────────────────────────
+  var view = document.getElementById('v-' + v);
+  if(view){
+    view.classList.add('on');
+    view.style.display = 'flex';
+    view.style.flex    = '1';
+  }
+
+  // Update sidebar active state
+  document.querySelectorAll('.ni').forEach(function(el){ el.classList.remove('on'); });
+  document.querySelectorAll('.ni').forEach(function(el){
+    var oc = el.getAttribute('onclick') || '';
+    if(oc.indexOf("nav('"+v+"')") !== -1 || oc.indexOf('nav("'+v+'")')!== -1){
+      el.classList.add('on');
+    }
+  });
+
+  // Update active view tracker
+  window._activeView = v;
+
+  // View-specific render calls
+  if(v==='dashboard')   renderDash();
+  if(v==='deals')       { renderDeals(); }
+  if(v==='candidates')  { updateRoleFilter(); doSearch(); }
+  if(v==='pipeline')    { renderKanban(); updateKbJobFilter(); }
+  if(v==='jobs')        { renderJobsList(); }
+  if(v==='match')       renderMatchJobs();
+  if(v==='analytics')   renderAnalytics();
+  if(v==='offer')       populateOfferDropdowns();
+  if(v==='headcount')   renderHeadcount();
+  if(v==='scorecard')   renderScorecards();
+  if(v==='integrations') try{ checkIntegrationStatus(); }catch(e){}
   if(v==='library'){
-    try {
-      // Always rebuild from seed — never trust stale state
-      libraryItems = (typeof _LIB_SEED !== 'undefined' && _LIB_SEED.length) ? _LIB_SEED.slice() : libraryItems;
-      window.libraryItems = libraryItems;
-      renderLibrary();
-    } catch(e){ console.error('[nav:library] renderLibrary failed:', e); }
+    try{ renderLibrary(); }catch(e){ console.error('[nav:library]',e); }
   }
-  if(v==='prompts'){renderPromptLib();}
+  if(v==='prompts')     { renderPromptLib(); }
   if(v==='tutorial'){
-    try {
-      currentTutStep = (typeof currentTutStep === 'number') ? currentTutStep : 0;
+    try{
+      currentTutStep = (typeof currentTutStep==='number') ? currentTutStep : 0;
       renderTutorial();
-    } catch(e){ console.error('[nav:tutorial] renderTutorial failed:', e); }
+    }catch(e){ console.error('[nav:tutorial]',e); }
   }
-  if(v==='campaigns')renderCampaigns();
-  if(v==='nlsearch'){}
-  if(v==='happyhunting'){
-    try{ window._hhAutoStart && window._hhAutoStart(); }catch(e){}
-  }
-  if(v==='workspace'){try{loadWsSettings();}catch(e){}}
-  if(v==='command'){try{renderCommandCenter();}catch(e){}}
-  const nc=document.getElementById('nb-cands');
-  const nj=document.getElementById('nb-jobs');
-  const nd=document.getElementById('nb-deals');
-  if(nc)nc.textContent=cands.length;
-  if(nj)nj.textContent=jobs.filter(j=>j.status==='Open').length;
-  if(nd)nd.textContent=deals.length||'';
-  // Re-apply nav restrictions on every view change (handles direct URL manipulation)
-  applyNavRestrictions();
+  if(v==='campaigns')   try{ renderCampaigns && renderCampaigns(); }catch(e){}
+  if(v==='workspace')   try{ initWorkspaceSettings && initWorkspaceSettings(); }catch(e){}
+  if(v==='command')     try{ renderCommandCenter && renderCommandCenter(); }catch(e){}
+  if(v==='radar')       try{ renderRadar && renderRadar(); }catch(e){}
+  if(v==='aitools')     try{ initAITools && initAITools(); }catch(e){}
 }
 
 // ═══════════════════════════════════════════════
@@ -12780,13 +12803,7 @@ function loadWsSettings(){
 }
 
 /* Ensure views fill main area */
-.view.on{
-  display:flex !important;
-  flex-direction:column;
-  flex:1;
-  min-width:0;
-  overflow:hidden;
-}
+
 
 /* Scrollable content areas inside views */
 .view-scroll{
@@ -14005,5 +14022,89 @@ function downloadScorecard(scId) {
 
 </div><!-- /app-shell -->
 
+
+<style>
+
+
+/* ══════════════════════════════════════════════════════════════
+   DEFINITIVE LAYOUT LOCK — overrides everything above
+   ══════════════════════════════════════════════════════════════ */
+
+/* 1. Every view is hidden by default — no exceptions */
+.view {
+  display: none !important;
+}
+
+/* 2. Only the active view is shown */
+.view.on {
+  display: flex !important;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 3. App shell: sidebar + main content side by side */
+.app {
+  display: flex !important;
+  height: 100vh;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* 4. Main content column fills all remaining space */
+.main {
+  flex: 1 !important;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 5. Library: topbar stacked above row layout */
+#v-library
+#v-library > div:nth-child(2) {
+  display: flex !important;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+/* Library file-list column */
+#v-library > div:nth-child(2) > div:last-child {
+  display: flex !important;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+/* Viewer fills all remaining space */
+#lib-viewer {
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow-y: auto !important;
+}
+
+/* 6. Tutorial grid */
+#v-tutorial
+#v-tutorial > div:nth-child(2) {
+  display: grid !important;
+  grid-template-columns: 280px 1fr;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 7. Scrollable content areas */
+#v-integrations > div:nth-child(2),
+#v-workspace > div:last-child,
+#v-campaigns > div:nth-child(2),
+#v-analytics > div:nth-child(2),
+#v-prompts > div:nth-child(2) {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+</style>
 </body>
 </html>
