@@ -1107,6 +1107,45 @@ button, .btn { white-space:nowrap !important; }
 /* Topbar search: slightly wider */
 .search-box input { width:320px !important; }
 .search-box input:focus { width:380px !important; }
+
+/* ═══ UI POLISH — PREMIUM FEEL ═══════════════════════════════ */
+
+/* KPI numbers — prominent */
+#dm-pipeline, #dm-expected, #dm-cands {
+  font-size: 38px !important;
+  font-weight: 800 !important;
+  letter-spacing: -1.5px;
+  line-height: 1;
+}
+
+/* Needs Action rows — clickable feel */
+.dash-attn-item {
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .1s;
+  padding: 10px 8px !important;
+}
+.dash-attn-item:hover { background: rgba(239,68,68,.06) !important; }
+
+/* Typography */
+.topbar-title { font-size: 15px !important; font-weight: 700 !important; }
+.topbar-sub   { font-size: 11px !important; color: var(--text4) !important; }
+.logo-name    { font-size: 12px !important; font-weight: 700 !important; }
+.logo-byline  { font-size: 10px !important; color: var(--text4) !important; }
+
+/* Nav items */
+.ni { font-size: 12.5px !important; }
+
+/* Candidate rows */
+.cand-row { transition: background .12s; }
+.cand-row:hover { background: var(--bg3) !important; }
+
+/* Integrations scroll */
+#v-integrations > div:nth-child(2) { overflow-y: auto; flex: 1; }
+
+/* Ensure content fills view */
+.view-body { flex: 1; overflow-y: auto; padding: 24px; }
+
 </style>
 </head>
 <body>
@@ -2095,6 +2134,7 @@ button, .btn { white-space:nowrap !important; }
 <div class="view" id="v-scorecard">
   <div class="topbar">
     <div><div class="topbar-title">Interview Scorecards</div></div>
+    <button class="btn btn-ghost btn-sm" onclick="downloadScorecard(scorecards&&scorecards[0]?scorecards[0].id:'sc_default_1')" style="margin-right:4px;">↓ Download PDF</button>
     <button class="btn btn-primary" onclick="openNewScorecard()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       New Scorecard
@@ -2660,6 +2700,577 @@ button, .btn { white-space:nowrap !important; }
     <div style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Active Campaigns</div>
     <div id="campaigns-list"></div>
   </div>
+</div>
+
+
+<div class="view" id="v-workspace" style="flex-direction:column;overflow:hidden;">
+  <div class="topbar" style="flex-shrink:0;">
+    <div>
+      <div class="topbar-title">Workspace Settings</div>
+      <div class="topbar-sub">Manage your data, workflow, branding, and exports</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:11px;background:rgba(46,168,98,.12);color:var(--green);border:1px solid rgba(46,168,98,.25);padding:4px 10px;border-radius:20px;font-weight:600;">Your data is yours. Export anytime. No lock-in.</span>
+    </div>
+  </div>
+
+  <!-- Tab bar -->
+  <div style="display:flex;gap:0;border-bottom:1px solid var(--border2);background:var(--bg2);flex-shrink:0;padding:0 20px;">
+    <button class="ws-tab on" data-tab="ws-general"    onclick="wsTab(this,'ws-general')">General</button>
+    <button class="ws-tab"    data-tab="ws-users"      onclick="wsTab(this,'ws-users')">Users &amp; Permissions</button>
+    <button class="ws-tab"    data-tab="ws-workflow"   onclick="wsTab(this,'ws-workflow')">Workflow</button>
+    <button class="ws-tab"    data-tab="ws-brand"      onclick="wsTab(this,'ws-brand')">Branding</button>
+    <button class="ws-tab"    data-tab="ws-export"     onclick="wsTab(this,'ws-export')">Data &amp; Exports</button>
+    <button class="ws-tab"    data-tab="ws-database"   onclick="wsTab(this,'ws-database')">&#9737; Database</button>
+    <button class="ws-tab"    data-tab="ws-email"      onclick="wsTab(this,'ws-email')">&#9993; Email</button>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;">
+
+    <!-- ── TAB: GENERAL ── -->
+    <div id="ws-general" class="ws-panel" style="padding:24px;max-width:600px;">
+      <div class="ws-section-title">Workspace Information</div>
+      <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
+        <div>
+          <div class="ws-label">Workspace Name</div>
+          <input id="ws-name" class="ws-input" placeholder="e.g. The Staffing Specialist" oninput="wsDirty()"/>
+        </div>
+        <div>
+          <div class="ws-label">Owner / Admin Name</div>
+          <input id="ws-owner" class="ws-input" placeholder="e.g. Jonah Adelman" oninput="wsDirty()"/>
+        </div>
+        <div>
+          <div class="ws-label">Industry Focus</div>
+          <input id="ws-industry" class="ws-input" placeholder="e.g. Medical Device, Life Sciences" oninput="wsDirty()"/>
+        </div>
+        <div>
+          <div class="ws-label">Website</div>
+          <input id="ws-website" class="ws-input" placeholder="https://thestaffingspecialist.com" oninput="wsDirty()"/>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="wsSaveGeneral()">Save Settings</button>
+
+      <div class="ws-divider"></div>
+      <div class="ws-section-title">Trust &amp; Ownership</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="ws-trust-row"><span class="ws-trust-icon">🔒</span><div><strong>Your data is fully isolated</strong><div class="ws-trust-sub">All candidates, jobs, and templates belong exclusively to this workspace.</div></div></div>
+        <div class="ws-trust-row"><span class="ws-trust-icon">📦</span><div><strong>Export anytime, no lock-in</strong><div class="ws-trust-sub">Download everything as CSV or JSON in one click. Always.</div></div></div>
+        <div class="ws-trust-row"><span class="ws-trust-icon">🗑️</span><div><strong>Delete everything instantly</strong><div class="ws-trust-sub">Full workspace wipe available at any time. No residual data.</div></div></div>
+        <div class="ws-trust-row"><span class="ws-trust-icon">🔐</span><div><strong>Enterprise-grade control</strong><div class="ws-trust-sub">Role-based permissions. Audit log. Version history on all templates.</div></div></div>
+      </div>
+    </div>
+
+    <!-- ── TAB: USERS ── -->
+    <div id="ws-users" class="ws-panel" style="display:none;padding:24px;max-width:700px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div class="ws-section-title" style="margin-bottom:0;">Team Members</div>
+        <button class="btn btn-primary btn-sm" onclick="wsAddUser()">+ Invite User</button>
+      </div>
+      <div id="ws-user-list"></div>
+
+      <div class="ws-divider"></div>
+      <div class="ws-section-title">Role Permissions</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div class="ws-role-card">
+          <div style="font-size:20px;margin-bottom:6px;">⚙️</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Admin</div>
+          <div style="font-size:11px;color:var(--text4);line-height:1.6;">Full access<br>Delete &amp; export<br>Manage users<br>Workspace settings</div>
+        </div>
+        <div class="ws-role-card">
+          <div style="font-size:20px;margin-bottom:6px;">🎯</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Recruiter</div>
+          <div style="font-size:11px;color:var(--text4);line-height:1.6;">Add/edit candidates<br>Run AI tools<br>View pipeline &amp; deals<br>No delete or export</div>
+        </div>
+        <div class="ws-role-card">
+          <div style="font-size:20px;margin-bottom:6px;">👤</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Client</div>
+          <div style="font-size:11px;color:var(--text4);line-height:1.6;">Portal only<br>Flagged candidates<br>Approve / reject<br>No internal data</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: WORKFLOW ── -->
+    <div id="ws-workflow" class="ws-panel" style="display:none;padding:24px;max-width:640px;">
+      <div class="ws-section-title">Pipeline Stages</div>
+      <div style="font-size:12px;color:var(--text4);margin-bottom:16px;">Drag to reorder. Double-click to rename. Changes apply immediately to all candidate records.</div>
+      <div id="ws-stages-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;"></div>
+      <div style="display:flex;gap:8px;">
+        <input id="ws-new-stage" class="ws-input" style="max-width:220px;" placeholder="New stage name..." onkeydown="if(event.key==='Enter')wsAddStage()"/>
+        <button class="btn btn-ghost btn-sm" onclick="wsAddStage()">+ Add Stage</button>
+        <button class="btn btn-primary btn-sm" onclick="wsSaveStages()">Save Workflow</button>
+      </div>
+      <div id="ws-stages-saved" style="font-size:11px;color:var(--green);margin-top:8px;display:none;">✓ Workflow saved</div>
+
+      <div class="ws-divider"></div>
+      <div class="ws-section-title">Default Workflow Template</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;" id="ws-workflow-preview"></div>
+    </div>
+
+    <!-- ── TAB: BRANDING ── -->
+    <div id="ws-brand" class="ws-panel" style="display:none;padding:24px;max-width:580px;">
+      <div class="ws-section-title">Brand Identity</div>
+      <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:24px;">
+        <div>
+          <div class="ws-label">Company Name</div>
+          <input id="ws-brand-name" class="ws-input" placeholder="Your company name" oninput="wsBrandPreview()"/>
+        </div>
+        <div>
+          <div class="ws-label">Accent Color</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input type="color" id="ws-brand-color" value="#3b82f6" onchange="wsBrandPreview()" style="width:48px;height:36px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;background:none;padding:2px;"/>
+            <input id="ws-brand-color-hex" class="ws-input" style="max-width:120px;" placeholder="#3b82f6" oninput="wsBrandColorHex()"/>
+            <div style="display:flex;gap:5px;" id="ws-color-presets"></div>
+          </div>
+        </div>
+        <div>
+          <div class="ws-label">Logo</div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div id="ws-logo-preview" style="width:64px;height:64px;border:2px dashed var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;" onclick="document.getElementById('ws-logo-input').click()">🏢</div>
+            <div>
+              <input type="file" id="ws-logo-input" accept="image/*" onchange="wsLogoUpload(this)" style="display:none;"/>
+              <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ws-logo-input').click()">Upload Logo</button>
+              <div style="font-size:11px;color:var(--text4);margin-top:4px;">PNG or JPG. Appears in offer letters and exports.</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="ws-label">Email Signature</div>
+          <textarea id="ws-signature" class="ws-input" style="height:80px;resize:vertical;" placeholder="e.g. Jonah Adelman | The Staffing Specialist | www.thestaffingspecialist.com" oninput="wsDirty()"></textarea>
+        </div>
+      </div>
+
+      <!-- Live preview -->
+      <div class="ws-section-title">Preview</div>
+      <div id="ws-brand-preview-box" style="background:#fff;border-radius:8px;padding:20px;border:1px solid var(--border2);">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:14px;border-bottom:2px solid #1a1a2e;" id="ws-preview-header">
+          <div id="ws-preview-logo" style="font-size:28px;">🏢</div>
+          <div>
+            <div id="ws-preview-name" style="font-size:18px;font-weight:800;color:#1a1a2e;font-family:Arial,sans-serif;">Your Company</div>
+            <div style="font-size:11px;color:#666;font-family:Arial,sans-serif;">Recruiting Platform</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#555;font-family:Arial,sans-serif;">Sample offer letter or email content would appear here with your branding applied throughout.</div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <button class="btn btn-primary btn-sm" onclick="wsSaveBranding()">Save Branding</button>
+      </div>
+    </div>
+
+    <!-- ── TAB: DATA & EXPORTS ── -->
+    <div id="ws-export" class="ws-panel" style="display:none;padding:24px;max-width:640px;">
+      <div class="ws-section-title">Export Your Data</div>
+      <div style="font-size:12px;color:var(--text4);margin-bottom:16px;line-height:1.6;">Your data belongs to you. Export everything at any time, in any format, with zero restrictions.</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px;">
+        <div class="ws-export-card">
+          <div style="font-size:24px;margin-bottom:8px;">👥</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Candidates</div>
+          <div id="ws-cand-count" style="font-size:11px;color:var(--text4);margin-bottom:10px;">Loading...</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-primary btn-xs" onclick="wsExport('candidates','csv')">CSV</button>
+            <button class="btn btn-ghost btn-xs" onclick="wsExport('candidates','json')">JSON</button>
+          </div>
+        </div>
+        <div class="ws-export-card">
+          <div style="font-size:24px;margin-bottom:8px;">💼</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Jobs</div>
+          <div id="ws-jobs-count" style="font-size:11px;color:var(--text4);margin-bottom:10px;">Loading...</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-primary btn-xs" onclick="wsExport('jobs','csv')">CSV</button>
+            <button class="btn btn-ghost btn-xs" onclick="wsExport('jobs','json')">JSON</button>
+          </div>
+        </div>
+        <div class="ws-export-card">
+          <div style="font-size:24px;margin-bottom:8px;">📚</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Templates</div>
+          <div id="ws-lib-count" style="font-size:11px;color:var(--text4);margin-bottom:10px;">Loading...</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-primary btn-xs" onclick="wsExport('templates','json')">JSON</button>
+          </div>
+        </div>
+        <div class="ws-export-card">
+          <div style="font-size:24px;margin-bottom:8px;">📦</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Everything</div>
+          <div style="font-size:11px;color:var(--text4);margin-bottom:10px;">Full workspace backup</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-primary btn-xs" onclick="wsExportAll()">Export All</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ws-divider"></div>
+      <div class="ws-section-title" style="color:var(--red);">Danger Zone</div>
+      <div style="background:var(--bg3);border:1px solid var(--red-border);border-left:3px solid var(--red);border-radius:8px;padding:16px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;">Delete All Workspace Data</div>
+          <div style="font-size:11px;color:var(--text4);">Permanently removes all candidates, jobs, templates, and settings. Cannot be undone.</div>
+        </div>
+        <button class="btn btn-sm" style="background:rgba(240,79,79,.12);color:var(--red);border:1px solid rgba(240,79,79,.3);white-space:nowrap;margin-left:16px;" onclick="wsDeleteAll()">Wipe Workspace</button>
+      </div>
+    </div>
+
+    <!-- ── TAB: DATABASE (SUPABASE) ── -->
+    <div id="ws-database" class="ws-panel" style="display:none;padding:24px;max-width:600px;">
+      <div class="ws-section-title">Database Connection</div>
+      <div style="font-size:12px;color:var(--text4);margin-bottom:20px;line-height:1.6;">
+        Connect to <a href="https://supabase.com" target="_blank" style="color:var(--accent);">Supabase</a> to sync data across devices and users.
+        Without a connection, TalentBase works perfectly — data is saved locally in your browser.
+        All changes mirror to localStorage instantly, so Supabase is enhancement-only.
+      </div>
+
+      <!-- Connection status card -->
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+        <div id="sb-card-dot" style="width:10px;height:10px;border-radius:50%;background:var(--text4);flex-shrink:0;"></div>
+        <div style="flex:1;min-width:0;">
+          <div id="sb-card-title" style="font-size:13px;font-weight:600;color:var(--text);">Not connected</div>
+          <div id="sb-card-sub" style="font-size:11px;color:var(--text4);margin-top:2px;">Enter your Supabase project URL and anon key below</div>
+        </div>
+      </div>
+
+      <!-- Project credentials -->
+      <div style="margin-bottom:16px;">
+        <div class="ws-label">Supabase Project URL</div>
+        <input class="ws-input" id="sb-url-input" placeholder="https://xxxx.supabase.co" style="font-family:'DM Mono',monospace;font-size:12px;"/>
+        <div style="font-size:11px;color:var(--text4);margin-top:4px;">Found in Supabase → Settings → API</div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div class="ws-label">Anon / Public Key</div>
+        <input class="ws-input" id="sb-key-input" type="password" placeholder="eyJhbGciOiJIUzI1NiIs..." style="font-family:'DM Mono',monospace;font-size:12px;"/>
+        <div style="font-size:11px;color:var(--text4);margin-top:4px;">Public key — safe to use in browser</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:24px;">
+        <button class="btn btn-primary" onclick="sbConnect()">Connect Supabase</button>
+        <button class="btn btn-ghost" onclick="sbDisconnect()">Disconnect</button>
+      </div>
+
+      <div class="ws-divider"></div>
+
+      <!-- Auth section -->
+      <div class="ws-section-title">User Authentication</div>
+      <div style="font-size:12px;color:var(--text4);margin-bottom:16px;line-height:1.6;">Sign in with your Supabase account to enable multi-user sync and row-level security.</div>
+
+      <div id="sb-auth-signed-out">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div>
+            <div class="ws-label">Email</div>
+            <input class="ws-input" id="sb-email" type="email" placeholder="you@company.com"/>
+          </div>
+          <div>
+            <div class="ws-label">Password</div>
+            <input class="ws-input" id="sb-password" type="password" placeholder="••••••••"/>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn btn-primary" onclick="sbDoSignIn()">Sign In</button>
+          <div id="sb-auth-err" style="font-size:12px;color:var(--red);"></div>
+        </div>
+      </div>
+
+      <div id="sb-auth-signed-in" style="display:none;">
+        <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--green);">Signed in</div>
+            <div id="sb-user-email" style="font-size:11px;color:var(--text4);margin-top:2px;"></div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="sbDoSignOut()">Sign Out</button>
+        </div>
+        <div style="margin-top:12px;">
+          <button class="btn btn-ghost btn-sm" onclick="sbSyncNow()">&#8635; Sync Now</button>
+          <div id="sb-sync-msg" style="font-size:11px;color:var(--text4);margin-top:6px;"></div>
+        </div>
+      </div>
+
+      <div class="ws-divider"></div>
+
+      <!-- Schema helper -->
+      <div class="ws-section-title">Supabase Table Setup</div>
+      <div style="font-size:12px;color:var(--text4);margin-bottom:10px;line-height:1.6;">Run this SQL in your Supabase SQL editor to create the required tables with row-level security:</div>
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:12px 14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);line-height:1.7;position:relative;">
+        <button onclick="copySbSchema(this)" class="btn btn-ghost btn-xs" style="position:absolute;top:8px;right:8px;">Copy SQL</button>
+        <pre id="sb-schema-sql" style="margin:0;white-space:pre-wrap;padding-right:60px;">-- ═══════════════════════════════════════════════
+-- TalentBase — Supabase Schema + RLS
+-- Run BOTH blocks in Supabase Dashboard → SQL Editor → Run
+-- Run schema first, then RLS block.
+-- ═══════════════════════════════════════════════
+
+-- ── BLOCK 1: TABLES + INDEXES ────────────────────
+CREATE TABLE IF NOT EXISTS candidates (
+  id                text PRIMARY KEY,
+  user_id           uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+  data              jsonb,
+  visible_to_client boolean DEFAULT false,
+  client_company    text,
+  created_at        timestamptz DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS jobs (
+  id         text PRIMARY KEY,
+  user_id    uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+  data       jsonb,
+  created_at timestamptz DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS deals (
+  id         text PRIMARY KEY,
+  user_id    uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+  data       jsonb,
+  created_at timestamptz DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS activity (
+  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  candidate_id text,
+  user_id      uuid REFERENCES auth.users ON DELETE CASCADE,
+  text         text,
+  tracking_id  text,
+  email        text,
+  created_at   timestamptz DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS client_feedback (
+  id             uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  candidate_id   text NOT NULL,
+  client_user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+  decision       text,
+  note           text,
+  created_at     timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS candidates_user_created ON candidates(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS jobs_user_created       ON jobs(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS deals_user_created      ON deals(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS activity_candidate      ON activity(candidate_id, created_at DESC);
+
+ALTER TABLE candidates      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jobs            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE deals           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE activity        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE client_feedback ENABLE ROW LEVEL SECURITY;
+
+-- ── BLOCK 2: RLS POLICIES ────────────────────────
+-- Drop all existing policies first
+DROP POLICY IF EXISTS "own_candidates"         ON candidates;
+DROP POLICY IF EXISTS "own_jobs"               ON jobs;
+DROP POLICY IF EXISTS "own_deals"              ON deals;
+DROP POLICY IF EXISTS "own_activity"           ON activity;
+DROP POLICY IF EXISTS "service_activity"       ON activity;
+DROP POLICY IF EXISTS "client_read_candidates" ON candidates;
+DROP POLICY IF EXISTS "client_own_feedback"    ON client_feedback;
+DROP POLICY IF EXISTS "admin_read_feedback"    ON client_feedback;
+DROP POLICY IF EXISTS "recruiter_candidates"   ON candidates;
+DROP POLICY IF EXISTS "recruiter_jobs"         ON jobs;
+DROP POLICY IF EXISTS "admin_candidates"       ON candidates;
+DROP POLICY IF EXISTS "admin_jobs"             ON jobs;
+DROP POLICY IF EXISTS "admin_deals"            ON deals;
+DROP POLICY IF EXISTS "recruiter_deals"        ON deals;
+DROP POLICY IF EXISTS "admin_activity"         ON activity;
+DROP POLICY IF EXISTS "recruiter_activity"     ON activity;
+DROP POLICY IF EXISTS "staff_read_feedback"    ON client_feedback;
+
+-- Helper functions
+CREATE OR REPLACE FUNCTION current_user_role()
+RETURNS text LANGUAGE sql STABLE AS $$
+  SELECT coalesce(auth.jwt()->'user_metadata'->>'role','admin')
+$$;
+CREATE OR REPLACE FUNCTION current_user_company()
+RETURNS text LANGUAGE sql STABLE AS $$
+  SELECT auth.jwt()->'user_metadata'->>'client_company'
+$$;
+-- workspace_owner_id scopes client to a single recruiter workspace
+CREATE OR REPLACE FUNCTION current_workspace_owner()
+RETURNS uuid LANGUAGE sql STABLE AS $$
+  SELECT nullif(auth.jwt()->'user_metadata'->>'workspace_owner_id','')::uuid
+$$;
+
+-- Admin policies
+CREATE POLICY "admin_candidates" ON candidates FOR ALL
+  USING  (auth.uid()=user_id AND current_user_role()='admin')
+  WITH CHECK (auth.uid()=user_id AND current_user_role()='admin');
+CREATE POLICY "admin_jobs" ON jobs FOR ALL
+  USING  (auth.uid()=user_id AND current_user_role()='admin')
+  WITH CHECK (auth.uid()=user_id AND current_user_role()='admin');
+CREATE POLICY "admin_deals" ON deals FOR ALL
+  USING  (auth.uid()=user_id AND current_user_role()='admin')
+  WITH CHECK (auth.uid()=user_id AND current_user_role()='admin');
+CREATE POLICY "admin_activity" ON activity FOR ALL
+  USING  (auth.uid()=user_id AND current_user_role()='admin')
+  WITH CHECK (auth.uid()=user_id AND current_user_role()='admin');
+
+-- Recruiter policies
+CREATE POLICY "recruiter_candidates" ON candidates FOR ALL
+  USING  (auth.uid()=user_id AND current_user_role()='recruiter')
+  WITH CHECK (auth.uid()=user_id AND current_user_role()='recruiter');
+CREATE POLICY "recruiter_jobs" ON jobs FOR ALL
+  USING  (auth.uid()=user_id AND current_user_role()='recruiter')
+  WITH CHECK (auth.uid()=user_id AND current_user_role()='recruiter');
+CREATE POLICY "recruiter_deals" ON deals FOR ALL
+  USING  (auth.uid()=user_id AND current_user_role()='recruiter')
+  WITH CHECK (auth.uid()=user_id AND current_user_role()='recruiter');
+CREATE POLICY "recruiter_activity" ON activity FOR ALL
+  USING  (auth.uid()=user_id AND current_user_role()='recruiter')
+  WITH CHECK (auth.uid()=user_id AND current_user_role()='recruiter');
+
+-- Client: read-only, scoped by workspace_owner_id + company + visible flag
+-- workspace_owner_id prevents cross-workspace leaks (set when creating client user)
+CREATE POLICY "client_read_candidates" ON candidates FOR SELECT
+  USING (
+    current_user_role()='client'
+    AND visible_to_client=true
+    AND (current_workspace_owner() IS NULL OR user_id=current_workspace_owner())
+    AND (current_user_company() IS NULL OR client_company=current_user_company())
+  );
+
+-- Client feedback
+CREATE POLICY "client_own_feedback" ON client_feedback FOR ALL
+  USING (auth.uid()=client_user_id) WITH CHECK (auth.uid()=client_user_id);
+CREATE POLICY "staff_read_feedback" ON client_feedback FOR SELECT
+  USING (current_user_role() IN ('admin','recruiter'));
+
+-- ── USER SETUP ────────────────────────────────────
+-- Admin:     { "role": "admin" }
+-- Recruiter: { "role": "recruiter" }
+-- Client:    { "role": "client", "client_company": "HiARC",
+--              "workspace_owner_id": "&lt;your-admin-uuid&gt;" }
+--
+-- Mark candidates visible to a client:
+-- UPDATE candidates SET visible_to_client=true, client_company='HiARC'
+-- WHERE id IN ('id1','id2');
+--
+-- Verify:
+-- SELECT tablename,policyname FROM pg_policies
+-- WHERE tablename IN ('candidates','jobs','deals','activity','client_feedback')
+-- ORDER BY tablename;</pre>
+      </div>
+    </div>
+
+    <!-- ── TAB: EMAIL (RESEND) ── -->
+    <div id="ws-email" class="ws-panel" style="display:none;padding:24px;max-width:600px;">
+      <div class="ws-section-title">Email Sending</div>
+      <div style="font-size:12px;color:var(--text4);margin-bottom:20px;line-height:1.6;">
+        Connect your <a href="https://resend.com" target="_blank" style="color:var(--accent);">Resend</a> account to send real emails from TalentBase.
+        Emails are sent via a secure server-side proxy — your API key never touches the browser.
+        Without configuration, outreach is still logged and composable via Gmail.
+      </div>
+
+      <!-- Status card -->
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+        <div id="email-status-dot" style="width:10px;height:10px;border-radius:50%;background:var(--text4);flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div id="email-status-title" style="font-size:13px;font-weight:600;color:var(--text);">Not configured</div>
+          <div id="email-status-sub" style="font-size:11px;color:var(--text4);margin-top:2px;">Enter your proxy URL below to enable real sending</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="testEmailConnection()">Test</button>
+      </div>
+
+      <!-- Proxy endpoint -->
+      <div style="margin-bottom:16px;">
+        <div class="ws-label">Vercel Domain <span style="color:var(--text4);font-weight:400;">For tracking pixel</span></div>
+        <input class="ws-input" id="email-vercel-domain" placeholder="https://your-site.vercel.app" style="font-family:'DM Mono',monospace;font-size:12px;"/>
+        <div style="font-size:11px;color:var(--text4);margin-top:4px;">Your Vercel deployment URL — used for open-tracking pixel. Must match your deployed domain exactly.</div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div class="ws-label">Email Proxy URL</div>
+        <input class="ws-input" id="email-proxy-url" placeholder="https://your-site.vercel.app/api/send-email" style="font-family:'DM Mono',monospace;font-size:12px;"/>
+        <div style="font-size:11px;color:var(--text4);margin-top:4px;">
+          Your deployed <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">api/send-email.js</code> Vercel function URL.
+          Set <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">RESEND_API_KEY</code> in your Vercel environment variables.
+        </div>
+      </div>
+
+      <!-- Sender identity -->
+      <div style="margin-bottom:16px;">
+        <div class="ws-label">From Name</div>
+        <input class="ws-input" id="email-from-name" placeholder="Jonah Adelman" />
+      </div>
+      <div style="margin-bottom:20px;">
+        <div class="ws-label">From Address <span style="color:var(--text4);font-weight:400;">(must be verified in Resend)</span></div>
+        <input class="ws-input" id="email-from-addr" placeholder="jonah@thestaffingspecialist.com" />
+        <div style="font-size:11px;color:var(--text4);margin-top:4px;">Add and verify this domain in Resend → Domains</div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <div class="ws-label">Email Secret <span style="color:var(--text4);font-weight:400;">Security token for send-email.js</span></div>
+        <input class="ws-input" id="email-secret-field" type="password" placeholder="Paste your EMAIL_SECRET value here" style="font-family:'DM Mono',monospace;font-size:12px;"/>
+        <div style="font-size:11px;color:var(--text4);margin-top:4px;">
+          Generate once: <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">openssl rand -hex 32</code> →
+          add as <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">EMAIL_SECRET</code> in Vercel env vars, and paste the same value here.
+          Prevents anyone else from using your email relay.
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:24px;">
+        <button class="btn btn-primary" onclick="saveEmailConfig()">Save Configuration</button>
+        <button class="btn btn-ghost" onclick="clearEmailConfig()">Clear</button>
+      </div>
+
+      <div class="ws-divider"></div>
+
+      <!-- Send approval toggle -->
+      <div class="ws-section-title">Approval Mode</div>
+      <div style="font-size:12px;color:var(--text4);margin-bottom:14px;line-height:1.6;">
+        Control whether auto-pipeline outreach sends immediately or waits for manual approval.
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:14px 16px;margin-bottom:10px;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">Require approval before sending</div>
+          <div style="font-size:11px;color:var(--text4);margin-top:2px;">Auto-pipeline queues outreach — you review and approve each email before it sends</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0;margin-left:12px;">
+          <input type="checkbox" id="email-approval-toggle" onchange="saveEmailConfig()" style="opacity:0;width:0;height:0;"/>
+          <span id="email-toggle-track" onclick="document.getElementById('email-approval-toggle').click()" style="position:absolute;cursor:pointer;inset:0;background:var(--bg5);border-radius:12px;transition:.2s;"></span>
+          <span id="email-toggle-thumb" style="position:absolute;content:'';height:18px;width:18px;left:3px;bottom:3px;background:var(--text4);border-radius:50%;transition:.2s;pointer-events:none;"></span>
+        </label>
+      </div>
+
+      <div class="ws-divider"></div>
+
+      <!-- Deployment guide -->
+      <div class="ws-section-title">Deployment Setup</div>
+      <div style="font-size:12px;color:var(--text4);margin-bottom:10px;line-height:1.6;">
+        The email proxy function lives in your GitHub repo at <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">api/send-email.js</code>.
+        Vercel deploys it automatically on push.
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:12px 14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);line-height:1.8;">
+        1. Push api/send-email.js to GitHub<br>
+        2. In Vercel project → Settings → Environment Variables<br>
+        3. Add: <strong style="color:var(--text2);">RESEND_API_KEY</strong> = your Resend API key<br>
+        4. Redeploy (or it auto-deploys on next push)<br>
+        5. Paste your Vercel URL above: https://yoursite.vercel.app/api/send-email
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     TALENTBASE V2 — COMMAND CENTER RECRUITING OS
+     Safe mode: all new code wrapped in TALENTBASE_V2 checks
+     Does NOT modify any existing functions
+═══════════════════════════════════════════════════════════════ -->
+
+<!-- V2: Command Center view (hidden until V2 enabled) -->
+<div class="view" id="v-command" style="flex-direction:column;overflow:hidden;">
+  <div class="topbar" style="display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <div class="topbar-title" style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:16px;">&#9889;</span> Command Center
+      </div>
+      <div class="topbar-sub" id="cc-subtitle">What to do today</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div id="cc-clock" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;"></div>
+      <button class="btn btn-ghost btn-sm" onclick="v2ToggleMode()" id="v2-toggle-btn" style="font-size:11px;white-space:nowrap;">Switch to Classic</button>
+    </div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:16px;" id="cc-body">
+    <div style="text-align:center;padding:40px;color:var(--text4);font-size:13px;">Loading command center...</div>
+  </div>
+</div>
+
+<!-- V2: Talent Radar view -->
+<div class="view" id="v-radar" style="flex-direction:column;">
+  <div class="topbar">
+    <div><div class="topbar-title">&#128225; Talent Radar</div><div class="topbar-sub">Unassigned candidates — ready to place</div></div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px 20px;" id="radar-body"></div>
 </div>
 
 </div><!-- /main -->
@@ -11246,575 +11857,7 @@ document.addEventListener('DOMContentLoaded', function(){ initApp(); });
 
 
 <!-- ═══════════════ WORKSPACE SETTINGS ═══════════════ -->
-<div class="view" id="v-workspace" style="flex-direction:column;overflow:hidden;">
-  <div class="topbar" style="flex-shrink:0;">
-    <div>
-      <div class="topbar-title">Workspace Settings</div>
-      <div class="topbar-sub">Manage your data, workflow, branding, and exports</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span style="font-size:11px;background:rgba(46,168,98,.12);color:var(--green);border:1px solid rgba(46,168,98,.25);padding:4px 10px;border-radius:20px;font-weight:600;">Your data is yours. Export anytime. No lock-in.</span>
-    </div>
-  </div>
 
-  <!-- Tab bar -->
-  <div style="display:flex;gap:0;border-bottom:1px solid var(--border2);background:var(--bg2);flex-shrink:0;padding:0 20px;">
-    <button class="ws-tab on" data-tab="ws-general"    onclick="wsTab(this,'ws-general')">General</button>
-    <button class="ws-tab"    data-tab="ws-users"      onclick="wsTab(this,'ws-users')">Users &amp; Permissions</button>
-    <button class="ws-tab"    data-tab="ws-workflow"   onclick="wsTab(this,'ws-workflow')">Workflow</button>
-    <button class="ws-tab"    data-tab="ws-brand"      onclick="wsTab(this,'ws-brand')">Branding</button>
-    <button class="ws-tab"    data-tab="ws-export"     onclick="wsTab(this,'ws-export')">Data &amp; Exports</button>
-    <button class="ws-tab"    data-tab="ws-database"   onclick="wsTab(this,'ws-database')">&#9737; Database</button>
-    <button class="ws-tab"    data-tab="ws-email"      onclick="wsTab(this,'ws-email')">&#9993; Email</button>
-  </div>
-
-  <div style="flex:1;overflow-y:auto;">
-
-    <!-- ── TAB: GENERAL ── -->
-    <div id="ws-general" class="ws-panel" style="padding:24px;max-width:600px;">
-      <div class="ws-section-title">Workspace Information</div>
-      <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
-        <div>
-          <div class="ws-label">Workspace Name</div>
-          <input id="ws-name" class="ws-input" placeholder="e.g. The Staffing Specialist" oninput="wsDirty()"/>
-        </div>
-        <div>
-          <div class="ws-label">Owner / Admin Name</div>
-          <input id="ws-owner" class="ws-input" placeholder="e.g. Jonah Adelman" oninput="wsDirty()"/>
-        </div>
-        <div>
-          <div class="ws-label">Industry Focus</div>
-          <input id="ws-industry" class="ws-input" placeholder="e.g. Medical Device, Life Sciences" oninput="wsDirty()"/>
-        </div>
-        <div>
-          <div class="ws-label">Website</div>
-          <input id="ws-website" class="ws-input" placeholder="https://thestaffingspecialist.com" oninput="wsDirty()"/>
-        </div>
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="wsSaveGeneral()">Save Settings</button>
-
-      <div class="ws-divider"></div>
-      <div class="ws-section-title">Trust &amp; Ownership</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div class="ws-trust-row"><span class="ws-trust-icon">🔒</span><div><strong>Your data is fully isolated</strong><div class="ws-trust-sub">All candidates, jobs, and templates belong exclusively to this workspace.</div></div></div>
-        <div class="ws-trust-row"><span class="ws-trust-icon">📦</span><div><strong>Export anytime, no lock-in</strong><div class="ws-trust-sub">Download everything as CSV or JSON in one click. Always.</div></div></div>
-        <div class="ws-trust-row"><span class="ws-trust-icon">🗑️</span><div><strong>Delete everything instantly</strong><div class="ws-trust-sub">Full workspace wipe available at any time. No residual data.</div></div></div>
-        <div class="ws-trust-row"><span class="ws-trust-icon">🔐</span><div><strong>Enterprise-grade control</strong><div class="ws-trust-sub">Role-based permissions. Audit log. Version history on all templates.</div></div></div>
-      </div>
-    </div>
-
-    <!-- ── TAB: USERS ── -->
-    <div id="ws-users" class="ws-panel" style="display:none;padding:24px;max-width:700px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <div class="ws-section-title" style="margin-bottom:0;">Team Members</div>
-        <button class="btn btn-primary btn-sm" onclick="wsAddUser()">+ Invite User</button>
-      </div>
-      <div id="ws-user-list"></div>
-
-      <div class="ws-divider"></div>
-      <div class="ws-section-title">Role Permissions</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-        <div class="ws-role-card">
-          <div style="font-size:20px;margin-bottom:6px;">⚙️</div>
-          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Admin</div>
-          <div style="font-size:11px;color:var(--text4);line-height:1.6;">Full access<br>Delete &amp; export<br>Manage users<br>Workspace settings</div>
-        </div>
-        <div class="ws-role-card">
-          <div style="font-size:20px;margin-bottom:6px;">🎯</div>
-          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Recruiter</div>
-          <div style="font-size:11px;color:var(--text4);line-height:1.6;">Add/edit candidates<br>Run AI tools<br>View pipeline &amp; deals<br>No delete or export</div>
-        </div>
-        <div class="ws-role-card">
-          <div style="font-size:20px;margin-bottom:6px;">👤</div>
-          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Client</div>
-          <div style="font-size:11px;color:var(--text4);line-height:1.6;">Portal only<br>Flagged candidates<br>Approve / reject<br>No internal data</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── TAB: WORKFLOW ── -->
-    <div id="ws-workflow" class="ws-panel" style="display:none;padding:24px;max-width:640px;">
-      <div class="ws-section-title">Pipeline Stages</div>
-      <div style="font-size:12px;color:var(--text4);margin-bottom:16px;">Drag to reorder. Double-click to rename. Changes apply immediately to all candidate records.</div>
-      <div id="ws-stages-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;"></div>
-      <div style="display:flex;gap:8px;">
-        <input id="ws-new-stage" class="ws-input" style="max-width:220px;" placeholder="New stage name..." onkeydown="if(event.key==='Enter')wsAddStage()"/>
-        <button class="btn btn-ghost btn-sm" onclick="wsAddStage()">+ Add Stage</button>
-        <button class="btn btn-primary btn-sm" onclick="wsSaveStages()">Save Workflow</button>
-      </div>
-      <div id="ws-stages-saved" style="font-size:11px;color:var(--green);margin-top:8px;display:none;">✓ Workflow saved</div>
-
-      <div class="ws-divider"></div>
-      <div class="ws-section-title">Default Workflow Template</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;" id="ws-workflow-preview"></div>
-    </div>
-
-    <!-- ── TAB: BRANDING ── -->
-    <div id="ws-brand" class="ws-panel" style="display:none;padding:24px;max-width:580px;">
-      <div class="ws-section-title">Brand Identity</div>
-      <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:24px;">
-        <div>
-          <div class="ws-label">Company Name</div>
-          <input id="ws-brand-name" class="ws-input" placeholder="Your company name" oninput="wsBrandPreview()"/>
-        </div>
-        <div>
-          <div class="ws-label">Accent Color</div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <input type="color" id="ws-brand-color" value="#3b82f6" onchange="wsBrandPreview()" style="width:48px;height:36px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;background:none;padding:2px;"/>
-            <input id="ws-brand-color-hex" class="ws-input" style="max-width:120px;" placeholder="#3b82f6" oninput="wsBrandColorHex()"/>
-            <div style="display:flex;gap:5px;" id="ws-color-presets"></div>
-          </div>
-        </div>
-        <div>
-          <div class="ws-label">Logo</div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div id="ws-logo-preview" style="width:64px;height:64px;border:2px dashed var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;" onclick="document.getElementById('ws-logo-input').click()">🏢</div>
-            <div>
-              <input type="file" id="ws-logo-input" accept="image/*" onchange="wsLogoUpload(this)" style="display:none;"/>
-              <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ws-logo-input').click()">Upload Logo</button>
-              <div style="font-size:11px;color:var(--text4);margin-top:4px;">PNG or JPG. Appears in offer letters and exports.</div>
-            </div>
-          </div>
-        </div>
-        <div>
-          <div class="ws-label">Email Signature</div>
-          <textarea id="ws-signature" class="ws-input" style="height:80px;resize:vertical;" placeholder="e.g. Jonah Adelman | The Staffing Specialist | www.thestaffingspecialist.com" oninput="wsDirty()"></textarea>
-        </div>
-      </div>
-
-      <!-- Live preview -->
-      <div class="ws-section-title">Preview</div>
-      <div id="ws-brand-preview-box" style="background:#fff;border-radius:8px;padding:20px;border:1px solid var(--border2);">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:14px;border-bottom:2px solid #1a1a2e;" id="ws-preview-header">
-          <div id="ws-preview-logo" style="font-size:28px;">🏢</div>
-          <div>
-            <div id="ws-preview-name" style="font-size:18px;font-weight:800;color:#1a1a2e;font-family:Arial,sans-serif;">Your Company</div>
-            <div style="font-size:11px;color:#666;font-family:Arial,sans-serif;">Recruiting Platform</div>
-          </div>
-        </div>
-        <div style="font-size:12px;color:#555;font-family:Arial,sans-serif;">Sample offer letter or email content would appear here with your branding applied throughout.</div>
-      </div>
-
-      <div style="margin-top:16px;">
-        <button class="btn btn-primary btn-sm" onclick="wsSaveBranding()">Save Branding</button>
-      </div>
-    </div>
-
-    <!-- ── TAB: DATA & EXPORTS ── -->
-    <div id="ws-export" class="ws-panel" style="display:none;padding:24px;max-width:640px;">
-      <div class="ws-section-title">Export Your Data</div>
-      <div style="font-size:12px;color:var(--text4);margin-bottom:16px;line-height:1.6;">Your data belongs to you. Export everything at any time, in any format, with zero restrictions.</div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px;">
-        <div class="ws-export-card">
-          <div style="font-size:24px;margin-bottom:8px;">👥</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Candidates</div>
-          <div id="ws-cand-count" style="font-size:11px;color:var(--text4);margin-bottom:10px;">Loading...</div>
-          <div style="display:flex;gap:6px;">
-            <button class="btn btn-primary btn-xs" onclick="wsExport('candidates','csv')">CSV</button>
-            <button class="btn btn-ghost btn-xs" onclick="wsExport('candidates','json')">JSON</button>
-          </div>
-        </div>
-        <div class="ws-export-card">
-          <div style="font-size:24px;margin-bottom:8px;">💼</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Jobs</div>
-          <div id="ws-jobs-count" style="font-size:11px;color:var(--text4);margin-bottom:10px;">Loading...</div>
-          <div style="display:flex;gap:6px;">
-            <button class="btn btn-primary btn-xs" onclick="wsExport('jobs','csv')">CSV</button>
-            <button class="btn btn-ghost btn-xs" onclick="wsExport('jobs','json')">JSON</button>
-          </div>
-        </div>
-        <div class="ws-export-card">
-          <div style="font-size:24px;margin-bottom:8px;">📚</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Templates</div>
-          <div id="ws-lib-count" style="font-size:11px;color:var(--text4);margin-bottom:10px;">Loading...</div>
-          <div style="display:flex;gap:6px;">
-            <button class="btn btn-primary btn-xs" onclick="wsExport('templates','json')">JSON</button>
-          </div>
-        </div>
-        <div class="ws-export-card">
-          <div style="font-size:24px;margin-bottom:8px;">📦</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Everything</div>
-          <div style="font-size:11px;color:var(--text4);margin-bottom:10px;">Full workspace backup</div>
-          <div style="display:flex;gap:6px;">
-            <button class="btn btn-primary btn-xs" onclick="wsExportAll()">Export All</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="ws-divider"></div>
-      <div class="ws-section-title" style="color:var(--red);">Danger Zone</div>
-      <div style="background:var(--bg3);border:1px solid var(--red-border);border-left:3px solid var(--red);border-radius:8px;padding:16px;display:flex;align-items:center;justify-content:space-between;">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;">Delete All Workspace Data</div>
-          <div style="font-size:11px;color:var(--text4);">Permanently removes all candidates, jobs, templates, and settings. Cannot be undone.</div>
-        </div>
-        <button class="btn btn-sm" style="background:rgba(240,79,79,.12);color:var(--red);border:1px solid rgba(240,79,79,.3);white-space:nowrap;margin-left:16px;" onclick="wsDeleteAll()">Wipe Workspace</button>
-      </div>
-    </div>
-
-    <!-- ── TAB: DATABASE (SUPABASE) ── -->
-    <div id="ws-database" class="ws-panel" style="display:none;padding:24px;max-width:600px;">
-      <div class="ws-section-title">Database Connection</div>
-      <div style="font-size:12px;color:var(--text4);margin-bottom:20px;line-height:1.6;">
-        Connect to <a href="https://supabase.com" target="_blank" style="color:var(--accent);">Supabase</a> to sync data across devices and users.
-        Without a connection, TalentBase works perfectly — data is saved locally in your browser.
-        All changes mirror to localStorage instantly, so Supabase is enhancement-only.
-      </div>
-
-      <!-- Connection status card -->
-      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
-        <div id="sb-card-dot" style="width:10px;height:10px;border-radius:50%;background:var(--text4);flex-shrink:0;"></div>
-        <div style="flex:1;min-width:0;">
-          <div id="sb-card-title" style="font-size:13px;font-weight:600;color:var(--text);">Not connected</div>
-          <div id="sb-card-sub" style="font-size:11px;color:var(--text4);margin-top:2px;">Enter your Supabase project URL and anon key below</div>
-        </div>
-      </div>
-
-      <!-- Project credentials -->
-      <div style="margin-bottom:16px;">
-        <div class="ws-label">Supabase Project URL</div>
-        <input class="ws-input" id="sb-url-input" placeholder="https://xxxx.supabase.co" style="font-family:'DM Mono',monospace;font-size:12px;"/>
-        <div style="font-size:11px;color:var(--text4);margin-top:4px;">Found in Supabase → Settings → API</div>
-      </div>
-      <div style="margin-bottom:16px;">
-        <div class="ws-label">Anon / Public Key</div>
-        <input class="ws-input" id="sb-key-input" type="password" placeholder="eyJhbGciOiJIUzI1NiIs..." style="font-family:'DM Mono',monospace;font-size:12px;"/>
-        <div style="font-size:11px;color:var(--text4);margin-top:4px;">Public key — safe to use in browser</div>
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:24px;">
-        <button class="btn btn-primary" onclick="sbConnect()">Connect Supabase</button>
-        <button class="btn btn-ghost" onclick="sbDisconnect()">Disconnect</button>
-      </div>
-
-      <div class="ws-divider"></div>
-
-      <!-- Auth section -->
-      <div class="ws-section-title">User Authentication</div>
-      <div style="font-size:12px;color:var(--text4);margin-bottom:16px;line-height:1.6;">Sign in with your Supabase account to enable multi-user sync and row-level security.</div>
-
-      <div id="sb-auth-signed-out">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-          <div>
-            <div class="ws-label">Email</div>
-            <input class="ws-input" id="sb-email" type="email" placeholder="you@company.com"/>
-          </div>
-          <div>
-            <div class="ws-label">Password</div>
-            <input class="ws-input" id="sb-password" type="password" placeholder="••••••••"/>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <button class="btn btn-primary" onclick="sbDoSignIn()">Sign In</button>
-          <div id="sb-auth-err" style="font-size:12px;color:var(--red);"></div>
-        </div>
-      </div>
-
-      <div id="sb-auth-signed-in" style="display:none;">
-        <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--green);">Signed in</div>
-            <div id="sb-user-email" style="font-size:11px;color:var(--text4);margin-top:2px;"></div>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="sbDoSignOut()">Sign Out</button>
-        </div>
-        <div style="margin-top:12px;">
-          <button class="btn btn-ghost btn-sm" onclick="sbSyncNow()">&#8635; Sync Now</button>
-          <div id="sb-sync-msg" style="font-size:11px;color:var(--text4);margin-top:6px;"></div>
-        </div>
-      </div>
-
-      <div class="ws-divider"></div>
-
-      <!-- Schema helper -->
-      <div class="ws-section-title">Supabase Table Setup</div>
-      <div style="font-size:12px;color:var(--text4);margin-bottom:10px;line-height:1.6;">Run this SQL in your Supabase SQL editor to create the required tables with row-level security:</div>
-      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:12px 14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);line-height:1.7;position:relative;">
-        <button onclick="copySbSchema(this)" class="btn btn-ghost btn-xs" style="position:absolute;top:8px;right:8px;">Copy SQL</button>
-        <pre id="sb-schema-sql" style="margin:0;white-space:pre-wrap;padding-right:60px;">-- ═══════════════════════════════════════════════
--- TalentBase — Supabase Schema + RLS
--- Run BOTH blocks in Supabase Dashboard → SQL Editor → Run
--- Run schema first, then RLS block.
--- ═══════════════════════════════════════════════
-
--- ── BLOCK 1: TABLES + INDEXES ────────────────────
-CREATE TABLE IF NOT EXISTS candidates (
-  id                text PRIMARY KEY,
-  user_id           uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
-  data              jsonb,
-  visible_to_client boolean DEFAULT false,
-  client_company    text,
-  created_at        timestamptz DEFAULT now()
-);
-CREATE TABLE IF NOT EXISTS jobs (
-  id         text PRIMARY KEY,
-  user_id    uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
-  data       jsonb,
-  created_at timestamptz DEFAULT now()
-);
-CREATE TABLE IF NOT EXISTS deals (
-  id         text PRIMARY KEY,
-  user_id    uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
-  data       jsonb,
-  created_at timestamptz DEFAULT now()
-);
-CREATE TABLE IF NOT EXISTS activity (
-  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  candidate_id text,
-  user_id      uuid REFERENCES auth.users ON DELETE CASCADE,
-  text         text,
-  tracking_id  text,
-  email        text,
-  created_at   timestamptz DEFAULT now()
-);
-CREATE TABLE IF NOT EXISTS client_feedback (
-  id             uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  candidate_id   text NOT NULL,
-  client_user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
-  decision       text,
-  note           text,
-  created_at     timestamptz DEFAULT now()
-);
-
-CREATE INDEX IF NOT EXISTS candidates_user_created ON candidates(user_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS jobs_user_created       ON jobs(user_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS deals_user_created      ON deals(user_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS activity_candidate      ON activity(candidate_id, created_at DESC);
-
-ALTER TABLE candidates      ENABLE ROW LEVEL SECURITY;
-ALTER TABLE jobs            ENABLE ROW LEVEL SECURITY;
-ALTER TABLE deals           ENABLE ROW LEVEL SECURITY;
-ALTER TABLE activity        ENABLE ROW LEVEL SECURITY;
-ALTER TABLE client_feedback ENABLE ROW LEVEL SECURITY;
-
--- ── BLOCK 2: RLS POLICIES ────────────────────────
--- Drop all existing policies first
-DROP POLICY IF EXISTS "own_candidates"         ON candidates;
-DROP POLICY IF EXISTS "own_jobs"               ON jobs;
-DROP POLICY IF EXISTS "own_deals"              ON deals;
-DROP POLICY IF EXISTS "own_activity"           ON activity;
-DROP POLICY IF EXISTS "service_activity"       ON activity;
-DROP POLICY IF EXISTS "client_read_candidates" ON candidates;
-DROP POLICY IF EXISTS "client_own_feedback"    ON client_feedback;
-DROP POLICY IF EXISTS "admin_read_feedback"    ON client_feedback;
-DROP POLICY IF EXISTS "recruiter_candidates"   ON candidates;
-DROP POLICY IF EXISTS "recruiter_jobs"         ON jobs;
-DROP POLICY IF EXISTS "admin_candidates"       ON candidates;
-DROP POLICY IF EXISTS "admin_jobs"             ON jobs;
-DROP POLICY IF EXISTS "admin_deals"            ON deals;
-DROP POLICY IF EXISTS "recruiter_deals"        ON deals;
-DROP POLICY IF EXISTS "admin_activity"         ON activity;
-DROP POLICY IF EXISTS "recruiter_activity"     ON activity;
-DROP POLICY IF EXISTS "staff_read_feedback"    ON client_feedback;
-
--- Helper functions
-CREATE OR REPLACE FUNCTION current_user_role()
-RETURNS text LANGUAGE sql STABLE AS $$
-  SELECT coalesce(auth.jwt()->'user_metadata'->>'role','admin')
-$$;
-CREATE OR REPLACE FUNCTION current_user_company()
-RETURNS text LANGUAGE sql STABLE AS $$
-  SELECT auth.jwt()->'user_metadata'->>'client_company'
-$$;
--- workspace_owner_id scopes client to a single recruiter workspace
-CREATE OR REPLACE FUNCTION current_workspace_owner()
-RETURNS uuid LANGUAGE sql STABLE AS $$
-  SELECT nullif(auth.jwt()->'user_metadata'->>'workspace_owner_id','')::uuid
-$$;
-
--- Admin policies
-CREATE POLICY "admin_candidates" ON candidates FOR ALL
-  USING  (auth.uid()=user_id AND current_user_role()='admin')
-  WITH CHECK (auth.uid()=user_id AND current_user_role()='admin');
-CREATE POLICY "admin_jobs" ON jobs FOR ALL
-  USING  (auth.uid()=user_id AND current_user_role()='admin')
-  WITH CHECK (auth.uid()=user_id AND current_user_role()='admin');
-CREATE POLICY "admin_deals" ON deals FOR ALL
-  USING  (auth.uid()=user_id AND current_user_role()='admin')
-  WITH CHECK (auth.uid()=user_id AND current_user_role()='admin');
-CREATE POLICY "admin_activity" ON activity FOR ALL
-  USING  (auth.uid()=user_id AND current_user_role()='admin')
-  WITH CHECK (auth.uid()=user_id AND current_user_role()='admin');
-
--- Recruiter policies
-CREATE POLICY "recruiter_candidates" ON candidates FOR ALL
-  USING  (auth.uid()=user_id AND current_user_role()='recruiter')
-  WITH CHECK (auth.uid()=user_id AND current_user_role()='recruiter');
-CREATE POLICY "recruiter_jobs" ON jobs FOR ALL
-  USING  (auth.uid()=user_id AND current_user_role()='recruiter')
-  WITH CHECK (auth.uid()=user_id AND current_user_role()='recruiter');
-CREATE POLICY "recruiter_deals" ON deals FOR ALL
-  USING  (auth.uid()=user_id AND current_user_role()='recruiter')
-  WITH CHECK (auth.uid()=user_id AND current_user_role()='recruiter');
-CREATE POLICY "recruiter_activity" ON activity FOR ALL
-  USING  (auth.uid()=user_id AND current_user_role()='recruiter')
-  WITH CHECK (auth.uid()=user_id AND current_user_role()='recruiter');
-
--- Client: read-only, scoped by workspace_owner_id + company + visible flag
--- workspace_owner_id prevents cross-workspace leaks (set when creating client user)
-CREATE POLICY "client_read_candidates" ON candidates FOR SELECT
-  USING (
-    current_user_role()='client'
-    AND visible_to_client=true
-    AND (current_workspace_owner() IS NULL OR user_id=current_workspace_owner())
-    AND (current_user_company() IS NULL OR client_company=current_user_company())
-  );
-
--- Client feedback
-CREATE POLICY "client_own_feedback" ON client_feedback FOR ALL
-  USING (auth.uid()=client_user_id) WITH CHECK (auth.uid()=client_user_id);
-CREATE POLICY "staff_read_feedback" ON client_feedback FOR SELECT
-  USING (current_user_role() IN ('admin','recruiter'));
-
--- ── USER SETUP ────────────────────────────────────
--- Admin:     { "role": "admin" }
--- Recruiter: { "role": "recruiter" }
--- Client:    { "role": "client", "client_company": "HiARC",
---              "workspace_owner_id": "&lt;your-admin-uuid&gt;" }
---
--- Mark candidates visible to a client:
--- UPDATE candidates SET visible_to_client=true, client_company='HiARC'
--- WHERE id IN ('id1','id2');
---
--- Verify:
--- SELECT tablename,policyname FROM pg_policies
--- WHERE tablename IN ('candidates','jobs','deals','activity','client_feedback')
--- ORDER BY tablename;</pre>
-      </div>
-    </div>
-
-    <!-- ── TAB: EMAIL (RESEND) ── -->
-    <div id="ws-email" class="ws-panel" style="display:none;padding:24px;max-width:600px;">
-      <div class="ws-section-title">Email Sending</div>
-      <div style="font-size:12px;color:var(--text4);margin-bottom:20px;line-height:1.6;">
-        Connect your <a href="https://resend.com" target="_blank" style="color:var(--accent);">Resend</a> account to send real emails from TalentBase.
-        Emails are sent via a secure server-side proxy — your API key never touches the browser.
-        Without configuration, outreach is still logged and composable via Gmail.
-      </div>
-
-      <!-- Status card -->
-      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
-        <div id="email-status-dot" style="width:10px;height:10px;border-radius:50%;background:var(--text4);flex-shrink:0;"></div>
-        <div style="flex:1;">
-          <div id="email-status-title" style="font-size:13px;font-weight:600;color:var(--text);">Not configured</div>
-          <div id="email-status-sub" style="font-size:11px;color:var(--text4);margin-top:2px;">Enter your proxy URL below to enable real sending</div>
-        </div>
-        <button class="btn btn-ghost btn-sm" onclick="testEmailConnection()">Test</button>
-      </div>
-
-      <!-- Proxy endpoint -->
-      <div style="margin-bottom:16px;">
-        <div class="ws-label">Vercel Domain <span style="color:var(--text4);font-weight:400;">For tracking pixel</span></div>
-        <input class="ws-input" id="email-vercel-domain" placeholder="https://your-site.vercel.app" style="font-family:'DM Mono',monospace;font-size:12px;"/>
-        <div style="font-size:11px;color:var(--text4);margin-top:4px;">Your Vercel deployment URL — used for open-tracking pixel. Must match your deployed domain exactly.</div>
-      </div>
-      <div style="margin-bottom:16px;">
-        <div class="ws-label">Email Proxy URL</div>
-        <input class="ws-input" id="email-proxy-url" placeholder="https://your-site.vercel.app/api/send-email" style="font-family:'DM Mono',monospace;font-size:12px;"/>
-        <div style="font-size:11px;color:var(--text4);margin-top:4px;">
-          Your deployed <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">api/send-email.js</code> Vercel function URL.
-          Set <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">RESEND_API_KEY</code> in your Vercel environment variables.
-        </div>
-      </div>
-
-      <!-- Sender identity -->
-      <div style="margin-bottom:16px;">
-        <div class="ws-label">From Name</div>
-        <input class="ws-input" id="email-from-name" placeholder="Jonah Adelman" />
-      </div>
-      <div style="margin-bottom:20px;">
-        <div class="ws-label">From Address <span style="color:var(--text4);font-weight:400;">(must be verified in Resend)</span></div>
-        <input class="ws-input" id="email-from-addr" placeholder="jonah@thestaffingspecialist.com" />
-        <div style="font-size:11px;color:var(--text4);margin-top:4px;">Add and verify this domain in Resend → Domains</div>
-      </div>
-      <div style="margin-bottom:20px;">
-        <div class="ws-label">Email Secret <span style="color:var(--text4);font-weight:400;">Security token for send-email.js</span></div>
-        <input class="ws-input" id="email-secret-field" type="password" placeholder="Paste your EMAIL_SECRET value here" style="font-family:'DM Mono',monospace;font-size:12px;"/>
-        <div style="font-size:11px;color:var(--text4);margin-top:4px;">
-          Generate once: <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">openssl rand -hex 32</code> →
-          add as <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">EMAIL_SECRET</code> in Vercel env vars, and paste the same value here.
-          Prevents anyone else from using your email relay.
-        </div>
-      </div>
-
-      <div style="display:flex;gap:8px;margin-bottom:24px;">
-        <button class="btn btn-primary" onclick="saveEmailConfig()">Save Configuration</button>
-        <button class="btn btn-ghost" onclick="clearEmailConfig()">Clear</button>
-      </div>
-
-      <div class="ws-divider"></div>
-
-      <!-- Send approval toggle -->
-      <div class="ws-section-title">Approval Mode</div>
-      <div style="font-size:12px;color:var(--text4);margin-bottom:14px;line-height:1.6;">
-        Control whether auto-pipeline outreach sends immediately or waits for manual approval.
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:14px 16px;margin-bottom:10px;">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">Require approval before sending</div>
-          <div style="font-size:11px;color:var(--text4);margin-top:2px;">Auto-pipeline queues outreach — you review and approve each email before it sends</div>
-        </div>
-        <label style="position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0;margin-left:12px;">
-          <input type="checkbox" id="email-approval-toggle" onchange="saveEmailConfig()" style="opacity:0;width:0;height:0;"/>
-          <span id="email-toggle-track" onclick="document.getElementById('email-approval-toggle').click()" style="position:absolute;cursor:pointer;inset:0;background:var(--bg5);border-radius:12px;transition:.2s;"></span>
-          <span id="email-toggle-thumb" style="position:absolute;content:'';height:18px;width:18px;left:3px;bottom:3px;background:var(--text4);border-radius:50%;transition:.2s;pointer-events:none;"></span>
-        </label>
-      </div>
-
-      <div class="ws-divider"></div>
-
-      <!-- Deployment guide -->
-      <div class="ws-section-title">Deployment Setup</div>
-      <div style="font-size:12px;color:var(--text4);margin-bottom:10px;line-height:1.6;">
-        The email proxy function lives in your GitHub repo at <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">api/send-email.js</code>.
-        Vercel deploys it automatically on push.
-      </div>
-      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:12px 14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);line-height:1.8;">
-        1. Push api/send-email.js to GitHub<br>
-        2. In Vercel project → Settings → Environment Variables<br>
-        3. Add: <strong style="color:var(--text2);">RESEND_API_KEY</strong> = your Resend API key<br>
-        4. Redeploy (or it auto-deploys on next push)<br>
-        5. Paste your Vercel URL above: https://yoursite.vercel.app/api/send-email
-      </div>
-    </div>
-
-  </div>
-</div>
-
-
-
-<!-- ═══════════════════════════════════════════════════════════
-     TALENTBASE V2 — COMMAND CENTER RECRUITING OS
-     Safe mode: all new code wrapped in TALENTBASE_V2 checks
-     Does NOT modify any existing functions
-═══════════════════════════════════════════════════════════════ -->
-
-<!-- V2: Command Center view (hidden until V2 enabled) -->
-<div class="view" id="v-command" style="flex-direction:column;overflow:hidden;">
-  <div class="topbar" style="display:flex;align-items:center;justify-content:space-between;">
-    <div>
-      <div class="topbar-title" style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:16px;">&#9889;</span> Command Center
-      </div>
-      <div class="topbar-sub" id="cc-subtitle">What to do today</div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <div id="cc-clock" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;"></div>
-      <button class="btn btn-ghost btn-sm" onclick="v2ToggleMode()" id="v2-toggle-btn" style="font-size:11px;white-space:nowrap;">Switch to Classic</button>
-    </div>
-  </div>
-  <div style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:16px;" id="cc-body">
-    <div style="text-align:center;padding:40px;color:var(--text4);font-size:13px;">Loading command center...</div>
-  </div>
-</div>
-
-<!-- V2: Talent Radar view -->
-<div class="view" id="v-radar" style="flex-direction:column;">
-  <div class="topbar">
-    <div><div class="topbar-title">&#128225; Talent Radar</div><div class="topbar-sub">Unassigned candidates — ready to place</div></div>
-  </div>
-  <div style="flex:1;overflow-y:auto;padding:16px 20px;" id="radar-body"></div>
-</div>
 
 <script>
 // ═══════════════════════════════════════════════════════════════
@@ -13885,6 +13928,32 @@ function pipelineViewTB(){ try{ nav("deals"); }catch(e){} }
     try{ setMode('job'); }catch(e){}
   };
 })();
+
+// ── SCORECARD DOWNLOAD ────────────────────────────────────────────────────────
+function downloadScorecard(scId) {
+  var sc = (scorecards||[]).find(function(s){ return s.id === scId; });
+  if (!sc) { sc = (scorecards||[])[0]; }
+  if (!sc) return;
+  var html = '<html><head><title>Scorecard: '+esc(sc.role||'General')+'</title><style>';
+  html += 'body{font-family:Arial,sans-serif;max-width:720px;margin:40px auto;padding:0 24px;color:#1a1a2e;}';
+  html += 'h1{font-size:22px;font-weight:800;margin-bottom:4px;}';
+  html += '.meta{font-size:12px;color:#666;margin-bottom:28px;}';
+  html += 'h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#555;margin:24px 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;}';
+  html += '.crit{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0;}';
+  html += '.crit-name{font-size:14px;font-weight:600;}';
+  html += '.score-boxes{display:flex;gap:6px;}';
+  html += '.score-box{width:32px;height:32px;border:1px solid #ddd;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;}';
+  html += '.question{padding:10px 0;border-bottom:1px solid #f5f5f5;font-size:13px;}';
+  html += '.q-num{font-weight:700;color:#3b82f6;margin-right:8px;}';
+  html += '.notes-box{border:1px solid #ddd;border-radius:6px;min-height:80px;padding:12px;margin-top:6px;font-size:13px;color:#888;}';
+  html += '@media print{body{margin:20px;}}';
+  html += '</body></html>';
+  var win = window.open('','_blank','width=800,height=900');
+  if(!win){ alert('Allow popups to download scorecard.'); return; }
+  win.document.write(html);
+  win.document.close();
+  setTimeout(function(){ win.print(); }, 400);
+}
 </script>
 
 </div><!-- /app-shell -->
