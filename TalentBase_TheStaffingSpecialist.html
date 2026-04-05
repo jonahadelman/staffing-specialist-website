@@ -2395,7 +2395,7 @@ button, .btn { white-space:nowrap !important; }
 
         <div>
           <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Candidate</div>
-          <select id="ob-cand" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 10px;font-size:12px;color:var(--text);outline:none;font-family:inherit;" onchange="updateOfferPreview()"></select>
+          <select id="ob-cand" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 10px;font-size:12px;color:var(--text);outline:none;font-family:inherit;" onchange="obAutoFill()"></select>
         </div>
 
         <div>
@@ -3456,6 +3456,7 @@ CREATE POLICY "staff_read_feedback" ON client_feedback FOR SELECT
       <div class="field"><label>LinkedIn Profile Text <span style="color:var(--text4);font-weight:400;">(optional — paste full profile for AI search)</span></label><textarea id="mf-linkedin-text" style="min-height:60px;" placeholder="Copy full LinkedIn profile text here (Ctrl+A then Ctrl+C on their profile page)..."></textarea></div>
   </div>
   <div class="field-row">
+    <div class="field"><label>Job Opening <span style="color:var(--red);font-size:10px;">required</span></label><select id="mf-job" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 10px;font-size:12px;color:var(--text);outline:none;font-family:inherit;"><option value="">— Select a Job —</option></select></div>
     <div class="field"><label>Target Role / Req #</label><input id="mf-role" placeholder="Sr. Program Manager (Req #977)"/></div>
     <div class="field"><label>Status</label>
       <select id="mf-status">
@@ -5007,6 +5008,14 @@ function seedCands(){
     {id:uid(),first:'Lauren',last:'Mitchell',title:'R&D Program Manager',company:'NovaMed Technologies',email:'lmitchell@email.com',phone:'612-555-0155',location:'Minneapolis, MN',linkedin:'linkedin.com/in/laurenmitchell',role:'Senior Program Manager (Req #977)',status:'On Hold',skills:['R&D','Program Management','MedTech','Startup Experience','Agile','Product Development'],source:'Referral',notes:'Hybrid R&D + PM. High upside candidate.',resume:'Experienced R&D Program Manager with hybrid background across startup MedTech and enterprise environments. Skilled at bridging engineering and commercial teams across product development programs.',created:Date.now()-6*864e5,activity:[{ts:Date.now()-6*864e5,text:'Added'},{ts:Date.now()-864e5,text:'On hold pending budget approval'}]},
     {id:uid(),first:'Kevin',last:'Brooks',title:'Senior R&D Manager',company:'Global Med Devices',email:'kbrooks@email.com',phone:'617-555-0199',location:'Cambridge, MA',linkedin:'linkedin.com/in/kevinbrooks',role:'Electrical Engineering Manager (Req #909)',status:'New',skills:['R&D Leadership','Global Teams','Electrical Engineering','Systems Integration','Product Lifecycle','Capital Equipment'],source:'Direct Outreach',notes:'Strong blend of technical depth and global team leadership.',resume:'Senior R&D leader managing global teams across full product lifecycle. Deep expertise in electrical engineering and systems integration for complex medical capital equipment platforms.',created:Date.now()-864e5,activity:[{ts:Date.now()-864e5,text:'Added via direct outreach'}]},
   ];
+
+  // Link candidates to jobs by reqNum in role field
+  cands.forEach(function(cand){
+    if(!cand.jobId && cand.role){
+      var matched = jobs.find(function(j){ return j.reqNum && cand.role.indexOf(j.reqNum) >= 0; });
+      if(matched) cand.jobId = matched.id;
+    }
+  });
   saveCands();
 }
 function seedJobs(){
@@ -6651,6 +6660,15 @@ function openAddCand(){
   document.getElementById('comp-analysis-box').style.display='none';
   document.getElementById('parse-msg').style.display='none';
   pendingResumeFile=null;
+  // Populate job dropdown
+  var mfJob = document.getElementById('mf-job');
+  if (mfJob) {
+    mfJob.innerHTML = '<option value="">— Select a Job —</option>' +
+      (jobs||[]).filter(function(j){return j.status==='Open';}).map(function(j){
+        return '<option value="'+esc(j.id)+'">'+esc(j.title)+' #'+esc(j.reqNum||'')+'</option>';
+      }).join('');
+    mfJob.value = '';
+  }
   openModal('ov-cand');
 }
 function openEditCand(id){
@@ -6685,12 +6703,19 @@ function openEditCand(id){
   } else {
     document.getElementById('comp-analysis-box').style.display='none';
   }
-  openModal('ov-cand');
+    var mfJobEdit = document.getElementById('mf-job');
+  if(mfJobEdit){
+    mfJobEdit.innerHTML = '<option value="">— Select a Job —</option>'+(jobs||[]).filter(function(j){return j.status==="Open";}).map(function(j){return '<option value="'+esc(j.id)+'">'+esc(j.title)+' #'+esc(j.reqNum||'')+'</option>';}).join('');
+    mfJobEdit.value = c.jobId||'';
+  }
+openModal('ov-cand');
 }
 function saveCand(){
   const first=(document.getElementById('mf-first').value||'').trim();
   const last=(document.getElementById('mf-last').value||'').trim();
+  const jobId=(document.getElementById('mf-job')||{value:''}).value||'';
   if(!first||!last){alert('First and last name required.');return;}
+  if(!jobId){alert('Please select a job opening.');document.getElementById('mf-job').focus();return;}
   const skills=document.getElementById('mf-skills').value.split(',').map(s=>s.trim()).filter(Boolean);
   const data={first,last,
     title:document.getElementById('mf-title').value.trim(),
@@ -6701,6 +6726,7 @@ function saveCand(){
     linkedin:document.getElementById('mf-linkedin').value.trim(),
     linkedinText:(document.getElementById('mf-linkedin-text')||{value:''}).value.trim(),
     role:document.getElementById('mf-role').value.trim(),
+    jobId:jobId,
     status:document.getElementById('mf-status').value,
     source:document.getElementById('mf-source').value,
     yoe:document.getElementById('mf-yoe').value.trim(),
@@ -6715,10 +6741,22 @@ function saveCand(){
   _pendingFile=null;
   if(editCandId){
     const idx=cands.findIndex(x=>x.id===editCandId);
-    if(idx>=0){cands[idx]={...cands[idx],...data};addActivity(cands[idx],'Profile updated');}
+    if(idx>=0){
+      var prevStatus = cands[idx].status;
+      cands[idx]={...cands[idx],...data};
+      // Log stage change
+      if(data.status && data.status !== prevStatus){
+        cands[idx].lastActivity = Date.now();
+        if(!cands[idx].activity) cands[idx].activity = [];
+        cands[idx].activity.push({ts:Date.now(), text:'Stage changed: '+prevStatus+' → '+data.status, type:'stage_change'});
+        addActivity(cands[idx], 'Stage: '+prevStatus+' → '+data.status);
+      } else {
+        addActivity(cands[idx],'Profile updated');
+      }
+    }
     selCandId=editCandId;
   }else{
-    data.id=uid();data.created=Date.now();data.activity=[{ts:Date.now(),text:'Added to TalentBase'}];
+    data.id=uid();data.created=Date.now();data.lastActivity=Date.now();data.activity=[{ts:Date.now(),text:'Added to TalentBase',type:'created'}];
     if(window._pendingCompAnalysis){data.compAnalysis=window._pendingCompAnalysis;window._pendingCompAnalysis=null;}
     cands.unshift(data);selCandId=data.id;
   }
@@ -8140,7 +8178,7 @@ function renderKanban(){
   const KANBAN_STAGES=['New','Screening','Interviewing','Offer','Hired'];
   const board=document.getElementById('kanban-board');
   board.innerHTML=KANBAN_STAGES.map(stage=>{
-    const stageCands=cands.filter(c=>c.status===stage&&(!jf||c.role&&jobs.find(j=>j.id===jf&&c.role.includes(j.reqNum||'XXXX'))));
+    const stageCands=cands.filter(c=>c.status===stage&&(!jf||(c.jobId===jf)));
     const col=STAGE_PIPE_COLORS[stage]||'#555';
     return`<div class="kb-col">
       <div class="kb-col-head">
@@ -8264,9 +8302,11 @@ function getNeedsAction(candList, dealList) {
 
   (candList || []).forEach(function(cc){
     if(cc.status==='Hired' || cc.status==='Rejected') return;
-    var lastAct = cc.activity && cc.activity.length
-      ? Math.max.apply(null, cc.activity.map(function(a){ return a.ts; }))
-      : (cc.created || now);
+    var lastAct = cc.lastActivity || 0;
+    if(cc.activity && cc.activity.length){
+      lastAct = Math.max(lastAct, Math.max.apply(null, cc.activity.map(function(a){ return a.ts; })));
+    }
+    if(!lastAct) lastAct = cc.created || now;
     var daysIdle = (now - lastAct) / DAY;
 
     // Hot lead — replied to outreach
@@ -8395,6 +8435,8 @@ function renderDashKPIs(){
   if(cd) cd.textContent = activeCount;
   if(cs) cs.textContent = interviewCount + ' interviewing';
   var openJobs = (jobs||[]).filter(function(j){return j.status==='Open';}).length;
+  var totalCands = (cands||[]).length;
+  var activeCands = (cands||[]).filter(function(cc){return cc.status!=='Hired'&&cc.status!=='Rejected';}).length;
   if(ps) ps.textContent = openJobs + ' open role' + (openJobs!==1?'s':'');
   var dateEl = document.getElementById('dash-date');
   if(dateEl){
@@ -8946,13 +8988,51 @@ function addSCQuestion(){
 // OFFER BUILDER
 // ═══════════════════════════════════════════════════
 function populateOfferDropdowns(){
-  const cs = document.getElementById('ob-cand');
-  const js = document.getElementById('ob-job');
+  var cs = document.getElementById('ob-cand');
+  var js = document.getElementById('ob-job');
   if(!cs||!js) return;
-  cs.innerHTML = '<option value="">Select candidate...</option>' + cands.map(c=>`<option value="${c.id}">${c.first} ${c.last} — ${c.title||'No title'}</option>`).join('');
-  js.innerHTML = '<option value="">Select job...</option>' + jobs.map(j=>`<option value="${j.id}">${j.title} (Req #${j.reqNum||'—'})</option>`).join('');
+
+  cs.innerHTML = '<option value="">Select candidate...</option>' +
+    cands.map(function(c){
+      return '<option value="'+c.id+'">'+esc(c.first)+' '+esc(c.last)+' — '+esc(c.title||'No title')+'</option>';
+    }).join('');
+
+  js.innerHTML = '<option value="">Select job...</option>' +
+    jobs.map(function(j){
+      return '<option value="'+j.id+'">'+esc(j.title)+(j.reqNum?' #'+esc(j.reqNum):'')+' — '+esc(j.dept||'')+'</option>';
+    }).join('');
+
+  // Auto-select last viewed candidate and their job
+  if(selCandId){
+    cs.value = selCandId;
+    obAutoFill();
+  }
+  updateOfferPreview();
 }
 
+function obAutoFill(){
+  var candId = (document.getElementById('ob-cand')||{}).value;
+  var cc = cands.find(function(x){ return x.id === candId; });
+  if(!cc) return;
+
+  // Auto-select the candidate's linked job
+  if(cc.jobId){
+    var js = document.getElementById('ob-job');
+    if(js) js.value = cc.jobId;
+  }
+
+  // Auto-fill name fields if they exist
+  var nameField = document.getElementById('ob-candidate-name');
+  if(nameField) nameField.value = cc.first+' '+cc.last;
+
+  var titleField = document.getElementById('ob-position');
+  if(titleField && cc.jobId){
+    var job = jobs.find(function(j){ return j.id === cc.jobId; });
+    if(job) titleField.value = job.title||'';
+  }
+
+  updateOfferPreview();
+}
 async function generateOffer(){
   var candId = document.getElementById('ob-cand').value;
   var jobId = document.getElementById('ob-job').value;
