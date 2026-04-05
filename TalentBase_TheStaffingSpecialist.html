@@ -2814,7 +2814,7 @@ window.__initSupabase = function(url, key) {
   try {
     var factory = (window.supabase && window.supabase.createClient)
       || (window.Supabase && window.Supabase.createClient);
-    if (!factory) { console.warn('[SB] createClient not available'); return null; }
+    if (!factory) { return null; }
     return factory(url, key, {
       auth: {
         persistSession:   true,
@@ -2823,7 +2823,7 @@ window.__initSupabase = function(url, key) {
         storage:          window.localStorage,
       }
     });
-  } catch(e) { console.warn('[SB] init failed:', e.message); return null; }
+  } catch(e) { return null; }
 };
 </script>
 
@@ -2884,7 +2884,7 @@ function _gateSetError(msg) {
 // Hard rule: admin/recruiter → app-shell only, client-portal hidden.
 //            client          → client-portal only, app-shell hidden.
 // Neither branch ever gives a client access to app-shell.
-function _unlockApp(role) {
+async function _unlockApp(role) {
   var g  = document.getElementById('gate');
   var a  = document.getElementById('app-shell');
   var cp = document.getElementById('client-portal');
@@ -2903,20 +2903,15 @@ function _unlockApp(role) {
   if(a)  a.style.cssText  = 'display:flex!important';
   try { _syncLibRole(); } catch(e){}
 
-  (async function(){
-    try { await launchApp(); } catch(e){
-      console.warn('[_unlockApp] launchApp failed:', e);
-      try { nav('dashboard'); } catch(e2){}
-    }
-    // After data is loaded, render all three views so they are never empty
-    try { renderDash(); }       catch(e){}
-    try { renderLibrary(); }    catch(e){ console.warn('renderLibrary failed:', e); }
-    try { renderScorecards(); } catch(e){}
-    try { renderTutorial(); }   catch(e){ console.warn('renderTutorial failed:', e); }
-    setTimeout(applyNavRestrictions, 50);
-  })();
+  // Guaranteed: data loads before any render
+  await launchApp();
+  nav('dashboard');
+  try { renderDash(); }       catch(e){}
+  try { renderLibrary(); }    catch(e){}
+  try { renderScorecards(); } catch(e){}
+  try { renderTutorial(); }   catch(e){}
+  try { applyNavRestrictions(); } catch(e){}
 }
-
 // ── MAIN GATE LOGIN ───────────────────────────────────────────
 async function gateLogin() {
   var email = ((document.getElementById('gate-email')||{}).value||'').trim();
@@ -2973,7 +2968,6 @@ function sbInit() {
   const key = localStorage.getItem(SB_KEY_KEY) || '';
   if (url && key && url !== 'YOUR_URL' && typeof window.__initSupabase === 'function') {
     _sb = window.__initSupabase(url, key);
-    if (!_sb) console.warn('[SB] __initSupabase returned null — check URL/key format');
   }
   _sbReady = true;
   _updateSbStatus();
@@ -3143,10 +3137,6 @@ function getRole() {
 }
 
 // Returns the client_company scoping value (clients only)
-function getClientCompany() {
-  if (!_sbUser || !_sbUser.user_metadata) return null;
-  return _sbUser.user_metadata.client_company || null;
-}
 
 // Permission map — what each role is allowed to do
 var ROLE_PERMISSIONS = {
@@ -3304,7 +3294,6 @@ async function sbSave(key, data) {
       const { error } = await _sb.from(table).upsert(rows, { onConflict: 'id' });
       if (error) throw error;
     } catch(e) {
-      console.warn('[SB] save failed, localStorage used:', e.message);
     }
   }
 }
@@ -3397,7 +3386,7 @@ async function sbRestoreSession() {
         _updateSbStatus();
         return true;
       }
-    } catch(e) { console.warn('[SB] getSession failed:', e.message); }
+    } catch(e) { }
   }
 
   return false; // no session found anywhere
@@ -3408,10 +3397,42 @@ async function sbRestoreSession() {
 // DATA LAYER
 // ═══════════════════════════════════════════════
 const CK='tb_cands_v3', JK='tb_jobs_v3', AK='tb_apikey', DK='tb_deals_v1';
-// Supabase table name map (must be after CK/JK/DK)
 const SB_TABLE = {'tb_cands_v3':'candidates','tb_jobs_v3':'jobs','tb_deals_v1':'deals'};
-var deals=[];
-let cands=[], jobs=[], fil=[], selCandId=null, selJobId=null, editCandId=null, editJobId=null, stageTargetId=null, activeChip='', matchCache={};
+
+// ── CENTRAL STATE STORE ────────────────────────────────────
+// All state reads/writes go through TB.store
+var TB = {
+  store: {
+    cands:           [],
+    jobs:            [],
+    deals:           [],
+    fil:             [],
+    selCandId:       null,
+    selJobId:        null,
+    editCandId:      null,
+    editJobId:       null,
+    stageTargetId:   null,
+    activeChip:      '',
+    matchCache:      {}
+  },
+  // Convenience getters (keep backward compat with global refs below)
+  get cands()         { return this.store.cands; },
+  get jobs()          { return this.store.jobs; },
+  get deals()         { return this.store.deals; },
+};
+
+// Backward-compatible globals (point to TB.store arrays so mutations stay in sync)
+var deals          = TB.store.deals;
+var cands          = TB.store.cands;
+var jobs           = TB.store.jobs;
+var fil            = TB.store.fil;
+var selCandId      = null;
+var selJobId       = null;
+var editCandId     = null;
+var editJobId      = null;
+var stageTargetId  = null;
+var activeChip     = '';
+var matchCache     = {};
 
 // Avatar colors
 const AVC=[['var(--accent)20','var(--accent2)'],['#3dbd7214','#3dbd72'],['#f5a62314','#f5a623'],['var(--red)14','var(--red)'],['#4f9cf014','#4f9cf0'],['#2aada314','#2aada3'],['var(--accent2)14','var(--accent2)']];
@@ -4251,7 +4272,6 @@ function toggleNavTools(btn){
 }
 
 function nav(v){
-  console.log('[nav] Active view:', v);
   // Permission guard — block views the current role cannot access
   var viewPermissions = {
     'deals'      : 'viewDeals',
@@ -4260,19 +4280,17 @@ function nav(v){
     'workspace'  : 'viewSettings',
   };
   if (viewPermissions[v] && !can(viewPermissions[v])) {
-    console.warn('[RBAC] Access denied to view:', v);
     v = 'dashboard';
   }
 
   document.querySelectorAll('.view').forEach(function(el){
     el.classList.remove('on');
-    el.style.display = 'none';  // explicitly hide all views
+    el.style.display = 'none';
   });
+  // Close open modals on view switch
+  document.querySelectorAll('.modal-overlay').forEach(function(m){ m.style.display='none'; });
   var view = document.getElementById('v-'+v);
-  if(view){
-    view.classList.add('on');
-    view.style.display = 'flex';
-  }
+  if(view){ view.classList.add('on'); view.style.display = 'flex'; }
   document.querySelectorAll('.ni').forEach(el=>el.classList.remove('on'));
   document.querySelectorAll('.ni').forEach(el=>{if(el.getAttribute('onclick')&&el.getAttribute('onclick').includes("'"+v+"'"))el.classList.add('on');});
   if(v==='dashboard')renderDash();
@@ -4293,7 +4311,6 @@ function nav(v){
       // Always rebuild from seed — never trust stale state
       libraryItems = (typeof _LIB_SEED !== 'undefined' && _LIB_SEED.length) ? _LIB_SEED.slice() : libraryItems;
       window.libraryItems = libraryItems;
-      console.log('[nav:library] libraryItems=', libraryItems.length);
       renderLibrary();
     } catch(e){ console.error('[nav:library] renderLibrary failed:', e); }
   }
@@ -4301,7 +4318,6 @@ function nav(v){
   if(v==='tutorial'){
     try {
       currentTutStep = (typeof currentTutStep === 'number') ? currentTutStep : 0;
-      console.log('[nav:tutorial] TUTORIAL_STEPS=', TUTORIAL_STEPS.length, 'step=', currentTutStep);
       renderTutorial();
     } catch(e){ console.error('[nav:tutorial] renderTutorial failed:', e); }
   }
@@ -5284,11 +5300,9 @@ function _updateEmailToggleUI(){
 async function sendEmail({ to, subject, html, text, candidateId }){
   var cfg = getEmailConfig();
   if(!cfg.proxyUrl){
-    console.info('[Email] No proxy configured — skipping.');
     return { skipped: true, reason: 'no_proxy' };
   }
   if(!to || !to.includes('@')){
-    console.warn('[Email] Invalid recipient:', to);
     return { skipped: true, reason: 'no_recipient' };
   }
   if(!cfg.secret){
@@ -7491,117 +7505,123 @@ function toggleExpand(id){const el=document.getElementById(id);if(el)el.style.di
 // Runs on dashboard render. Zero writes unless something changed.
 // Returns: { attention: [{type, icon, label, subtext, urgency, action, id}] }
 // ═══════════════════════════════════════════════════════════
-function runAutomation(){
+// ── Pure data function: no DOM, no side effects ──────────────────────────
+function getNeedsAction(candList, dealList) {
   var now  = Date.now();
   var DAY  = 1000*60*60*24;
   var items = [];
 
-  // ── STEP 1: Candidate follow-up detection ────────────────
-  // If candidate has been in Screening or Contacted state with no
-  // activity for 2+ days, flag for follow-up. Write activity once.
-  cands.forEach(function(c){
-    if(c.status==='Hired'||c.status==='Rejected') return;
-    var lastAct = c.activity&&c.activity.length
-      ? Math.max.apply(null, c.activity.map(function(a){return a.ts;}))
-      : (c.created||now);
+  (candList || []).forEach(function(cc){
+    if(cc.status==='Hired' || cc.status==='Rejected') return;
+    var lastAct = cc.activity && cc.activity.length
+      ? Math.max.apply(null, cc.activity.map(function(a){ return a.ts; }))
+      : (cc.created || now);
     var daysIdle = (now - lastAct) / DAY;
 
-    // ── STEP 3: Hot lead detection ─────────────────────────
-    if(c.responded && getCRMFields(c).temperature === 'hot'){
+    // Hot lead — replied to outreach
+    if(cc.responded){
       items.push({
         type:'hot', icon:'🔥', urgency:'high',
-        label: c.first+' '+c.last,
+        label: cc.first + ' ' + cc.last,
         subtext: 'Replied to outreach — call now',
-        action: function(){ selCand(c.id); },
-        actionLabel: 'View →',
-        id: 'hot-'+c.id
+        candId: cc.id,
+        actionLabel: 'View →'
       });
-      return; // hot leads take priority over follow-up flags
+      return;
     }
-
-    // ── Follow-up due ──────────────────────────────────────
-    if(daysIdle >= 2 && (c.status==='Screening'||c.status==='Interviewing'||c.status==='Offer')){
-      // Write activity flag once (check for existing)
-      var alreadyFlagged = (c.activity||[]).some(function(a){
-        return a.text && a.text.includes('Auto: follow-up due') && (now-a.ts) < DAY;
-      });
-      if(!alreadyFlagged){
-        if(!c.activity) c.activity=[];
-        c.activity.push({ts:now, text:'Auto: follow-up due ('+Math.floor(daysIdle)+'d idle)'});
-      }
+    // Follow-up due after 2+ idle days
+    if(daysIdle >= 2 && (cc.status==='Screening' || cc.status==='Interviewing' || cc.status==='Offer')){
       items.push({
-        type:'followup', icon:'⏱', urgency: daysIdle>=4 ? 'high' : 'medium',
-        label: c.first+' '+c.last,
-        subtext: c.status+' · '+Math.floor(daysIdle)+'d no activity',
-        action: function(){ selCand(c.id); },
-        actionLabel: 'Follow up →',
-        id: 'fu-'+c.id
+        type:'followup', icon:'⏱', urgency: daysIdle >= 4 ? 'high' : 'medium',
+        label: cc.first + ' ' + cc.last,
+        subtext: cc.status + ' · ' + Math.floor(daysIdle) + 'd no activity',
+        candId: cc.id,
+        actionLabel: 'Follow up →'
       });
     }
   });
 
-  // ── STEP 2: Deal stall detection ─────────────────────────
-  deals.forEach(function(d){
-    if(d.stage==='Closed') return;
-    var lastAct = d.stageUpdatedAt || d.createdAt || now;
+  (dealList || []).forEach(function(d){
+    if(d.stage === 'Closed') return;
+    var lastAct  = d.stageUpdatedAt || d.createdAt || now;
     var daysIdle = (now - lastAct) / DAY;
-
     if(daysIdle >= 3){
-      d.statusFlag = 'At Risk';
       items.push({
-        type:'atrisk', icon:'⚠', urgency: daysIdle>=7 ? 'high' : 'medium',
-        label: d.company + (d.jobTitle?' · '+d.jobTitle:''),
-        subtext: d.stage+' · '+Math.floor(daysIdle)+'d stalled',
-        action: function(){ nav('deals'); setTimeout(function(){openDealDetail(d.id);},200); },
-        actionLabel: 'View deal →',
-        id: 'ar-'+d.id
-      });
-    } else {
-      d.statusFlag = '';
-    }
-
-    // ── STEP 4: Deal acceleration (score >80) ─────────────
-    var score = getDealScore(d);
-    if(score > 80 && d.stage !== 'Active' && d.stage !== 'Closed'){
-      items.push({
-        type:'close', icon:'💰', urgency:'high',
-        label: d.company + ' — Score '+score,
-        subtext: 'High score · Ready to close — move to Active now',
-        action: function(){ nav('deals'); setTimeout(function(){openDealDetail(d.id);},200); },
-        actionLabel: 'Close deal →',
-        id: 'cl-'+d.id
+        type:'atrisk', icon:'⚠', urgency: daysIdle >= 7 ? 'high' : 'medium',
+        label: d.company + (d.jobTitle ? ' · ' + d.jobTitle : ''),
+        subtext: d.stage + ' · ' + Math.floor(daysIdle) + 'd stalled',
+        dealId: d.id,
+        actionLabel: 'View deal →'
       });
     }
   });
-
-  // Persist any new activity flags written
-  saveCands();
-  saveDeals();
 
   // Sort: high urgency first
-  items.sort(function(a,b){
-    var order={high:0,medium:1,low:2};
-    return (order[a.urgency]||1)-(order[b.urgency]||1);
+  items.sort(function(a, b){
+    var order = {high:0, medium:1, low:2};
+    return (order[a.urgency]||1) - (order[b.urgency]||1);
   });
-
   return items;
 }
 
+// Thin wrapper — preserves backward compat, persists flags as side effect
+function runAutomation(candList, dealList){
+  var items = getNeedsAction(candList, dealList);
+  // Write activity flags for follow-up items
+  var now = Date.now();
+  var DAY = 1000*60*60*24;
+  items.forEach(function(item){
+    if(item.type === 'followup' && item.candId){
+      var cc = candList.find(function(x){ return x.id === item.candId; });
+      if(cc){
+        var alreadyFlagged = (cc.activity||[]).some(function(a){
+          return a.text && a.text.includes('Auto: follow-up due') && (now-a.ts) < DAY;
+        });
+        if(!alreadyFlagged){
+          if(!cc.activity) cc.activity = [];
+          cc.activity.push({ts: now, text: 'Auto: follow-up due'});
+        }
+        // Map candId back to action fn for renderDashAttention
+        item.action = (function(id){ return function(){ selCand(id); nav('candidates'); }; })(item.candId);
+      }
+    }
+    if(item.type === 'hot' && item.candId){
+      item.action = (function(id){ return function(){ selCand(id); nav('candidates'); }; })(item.candId);
+    }
+    if(item.type === 'atrisk' && item.dealId){
+      item.action = (function(id){ return function(){ nav('dealList'); setTimeout(function(){ try{openDealDetail(id);}catch(e){} },200); }; })(item.dealId);
+    }
+  });
+  try { saveCands(); } catch(e){}
+  try { saveDeals(); } catch(e){}
+  return items;
+}
+
+
 function renderDash(){
-  // ── DATE ──────────────────────────────────────────────────
+  // Safety: ensure arrays exist even if data not loaded
+  if(!Array.isArray(cands)) { cands = TB.store.cands = []; }
+  if(!Array.isArray(jobs))  { jobs  = TB.store.jobs  = []; }
+  if(!Array.isArray(deals)) { deals = TB.store.deals = []; }
+
+  // Date header
   var now = new Date();
-  var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var dateEl = document.getElementById('dash-date');
-  if(dateEl) dateEl.textContent = 'What needs to happen today to close roles — ' + days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate();
+  if(dateEl) dateEl.textContent = days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate();
 
-  var total          = cands.length;
-  // render handled by individual sub-functions
-  try { renderDashKPIs(); }     catch(e){}
-  try { renderDashAttention(); } catch(e){}
-  try { renderDashPipeline(); } catch(e){}
-  try { renderDashHot(); }      catch(e){}
-  try { renderDashDeals(); }    catch(e){}
+  // Render each panel independently — one failure won't cascade
+  try { renderDashKPIs();       } catch(e){ console.warn('KPIs:',e); }
+  try { renderDashAttention();  } catch(e){ console.warn('Attention:',e); }
+  try { renderDashPipeline();   } catch(e){ console.warn('Pipeline:',e); }
+  try { renderDashHot();        } catch(e){ console.warn('Hot:',e); }
+  try { renderDashDeals();      } catch(e){ console.warn('Deals:',e); }
+
+  // Empty state
+  var hasData = cands.length || jobs.length || deals.length;
+  var emptyEl = document.getElementById('dash-empty');
+  if(emptyEl) emptyEl.style.display = hasData ? 'none' : 'block';
 }
 
 // ═══════════════════════════════════════════════
@@ -7609,20 +7629,21 @@ function renderDash(){
 // ═══════════════════════════════════════════════
 
 function renderDashKPIs(){
-  var rev = getRevenueStats ? getRevenueStats() : {pipelineValue:0,expectedRevenue:0};
+  var rev = (typeof getRevenueStats === 'function') ? getRevenueStats() : {pipelineValue:0,expectedRevenue:0};
+  var safeCands = cands || [];
   var pl  = document.getElementById('dm-pipeline');
   var ex  = document.getElementById('dm-expected');
   var cd  = document.getElementById('dm-cands');
   var cs  = document.getElementById('dm-cands-sub');
   var ps  = document.getElementById('dm-pipeline-sub');
-  var fmt = function(n){ return n>=1000000?'$'+(n/1000000).toFixed(1)+'M':n>=1000?'$'+(n/1000).toFixed(0)+'K':'$'+n.toFixed(0); };
-  if(pl) pl.textContent = rev.pipelineValue ? fmt(rev.pipelineValue) : '$0';
-  if(ex) ex.textContent = rev.expectedRevenue ? fmt(rev.expectedRevenue) : '$0';
-  var activeCount = cands.filter(function(cc){return cc.status!=='Hired'&&cc.status!=='Rejected';}).length;
-  var interviewCount = cands.filter(function(cc){return cc.status==='Interviewing';}).length;
+  var fmt = function(n){ if(!n) return '$0'; return n>=1000000?'$'+(n/1000000).toFixed(1)+'M':n>=1000?'$'+(n/1000).toFixed(0)+'K':'$'+n.toFixed(0); };
+  if(pl) pl.textContent = fmt(rev.pipelineValue || 0);
+  if(ex) ex.textContent = fmt(rev.expectedRevenue || 0);
+  var activeCount = safeCands.filter(function(cc){return cc.status!=='Hired'&&cc.status!=='Rejected';}).length;
+  var interviewCount = safeCands.filter(function(cc){return cc.status==='Interviewing';}).length;
   if(cd) cd.textContent = activeCount;
   if(cs) cs.textContent = interviewCount + ' interviewing';
-  var openJobs = jobs.filter(function(j){return j.status==='Open';}).length;
+  var openJobs = (jobs||[]).filter(function(j){return j.status==='Open';}).length;
   if(ps) ps.textContent = openJobs + ' open role' + (openJobs!==1?'s':'');
   var dateEl = document.getElementById('dash-date');
   if(dateEl){
@@ -7633,38 +7654,64 @@ function renderDashKPIs(){
   }
 }
 
+
 function renderDashAttention(){
   var list  = document.getElementById('dash-attention-list');
   var count = document.getElementById('dash-attention-count');
   var clear = document.getElementById('dash-all-clear');
   if(!list) return;
   var items = [];
-  try { items = runAutomation ? runAutomation() : []; } catch(e){}
+  try { items = runAutomation ? runAutomation(cands, deals) : []; } catch(e){ }
+
   if(items.length){
-    if(count){ count.textContent=items.length; count.style.display=''; }
-    if(clear) clear.style.display='none';
-    var urgColors={high:'var(--red)',medium:'var(--amber)',low:'var(--text4)'};
-    list.innerHTML = items.map(function(item){
-      var col=urgColors[item.urgency]||'var(--text4)';
-      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);" onclick="'+(item.action?'('+item.action.toString()+'())':'')+'">' +
-        '<span style="font-size:18px;flex-shrink:0;">'+item.icon+'</span>' +
+    if(count){ count.textContent = items.length; count.style.display = ''; }
+    if(clear) clear.style.display = 'none';
+
+    var urgColors = {high:'var(--red)', medium:'var(--amber)', low:'var(--text4)'};
+    list.innerHTML = items.map(function(item, idx){
+      var col = urgColors[item.urgency] || 'var(--text4)';
+      var urgBg = item.urgency==='high' ? 'rgba(239,68,68,.06)' :
+                  item.urgency==='medium' ? 'rgba(245,158,11,.06)' : 'transparent';
+      return '<div class="dash-attn-item" data-attn-idx="'+idx+'" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;background:'+urgBg+';border-radius:6px;padding-left:8px;">' +
+        '<span style="font-size:18px;flex-shrink:0;width:24px;text-align:center;">'+item.icon+'</span>' +
         '<div style="flex:1;min-width:0;">' +
           '<div style="font-size:13px;font-weight:600;color:var(--text);">'+esc(item.label)+'</div>' +
-          '<div style="font-size:11px;color:'+col+';margin-top:2px;">'+esc(item.detail||'')+'</div>' +
+          '<div style="font-size:11px;color:'+col+';margin-top:2px;">'+esc(item.subtext||'')+'</div>' +
         '</div>' +
-        '<button onclick="('+item.action.toString()+'());event.stopPropagation();" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent2);font-size:11px;padding:4px 10px;border-radius:5px;cursor:pointer;font-family:inherit;white-space:nowrap;">'+esc(item.cta||'Review')+'</button>' +
+        '<button class="btn btn-ghost btn-sm" data-attn-idx="'+idx+'" style="font-size:11px;padding:4px 10px;flex-shrink:0;">'+esc(item.actionLabel||'Review')+'</button>' +
       '</div>';
     }).join('');
+
+    // Bind via onclick property — safe to re-render, no stacking
+    list.querySelectorAll('.dash-attn-item').forEach(function(el){
+      var idx2 = parseInt(el.getAttribute('data-attn-idx'));
+      var item2 = items[idx2];
+      if(item2 && item2.action){
+        el.onclick = function(e){ e.stopPropagation(); try{ item2.action(); }catch(err){} };
+      }
+    });
+    list.querySelectorAll('.dash-attn-item button').forEach(function(el){
+      var idx2 = parseInt(el.getAttribute('data-attn-idx'));
+      var item2 = items[idx2];
+      if(item2 && item2.action){
+        el.onclick = function(e){ e.stopPropagation(); try{ item2.action(); }catch(err){} };
+      }
+    });
+
   } else {
-    if(count) count.style.display='none';
-    if(clear) clear.style.display='block';
-    list.innerHTML='';
+    if(count) count.style.display = 'none';
+    if(clear) clear.style.display = 'block';
+    list.innerHTML = '';
   }
 }
 
 function renderDashPipeline(){
   var el=document.getElementById('dash-pipeline');
   if(!el) return;
+  if(!cands || !cands.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text4);padding:16px 0;text-align:center;">No candidates yet — add one to see the pipeline.</div>';
+    return;
+  }
   var STAGES_SHOW=['New','Screening','Interviewing','Offer','Hired'];
   var COLORS={New:'var(--blue)',Screening:'var(--purple)',Interviewing:'var(--amber)',Offer:'var(--teal)',Hired:'var(--green)'};
   var total=cands.length;
@@ -7717,11 +7764,11 @@ function renderDashHot(){
   });
   el.innerHTML=rows;
   el.querySelectorAll('.dash-hot-row').forEach(function(row){
-    row.addEventListener('click',function(){
-      var cid=row.getAttribute('data-cid');
+    var cid = row.getAttribute('data-cid');
+    row.onclick = function(){
       nav('candidates');
-      setTimeout(function(){try{selCand(cid);}catch(e){}},120);
-    });
+      setTimeout(function(){ try{selCand(cid);}catch(e){} }, 120);
+    };
   });
 }
 
@@ -7752,7 +7799,7 @@ function renderDashDeals(){
   });
   el.innerHTML=rows;
   el.querySelectorAll('.dash-deal-row').forEach(function(row){
-    row.addEventListener('click',function(){ nav('deals'); });
+    row.onclick = function(){ nav('deals'); };
   });
 }
 
@@ -7813,7 +7860,7 @@ function downloadResume(id){
       a.click();
       URL.revokeObjectURL(url);
       return;
-    }catch(e){console.log('File download failed, falling back to text');}
+    }catch(e){ }
   }
   // Fall back to text resume if no file saved
   if(!c.resume||!c.resume.trim()){alert('No resume saved for this candidate. Upload a PDF or add resume text in Edit.');return;}
@@ -8031,7 +8078,6 @@ function saveScorecards(){ localStorage.setItem('tb_scorecards', JSON.stringify(
 function renderScorecards(){
   const el = document.getElementById('scorecard-list');
   if(!el) return;
-  console.log('[renderScorecards] scorecards:', scorecards.length);
   if(!scorecards.length){
     el.innerHTML = '<div style="color:var(--text4);font-size:13px;text-align:center;padding:60px 0;">No scorecards yet. Create one for each role to standardize your interviews.</div>';
     return;
@@ -8278,14 +8324,6 @@ function updateOfferPreview(){
   if(sigEl) sigEl.textContent = deadline || '3 business days';
 }
 
-function copyOffer(){
-  var doc = document.getElementById('ob-doc');
-  if(!doc) return;
-  navigator.clipboard.writeText(doc.innerText).then(function(){
-    var btn = document.getElementById('ob-copy-btn');
-    if(btn){var orig=btn.innerHTML;btn.innerHTML='Copied ✓';setTimeout(function(){btn.innerHTML=orig;},1500);}
-  });
-}
 
 function printOffer(){
   var doc = document.getElementById('ob-doc');
@@ -9827,7 +9865,6 @@ window.libraryItems = libraryItems;
 
   // SAFETY: if localStorage corruption produced empty array, always fall back to seed
   if(!libraryItems.length){
-    console.warn('[Library] libraryItems empty after merge — resetting from _LIB_SEED');
     libraryItems = _LIB_SEED.slice();
     try { localStorage.removeItem('tb_library'); } catch(e){}
   }
@@ -9839,7 +9876,6 @@ function saveLibrary(){ localStorage.setItem('tb_library', JSON.stringify(librar
 
 // Safety alias — ensures window.libraryItems always mirrors the local array
 window.libraryItems = libraryItems;
-console.log('[Library] Loaded', libraryItems.length, 'items');
 
 // ═══ AI TOOL LAUNCHER ════════════════════════════════════════
 // Opens a full-screen modal for any AI writing tool.
@@ -10529,7 +10565,7 @@ function renderLibrary(){
     if(!el){ console.error('[renderLibrary] #lib-list not found'); return; }
 
     // Guard: bail if LIB_GROUPS not ready
-    if(typeof LIB_GROUPS === 'undefined'){ console.warn('[renderLibrary] LIB_GROUPS not ready'); return; }
+    if(typeof LIB_GROUPS === 'undefined'){ return; }
 
     // Ensure libGroup has a value
     if(typeof libGroup === 'undefined') libGroup = 'all';
@@ -10539,7 +10575,6 @@ function renderLibrary(){
       libraryItems = (typeof _LIB_SEED !== 'undefined' ? _LIB_SEED : []).slice();
       window.libraryItems = libraryItems;
     }
-    console.log('[renderLibrary] rendering', libraryItems.length, 'items, group:', libGroup);
 
     initLibNav();
 
@@ -10603,7 +10638,6 @@ function renderLibrary(){
         el.appendChild(row);
       });
     });
-    console.log('[renderLibrary] done — rendered', filtered.length, 'rows');
   } catch(e){ console.error('[renderLibrary] FAILED:', e); }
 }
 
@@ -10954,7 +10988,6 @@ function renderTutorial(){
     var step = _TUT[currentTutStep];
     if(!step){ console.error('[renderTutorial] step is null at index', currentTutStep); return; }
 
-    console.log('[renderTutorial] rendering step', currentTutStep, ':', step.title);
 
     // Progress bar
     var pct = ((currentTutStep+1)/_TUT.length*100).toFixed(0);
@@ -11034,7 +11067,6 @@ function renderTutorial(){
           +'</div></div>';
       }).join('');
     }
-    console.log('[renderTutorial] done');
   } catch(e){ console.error('[renderTutorial] FAILED:', e); }
 }
 
@@ -11088,7 +11120,7 @@ document.querySelectorAll('.overlay, .modal-overlay').forEach(function(ov){
 // ═══════════════════════════════════════════════
 
 async function launchApp(){
-  try { await initAppData(); } catch(e){ console.warn('[launchApp] initAppData error:', e); }
+  try { await initAppData(); } catch(e){ }
 
   // Happy Hunting redirect
   try {
@@ -11166,11 +11198,6 @@ async function initAppData(){
     var apiField = document.getElementById('api-key');
     if(apiField){ apiField.value = k; updateApiDot(k); }
   } catch(e){}
-
-  console.log('[TalentBase] Ready: library=' + libraryItems.length
-    + ' cands=' + cands.length + ' jobs=' + jobs.length
-    + ' sc=' + (scorecards||[]).length
-    + ' tutorial=' + (window.tutorialSteps||[]).length);
 }
 
 // ═══ INIT APP ════════════════════════════════════════════════
@@ -12360,7 +12387,7 @@ function renderCommandCenter(){
 
   var hotCands=cands.filter(function(c){ return getCRMFields(c).temperature==='hot'; });
   var openDeals=deals.filter(function(d){ return d.stage!=='Closed'; });
-  var attnItems=runAutomation();
+  var attnItems=runAutomation(cands, deals);
 
   var html='';
 
@@ -12372,13 +12399,14 @@ function renderCommandCenter(){
   } else {
     if(attnItems.length){
       html+='<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;">'+attnItems.length+' item'+(attnItems.length>1?'s':'')+' need attention</div>';
-      html+=attnItems.slice(0,3).map(function(item){
+      var _ccAttnIdx=-1;
+      html+=attnItems.slice(0,3).map(function(item){ _ccAttnIdx++;
         var col={high:'var(--red)',medium:'var(--amber)',low:'var(--text4)'}[item.urgency]||'var(--text4)';
         return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border2);">'+
           '<span style="font-size:14px;">'+item.icon+'</span>'+
           '<div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--text);">'+esc(item.label)+'</div>'+
           '<div style="font-size:11px;color:'+col+';">'+esc(item.subtext)+'</div></div>'+
-          '<button onclick="('+item.action.toString()+'())" style="font-size:11px;padding:4px 10px;border-radius:4px;border:1px solid '+col+';color:'+col+';background:transparent;cursor:pointer;font-family:inherit;">'+esc(item.actionLabel)+'</button>'+
+          '<button class="cc-attn-btn" data-cc-idx="'+_ccAttnIdx+'" style="font-size:11px;padding:4px 10px;background:var(--accent-dim);color:var(--accent2);border:1px solid var(--accent-border);border-radius:5px;cursor:pointer;font-family:inherit;white-space:nowrap;">'+esc(item.actionLabel||'Review')+'</button>'+
           '</div>';
       }).join('');
     }
@@ -12697,7 +12725,6 @@ async function _cpLoad(){
       }catch(e){ _cpJobs=[]; }
       return;
     } catch(e) {
-      console.warn('[Portal] Supabase load failed, falling back:', e.message);
     }
   }
 
