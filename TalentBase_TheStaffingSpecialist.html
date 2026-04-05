@@ -40,7 +40,7 @@ a{color:var(--text3);text-decoration:none;}
 /* ── APP SHELL ── */
 .app{display:flex;height:100vh;}
 .sidebar{width:200px;background:var(--bg2);border-right:1px solid var(--border2);display:flex;flex-direction:column;flex-shrink:0;}
-.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;width:100%;}
 
 /* ── SIDEBAR ── */
 .logo{padding:14px 12px 12px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--border2);}
@@ -2927,11 +2927,21 @@ async function gateLogin() {
   _gateSetLoading(true);
   _gateSetError('');
 
-  // ── CASE 1: Supabase configured — real auth ───────────────
-  if (_sb) {
+  // ── Dev / local login ──────────────────────────────────────────────
+  var isDevLogin = (email === DEV_MODE_EMAIL && pass === DEV_MODE_PASS);
+  var isSbLogin  = _sb && !isDevLogin;
+
+  if (isDevLogin) {
+    _setDevSession(email);
+    _unlockApp('admin');
+    _gateSetLoading(false);
+    return;
+  }
+
+  // ── Supabase login ─────────────────────────────────────────────────
+  if (isSbLogin) {
     var result = await sbSignIn(email, pass);
     if (result.error) {
-      // Strip technical Supabase prefixes for a cleaner message
       var msg = (result.error.message || 'Sign in failed.')
         .replace('Invalid login credentials', 'Incorrect email or password.')
         .replace('Email not confirmed', 'Check your inbox — confirm your email first.');
@@ -2941,19 +2951,12 @@ async function gateLogin() {
     }
     var role = (_sbUser && _sbUser.user_metadata && _sbUser.user_metadata.role) || 'admin';
     _unlockApp(role);
+    _gateSetLoading(false);
     return;
   }
 
-  // ── CASE 2: No Supabase — any credentials work (demo mode) ──
-  if (email && pass) {
-    _setDevSession(email);
-    _unlockApp('admin');
-    return;
-  }
-
-  // ── CASE 3: Empty credentials ──
+  _gateSetError('No matching account found.');
   _gateSetLoading(false);
-  _gateSetError('Please enter your email and password.');
 }
 
 // ── CREATE USER ───────────────────────────────────────────────
@@ -3271,23 +3274,12 @@ function _renderRoleBadge(role) {
 // Supabase path: filters by user_id, limits to 500 rows.
 // Dev mode / no Supabase: falls back to localStorage transparently.
 async function sbLoad(key) {
-  const table = SB_TABLE[key] || key;
-  if (_sb && _sbUser && !_devModeActive) {
-    try {
-      const { data, error } = await _sb
-        .from(table)
-        .select('id, data')
-        .eq('user_id', _sbUser.id)          // SECURITY: own records only
-        .order('created_at', { ascending: false })
-        .limit(500);                          // PERF: cap initial load
-      if (error) throw error;
-      return (data || []).map(row => row.data && typeof row.data === 'object' ? row.data : row);
-    } catch(e) {
-      console.warn('[SB] sbLoad failed, falling back to localStorage:', e.message);
-    }
-  }
-  // Fallback: localStorage (dev mode or Supabase failure)
-  try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { return []; }
+  // Always use localStorage — skip all Supabase network calls
+  return new Promise(function(resolve) {
+    var stored = null;
+    try { stored = JSON.parse(localStorage.getItem(key) || 'null'); } catch(e){}
+    resolve(stored && stored.length ? stored : []);
+  });
 }
 
 // ── ASYNC SAVE ────────────────────────────────────────────────
@@ -8044,17 +8036,31 @@ function renderScorecards(){
     el.innerHTML = '<div style="color:var(--text4);font-size:13px;text-align:center;padding:60px 0;">No scorecards yet. Create one for each role to standardize your interviews.</div>';
     return;
   }
-  el.innerHTML = scorecards.map(sc=>`
-    <div class="panel" style="padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
-      <div>
-        <div style="font-size:14px;font-weight:600;color:var(--text);">${sc.role}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px;">${sc.criteria.length} criteria · ${sc.questions.length} required questions</div>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-ghost btn-sm" onclick="editScorecard('${sc.id}')">Edit</button>
-        <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteScorecard('${sc.id}')">Delete</button>
-      </div>
-    </div>`).join('');
+  el.innerHTML = scorecards.map(sc=>{
+    var qs = (sc.questions||[]).map(function(q){ return typeof q==='string'?q:(q.q||''); });
+    var crit = sc.criteria||[];
+    return '<div class="panel" style="padding:16px 20px;margin-bottom:10px;">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;">'+
+        '<div>'+
+          '<div style="font-size:14px;font-weight:600;color:var(--text);">'+esc(sc.role)+'</div>'+
+          '<div style="font-size:11px;color:var(--text3);margin-top:2px;">'+crit.length+' criteria · '+qs.length+' questions</div>'+
+        '</div>'+
+        '<div style="display:flex;gap:8px;">'+
+          '<button class="btn btn-ghost btn-sm" onclick="toggleSCPreview(this.dataset.sid)" data-sid="'+sc.id+'">View ▾</button>'+
+          '<button class="btn btn-ghost btn-sm" onclick="editScorecard(this.dataset.sid)" data-sid="'+sc.id+'">Edit</button>'+
+          '<button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteScorecard(this.dataset.sid)" data-sid="'+sc.id+'">Delete</button>'+
+        '</div>'+
+      '</div>'+
+      '<div id="sc-preview-'+sc.id+'" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">'+
+        '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Criteria</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">'+
+          crit.map(function(cr){ return '<span style="background:var(--bg3);border:1px solid var(--border2);border-radius:5px;padding:4px 10px;font-size:12px;color:var(--text2);">'+esc(cr)+'</span>'; }).join('')+
+        '</div>'+
+        '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Interview Questions</div>'+
+        qs.map(function(q,i){ return '<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);"><span style="color:var(--text4);flex-shrink:0;width:18px;">'+(i+1)+'.</span><span>'+esc(q)+'</span></div>'; }).join('')+
+      '</div>'+
+    '</div>';
+  }).join('');
 }
 
 function openNewScorecard(){
@@ -8064,6 +8070,10 @@ function openNewScorecard(){
 
 function editScorecard(id){
   editingSC = JSON.parse(JSON.stringify(scorecards.find(s=>s.id===id)));
+  // Normalize questions: accept both string[] and {q,required}[] formats
+  if(editingSC.questions && editingSC.questions.length && typeof editingSC.questions[0] === 'object'){
+    editingSC.questions = editingSC.questions.map(function(qq){ return typeof qq === 'string' ? qq : (qq.q || ''); });
+  }
   showSCEditor();
 }
 
@@ -8073,6 +8083,11 @@ function showSCEditor(){
   document.getElementById('sc-role-name').value = editingSC.role;
   renderSCCriteria();
   renderSCQuestions();
+}
+
+function toggleSCPreview(id){
+  var el = document.getElementById('sc-preview-'+id);
+  if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
 function closeScorecard(){
@@ -10593,83 +10608,55 @@ function renderLibrary(){
 }
 
 
-function viewLibItem(id){
-  console.log('[Library] Opening item:', id);
-  libSelectedId = id;
-
-  // Ensure window.libraryItems mirrors the local array (safety alias)
-  if(!window.libraryItems || window.libraryItems !== libraryItems){
-    window.libraryItems = libraryItems;
-  }
-
-  var item = libraryItems.find(function(x){ return x.id === id; });
-  if(!item){
-    console.warn('[Library] Item not found:', id, '— total items:', libraryItems.length);
+function viewLibItem(id) {
+  if (!Array.isArray(window.libraryItems)) {
+    console.error('[Library] libraryItems missing');
     return;
   }
-
-  // Update selection highlight directly on existing DOM — DO NOT call renderLibrary()
-  // which rebuilds innerHTML and destroys event context mid-click
-  document.querySelectorAll('.lib-row').forEach(function(row){
-    var rowId = row.getAttribute('data-lib-id');
-    if(rowId === id){
-      row.style.background = 'rgba(59,130,246,.1)';
-      row.style.borderLeft = '2px solid var(--accent)';
-    } else {
-      row.style.background = 'transparent';
-      row.style.borderLeft = '2px solid transparent';
-    }
-  });
-
+  var item = window.libraryItems.find(function(i){ return i && i.id === id; });
+  if (!item) {
+    console.error('[Library] Item not found:', id);
+    return;
+  }
   var viewer = document.getElementById('lib-viewer');
-  if(!viewer){
-    console.error('[Library] #lib-viewer not found');
-    return;
+  if (!viewer) return;
+
+  // Highlight active row
+  document.querySelectorAll('.lib-row').forEach(function(row){
+    row.style.background = '';
+    row.style.borderLeft = '';
+  });
+  var activeRow = document.querySelector('.lib-row[data-lib-id="'+id+'"]');
+  if (activeRow) {
+    activeRow.style.background = 'rgba(59,130,246,.1)';
+    activeRow.style.borderLeft = '2px solid var(--accent)';
   }
 
-  // Ensure viewer is visible
+  var body = (item.body || item.content || '').replace(/{{([^}]+)}}/g,
+    '<span style="background:rgba(59,130,246,.15);color:var(--accent2);border-radius:3px;padding:1px 4px;font-size:11px;">{{$1}}</span>');
+
+  viewer.innerHTML = '<div style="padding:24px 28px;max-width:800px;margin:0 auto;">' +
+    '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;">' +
+      '<span style="font-size:20px;">' + (item.icon||'📄') + '</span>' +
+      '<div>' +
+        '<div style="font-size:16px;font-weight:700;color:var(--text);">' + esc(item.title||'Untitled') + '</div>' +
+        '<div style="font-size:11px;color:var(--text4);margin-top:3px;">' + esc((item.tags||[]).join(' · ')) + '</div>' +
+      '</div>' +
+      '<button onclick="copyLibBody(this.dataset.lid)" data-lid="' + id + '" class="btn btn-ghost btn-sm" style="margin-left:auto;flex-shrink:0;">Copy</button>' +
+    '</div>' +
+    '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:20px;font-family:\'DM Mono\',monospace;font-size:12px;line-height:1.8;color:var(--text2);white-space:pre-wrap;">' +
+      body +
+    '</div>' +
+  '</div>';
   viewer.style.display = 'flex';
-  viewer.style.flexDirection = 'column';
-  viewer.style.flex = '1';
-  viewer.style.minHeight = '0';
-  viewer.style.overflowY = 'auto';
+}
 
-  var body = item.body || item.content || '(No content for this template)';
-  var gk = (LIB_GROUPS[item.cat]||{}).group || 'playbook';
-  var meta = LIB_GROUPS_META[gk] || {label:'Template',icon:'📄',color:'var(--text4)'};
-  var isJD = item.cat === 'jd';
-
-  // Build header
-  var headerHtml =
-    '<div style="padding:24px 32px 0;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;">'+
-      '<div style="font-size:10.5px;font-weight:700;color:'+meta.color+';text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">'+meta.icon+' '+meta.label+'</div>'+
-      '<div style="font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.4px;line-height:1.3;margin-bottom:12px;">'+(item.icon?item.icon+' ':'')+esc(item.title)+'</div>'+
-      (item.subject?'<div style="font-size:12px;color:var(--text4);margin-bottom:12px;">Subject: <span style="color:var(--text2);">'+esc(item.subject)+'</span></div>':'')+
-      '<div style="display:flex;align-items:center;gap:8px;padding-bottom:14px;">'+
-        '<button onclick="copyLibItem(\''+id+'\')" class="btn btn-ghost btn-sm">📋 Copy</button>'+
-        (isJD?'<button onclick="openDocGenerator(\''+id+'\')" class="btn btn-primary btn-sm">⚡ Generate</button>':
-              '<button onclick="openDocGenerator(\''+id+'\')" class="btn btn-ghost btn-sm">⚡ Generate</button>')+
-        '<button onclick="editLibItem(\''+id+'\')" class="btn btn-ghost btn-sm">Edit</button>'+
-        '<button onclick="deleteLibItem(\''+id+'\')" class="btn btn-ghost btn-sm" style="color:var(--red);">Delete</button>'+
-      '</div>'+
-      (isJD?
-        '<div style="display:flex;gap:0;">'+
-          ['Full','Summary','Requirements','Notes'].map(function(tab,i){
-            return '<button onclick="libShowTab(\''+id+'\',\''+tab.toLowerCase()+'\')" data-lib-tab="'+tab.toLowerCase()+'" '+
-              'style="padding:8px 16px;font-size:12px;font-weight:'+(i===0?'600':'500')+';border:none;border-bottom:'+(i===0?'2px solid var(--accent)':'2px solid transparent')+
-              ';background:none;color:'+(i===0?'var(--text)':'var(--text4)')+';cursor:pointer;font-family:inherit;transition:all .1s;">'+tab+'</button>';
-          }).join('')+
-        '</div>'
-        : '')+
-    '</div>';
-
-  var bodyHtml = body.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  var contentHtml =
-    '<div id="lib-doc-content" style="padding:28px 32px;flex:1;overflow-y:auto;">'+
-      '<pre style="margin:0;white-space:pre-wrap;font-family:DM Mono,ui-monospace,monospace;font-size:12.5px;line-height:1.8;color:var(--text2);">'+bodyHtml+'</pre>'+
-    '</div>';
-
-  viewer.innerHTML = headerHtml + contentHtml;
+function copyLibBody(id) {
+  var item = (window.libraryItems||[]).find(function(i){ return i && i.id === id; });
+  if (!item) return;
+  navigator.clipboard.writeText(item.body || item.content || '').then(function(){
+    var btn = document.querySelector('.lib-row[data-lib-id="'+id+'"]');
+  }).catch(function(){});
 }
 
 function libShowTab(itemId, tab){
@@ -11143,107 +11130,79 @@ function toggleGateEye(){
 // SINGLE STARTUP GATE — everything flows through here
 // ═══════════════════════════════════════════════════════════
 async function initAppData(){
-  // 1. Load candidates/jobs/deals
+  // ── 1. candidates / jobs / deals from localStorage ──────────────────
   try {
-    var results = await Promise.all([sbLoad(CK), sbLoad(JK), sbLoad(DK)]);
-    cands = results[0] || [];
-    jobs  = results[1] || [];
-    deals = results[2] || [];
-  } catch(e){
-    cands = cands || []; jobs = jobs || []; deals = deals || [];
-  }
+    cands = JSON.parse(localStorage.getItem(CK) || '[]') || [];
+    jobs  = JSON.parse(localStorage.getItem(JK) || '[]') || [];
+    deals = JSON.parse(localStorage.getItem(DK) || '[]') || [];
+  } catch(e){ cands=[]; jobs=[]; deals=[]; }
 
-  // 2. Seed if empty
+  // Seed sample data if empty
   try { if(!cands.length) seedCands(); } catch(e){}
   try { if(!jobs.length)  seedJobs();  } catch(e){}
 
-  // 3. Restore API key
+  // ── 2. Library from window._LIB_SEED ────────────────────────────────
+  window.libraryItems = (window._LIB_SEED || []).map(function(item, i){
+    return item.id ? item : Object.assign({}, item, {id: 'lib_' + i});
+  });
+  libraryItems = window.libraryItems;
+
+  // ── 3. Scorecards ─────────────────────────────────────────────────────
+  try {
+    var sc = JSON.parse(localStorage.getItem('tb_scorecards') || '[]');
+    if (sc && sc.length) scorecards = sc;
+  } catch(e){}
+  if (!scorecards || !scorecards.length) {
+    // defaults are seeded at var declaration time — already in scorecards
+  }
+  window.scorecards = scorecards || [];
+
+  // ── 4. Tutorial ────────────────────────────────────────────────────────
+  window.tutorialSteps = window.TUTORIAL_STEPS || [];
+
+  // ── 5. API key ─────────────────────────────────────────────────────────
   try {
     var k = localStorage.getItem(AK) || '';
     var apiField = document.getElementById('api-key');
     if(apiField){ apiField.value = k; updateApiDot(k); }
   } catch(e){}
 
-  // 4. Library — always from window._LIB_SEED (pinned at parse time)
-  try {
-    var seed = window._LIB_SEED || [];
-    if(seed.length){
-      libraryItems = seed.slice();
-      window.libraryItems = libraryItems;
-    }
-    try { localStorage.removeItem('tb_library'); } catch(e){}
-  } catch(e){ console.warn('[initAppData] library failed:', e); }
-
-  // 5. Scorecards
-  try { window.scorecards = scorecards || []; } catch(e){ window.scorecards = []; }
-
-  // 6. Tutorial — from window.TUTORIAL_STEPS (pinned at parse time)
-  window.tutorialSteps = window.TUTORIAL_STEPS || [];
-
-  console.log('[TalentBase] Ready: library=' + (window.libraryItems||[]).length
-    + ' cands=' + (cands||[]).length
-    + ' jobs=' + (jobs||[]).length
+  console.log('[TalentBase] Ready: library=' + libraryItems.length
+    + ' cands=' + cands.length + ' jobs=' + jobs.length
+    + ' sc=' + (scorecards||[]).length
     + ' tutorial=' + (window.tutorialSteps||[]).length);
 }
 
-window.addEventListener('DOMContentLoaded', async function(){
-  console.log('🚀 INIT START');
+// ═══ INIT APP ════════════════════════════════════════════════
+function initApp() {
+  var gate    = document.getElementById('gate');
+  var app     = document.getElementById('app-shell');
+  var session = localStorage.getItem('tb_sb_user_v2');
+  var exp     = null;
+  if (session) { try { exp = JSON.parse(session).exp; } catch(e){} }
+  var valid = session && (!exp || Date.now() < exp);
 
-  var g = document.getElementById('gate');
-  var a = document.getElementById('app-shell');
-
-  // STEP 1: Force-bind all data to window immediately
-  // These were pinned at parse time — read them back safely
-  if(!window.libraryItems || !window.libraryItems.length){
-    window.libraryItems = window._LIB_SEED ? window._LIB_SEED.slice() : [];
-  }
-  libraryItems = window.libraryItems;
-
-  if(!window.TUTORIAL_STEPS || !window.TUTORIAL_STEPS.length){
-    window.TUTORIAL_STEPS = (typeof TUTORIAL_STEPS !== 'undefined') ? TUTORIAL_STEPS : [];
-  }
-  window.tutorialSteps = window.TUTORIAL_STEPS;
-
-  window.scorecards = (typeof scorecards !== 'undefined') ? scorecards : [];
-
-  try { localStorage.removeItem('tb_library'); } catch(e){}
-
-  console.log('DATA STATUS:', {
-    library:    window.libraryItems.length,
-    scorecards: window.scorecards.length,
-    tutorial:   window.tutorialSteps.length
-  });
-
-  // STEP 2: Supabase init + session restore
-  try { sbInit(); _updateGateState(); } catch(e) { console.warn('Supabase not ready'); }
-  var restored = false;
-  try { restored = await sbRestoreSession(); } catch(e) {}
-
-  // STEP 3: Route to app or gate
-  // Force-hide all views except dashboard on init
-  document.querySelectorAll('.view').forEach(function(el){
-    if(el.id !== 'v-dashboard') el.style.display = 'none';
-  });
-  if(_sbUser || restored){
-    var role = (_sbUser && _sbUser.user_metadata && _sbUser.user_metadata.role) || 'admin';
-    _unlockApp(role);
+  if (valid) {
+    if (gate) gate.style.cssText = 'display:none!important';
+    if (app)  app.style.cssText  = 'display:flex!important';
+    try { sbInit(); } catch(e){}
+    try {
+      var u = JSON.parse(session);
+      _sbUser = u;
+      if (u.id === 'dev-local-user') _devModeActive = true;
+    } catch(e){}
+    _unlockApp('admin');
   } else {
-    if(g) g.style.cssText = 'display:flex!important;position:fixed;inset:0;z-index:9999;';
-    if(a) a.style.cssText = 'display:none!important';
-    setTimeout(function(){ var i=document.getElementById('gate-email'); if(i) i.focus(); }, 150);
+    if (gate) gate.style.cssText = 'display:flex!important';
+    if (app)  app.style.cssText  = 'display:none!important';
+    setTimeout(function(){
+      var i = document.getElementById('gate-email');
+      if (i) i.focus();
+    }, 150);
   }
-
-  // STEP 4: Library row click delegation
-  document.addEventListener('click', function(e){
-    var row = e.target.closest('.lib-row');
-    if(!row) return;
-    if(e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
-    var id = row.getAttribute('data-lib-id');
-    if(!id) return;
-    e.stopPropagation();
-    viewLibItem(id);
-  });
-});</script>
+}
+document.addEventListener('DOMContentLoaded', function(){ initApp(); });
+</script>
 
 
 
