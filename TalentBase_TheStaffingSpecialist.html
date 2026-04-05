@@ -227,7 +227,7 @@ a{color:var(--text3);text-decoration:none;}
 /* ── CANDIDATES ── */
 .cand-layout{flex:1;display:flex;overflow:hidden;}
 /* ── VIEWS — the core show/hide system ── */
-.view{display:none !important;flex-direction:column;overflow:hidden;min-height:0;min-width:0;}
+.view{display:none;flex-direction:column;overflow:hidden;min-height:0;min-width:0;}
 .view.on{display:flex !important;flex-direction:column;flex:1;overflow:hidden;min-height:0;min-width:0;}
 
 /* ── CANDIDATES ── */
@@ -1449,25 +1449,25 @@ button, .btn { white-space:nowrap !important; }
   <div class="nav">
 
     <!-- PRIMARY NAV -->
-    <div class="ni on" onclick="nav('dashboard')" id="ni-dashboard">
+    <div class="ni on" data-nav="dashboard" data-nav="dashboard" onclick="nav('dashboard')" id="ni-dashboard">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
       Dashboard
     </div>
-    <div class="ni" onclick="nav('jobs')">
+    <div class="ni" data-nav="jobs" data-nav="jobs" onclick="nav('jobs')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
       Jobs
       <span class="ni-badge" id="nb-jobs"></span>
     </div>
-    <div class="ni" onclick="nav('candidates')">
+    <div class="ni" data-nav="candidates" data-nav="candidates" onclick="nav('candidates')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
       Candidates
       <span class="ni-badge" id="nb-cands"></span>
     </div>
-    <div class="ni" onclick="nav('pipeline')">
+    <div class="ni" data-nav="pipeline" data-nav="pipeline" onclick="nav('pipeline')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
       Pipeline
     </div>
-    <div class="ni" onclick="nav('deals')" id="ni-deals">
+    <div class="ni" data-nav="deals" data-nav="deals" onclick="nav('deals')" id="ni-deals">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
       Deals
       <span class="ni-badge" id="nb-deals"></span>
@@ -1481,62 +1481,62 @@ button, .btn { white-space:nowrap !important; }
     </div>
 
     <div id="nav-tools-drawer" style="display:none;">
-      <div class="ni" onclick="nav('match')">
+      <div class="ni" data-nav="match" data-nav="match" onclick="nav('match')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
         AI Match
       </div>
-      <div class="ni" onclick="nav('campaigns')">
+      <div class="ni" data-nav="campaigns" data-nav="campaigns" onclick="nav('campaigns')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
         Campaigns
       </div>
-      <div class="ni" onclick="nav('offer')">
+      <div class="ni" data-nav="offer" data-nav="offer" onclick="nav('offer')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         Offer Builder
       </div>
-      <div class="ni" onclick="nav('scorecard')">
+      <div class="ni" data-nav="scorecard" data-nav="scorecard" onclick="nav('scorecard')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         Scorecards
       </div>
-      <div class="ni" onclick="nav('library')">
+      <div class="ni" data-nav="library" data-nav="library" onclick="nav('library')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
         Doc Library
       </div>
-      <div class="ni" id="ni-prompts" onclick="nav('prompts')">
+      <div class="ni" data-nav="prompts" data-nav="prompts" id="ni-prompts" onclick="nav('prompts')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
         Prompt Library
       </div>
-      <div class="ni" onclick="nav('analytics')" id="ni-analytics">
+      <div class="ni" data-nav="analytics" data-nav="analytics" onclick="nav('analytics')" id="ni-analytics">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Analytics
       </div>
-      <div class="ni" id="ni-happyhunting" onclick="nav('happyhunting')">
+      <div class="ni" data-nav="happyhunting" data-nav="happyhunting" id="ni-happyhunting" onclick="nav('happyhunting')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0;color:#ff4d00;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         <span>Happy Hunting</span>
       </div>
-      <div class="ni" onclick="nav('nlsearch')">
+      <div class="ni" data-nav="nlsearch" data-nav="nlsearch" onclick="nav('nlsearch')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         AI Sourcing
       </div>
-      <div class="ni" onclick="nav('headcount')">
+      <div class="ni" data-nav="headcount" data-nav="headcount" onclick="nav('headcount')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
         Headcount
       </div>
-      <div class="ni" onclick="nav('aitools')" id="ni-aitools">
+      <div class="ni" data-nav="aitools" data-nav="aitools" onclick="nav('aitools')" id="ni-aitools">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         AI Tools
       </div>
-      <div class="ni" onclick="nav('integrations')">
+      <div class="ni" data-nav="integrations" data-nav="integrations" onclick="nav('integrations')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
         Integrations
       </div>
-      <div class="ni" onclick="nav('tutorial')">
+      <div class="ni" data-nav="tutorial" data-nav="tutorial" onclick="nav('tutorial')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Tutorial
       </div>
     </div>
 
     <div style="flex:1;"></div>
-    <div class="ni" onclick="nav('workspace')" id="ni-workspace">
+    <div class="ni" data-nav="workspace" data-nav="workspace" onclick="nav('workspace')" id="ni-workspace">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
       Settings
     </div>
@@ -1578,7 +1578,7 @@ button, .btn { white-space:nowrap !important; }
 <!-- ══════════════════════════════════════════════════════════
      AI TOOLS — COMMAND CENTER
 ═══════════════════════════════════════════════════════════ -->
-<div class="view" id="v-aitools" style="display:none;flex-direction:column;overflow:hidden;">
+<div class="view" id="v-aitools" style="flex-direction:column;overflow:hidden;">
   <div class="topbar">
     <div><div class="topbar-title">⚡ AI Tools</div></div>
   </div>
@@ -1695,7 +1695,7 @@ button, .btn { white-space:nowrap !important; }
      DEALS CRM — Sales pipeline from HappyHunting to Closed
 ═══════════════════════════════════════════════════════════ -->
 <!-- ═══ HAPPY HUNTING (embedded) ═══ -->
-<div class="view" id="v-happyhunting" style="display:none;flex-direction:column;overflow:hidden;">
+<div class="view" id="v-happyhunting" style="flex-direction:column;overflow:hidden;">
   <div class="topbar" style="flex-shrink:0;">
     <div>
       <div class="topbar-title">⚡ Happy Hunting</div>
@@ -1859,7 +1859,7 @@ button, .btn { white-space:nowrap !important; }
   </div>
 </div>
 
-<div class="view" id="v-deals" style="display:none;flex-direction:column;overflow:hidden;">
+<div class="view" id="v-deals" style="flex-direction:column;overflow:hidden;">
 
   <!-- Topbar -->
   <div class="topbar">
@@ -2019,7 +2019,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ── CANDIDATES ── -->
-<div class="view" style="display:none;" id="v-candidates">
+<div class="view" id="v-candidates">
   <div class="topbar">
     <div><div class="topbar-title">Candidates</div></div>
     <div class="tb-spacer"></div>
@@ -2148,7 +2148,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ── PIPELINE KANBAN ── -->
-<div class="view" style="display:none;" id="v-pipeline">
+<div class="view" id="v-pipeline">
   <div class="topbar">
     <div><div class="topbar-title">Pipeline</div><div class="topbar-sub">Drag-to-advance click interface</div></div>
     <div class="tb-spacer"></div>
@@ -2160,7 +2160,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ── JOBS ── -->
-<div class="view" style="display:none;" id="v-jobs">
+<div class="view" id="v-jobs">
   <div class="topbar">
     <div><div class="topbar-title">Jobs</div></div>
     <div class="tb-spacer"></div>
@@ -2177,7 +2177,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ── AI MATCH ── -->
-<div class="view" style="display:none;" id="v-match">
+<div class="view" id="v-match">
   <div class="topbar">
     <div><div class="topbar-title">AI Match</div><div class="topbar-sub">Score and rank candidates against any job</div></div>
   </div>
@@ -2195,7 +2195,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ── ANALYTICS ── -->
-<div class="view" style="display:none;" id="v-analytics">
+<div class="view" id="v-analytics">
   <div class="topbar">
     <div><div class="topbar-title">Analytics</div></div>
   </div>
@@ -2223,7 +2223,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ═══ AI SOURCING (Natural Language) ═══ -->
-<div class="view" style="display:none;" id="v-nlsearch">
+<div class="view" id="v-nlsearch">
   <div class="topbar">
     <div><div class="topbar-title">AI Sourcing</div><div class="topbar-sub">Describe who you need in plain English</div></div>
   </div>
@@ -2241,7 +2241,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ═══ INTERVIEW SCORECARDS ═══ -->
-<div class="view" style="display:none;" id="v-scorecard">
+<div class="view" id="v-scorecard">
   <div class="topbar">
     <div><div class="topbar-title">Interview Scorecards</div></div>
     <button class="btn btn-ghost btn-sm" onclick="downloadScorecard(scorecards&&scorecards[0]?scorecards[0].id:'sc_default_1')" style="margin-right:4px;">↓ Download PDF</button>
@@ -2273,7 +2273,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ═══ OFFER BUILDER ═══ -->
-<div class="view" style="display:none;" id="v-offer">
+<div class="view" id="v-offer">
   <div class="topbar">
     <div><div class="topbar-title">Offer Builder</div><div class="topbar-sub">Professional offer letters — fill fields, generate, edit inline, print or send</div></div>
     <div style="display:flex;gap:8px;" id="ob-action-btns">
@@ -2454,7 +2454,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ═══ HEADCOUNT PLANNING ═══ -->
-<div class="view" style="display:none;" id="v-headcount">
+<div class="view" id="v-headcount">
   <div class="topbar">
     <div><div class="topbar-title">Headcount Planning</div></div>
     <button class="btn btn-primary" onclick="openAddHeadcount()">
@@ -2521,7 +2521,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ═══ INTEGRATIONS ═══ -->
-<div class="view" id="v-integrations" style="display:none;flex-direction:column;">
+<div class="view" id="v-integrations" style="flex-direction:column;">
   <div class="topbar">
     <div><div class="topbar-title">Integrations</div><div class="topbar-sub">Connect your recruiting stack</div></div>
     <button class="btn btn-ghost btn-sm" onclick="alert('Email jonah@thestaffingspecialist.com to request an integration.')">Request Integration</button>
@@ -2594,7 +2594,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ═══ PROMPTS ═══ -->
-<div class="view" style="display:none;" id="v-prompts">
+<div class="view" id="v-prompts">
   <div class="topbar">
     <div><div class="topbar-title">Prompt Library</div><div class="topbar-sub">100 AI recruiting prompts · DM scripts · BD playbooks — all built for your workflow</div></div>
   </div>
@@ -2646,7 +2646,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 <!-- ═══ TUTORIAL ═══ -->
-<div class="view" id="v-tutorial" style="display:none;flex-direction:column;display:flex;">
+<div class="view" id="v-tutorial" style="flex-direction:column;display:flex;">
   <div class="topbar">
     <div><div class="topbar-title">TalentBase Tutorial</div><div class="topbar-sub">Complete walkthrough — 8 steps to master the system</div></div>
     <div style="display:flex;align-items:center;gap:10px;">
@@ -2715,7 +2715,7 @@ button, .btn { white-space:nowrap !important; }
 
 
 <!-- ═══ CAMPAIGNS ═══ -->
-<div class="view" style="display:none;" id="v-campaigns">
+<div class="view" id="v-campaigns">
   <div class="topbar">
     <div><div class="topbar-title">Campaigns</div><div class="topbar-sub">Always-On Pipeline · Outreach · Reactivation</div></div>
     <button class="btn btn-primary" onclick="openNewCampaign()">
@@ -2767,7 +2767,7 @@ button, .btn { white-space:nowrap !important; }
 </div>
 
 
-<div class="view" id="v-workspace" style="display:none;flex-direction:column;overflow:hidden;display:flex;">
+<div class="view" id="v-workspace" style="flex-direction:column;overflow:hidden;display:flex;">
   <div class="topbar" style="flex-shrink:0;">
     <div>
       <div class="topbar-title">Workspace Settings</div>
@@ -3311,7 +3311,7 @@ CREATE POLICY "staff_read_feedback" ON client_feedback FOR SELECT
 ═══════════════════════════════════════════════════════════════ -->
 
 <!-- V2: Command Center view (hidden until V2 enabled) -->
-<div class="view" id="v-command" style="display:none;flex-direction:column;overflow:hidden;">
+<div class="view" id="v-command" style="flex-direction:column;overflow:hidden;">
   <div class="topbar" style="display:flex;align-items:center;justify-content:space-between;">
     <div>
       <div class="topbar-title" style="display:flex;align-items:center;gap:8px;">
@@ -3330,7 +3330,7 @@ CREATE POLICY "staff_read_feedback" ON client_feedback FOR SELECT
 </div>
 
 <!-- V2: Talent Radar view -->
-<div class="view" id="v-radar" style="display:none;flex-direction:column;">
+<div class="view" id="v-radar" style="flex-direction:column;">
   <div class="topbar">
     <div><div class="topbar-title">&#128225; Talent Radar</div><div class="topbar-sub">Unassigned candidates — ready to place</div></div>
   </div>
@@ -4940,11 +4940,9 @@ function toggleNavTools(btn){
 }
 
 function nav(v) {
-  // Permission guard
-  var perms = { 'deals':'viewDeals','analytics':'viewAnalytics','aitools':'viewAITools','workspace':'viewSettings' };
-  if (perms[v] && !can(perms[v])) v = 'dashboard';
+  console.log('[nav] active:', v);
 
-  // Hide ALL views
+  // Hide all views
   document.querySelectorAll('.view').forEach(function(el) {
     el.classList.remove('on');
     el.style.display = 'none';
@@ -4952,45 +4950,38 @@ function nav(v) {
 
   // Show selected view
   var active = document.getElementById('v-' + v);
-  if (active) {
-    active.classList.add('on');
-    active.style.display    = 'flex';
-    active.style.flex       = '1';
-    active.style.flexDirection = 'column';
-  } else {
-    console.error('[nav] View not found: v-' + v);
-    return;
-  }
+  if (!active) { console.error('[nav] Missing view: v-' + v); return; }
+  active.classList.add('on');
+  active.style.display = 'flex';
+  active.style.flex = '1';
+  active.style.flexDirection = 'column';
 
-  // Update sidebar highlight
-  document.querySelectorAll('.ni').forEach(function(el) {
-    el.classList.remove('on');
-    var oc = el.getAttribute('onclick') || '';
-    if (oc.indexOf("nav('" + v + "')") !== -1) el.classList.add('on');
-  });
-
+  // Sidebar highlight
+  document.querySelectorAll('.ni').forEach(function(n) { n.classList.remove('on'); });
+  var ni = document.querySelector('[data-nav="' + v + '"]');
+  if (ni) ni.classList.add('on');
   window._activeView = v;
 
-  // View-specific renders
-  if (v==='dashboard')    { try { renderDash(); }              catch(e) { console.error(e); } }
-  if (v==='deals')        { try { renderDeals(); }             catch(e) { console.error(e); } }
-  if (v==='candidates')   { try { updateRoleFilter(); doSearch(); } catch(e) { console.error(e); } }
-  if (v==='pipeline')     { try { renderKanban(); updateKbJobFilter(); } catch(e) { console.error(e); } }
-  if (v==='jobs')         { try { renderJobsList(); }          catch(e) { console.error(e); } }
-  if (v==='match')        { try { renderMatchJobs(); }         catch(e) { console.error(e); } }
-  if (v==='analytics')    { try { renderAnalytics(); }         catch(e) { console.error(e); } }
-  if (v==='offer')        { try { populateOfferDropdowns(); }  catch(e) { console.error(e); } }
-  if (v==='headcount')    { try { renderHeadcount(); }         catch(e) { console.error(e); } }
-  if (v==='scorecard')    { try { renderScorecards(); }        catch(e) { console.error(e); } }
-  if (v==='library')      { try { renderLibrary(); }           catch(e) { console.error(e); } }
-  if (v==='prompts')      { try { renderPromptLib(); }         catch(e) { console.error(e); } }
-  if (v==='tutorial')     { try { currentTutStep = currentTutStep || 0; renderTutorial(); } catch(e) { console.error(e); } }
+  // View renders — each isolated
+  if (v==='dashboard')    { try { renderDash(); } catch(e) {} }
+  if (v==='deals')        { try { renderDeals(); } catch(e) {} }
+  if (v==='candidates')   { try { updateRoleFilter(); doSearch(); } catch(e) {} }
+  if (v==='pipeline')     { try { renderKanban(); updateKbJobFilter(); } catch(e) {} }
+  if (v==='jobs')         { try { renderJobsList(); } catch(e) {} }
+  if (v==='match')        { try { renderMatchJobs(); } catch(e) {} }
+  if (v==='analytics')    { try { renderAnalytics(); } catch(e) {} }
+  if (v==='offer')        { try { populateOfferDropdowns(); } catch(e) {} }
+  if (v==='headcount')    { try { renderHeadcount(); } catch(e) {} }
+  if (v==='scorecard')    { try { renderScorecards(); } catch(e) {} }
+  if (v==='library')      { try { renderLibrary(); } catch(e) {} }
+  if (v==='prompts')      { try { renderPromptLib(); } catch(e) {} }
+  if (v==='tutorial')     { try { currentTutStep=currentTutStep||0; renderTutorial(); } catch(e) {} }
   if (v==='integrations') { try { checkIntegrationStatus(); } catch(e) {} }
-  if (v==='campaigns')    { try { renderCampaigns && renderCampaigns(); } catch(e) {} }
-  if (v==='workspace')    { try { initWorkspaceSettings && initWorkspaceSettings(); } catch(e) {} }
-  if (v==='command')      { try { renderCommandCenter && renderCommandCenter(); } catch(e) {} }
-  if (v==='radar')        { try { renderRadar && renderRadar(); } catch(e) {} }
-  if (v==='aitools')      { try { initAITools && initAITools(); } catch(e) {} }
+  if (v==='campaigns')    { try { renderCampaigns&&renderCampaigns(); } catch(e) {} }
+  if (v==='workspace')    { try { initWorkspaceSettings&&initWorkspaceSettings(); } catch(e) {} }
+  if (v==='command')      { try { renderCommandCenter&&renderCommandCenter(); } catch(e) {} }
+  if (v==='radar')        { try { renderRadar&&renderRadar(); } catch(e) {} }
+  if (v==='aitools')      { try { initAITools&&initAITools(); } catch(e) {} }
 }
 
 
@@ -11904,6 +11895,13 @@ function initApp() {
   }
 }
 document.addEventListener('DOMContentLoaded', function(){ initApp(); });
+// Event delegation — belt AND suspenders nav
+document.addEventListener('click', function(e) {
+  var item = e.target.closest('[data-nav]');
+  if (item && item.getAttribute('data-nav')) {
+    nav(item.getAttribute('data-nav'));
+  }
+});
 </script>
 
 
@@ -14014,7 +14012,7 @@ function downloadScorecard(scId) {
 
 /* 1. Every view is hidden by default — no exceptions */
 .view {
-  display: none !important;
+  display: none;
 }
 
 /* 2. Only the active view is shown */
