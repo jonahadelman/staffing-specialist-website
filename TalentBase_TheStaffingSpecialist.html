@@ -2062,11 +2062,15 @@ button, .btn { white-space:nowrap !important; }
 <div class="view" id="v-dashboard">
 
   <!-- TOPBAR -->
-  <div class="topbar" style="padding:0 32px;gap:16px;align-items:flex-start;">
-    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">
-      <div style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--text);">Hiring Command Center</div>
-      <div id="dash-date" style="font-size:11px;color:var(--text4);"></div>
-      <div id="dash-user-greeting" style="font-size:12px;color:var(--accent2);font-weight:600;opacity:.85;"></div>
+  <div class="topbar" style="padding:0 32px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:16px;">
+      <!-- LEFT -->
+      <div style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--text);white-space:nowrap;">Hiring Command Center</div>
+      <!-- RIGHT: date + greeting stacked -->
+      <div style="display:flex;flex-direction:column;align-items:flex-end;line-height:1.5;flex-shrink:0;">
+        <div id="dash-date" style="font-size:11px;color:var(--text4);"></div>
+        <div id="dash-user-greeting" style="font-size:12px;color:var(--accent2);font-weight:600;"></div>
+      </div>
     </div>
     <div style="display:flex;gap:8px;">
       <button class="btn btn-ghost btn-sm" onclick="openAddJob()">
