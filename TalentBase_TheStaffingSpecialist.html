@@ -13131,7 +13131,6 @@ function renderCommandCenter(){
             (t.status!=='Completed' ? '<button data-cc-complete="'+t.id+'" class="btn btn-ghost btn-sm" style="font-size:10.5px;white-space:nowrap;">✓ Complete</button>' : '<span style="font-size:10px;color:var(--green);font-weight:700;">✓ Done</span>')) +
           (!ccManagerView && role!=='executive' ? '<button data-cc-edit="'+t.id+'" class="btn btn-ghost btn-sm" style="font-size:10.5px;">Edit</button>' : '') +
           (!ccManagerView && role!=='executive' ? '<button data-cc-delete="'+t.id+'" class="btn btn-ghost btn-sm" style="font-size:10.5px;color:var(--red);" title="Delete task">🗑 Delete</button>' : '') +
-          (!ccManagerView ? '<button data-cc-delete="'+t.id+'" class="btn btn-ghost btn-sm" style="font-size:10.5px;color:var(--red);" title="Delete task">🗑 Delete</button>' : '') +
         '</div>' +
       '</div>' +
     '</div>';
