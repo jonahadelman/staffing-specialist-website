@@ -1545,11 +1545,31 @@ button, .btn { white-space:nowrap !important; }
 
 <!-- ═══════════════ SIDEBAR ═══════════════ -->
 <div class="sidebar">
-  <!-- Workspace Switcher -->
-  <div id="ws-switcher-bar" style="padding:8px 12px 0;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:2px;">
-    <div style="font-size:9px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Workspace</div>
-    <select id="ws-switcher" onchange="switchWorkspace(this.value)"
-      style="width:100%;font-size:12px;padding:5px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);outline:none;font-family:inherit;font-weight:600;">
+  <!-- User Picker — unified workspace + role switcher -->
+  <div id="ws-switcher-bar" style="padding:8px 12px 6px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:2px;">
+    <div style="font-size:9px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Active User</div>
+    <select id="user-picker" onchange="switchUser(this.value)"
+      style="width:100%;font-size:11px;padding:5px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);outline:none;font-family:inherit;font-weight:600;">
+      <optgroup label="— Werfen —">
+        <option value="u-w1">Jonah Adelman · Admin</option>
+        <option value="u-w2">Suz Stetson · Sr HRBP</option>
+        <option value="u-w3">Hiring Manager · Hiring Mgr</option>
+        <option value="u-w4">Dir. Talent Acquisition · Executive</option>
+      </optgroup>
+      <optgroup label="— HiArc —">
+        <option value="u-h1">Jonah Adelman · Admin</option>
+        <option value="u-h2">HiArc Manager · Hiring Mgr</option>
+        <option value="u-h3">HRBP Lead · HRBP</option>
+        <option value="u-h4">Mike Aschettino · Director</option>
+        <option value="u-h5">Nate Doemling · President</option>
+        <option value="u-h6">Dana Smathers · Executive</option>
+      </optgroup>
+      <optgroup label="— General —">
+        <option value="u-d1">Admin · General</option>
+      </optgroup>
+    </select>
+    <!-- Hidden but functional workspace select for legacy code -->
+    <select id="ws-switcher" onchange="switchWorkspace(this.value)" style="display:none;">
       <option value="werfen">Werfen</option>
       <option value="hiarc">HiArc</option>
       <option value="default">General</option>
@@ -1683,22 +1703,13 @@ button, .btn { white-space:nowrap !important; }
       </div>
       <input type="password" class="api-field" id="api-key" placeholder="sk-ant-..." oninput="saveKey(this.value)" autocomplete="off"/>
     </div>
-    <!-- Role switcher for demo -->
-    <div style="padding:6px 2px 2px;">
-      <div style="font-size:9px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">View As</div>
-      <select id="sb-role-select" onchange="setRoleOverride(this.value)"
-        style="width:100%;font-size:11px;padding:5px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);outline:none;font-family:inherit;">
-        <option value="admin">🔧 Admin / Recruiter</option>
-        <option value="hiring_manager">👔 Hiring Manager</option>
-        <option value="hrbp">📋 HRBP</option>
-        <option value="executive">📊 Executive</option>
-      </select>
-    </div>
+    <!-- Role controlled by user picker above -->
     <!-- User + sign out -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 2px 2px;">
       <div style="display:flex;align-items:center;gap:5px;">
         <div id="sb-status-dot" style="width:5px;height:5px;border-radius:50%;background:var(--text4);flex-shrink:0;transition:background .3s;"></div>
-        <span id="sb-role-badge" style="font-size:10px;color:var(--text4);"></span>
+        <span id="sb-user-name" style="font-size:10px;color:var(--text2);font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+        <span id="sb-role-badge" style="font-size:9px;color:var(--text4);"></span>
       </div>
       <button onclick="sbSignOut()" style="background:none;border:none;color:var(--text4);font-size:10.5px;cursor:pointer;padding:2px 4px;border-radius:3px;font-family:inherit;transition:color .1s;" onmouseover="this.style.color='var(--text2)'" onmouseout="this.style.color='var(--text4)'">Sign out</button>
     </div>
@@ -2053,6 +2064,7 @@ button, .btn { white-space:nowrap !important; }
     <div style="flex:1;min-width:0;">
       <div style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--text);">Hiring Command Center</div>
       <div id="dash-date" style="font-size:11px;color:var(--text4);margin-top:1px;"></div>
+      <div id="dash-user-greeting" style="font-size:11px;color:var(--accent2);margin-top:2px;font-weight:600;"></div>
     </div>
     <div style="display:flex;gap:8px;">
       <button class="btn btn-ghost btn-sm" onclick="openAddJob()">
@@ -3793,10 +3805,15 @@ async function _unlockApp(role) {
   try { renderScorecards(); } catch(e){}
   try { renderTutorial(); }   catch(e){}
   try { applyNavRestrictions(); } catch(e){}
-  // Init workspace switcher
+  // Init user system
   try {
-    var swEl = document.getElementById('ws-switcher');
-    if (swEl) swEl.value = currentWorkspace;
+    // Restore current user from storage
+    var _savedUid = localStorage.getItem('tb_current_user');
+    if (_savedUid) {
+      var _savedUser = TB_USERS.find(function(u){ return u.id === _savedUid; });
+      if (_savedUser) { currentUser = _savedUser; currentWorkspace = _savedUser.workspaceId; }
+    }
+    updateUserUI();
   } catch(e){}
 }
 // ── MAIN GATE LOGIN ───────────────────────────────────────────
@@ -4351,6 +4368,100 @@ function wsFilter(arr) {
     return !item.workspaceId || item.workspaceId === currentWorkspace || currentWorkspace === 'default';
   });
 }
+
+// ── USER SYSTEM ───────────────────────────────────────────────
+// Default users per workspace — editable in Settings
+var TB_USERS = JSON.parse(localStorage.getItem('tb_users') || 'null') || [
+  // ── Werfen ──────────────────────────────────────────────────
+  { id:'u-w1', name:'Jonah Adelman',                  email:'jonah@werfen',   role:'admin',           workspaceId:'werfen',  title:'Admin'                                  },
+  { id:'u-w2', name:'Suz Stetson',                    email:'suz@werfen',     role:'hrbp',            workspaceId:'werfen',  title:'Senior HR Business Partner (Hiring)'    },
+  { id:'u-w3', name:'Hiring Manager',                 email:'hm@werfen',      role:'hiring_manager',  workspaceId:'werfen',  title:'Hiring Manager'                         },
+  { id:'u-w4', name:'Director of Talent Acquisition', email:'dta@werfen',     role:'executive',       workspaceId:'werfen',  title:'Director of Talent Acquisition'         },
+  // ── HiArc ───────────────────────────────────────────────────
+  { id:'u-h1', name:'Jonah Adelman',                  email:'jonah@hiarc',    role:'admin',           workspaceId:'hiarc',   title:'Admin'                                  },
+  { id:'u-h2', name:'HiArc Manager',                  email:'mgr@hiarc',      role:'hiring_manager',  workspaceId:'hiarc',   title:'Hiring Manager'                         },
+  { id:'u-h3', name:'HRBP Lead',                      email:'hrbp@hiarc',     role:'hrbp',            workspaceId:'hiarc',   title:'HR Business Partner'                    },
+  { id:'u-h4', name:'Mike Aschettino',                email:'mike@hiarc',     role:'hiring_manager',  workspaceId:'hiarc',   title:'Director, HiArc'                        },
+  { id:'u-h5', name:'Nate Doemling',                  email:'nate@hiarc',     role:'executive',       workspaceId:'hiarc',   title:'President, HiArc'                       },
+  { id:'u-h6', name:'Dana Smathers',                  email:'dana@hiarc',     role:'executive',       workspaceId:'hiarc',   title:'Director, Talent Center of Excellence'  },
+  // ── General ─────────────────────────────────────────────────
+  { id:'u-d1', name:'Admin',                          email:'admin@local',    role:'admin',           workspaceId:'default', title:'Admin'                                  },
+];
+
+function saveUsers() {
+  try { localStorage.setItem('tb_users', JSON.stringify(TB_USERS)); } catch(e) {}
+}
+
+// Current logged-in user — persisted across sessions
+var _currentUserId = localStorage.getItem('tb_current_user') || 'u-d1';
+var currentUser = TB_USERS.find(function(u){ return u.id === _currentUserId; }) || TB_USERS[7];
+
+function switchUser(userId) {
+  var u = TB_USERS.find(function(x){ return x.id === userId; });
+  if (!u) return;
+  currentUser     = u;
+  _currentUserId  = userId;
+  localStorage.setItem('tb_current_user', userId);
+
+  // Sync workspace to user's workspace
+  currentWorkspace = u.workspaceId;
+  localStorage.setItem('tb_workspace', currentWorkspace);
+
+  // Sync role override
+  if (u.role === 'admin') {
+    localStorage.removeItem('tb_role_override');
+  } else {
+    localStorage.setItem('tb_role_override', u.role);
+  }
+
+  // Update UI
+  updateUserUI();
+  // Re-render everything
+  try { applyNavRestrictions(); } catch(e) {}
+  if (window._activeView) try { nav(window._activeView); } catch(e) {}
+  else try { nav('dashboard'); } catch(e) {}
+}
+
+function updateUserUI() {
+  // Workspace switcher
+  var wsSel = document.getElementById('ws-switcher');
+  if (wsSel) wsSel.value = currentWorkspace;
+
+  // User picker
+  var uPicker = document.getElementById('user-picker');
+  if (uPicker) uPicker.value = currentUser.id;
+
+  // User display name + role badge
+  var nameEl = document.getElementById('sb-user-name');
+  if (nameEl) nameEl.textContent = currentUser.name;
+
+  var roleEl = document.getElementById('sb-role-badge');
+  var roleLabels = { admin:'Admin', recruiter:'Recruiter', hiring_manager:'Hiring Mgr', hrbp:'HRBP', executive:'Executive' };
+  if (roleEl) roleEl.textContent = currentUser.title || roleLabels[currentUser.role] || currentUser.role;
+
+  // Status dot — green for admin/recruiter, blue for others
+  var dot = document.getElementById('sb-status-dot');
+  if (dot) dot.style.background = (currentUser.role==='admin'||currentUser.role==='recruiter') ? '#22c55e' : '#3b82f6';
+}
+
+function getUsersForWorkspace(wsId) {
+  return TB_USERS.filter(function(u){ return u.workspaceId === (wsId || currentWorkspace); });
+}
+
+// Extend getCurrentUser to return full currentUser object
+function getCurrentUser() {
+  return currentUser;
+}
+
+// Extend getRole to use currentUser
+function getRole() {
+  var override = localStorage.getItem('tb_role_override');
+  if (override) return override;
+  if (currentUser) return currentUser.role;
+  if (_devModeActive) return 'admin';
+  return (_sbUser && _sbUser.user_metadata && _sbUser.user_metadata.role) || 'admin';
+}
+
 const SB_TABLE = {'tb_cands_v3':'candidates','tb_jobs_v3':'jobs','tb_deals_v1':'deals'};
 
 // ── CENTRAL STATE STORE ────────────────────────────────────
@@ -7205,6 +7316,10 @@ function renderCompAnalysis(d){
 // ═══════════════════════════════════════════════
 function renderJobsList(){
   var _jobs = wsFilter(jobs);
+  // Hiring managers see only their assigned jobs
+  if (currentUser && currentUser.role === 'hiring_manager') {
+    _jobs = _jobs.filter(function(j){ return !j.hiringManagerId || j.hiringManagerId === currentUser.id; });
+  }
   document.getElementById('nb-jobs').textContent=_jobs.filter(j=>j.status==='Open').length;
   const col=document.getElementById('jobs-list-col');
   col.innerHTML=_jobs.length?jobs.map(j=>`
@@ -8606,6 +8721,15 @@ function runAutomation(candList, dealList){
 
 function renderDash(){
   try{ escalateOverdueTasks(); }catch(e){}
+  // Update user greeting
+  try {
+    var greetEl = document.getElementById('dash-user-greeting');
+    if (greetEl) {
+      var _rl = { admin:'Admin', recruiter:'Recruiter', hiring_manager:'Hiring Mgr', hrbp:'HRBP', executive:'Executive' };
+      var _wsN = (WORKSPACES.find(function(w){ return w.id===currentWorkspace; })||{}).name || currentWorkspace;
+      greetEl.textContent = 'Welcome, ' + currentUser.name + ' · ' + (_rl[currentUser.role]||currentUser.role) + ' · ' + _wsN;
+    }
+  } catch(e) {}
   // Safety: ensure arrays exist even if data not loaded
   if(!Array.isArray(cands)) { cands = TB.store.cands = []; }
   if(!Array.isArray(jobs))  { jobs  = TB.store.jobs  = []; }
