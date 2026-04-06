@@ -1709,9 +1709,11 @@ button, .btn { white-space:nowrap !important; }
     <!-- User + sign out -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 2px 2px;">
       <div style="display:flex;align-items:center;gap:5px;">
-        <div id="sb-status-dot" style="width:5px;height:5px;border-radius:50%;background:var(--text4);flex-shrink:0;transition:background .3s;"></div>
-        <span id="sb-user-name" style="font-size:10px;color:var(--text2);font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
-        <span id="sb-role-badge" style="font-size:9px;color:var(--text4);"></span>
+        <div id="sb-status-dot" style="width:5px;height:5px;border-radius:50%;background:var(--text4);flex-shrink:0;margin-top:2px;transition:background .3s;"></div>
+        <div style="flex:1;min-width:0;overflow:hidden;">
+          <div id="sb-user-name" style="font-size:11px;color:var(--text2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+          <div id="sb-role-badge" style="font-size:10px;color:var(--text4);margin-top:1px;"></div>
+        </div>
       </div>
       <button onclick="sbSignOut()" style="background:none;border:none;color:var(--text4);font-size:10.5px;cursor:pointer;padding:2px 4px;border-radius:3px;font-family:inherit;transition:color .1s;" onmouseover="this.style.color='var(--text2)'" onmouseout="this.style.color='var(--text4)'">Sign out</button>
     </div>
@@ -4391,7 +4393,7 @@ var TB_USERS = JSON.parse(localStorage.getItem('tb_users') || 'null') || [
   { id:'u-h5', name:'Nate Doemling',                  email:'nate@hiarc',     role:'executive',       workspaceId:'hiarc',   title:'President, HiArc'                       },
   { id:'u-h6', name:'Dana Smathers',                  email:'dana@hiarc',     role:'executive',       workspaceId:'hiarc',   title:'Director, Talent Center of Excellence'  },
   // ── General ─────────────────────────────────────────────────
-  { id:'u-d1', name:'Admin',                          email:'admin@local',    role:'admin',           workspaceId:'default', title:'Admin'                                  },
+  { id:'u-d1', name:'Jonah Adelman',                  email:'admin@local',    role:'admin',           workspaceId:'default', title:'Admin'                                  },
 ];
 
 function saveUsers() {
@@ -4443,7 +4445,9 @@ function updateUserUI() {
 
   var roleEl = document.getElementById('sb-role-badge');
   var roleLabels = { admin:'Admin', recruiter:'Recruiter', hiring_manager:'Hiring Mgr', hrbp:'HRBP', executive:'Executive' };
-  if (roleEl) roleEl.textContent = currentUser.title || roleLabels[currentUser.role] || currentUser.role;
+  // Show title if it differs from name; otherwise show role label
+  var _roleText = currentUser.title || roleLabels[currentUser.role] || currentUser.role;
+  if (roleEl) roleEl.textContent = _roleText;
 
   // Status dot — green for admin/recruiter, blue for others
   var dot = document.getElementById('sb-status-dot');
