@@ -1747,7 +1747,11 @@ input::placeholder, textarea::placeholder {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         Analytics
       </div>
-      <div class="ni" data-nav="happyhunting" data-nav="happyhunting" id="ni-happyhunting">
+          <div class="ni" data-nav="clientdash" id="ni-clientdash">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      Client Dashboard
+    </div>
+<div class="ni" data-nav="happyhunting" data-nav="happyhunting" id="ni-happyhunting">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0;color:#ff4d00;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         <span>Happy Hunting</span>
       </div>
@@ -5557,6 +5561,7 @@ function nav(view) {
   if (v==='workspace')    { try { initWorkspaceSettings&&initWorkspaceSettings(); } catch(e) {} }
   if (v==='command')      { try { renderCommandCenter(); } catch(e) {} }
   if (v==='radar')        { try { renderRadar&&renderRadar(); } catch(e) {} }
+  if(v==='clientdash')   { try { renderClientDash(); } catch(e) {} }
   if (v==='aitools')      { try { initAITools&&initAITools(); } catch(e) {} }
 }
 
@@ -12787,6 +12792,187 @@ function endDemo() {
   try { nav('dashboard'); } catch(e) {}
 }
 
+// ═══ CLIENT COMMAND CENTER ═══════════════════════════════════════════════════
+
+function renderClientDash() {
+  var el = document.getElementById('ccd-body');
+  if (!el) return;
+
+  var wsJobs  = wsFilter(jobs);
+  var wsCands = wsFilter(cands);
+  var wsTasks = JSON.parse(localStorage.getItem('tb_tasks')||'[]').filter(function(t){
+    return !t.workspaceId || t.workspaceId === currentWorkspace;
+  });
+
+  var wsName = (WORKSPACES.find(function(w){ return w.id===currentWorkspace; })||{}).name || currentWorkspace;
+  var now = Date.now();
+  var today = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+
+  // Update header
+  var titleEl = document.getElementById('ccd-title');
+  if (titleEl) titleEl.textContent = wsName + ' — Hiring Command Center';
+  var subEl = document.getElementById('ccd-subtitle');
+  if (subEl) subEl.textContent = 'Live as of ' + today;
+  var updEl = document.getElementById('ccd-last-updated');
+  if (updEl) updEl.textContent = 'Last refreshed: ' + new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true}) + ' EST';
+
+  // ── METRICS ────────────────────────────────────────────────────────────────
+  var openJobs    = wsJobs.filter(function(j){ return j.status==='Open'; });
+  var filledJobs  = wsJobs.filter(function(j){ return j.status==='Filled'; });
+  var activeCands = wsCands.filter(function(c){ return !['Hired','Rejected'].includes(c.status); });
+  var offerCands  = wsCands.filter(function(c){ return c.status==='Offer'; });
+  var hiredCands  = wsCands.filter(function(c){ return c.status==='Hired'; });
+  var interviewCands = wsCands.filter(function(c){ return c.status==='Interviewing'; });
+
+  // Median days open
+  var daysOpenArr = openJobs.map(function(j){
+    return j.created ? Math.floor((now - j.created) / 86400000) : 0;
+  }).sort(function(a,b){ return a-b; });
+  var medianDays = daysOpenArr.length ? daysOpenArr[Math.floor(daysOpenArr.length/2)] : 0;
+
+  // Overdue tasks
+  var todayStr = new Date().toISOString().split('T')[0];
+  var overdueTasks = wsTasks.filter(function(t){ return t.status!=='Completed' && t.dueDate && t.dueDate < todayStr; });
+  var openTasks    = wsTasks.filter(function(t){ return t.status!=='Completed'; });
+
+  var metrics = [
+    { label:'Total Open Reqs',    val:openJobs.length,    color:'#60a5fa', sub: wsJobs.length + ' total reqs' },
+    { label:'Active Candidates',  val:activeCands.length, color:'#a78bf5', sub: interviewCands.length + ' interviewing' },
+    { label:'Offers Pending',     val:offerCands.length,  color:'#f59e0b', sub:'Ready to decide' },
+    { label:'Median Days Open',   val:medianDays+'d',     color: medianDays>60?'#ef4444':medianDays>30?'#f59e0b':'#22c55e', sub: hiredCands.length + ' hired to date' },
+  ];
+
+  // ── ATTENTION REQUIRED ────────────────────────────────────────────────────
+  var attention = [];
+  openJobs.forEach(function(j){
+    var daysOpen = j.created ? Math.floor((now - j.created) / 86400000) : 0;
+    var jobCands = wsCands.filter(function(c){ return c.jobId === j.id && !['Hired','Rejected'].includes(c.status); });
+    var flag = daysOpen > 90 ? '🚨' : daysOpen > 60 ? '⚠️' : null;
+    if (flag || jobCands.length === 0) {
+      attention.push({
+        role:     j.title,
+        reqNum:   j.reqNum||'',
+        daysOpen: daysOpen,
+        pipeline: jobCands.length,
+        flag:     flag || (jobCands.length === 0 ? '⚠️' : null),
+        issue:    daysOpen > 90 ? 'Critical aging — '+daysOpen+' days open' :
+                  daysOpen > 60 ? 'Aging req — '+daysOpen+' days open' :
+                  'No candidates in pipeline',
+        action:   daysOpen > 90 ? 'Requires immediate attention' :
+                  jobCands.length === 0 ? 'Begin sourcing immediately' : 'Review pipeline',
+        color:    daysOpen > 90 ? 'var(--red)' : 'var(--amber)',
+      });
+    }
+  });
+
+  // ── PIPELINE BY REQ ───────────────────────────────────────────────────────
+  var pipelineRows = openJobs.map(function(j){
+    var daysOpen = j.created ? Math.floor((now - j.created) / 86400000) : 0;
+    var jc = wsCands.filter(function(c){ return c.jobId === j.id; });
+    var byStage = {New:0, Screening:0, Interviewing:0, Offer:0, Hired:0};
+    jc.forEach(function(c){ if(byStage[c.status]!==undefined) byStage[c.status]++; });
+    var healthColor = daysOpen>90?'var(--red)':daysOpen>60?'var(--amber)':'var(--green)';
+    var healthLabel = daysOpen>90?'🚨 Critical':daysOpen>60?'⚠️ Caution':'✅ Healthy';
+    return { j:j, daysOpen:daysOpen, byStage:byStage, total:jc.length, healthColor:healthColor, healthLabel:healthLabel };
+  }).sort(function(a,b){ return b.daysOpen - a.daysOpen; });
+
+  // ── RENDER ────────────────────────────────────────────────────────────────
+  var html = '';
+
+  // Metric tiles
+  html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;">';
+  html += metrics.map(function(m){
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid '+m.color+';border-radius:12px;padding:16px 18px;">' +
+      '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">'+m.label+'</div>' +
+      '<div style="font-size:28px;font-weight:800;color:'+m.color+';letter-spacing:-1px;line-height:1;">'+m.val+'</div>' +
+      '<div style="font-size:11px;color:var(--text4);margin-top:5px;">'+m.sub+'</div>' +
+      '</div>';
+  }).join('');
+  html += '</div>';
+
+  // Attention Required
+  if (attention.length) {
+    html += '<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin:0 0 10px;padding-bottom:8px;border-bottom:1px solid var(--border);">⚡ Attention Required ('+attention.length+')</div>';
+    html += attention.map(function(a){
+      return '<div style="display:flex;align-items:center;gap:14px;padding:13px 16px;background:var(--bg2);border:1px solid var(--border2);border-left:3px solid '+a.color+';border-radius:8px;margin-bottom:8px;">' +
+        '<span style="font-size:20px;flex-shrink:0;">'+a.flag+'</span>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:13px;font-weight:700;color:var(--text);">'+esc(a.role)+(a.reqNum?' <span style="font-size:11px;color:var(--text4);">#'+esc(a.reqNum)+'</span>':'')+'</div>' +
+          '<div style="font-size:12px;color:var(--text3);margin-top:2px;">'+esc(a.issue)+'</div>' +
+        '</div>' +
+        '<div style="text-align:right;flex-shrink:0;">' +
+          '<div style="font-size:12px;font-weight:700;color:'+a.color+';">'+a.daysOpen+'d open</div>' +
+          '<div style="font-size:11px;color:var(--text4);">'+a.pipeline+' in pipeline</div>' +
+        '</div>' +
+        '</div>';
+    }).join('');
+    html += '<div style="margin-bottom:28px;"></div>';
+  }
+
+  // Pipeline by role table
+  if (pipelineRows.length) {
+    html += '<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin:0 0 10px;padding-bottom:8px;border-bottom:1px solid var(--border);">📋 Pipeline by Role</div>';
+    html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:28px;">';
+    html += '<table style="width:100%;border-collapse:collapse;">';
+    html += '<thead><tr style="background:var(--bg3);">' +
+      '<th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;">Role</th>' +
+      '<th style="padding:10px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;">New</th>' +
+      '<th style="padding:10px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;">Screening</th>' +
+      '<th style="padding:10px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;">Interview</th>' +
+      '<th style="padding:10px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;">Offer</th>' +
+      '<th style="padding:10px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;">Days Open</th>' +
+      '<th style="padding:10px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;">Status</th>' +
+      '</tr></thead><tbody>';
+    html += pipelineRows.map(function(r, i){
+      var bg = i%2===0?'':'background:rgba(255,255,255,.02);';
+      return '<tr style="border-top:1px solid var(--border);'+bg+'">' +
+        '<td style="padding:11px 14px;">' +
+          '<div style="font-size:13px;font-weight:600;color:var(--text);">'+esc(r.j.title)+'</div>' +
+          (r.j.dept?'<div style="font-size:11px;color:var(--text4);">'+esc(r.j.dept)+'</div>':'') +
+        '</td>' +
+        '<td style="padding:11px 14px;text-align:center;font-size:13px;color:var(--text3);">'+(r.byStage.New||'—')+'</td>' +
+        '<td style="padding:11px 14px;text-align:center;font-size:13px;color:var(--text3);">'+(r.byStage.Screening||'—')+'</td>' +
+        '<td style="padding:11px 14px;text-align:center;font-size:13px;color:var(--amber);">'+(r.byStage.Interviewing||'—')+'</td>' +
+        '<td style="padding:11px 14px;text-align:center;font-size:13px;color:var(--green);font-weight:600;">'+(r.byStage.Offer||'—')+'</td>' +
+        '<td style="padding:11px 14px;text-align:center;font-size:13px;font-weight:700;color:'+r.healthColor+';">'+r.daysOpen+'</td>' +
+        '<td style="padding:11px 14px;text-align:center;font-size:11px;font-weight:700;color:'+r.healthColor+';">'+r.healthLabel+'</td>' +
+      '</tr>';
+    }).join('');
+    html += '</tbody></table></div>';
+  }
+
+  // Open tasks summary
+  if (openTasks.length) {
+    html += '<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin:0 0 10px;padding-bottom:8px;border-bottom:1px solid var(--border);">⚡ Active Tasks ('+openTasks.length+')</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px;">';
+    html += openTasks.slice(0,8).map(function(t){
+      var pColor = {High:'var(--red)',Medium:'var(--amber)',Low:'var(--text4)'}[t.priority]||'var(--text4)';
+      var isOverdue = t.dueDate && t.dueDate < todayStr;
+      return '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;">' +
+        '<span style="font-size:11px;font-weight:700;color:'+pColor+';background:rgba(0,0,0,.2);padding:2px 8px;border-radius:999px;flex-shrink:0;">'+(t.priority||'Medium').toUpperCase()+'</span>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:13px;color:var(--text);font-weight:500;">'+esc(t.item)+'</div>' +
+          (t.owner?'<div style="font-size:11px;color:var(--text4);">Owner: '+esc(t.owner)+'</div>':'') +
+        '</div>' +
+        (t.dueDate?'<div style="font-size:11px;font-weight:600;color:'+(isOverdue?'var(--red)':'var(--text4)')+';">'+esc(t.dueDate)+'</div>':'') +
+        '</div>';
+    }).join('');
+    if(openTasks.length > 8) html += '<div style="font-size:11px;color:var(--text4);text-align:center;padding:8px;">+ '+(openTasks.length-8)+' more tasks — see Command Center</div>';
+    html += '</div>';
+  }
+
+  // Empty state
+  if (!openJobs.length && !activeCands.length) {
+    html += '<div style="text-align:center;padding:60px 20px;color:var(--text4);">' +
+      '<div style="font-size:32px;margin-bottom:12px;">📋</div>' +
+      '<div style="font-size:14px;font-weight:600;color:var(--text3);">No data yet for '+esc(wsName)+'</div>' +
+      '<div style="font-size:12px;margin-top:6px;">Add jobs and candidates to see the live dashboard.</div>' +
+      '</div>';
+  }
+
+  el.innerHTML = html;
+}
+
 document.addEventListener('DOMContentLoaded', function(){ initApp(); });
 
 // Auto-save contenteditable documents
@@ -15208,114 +15394,4 @@ function downloadScorecard(scId) {
   html += '.q-num{font-weight:700;color:#3b82f6;margin-right:8px;}';
   html += '.notes-box{border:1px solid #ddd;border-radius:6px;min-height:80px;padding:12px;margin-top:6px;font-size:13px;color:#888;}';
   html += '@media print{body{margin:20px;}}';
-  html += '</body></html>';
-  var win = window.open('','_blank','width=800,height=900');
-  if(!win){ alert('Allow popups to download scorecard.'); return; }
-  win.document.write(html);
-  win.document.close();
-  setTimeout(function(){ win.print(); }, 400);
-}
-</script>
-
-</div><!-- /app-shell -->
-
-
-<style>
-
-
-/* ══════════════════════════════════════════════════════════════
-   DEFINITIVE LAYOUT LOCK — overrides everything above
-   ══════════════════════════════════════════════════════════════ */
-
-
-
-
-
-
-/* 3. App shell: sidebar + main content side by side */
-.app {
-  display: flex !important;
-  height: 100vh;
-  overflow: hidden;
-  width: 100%;
-}
-
-/* 4. Main content column fills all remaining space */
-.main {
-  flex: 1 !important;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* 5. Library: topbar stacked above row layout */
-#v-library > div:nth-child(2) {
-  display: flex !important;
-  flex: 1;
-  overflow: hidden;
-  min-height: 0;
-}
-/* Library file-list column */
-#v-library > div:nth-child(2) > div:last-child {
-  display: flex !important;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-}
-/* Viewer fills all remaining space */
-#lib-viewer {
-  flex: 1 !important;
-  min-width: 0 !important;
-  overflow-y: auto !important;
-}
-
-/* 6. Tutorial grid */
-#v-tutorial > div:nth-child(2) {
-  display: grid !important;
-  grid-template-columns: 280px 1fr;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-/* 7. Scrollable content areas */
-#v-integrations > div:nth-child(2),
-#v-workspace > div:last-child,
-#v-campaigns > div:nth-child(2),
-#v-analytics > div:nth-child(2),
-#v-prompts > div:nth-child(2) {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-}
-
-</style>
-</body>
-</htm  // ── STEP 5: High priority + overdue tasks from Command Center ──
-  var ccTasks = [];
-  try{ ccTasks = JSON.parse(localStorage.getItem('tb_tasks')||'[]'); }catch(e){}
-  ccTasks.forEach(function(t){
-    if(t.status==='Completed') return;
-    var isOverdue = t.dueDate && new Date(t.dueDate) < new Date();
-    if(t.priority==='High' || isOverdue){
-      items.push({
-        type:'task', icon:'📋', urgency: isOverdue ? 'high' : (t.priority==='High' ? 'medium' : 'low'),
-        label: t.item,
-        subtext: (t.owner?'Owner: '+t.owner+' · ':'') + (isOverdue?'OVERDUE':'High priority') + (t.dueDate?' · Due: '+t.dueDate:''),
-        action: function(){ nav('command'); },
-        actionLabel: 'View Task →',
-        id: 'task-'+t.id
-      });
-    }
-  });
-
-  return items;
-}
-
-
-</script>
-
-
-</body>
-</html>
+  html += '</body></html>
