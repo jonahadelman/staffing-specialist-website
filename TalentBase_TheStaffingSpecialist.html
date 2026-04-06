@@ -5582,16 +5582,16 @@ function doSearch(){
   const hasAdv = Object.values(advF).some(v=>v);
 
   // For CRM temp filters: pre-compute scores once, not per-candidate in the sort
-  fil = _wsCands.filter(p=>{
-    if(chip==='__hot'){return getCRMFields(c).temperature==='hot';}
-    if(chip==='__warm'){return getCRMFields(c).temperature==='warm';}
-    if(chip==='__cold'){return getCRMFields(c).temperature==='cold';}
-    if(chip==='__stale'){const crm=getCRMFields(c);return crm.daysIdle>5&&!['Hired','Rejected'].includes(c.status);}
-    if(chip&&c.status!==chip)return false;
-    if(st&&c.status!==st)return false;
-    if(hasAdv && !matchesAdvFilters(c,advF))return false;
+  fil = _wsCands.filter(function(p){
+    if(chip==='__hot'){return getCRMFields(p).temperature==='hot';}
+    if(chip==='__warm'){return getCRMFields(p).temperature==='warm';}
+    if(chip==='__cold'){return getCRMFields(p).temperature==='cold';}
+    if(chip==='__stale'){var crm=getCRMFields(p);return crm.daysIdle>5&&!['Hired','Rejected'].includes(p.status);}
+    if(chip&&!['__hot','__warm','__cold','__stale'].includes(chip)&&p.status!==chip)return false;
+    if(st&&p.status!==st)return false;
+    if(hasAdv && !matchesAdvFilters(p,advF))return false;
     if(!fn)return true;
-    return fn(c);
+    return fn(p);
   }).sort((a,b)=>{
     if(chip==='__hot'){return getCRMFields(b).engagementScore-getCRMFields(a).engagementScore;}
     if(chip==='__stale'){return getCRMFields(b).daysIdle-getCRMFields(a).daysIdle;}
