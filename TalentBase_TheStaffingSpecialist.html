@@ -1649,6 +1649,17 @@ button, .btn { white-space:nowrap !important; }
       </div>
       <input type="password" class="api-field" id="api-key" placeholder="sk-ant-..." oninput="saveKey(this.value)" autocomplete="off"/>
     </div>
+    <!-- Role switcher for demo -->
+    <div style="padding:6px 2px 2px;">
+      <div style="font-size:9px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">View As</div>
+      <select id="sb-role-select" onchange="setRoleOverride(this.value)"
+        style="width:100%;font-size:11px;padding:5px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);outline:none;font-family:inherit;">
+        <option value="admin">🔧 Admin / Recruiter</option>
+        <option value="hiring_manager">👔 Hiring Manager</option>
+        <option value="hrbp">📋 HRBP</option>
+        <option value="executive">📊 Executive</option>
+      </select>
+    </div>
     <!-- User + sign out -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 2px 2px;">
       <div style="display:flex;align-items:center;gap:5px;">
@@ -3969,8 +3980,35 @@ function _updateSbStatus() {
 
 // Get current role from live session. Defaults to 'admin' when unconfigured.
 function getRole() {
+  // Check for role override (for demo/switching)
+  var override = localStorage.getItem('tb_role_override');
+  if (override) return override;
   if (_devModeActive) return 'admin';
   return (_sbUser && _sbUser.user_metadata && _sbUser.user_metadata.role) || 'admin';
+}
+
+function getCurrentUser() {
+  var role = getRole();
+  var email = (_sbUser && _sbUser.email) ? _sbUser.email : 'dev@local';
+  var name = email.split('@')[0];
+  return { name: name, email: email, role: role };
+}
+
+function setRoleOverride(role) {
+  if (role === 'admin') {
+    localStorage.removeItem('tb_role_override');
+  } else {
+    localStorage.setItem('tb_role_override', role);
+  }
+  // Update sidebar badge
+  var badge = document.getElementById('sb-role-badge');
+  var labels = { admin:'Admin', hiring_manager:'Hiring Mgr', hrbp:'HRBP', executive:'Executive' };
+  if (badge) badge.textContent = labels[getRole()] || 'Admin';
+  // Re-apply nav restrictions
+  try { applyNavRestrictions(); } catch(e) {}
+  // Re-render current view
+  var v = window._activeView || 'dashboard';
+  try { nav(v); } catch(e) {}
 }
 
 // Returns the client_company scoping value (clients only)
@@ -3978,22 +4016,28 @@ function getRole() {
 // Permission map — what each role is allowed to do
 var ROLE_PERMISSIONS = {
   admin: {
-    viewDashboard    : true,
-    viewCandidates   : true,
-    viewJobs         : true,
-    viewDeals        : true,
-    viewPipeline     : true,
-    viewAnalytics    : true,
-    viewSettings     : true,
-    viewAITools      : true,
-    editCandidates   : true,
-    deleteCandidates : true,
-    editJobs         : true,
-    deleteJobs       : true,
-    editDeals        : true,
-    exportData       : true,
-    manageUsers      : true,
-    sendEmail        : true,
+    viewDashboard:true, viewCandidates:true, viewJobs:true, viewDeals:true,
+    viewPipeline:true, viewAnalytics:true, viewSettings:true, viewAITools:true,
+    editCandidates:true, deleteCandidates:true, editJobs:true, deleteJobs:true,
+    editDeals:true, exportData:true, manageUsers:true, sendEmail:true,
+  },
+  hiring_manager: {
+    viewDashboard:true, viewCandidates:true, viewJobs:true, viewPipeline:true,
+    viewAnalytics:false, viewSettings:false, viewAITools:false, viewDeals:false,
+    editCandidates:false, deleteCandidates:false, editJobs:false, deleteJobs:false,
+    editDeals:false, exportData:false, manageUsers:false, sendEmail:false,
+  },
+  hrbp: {
+    viewDashboard:true, viewCandidates:true, viewJobs:true, viewPipeline:true,
+    viewAnalytics:true, viewSettings:false, viewAITools:false, viewDeals:false,
+    editCandidates:false, deleteCandidates:false, editJobs:false, deleteJobs:false,
+    editDeals:false, exportData:true, manageUsers:false, sendEmail:false,
+  },
+  executive: {
+    viewDashboard:true, viewCandidates:false, viewJobs:true, viewPipeline:false,
+    viewAnalytics:true, viewSettings:false, viewAITools:false, viewDeals:false,
+    editCandidates:false, deleteCandidates:false, editJobs:false, deleteJobs:false,
+    editDeals:false, exportData:false, manageUsers:false, sendEmail:false,
   },
   recruiter: {
     viewDashboard    : true,
@@ -6828,6 +6872,8 @@ function saveCand(){
         if(!cands[idx].activity) cands[idx].activity = [];
         cands[idx].activity.push({ts:Date.now(), text:'Stage changed: '+prevStatus+' → '+data.status, type:'stage_change'});
         addActivity(cands[idx], 'Stage: '+prevStatus+' → '+data.status);
+        // Auto-create task on key stage transitions
+        autoCreateStageTask(cands[idx], data.status);
       } else {
         addActivity(cands[idx],'Profile updated');
       }
@@ -8436,6 +8482,17 @@ function getNeedsAction(candList, dealList) {
 // Thin wrapper — preserves backward compat, persists flags as side effect
 function runAutomation(candList, dealList){
   var items = getNeedsAction(candList, dealList);
+  // Auto-create follow-up tasks for idle candidates
+  var _now = Date.now(); var _DAY = 86400000;
+  (candList||[]).forEach(function(cc){
+    if(cc.status==='Hired'||cc.status==='Rejected') return;
+    var _last = cc.lastActivity || 0;
+    if(cc.activity&&cc.activity.length) _last = Math.max(_last, Math.max.apply(null,cc.activity.map(function(a){return a.ts;})));
+    if(!_last) _last = cc.created || _now;
+    if((_now-_last)/_DAY >= 2 && (cc.status==='Screening'||cc.status==='Interviewing'||cc.status==='Offer')){
+      try{ autoCreateFollowupTask(cc); }catch(e){}
+    }
+  });
   // Write activity flags for follow-up items
   var now = Date.now();
   var DAY = 1000*60*60*24;
@@ -8468,6 +8525,7 @@ function runAutomation(candList, dealList){
 
 
 function renderDash(){
+  try{ escalateOverdueTasks(); }catch(e){}
   // Safety: ensure arrays exist even if data not loaded
   if(!Array.isArray(cands)) { cands = TB.store.cands = []; }
   if(!Array.isArray(jobs))  { jobs  = TB.store.jobs  = []; }
@@ -12779,6 +12837,93 @@ function v2ToggleMode(){
 
 function showCommandCenter(){ nav('command'); renderCommandCenter(); }
 
+// ═══ TASK AUTOMATION ════════════════════════════════════════════════════════
+
+function autoCreateStageTask(cand, newStage) {
+  var stageMap = {
+    'Interviewing': { item: 'Collect interview feedback', detail: 'Gather feedback from interviewers and update scorecard.', priority: 'High' },
+    'Offer':        { item: 'Finalize offer letter',      detail: 'Prepare and send offer letter. Confirm start date and compensation.', priority: 'High' },
+    'Hired':        { item: 'Complete onboarding setup',  detail: 'Set up system access, schedule orientation, send welcome packet.', priority: 'Medium' },
+  };
+  var template = stageMap[newStage];
+  if (!template) return;
+
+  // No duplicate: check if same task already exists for this candidate+stage
+  var existing = tasks.find(function(t) {
+    return t.candidateId === cand.id && t.item === template.item && t.status !== 'Completed';
+  });
+  if (existing) return;
+
+  var job = cand.jobId ? (jobs||[]).find(function(j){ return j.id===cand.jobId; }) : null;
+  var due = new Date(); due.setDate(due.getDate() + 2);
+  var dueStr = due.toISOString().split('T')[0];
+
+  var newTask = {
+    id:           uid(),
+    item:         template.item,
+    detail:       template.detail + (cand ? ' — ' + cand.first + ' ' + cand.last : ''),
+    owner:        '',
+    priority:     template.priority,
+    status:       'Open',
+    dueDate:      dueStr,
+    jobId:        cand.jobId || null,
+    candidateId:  cand.id,
+    dateAssigned: Date.now(),
+    visibleTo:    ['recruiter','hiring_manager','hrbp','executive'],
+    auto:         true,
+    history:      [{ user:'System', action:'auto-created on stage change to '+newStage, timestamp:Date.now() }]
+  };
+  tasks.unshift(newTask);
+  saveTasks();
+}
+
+function autoCreateFollowupTask(cand) {
+  // Called by runAutomation for idle candidates
+  var item = 'Follow up with ' + cand.first + ' ' + cand.last;
+  var existing = tasks.find(function(t) {
+    return t.candidateId === cand.id && t.item === item && t.status !== 'Completed';
+  });
+  if (existing) return;
+
+  var due = new Date(); due.setDate(due.getDate() + 1);
+  var dueStr = due.toISOString().split('T')[0];
+
+  var newTask = {
+    id:           uid(),
+    item:         item,
+    detail:       cand.status + ' — no activity for 2+ days. Re-engage immediately.',
+    owner:        '',
+    priority:     'High',
+    status:       'Open',
+    dueDate:      dueStr,
+    jobId:        cand.jobId || null,
+    candidateId:  cand.id,
+    dateAssigned: Date.now(),
+    visibleTo:    ['recruiter','hiring_manager','hrbp','executive'],
+    auto:         true,
+    history:      [{ user:'System', action:'auto-created: candidate idle 2+ days', timestamp:Date.now() }]
+  };
+  tasks.unshift(newTask);
+  saveTasks();
+}
+
+function escalateOverdueTasks() {
+  var now = Date.now();
+  var changed = false;
+  tasks.forEach(function(t) {
+    if (t.status === 'Completed') return;
+    if (!t.dueDate) return;
+    var due = new Date(t.dueDate).getTime();
+    if (due < now && t.priority !== 'High') {
+      t.priority = 'High';
+      if (!t.history) t.history = [];
+      t.history.push({ user:'System', action:'auto-escalated to High (overdue)', timestamp:now });
+      changed = true;
+    }
+  });
+  if (changed) saveTasks();
+}
+
 // ═══ COMMAND CENTER ══════════════════════════════════════════════════════
 var tasks = JSON.parse(localStorage.getItem('tb_tasks')||'[]');
 var ccManagerView = false;
@@ -12922,6 +13067,9 @@ function ccDeleteTask(id){
 }
 
 function renderCommandCenter(){
+  // Sync role switcher dropdown
+  var roleSel = document.getElementById('sb-role-select');
+  if(roleSel) roleSel.value = getRole();
   // Update EST clock
   var clockEl = document.getElementById('cc-est-clock');
   if(clockEl){
@@ -12943,7 +13091,25 @@ function renderCommandCenter(){
   var filter = (document.getElementById('cc-filter')||{value:'all'}).value;
   var userName = (_sbUser&&_sbUser.email) ? _sbUser.email.split('@')[0] : 'Admin';
 
+  var role = getRole();
   var filtered = tasks.filter(function(t){
+    // Role-based visibility
+    if(role === 'hiring_manager'){
+      // Only see tasks linked to their jobs or general tasks
+      if(t.jobId){
+        var j = (jobs||[]).find(function(j){ return j.id===t.jobId; });
+        // Show if they're listed as owner or it's a general task
+        if(!j) return false;
+      }
+      // Hide internal/admin-only items
+      if(t.visibleTo && t.visibleTo.indexOf('hiring_manager') < 0) return false;
+    }
+    if(role === 'executive'){
+      // Executive: only high priority or overdue, read-only
+      var isOverdue = t.dueDate && new Date(t.dueDate) < new Date();
+      if(!isOverdue && t.priority !== 'High') return false;
+    }
+    // Standard filters
     if(filter==='mine')      return t.owner && t.owner.toLowerCase()===userName.toLowerCase();
     if(filter==='high')      return t.priority==='High';
     if(filter==='open')      return t.status!=='Completed';
@@ -12964,8 +13130,26 @@ function renderCommandCenter(){
     return (b.dateAssigned||0) - (a.dateAssigned||0);
   });
 
+  // ── TODAY'S FOCUS section ────────────────────────────────────────
+  var todayStr = new Date().toISOString().split('T')[0];
+  var overdueT  = tasks.filter(function(t){ return t.status!=='Completed' && t.dueDate && t.dueDate < todayStr; });
+  var dueTodayT = tasks.filter(function(t){ return t.status!=='Completed' && t.dueDate === todayStr; });
+  var highT     = tasks.filter(function(t){ return t.status!=='Completed' && t.priority==='High' && (!t.dueDate || t.dueDate > todayStr); });
+
+  var focusHtml = '';
+  if(overdueT.length || dueTodayT.length || highT.length){
+    focusHtml = '<div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:14px 18px;margin-bottom:20px;">' +
+      '<div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">⚡ Today&#x27;s Focus</div>' +
+      '<div style="display:flex;gap:20px;flex-wrap:wrap;">' +
+      (overdueT.length  ? '<div style="font-size:13px;color:var(--red);font-weight:600;">🔴 '+overdueT.length+' Overdue</div>' : '') +
+      (dueTodayT.length ? '<div style="font-size:13px;color:var(--amber);font-weight:600;">🟡 '+dueTodayT.length+' Due Today</div>' : '') +
+      (highT.length     ? '<div style="font-size:13px;color:var(--text3);font-weight:600;">🔥 '+highT.length+' High Priority</div>' : '') +
+      '</div>' +
+    '</div>';
+  }
+
   if(!filtered.length){
-    el.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--text4);">'+
+    el.innerHTML = focusHtml + '<div style="text-align:center;padding:60px 20px;color:var(--text4);">'+
       '<div style="font-size:32px;margin-bottom:12px;">✅</div>'+
       '<div style="font-size:14px;font-weight:600;color:var(--text3);">No tasks found</div>'+
       '<div style="font-size:12px;margin-top:6px;">Click "+ Add Task" to create your first task</div>'+
@@ -12973,7 +13157,7 @@ function renderCommandCenter(){
     return;
   }
 
-  el.innerHTML = filtered.map(function(t){
+  el.innerHTML = focusHtml + filtered.map(function(t){
     var isOverdue = t.dueDate && t.status!=='Completed' && new Date(t.dueDate) < new Date();
     var pColors = {High:'var(--red)', Medium:'var(--amber)', Low:'var(--text4)'};
     var pBg     = {High:'rgba(239,68,68,.08)', Medium:'rgba(245,158,11,.08)', Low:'var(--bg3)'};
@@ -13025,9 +13209,10 @@ function renderCommandCenter(){
             '<option value="Open"'+(t.status==='Open'?' selected':'')+'>Open</option>' +
             '<option value="In Progress"'+(t.status==='In Progress'?' selected':'')+'>In Progress</option>' +
             '<option value="Completed"'+(t.status==='Completed'?' selected':'')+'>Completed</option>' +
-          (t.status!=='Completed' ? '<button data-cc-complete="'+t.id+'" class="btn btn-ghost btn-sm" style="font-size:10.5px;white-space:nowrap;">✓ Complete</button>' : '<span style="font-size:10px;color:var(--green);font-weight:700;">✓ Done</span>') +
-          (!ccManagerView ? '<button data-cc-edit="'+t.id+'" class="btn btn-ghost btn-sm" style="font-size:10.5px;">Edit</button>' : '') +
-          (!ccManagerView ? '<button data-cc-delete="'+t.id+'" class="btn btn-ghost btn-sm" style="font-size:10.5px;color:var(--red);" title="Delete task">🗑 Delete</button>' : '') +
+          (role==='executive' ? '<span style="font-size:10px;color:var(--text4);">Read-only</span>' :
+            (t.status!=='Completed' ? '<button data-cc-complete="'+t.id+'" class="btn btn-ghost btn-sm" style="font-size:10.5px;white-space:nowrap;">✓ Complete</button>' : '<span style="font-size:10px;color:var(--green);font-weight:700;">✓ Done</span>')) +
+          (!ccManagerView && role!=='executive' ? '<button data-cc-edit="'+t.id+'" class="btn btn-ghost btn-sm" style="font-size:10.5px;">Edit</button>' : '') +
+          (!ccManagerView && role!=='executive' ? '<button data-cc-delete="'+t.id+'" class="btn btn-ghost btn-sm" style="font-size:10.5px;color:var(--red);" title="Delete task">🗑 Delete</button>' : '') +
           (!ccManagerView ? '<button data-cc-delete="'+t.id+'" class="btn btn-ghost btn-sm" style="font-size:10.5px;color:var(--red);" title="Delete task">🗑 Delete</button>' : '') +
         '</div>' +
       '</div>' +
