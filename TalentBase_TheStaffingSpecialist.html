@@ -1360,6 +1360,18 @@ button, .btn { white-space:nowrap !important; }
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
+
+/* ═══ COMMAND CENTER HEADER USER ═══════════════════════════ */
+.cc-header-user {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+  margin-top: 2px;
+}
 </style>
 </head>
 <body>
@@ -2064,7 +2076,7 @@ button, .btn { white-space:nowrap !important; }
     <div style="flex:1;min-width:0;">
       <div style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--text);">Hiring Command Center</div>
       <div id="dash-date" style="font-size:11px;color:var(--text4);margin-top:1px;"></div>
-      <div id="dash-user-greeting" style="font-size:11px;color:var(--accent2);margin-top:2px;font-weight:600;"></div>
+      <div id="dash-user-greeting" class="cc-header-user"></div>
     </div>
     <div style="display:flex;gap:8px;">
       <button class="btn btn-ghost btn-sm" onclick="openAddJob()">
@@ -8725,9 +8737,8 @@ function renderDash(){
   try {
     var greetEl = document.getElementById('dash-user-greeting');
     if (greetEl) {
-      var _rl = { admin:'Admin', recruiter:'Recruiter', hiring_manager:'Hiring Mgr', hrbp:'HRBP', executive:'Executive' };
-      var _wsN = (WORKSPACES.find(function(w){ return w.id===currentWorkspace; })||{}).name || currentWorkspace;
-      greetEl.textContent = 'Welcome, ' + currentUser.name + ' · ' + (_rl[currentUser.role]||currentUser.role) + ' · ' + _wsN;
+      var _firstName = (currentUser.name || 'User').split(' ')[0];
+      greetEl.textContent = 'Welcome, ' + _firstName;
     }
   } catch(e) {}
   // Safety: ensure arrays exist even if data not loaded
