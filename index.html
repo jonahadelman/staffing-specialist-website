@@ -20,7 +20,7 @@
       --aqua:#5ab8d4;
       --shadow:0 10px 30px rgba(0,0,0,.35);
       --radius:18px;
-    }<!-- update -->
+    }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -387,7 +387,7 @@
       }
     </style>
     <div style="width:100%;overflow:hidden;position:relative;max-height:400px;min-height:280px;">
-      <img src="hero-banner.png" alt="Jonah Adelman — The Staffing Specialist" class="hero-banner-img"/>
+      <img src="./hero-banner.png" alt="Jonah Adelman — The Staffing Specialist" class="hero-banner-img" onerror="this.style.display='none'"/>
       <div class="hero-banner-overlay"></div>
     </div>
 
@@ -395,18 +395,21 @@
       <div class="container hero-grid">
         <div>
           <div class="kicker">Performance System · Not Another ATS</div>
-          <h2>The Recruiting Engine That<br><span style="color:#e8f0ff;">Outperforms Entire Teams.</span></h2>
-          <p style="font-size:19px;color:#c9d6ff;font-weight:500;margin-bottom:8px;">Built from 1,500+ hires. Designed to fill roles others can't.</p>
-          <p>We don't start from zero. We don't wait on inbound. We don't rely on job boards. We build your pipeline <em style="color:#7eb8d4;font-style:normal;font-weight:700;">before the req even opens.</em></p>
+          <h2>See Your Hiring System<br><span style="color:#7eb8d4;">Running Live — Right Now</span></h2>
+          <p style="font-size:18px;color:#c9d6ff;max-width:640px;">Real-time visibility into your pipeline, execution, and hiring progress.<br>No updates. No guessing. No delays.</p>
           <div class="statbar">
             <div class="stat card"><strong style="color:#e8f0ff;">1,500+</strong><div class="muted">Hires delivered</div></div>
             <div class="stat card"><strong style="color:#e8f0ff;">200</strong><div class="muted">Roles · 1 Year · Team of 4</div></div>
             <div class="stat card"><strong style="color:#e8f0ff;">$10M+</strong><div class="muted">Saved vs. agencies</div></div>
           </div>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;">
-            <a href="#contact" class="btn" style="font-size:15px;padding:14px 28px;">Get Access →</a>
-            <a href="#proof" class="btn secondary">See The Proof</a>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+            <a href="/TalentBase_TheStaffingSpecialist.html?demo=true"
+               style="display:inline-block;padding:16px 32px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border-radius:12px;font-size:16px;font-weight:900;text-decoration:none;box-shadow:0 6px 30px rgba(59,130,246,.45);">
+              ▶ Watch Live Demo
+            </a>
+            <a href="#contact" class="btn secondary">Talk to Jonah</a>
           </div>
+          <p style="margin-top:10px;font-size:13px;color:#8899bb;">What most firms hide, we show — live.</p>
         </div>
         <div class="card" style="padding:22px">
           <h3 style="margin-top:0">Immediate Hiring Needs?</h3>
@@ -825,12 +828,26 @@
             <div style="margin-top:20px;padding:14px 16px;background:rgba(124,106,247,.08);border:1px solid rgba(124,106,247,.2);border-radius:8px;font-size:12px;color:#c9d6e8;line-height:1.7;">
               <strong style="color:#a89dff;">There is nothing else like this.</strong> TalentBase is not software built in a boardroom. It was built by one recruiter who used it to fill 200 roles in one year — and it keeps getting better.
             </div>
-            <div style="margin-top:20px;display:flex;flex-direction:column;align-items:flex-start;gap:10px;">
-              <a href="TalentBase_TheStaffingSpecialist.html" target="_blank" class="tb-launch-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                Launch TalentBase
-              </a>
-              <div class="tb-note">Free to use. Bring your own Anthropic API key to unlock AI features (~$5 gets you hundreds of searches).</div>
+            <div style="margin-top:24px;">
+              <p style="font-size:18px;font-weight:700;color:#f1f5f9;margin:0 0 6px;letter-spacing:-.2px;">See Your Hiring System Live in 60 Seconds</p>
+              <p style="font-size:13px;color:#8899aa;margin:0 0 16px;line-height:1.6;">Real-time visibility into hiring, pipeline, and execution — no login required.</p>
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <a href="TalentBase_TheStaffingSpecialist.html?demo=true" target="_blank"
+                   style="display:inline-flex;align-items:center;gap:7px;padding:11px 22px;
+                          background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border-radius:8px;
+                          font-size:14px;font-weight:700;text-decoration:none;letter-spacing:.01em;
+                          box-shadow:0 2px 16px rgba(59,130,246,.35);transition:all .18s ease;"
+                   onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 24px rgba(59,130,246,.5)'"
+                   onmouseout="this.style.transform='';this.style.boxShadow='0 2px 16px rgba(59,130,246,.35)'">
+                  ▶ Watch Live Demo
+                </a>
+                <a href="TalentBase_TheStaffingSpecialist.html" target="_blank" class="tb-launch-btn" style="margin:0;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  Access TalentBase
+                </a>
+              </div>
+              <p style="margin-top:10px;font-size:12px;color:#556070;">What most firms hide, we show — live.</p>
+              <div class="tb-note" style="margin-top:10px;">Free to use. Bring your own Anthropic API key to unlock AI features (~$5 gets you hundreds of searches).</div>
             </div>
           </div>
 
