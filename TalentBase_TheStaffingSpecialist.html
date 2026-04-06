@@ -12061,6 +12061,8 @@ async function launchApp(){
   } catch(e){}
 
   try { nav('dashboard'); } catch(e){}
+  // Check for demo mode trigger
+  try { checkDemoMode(); } catch(e){}
 }
 
 function toggleGateEye(){
@@ -12125,6 +12127,15 @@ async function initAppData(){
 
 // ═══ INIT APP ════════════════════════════════════════════════
 function initApp() {
+  // Auto-login for demo mode
+  var _initParams = new URLSearchParams(window.location.search);
+  if (_initParams.get('demo') === 'true') {
+    _setDevSession('demo@talentbase.io');
+    var sess = { id:'dev-local-user', email:'demo@talentbase.io',
+                 user_metadata:{role:'admin'}, exp: Date.now()+(2*60*60*1000) };
+    localStorage.setItem('tb_sb_user_v2', JSON.stringify(sess));
+  }
+
   var gate    = document.getElementById('gate');
   var app     = document.getElementById('app-shell');
   var session = localStorage.getItem('tb_sb_user_v2');
@@ -12151,6 +12162,152 @@ function initApp() {
     }, 150);
   }
 }
+// ═══ DEMO MODE ═══════════════════════════════════════════════════════════════
+
+var _demoIndex  = 0;
+var _demoActive = false;
+
+var DEMO_STEPS = [
+  {
+    view:    'dashboard',
+    title:   '👋 Welcome to TalentBase',
+    body:    'Your hiring command center. Everything you need — pipeline, tasks, candidates, and automation — in one place.',
+    highlight: null,
+  },
+  {
+    view:    'jobs',
+    title:   '💼 Open Roles',
+    body:    'Every active req tracked in real time. Filter by status, department, or priority. Each job links directly to its candidates.',
+    highlight: null,
+  },
+  {
+    view:    'candidates',
+    title:   '👤 Candidate Pipeline',
+    body:    'Your full candidate database. Search, filter by stage, and open any profile for history, notes, and actions.',
+    highlight: null,
+  },
+  {
+    view:    'pipeline',
+    title:   '📋 Visual Pipeline',
+    body:    'Kanban view filtered by job. See every candidate stage at a glance. Move them forward with one click.',
+    highlight: null,
+  },
+  {
+    view:    'command',
+    title:   '⚡ Command Center',
+    body:    'Shared execution board for recruiters and hiring managers. Auto-generated tasks, role-based visibility, and real-time activity logs.',
+    highlight: null,
+  },
+  {
+    view:    'library',
+    title:   '📚 Document Library',
+    body:    '141 live templates — offer letters, job descriptions, outreach, compliance. Every doc is editable and downloadable as PDF.',
+    highlight: null,
+  },
+  {
+    view:    'analytics',
+    title:   '📊 Analytics',
+    body:    'Pipeline health, hiring funnel, and candidate distribution — all from live data. No spreadsheets required.',
+    highlight: null,
+  },
+];
+
+function checkDemoMode() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('demo') === 'true') {
+    setTimeout(function(){ startDemo(); }, 600);
+  }
+}
+
+function startDemo() {
+  _demoActive = true;
+  _demoIndex  = 0;
+  // Close any open overlays
+  document.querySelectorAll('.overlay, .modal-overlay').forEach(function(el){
+    el.classList.remove('on');
+    el.style.display = 'none';
+  });
+  runDemoStep();
+}
+
+function runDemoStep() {
+  // Remove any existing demo overlay
+  var existing = document.getElementById('tb-demo-overlay');
+  if (existing) existing.remove();
+
+  if (_demoIndex >= DEMO_STEPS.length) {
+    endDemo();
+    return;
+  }
+
+  var step = DEMO_STEPS[_demoIndex];
+  var isLast = (_demoIndex === DEMO_STEPS.length - 1);
+
+  // Navigate to the step's view
+  try { nav(step.view); } catch(e) {}
+
+  // Build demo overlay card
+  var overlay = document.createElement('div');
+  overlay.id = 'tb-demo-overlay';
+  overlay.style.cssText = [
+    'position:fixed',
+    'bottom:32px',
+    'left:50%',
+    'transform:translateX(-50%)',
+    'z-index:9999',
+    'background:#0f172a',
+    'border:1px solid rgba(59,130,246,.4)',
+    'border-radius:16px',
+    'padding:22px 28px',
+    'min-width:360px',
+    'max-width:520px',
+    'box-shadow:0 8px 40px rgba(0,0,0,.6)',
+    'font-family:inherit',
+    'display:flex',
+    'flex-direction:column',
+    'gap:12px',
+  ].join(';');
+
+  var progress = (_demoIndex + 1) + ' / ' + DEMO_STEPS.length;
+
+  overlay.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+      '<span style="font-size:10px;font-weight:700;color:rgba(59,130,246,.8);text-transform:uppercase;letter-spacing:.12em;">Live Demo · ' + progress + '</span>' +
+      '<button onclick="endDemo()" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:18px;line-height:1;padding:0;" title="Exit demo">&times;</button>' +
+    '</div>' +
+    '<div>' +
+      '<div style="font-size:16px;font-weight:700;color:#f1f5f9;margin-bottom:6px;">' + step.title + '</div>' +
+      '<div style="font-size:13px;color:#94a3b8;line-height:1.6;">' + step.body + '</div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;align-items:center;">' +
+      (_demoIndex > 0
+        ? '<button onclick="_demoIndex--;runDemoStep();" style="padding:7px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:transparent;color:#94a3b8;cursor:pointer;font-size:12px;font-family:inherit;">← Back</button>'
+        : '<span style="width:60px;"></span>') +
+      '<button onclick="_demoIndex++;runDemoStep();" style="padding:7px 20px;border-radius:8px;border:none;background:#3b82f6;color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;">' +
+        (isLast ? 'Finish ✓' : 'Next →') +
+      '</button>' +
+      '<div style="flex:1;height:3px;background:rgba(255,255,255,.08);border-radius:999px;margin-left:4px;">' +
+        '<div style="height:100%;width:' + Math.round(((_demoIndex+1)/DEMO_STEPS.length)*100) + '%;background:#3b82f6;border-radius:999px;transition:width .3s;"></div>' +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+}
+
+function endDemo() {
+  _demoActive = false;
+  var overlay = document.getElementById('tb-demo-overlay');
+  if (overlay) overlay.remove();
+  // Clean up demo session param without reloading
+  try {
+    var url = new URL(window.location.href);
+    url.searchParams.delete('demo');
+    window.history.replaceState({}, '', url.toString());
+  } catch(e) {}
+  // Return to dashboard cleanly
+  try { nav('dashboard'); } catch(e) {}
+}
+
 document.addEventListener('DOMContentLoaded', function(){ initApp(); });
 
 // Auto-save contenteditable documents
