@@ -3961,6 +3961,12 @@ function gateUserLogin() {
   } else {
     localStorage.setItem('tb_role_override', user.role);
   }
+  // Enforce workspace param if present
+  var _wpCheck = new URLSearchParams(window.location.search).get('workspace');
+  if (_wpCheck && user.workspaceId !== _wpCheck && _wpCheck !== 'default') {
+    document.getElementById('gate-err-user').textContent = 'This link is for a different workspace. Use your correct access URL.';
+    return;
+  }
   // Use dev session to bypass Supabase
   _setDevSession(user.email || 'user@local');
   _unlockApp('admin');
@@ -12497,6 +12503,26 @@ async function initAppData(){
 function initApp() {
   // Auto-login for demo mode
   var _initParams = new URLSearchParams(window.location.search);
+
+  // Workspace context from URL: ?workspace=hiarc or ?workspace=werfen
+  var _wsParam = (_initParams.get('workspace')||'').toLowerCase();
+  if (_wsParam) {
+    // Lock workspace context for this session
+    currentWorkspace = _wsParam;
+    localStorage.setItem('tb_workspace', _wsParam);
+    // If a user is already logged in but belongs to a different workspace — log them out
+    var _savedUid2 = localStorage.getItem('tb_current_user');
+    if (_savedUid2) {
+      var _savedU2 = TB_USERS.find(function(u){ return u.id === _savedUid2; });
+      if (_savedU2 && _savedU2.workspaceId !== _wsParam && _wsParam !== 'default') {
+        // Clear session — wrong workspace
+        localStorage.removeItem('tb_current_user');
+        localStorage.removeItem('tb_sb_user_v2');
+        localStorage.removeItem('tb_role_override');
+      }
+    }
+  }
+
   if (_initParams.get('demo') === 'true') {
     _setDevSession('demo@talentbase.io');
     var sess = { id:'dev-local-user', email:'demo@talentbase.io',
