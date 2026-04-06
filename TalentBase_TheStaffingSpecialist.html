@@ -3416,7 +3416,6 @@ CREATE POLICY "staff_read_feedback" ON client_feedback FOR SELECT
     <div>
       <div class="topbar-title">⚡ Command Center</div>
       <div class="topbar-sub">Shared execution board — recruiters &amp; hiring managers</div>
-      <div id="cc-est-clock" style="font-size:11px;color:var(--text4);font-family:'DM Mono',monospace;margin-top:2px;"></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <select id="cc-filter" onchange="renderCommandCenter()" style="font-size:12px;padding:5px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);outline:none;">
@@ -8536,7 +8535,11 @@ function renderDash(){
   var days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var dateEl = document.getElementById('dash-date');
-  if(dateEl) dateEl.textContent = days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear();
+  if(dateEl){
+    var timeStr = now.toLocaleString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit',hour12:true});
+    dateEl.textContent = days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear()+' · '+timeStr+' EST';
+  }
+
 
   // Render each panel independently — one failure won't cascade
   try { renderDashKPIs();       } catch(e){ console.warn('KPIs:',e); }
@@ -8579,7 +8582,8 @@ function renderDashKPIs(){
     var now=new Date();
     var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    dateEl.textContent = days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear();
+    var timeStr = now.toLocaleString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit',hour12:true});
+    dateEl.textContent = days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear()+' · '+timeStr+' EST';
   }
 }
 
@@ -12216,21 +12220,6 @@ function initApp() {
 }
 document.addEventListener('DOMContentLoaded', function(){ initApp(); });
 
-// Keep Command Center clock ticking
-setInterval(function(){
-  if(window._activeView === 'command'){
-    var clockEl = document.getElementById('cc-est-clock');
-    if(clockEl){
-      var now = new Date();
-      clockEl.textContent = now.toLocaleString('en-US',{
-        timeZone:'America/New_York',
-        weekday:'short', month:'short', day:'numeric', year:'numeric',
-        hour:'numeric', minute:'2-digit', second:'2-digit',
-        hour12:true
-      }) + ' EST';
-    }
-  }
-}, 1000);
 // Command Center button delegation
 document.addEventListener('click', function(e) {
   var el = e.target.closest('[data-cc-complete],[data-cc-edit],[data-cc-delete],[data-link-cand]') || e.target;
@@ -13070,18 +13059,6 @@ function renderCommandCenter(){
   // Sync role switcher dropdown
   var roleSel = document.getElementById('sb-role-select');
   if(roleSel) roleSel.value = getRole();
-  // Update EST clock
-  var clockEl = document.getElementById('cc-est-clock');
-  if(clockEl){
-    var now = new Date();
-    var estStr = now.toLocaleString('en-US',{
-      timeZone:'America/New_York',
-      weekday:'short', month:'short', day:'numeric', year:'numeric',
-      hour:'numeric', minute:'2-digit', second:'2-digit',
-      hour12:true
-    });
-    clockEl.textContent = estStr + ' EST';
-  }
   // Always reload from storage for consistency
   tasks = JSON.parse(localStorage.getItem('tb_tasks')||'[]');
 
