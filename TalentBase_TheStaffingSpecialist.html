@@ -1502,36 +1502,77 @@ input::placeholder, textarea::placeholder {
       <div class="gate-wrap">
         <div id="gate-login-state">
       <div class="gate-card">
-        <div class="gate-headline">Run your hiring system</div>
-        <div class="gate-subline">Sign in to access your pipeline,<br>candidates, and deals.</div>
-
-<form onsubmit="event.preventDefault();gateLogin();" autocomplete="on">
-        <form onsubmit="event.preventDefault();gateLogin();" style="display:contents;">
-        <div class="gate-field">
-          <label class="gate-label" for="gate-email">Email</label>
-          <input class="gate-input" id="gate-email" type="email"
-            placeholder="you@company.com"
-            onkeydown="if(event.key==='Enter')document.getElementById('gate-input').focus()"
-            autocomplete="email"/>
+        <!-- Tab nav -->
+        <div style="display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid var(--border2);">
+          <button id="gate-tab-user" onclick="gateShowTab('user')"
+            style="flex:1;padding:8px 0;font-size:13px;font-weight:700;background:none;border:none;border-bottom:2px solid var(--accent);color:var(--text);cursor:pointer;font-family:inherit;">
+            Quick Access
+          </button>
+          <button id="gate-tab-pass" onclick="gateShowTab('pass')"
+            style="flex:1;padding:8px 0;font-size:13px;font-weight:600;background:none;border:none;border-bottom:2px solid transparent;color:var(--text4);cursor:pointer;font-family:inherit;">
+            Email / Password
+          </button>
         </div>
 
-        <div class="gate-field">
-          <label class="gate-label" for="gate-input">Password</label>
-          <div class="gate-input-wrap">
-            <input class="gate-input" id="gate-input" type="password"
-              placeholder="••••••••••••"
-              onkeydown="if(event.key==='Enter')gateLogin()"
-              autocomplete="current-password"/>
-            <button class="gate-eye" onclick="toggleGateEye()" id="gate-eye-btn" title="Show password">
-              <svg id="gate-eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-</form>
+        <!-- TAB 1: User picker -->
+        <div id="gate-panel-user">
+          <div class="gate-headline" style="margin-bottom:6px;">Select your profile</div>
+          <div class="gate-subline" style="margin-bottom:16px;">No password required for workspace access.</div>
+          <div class="gate-field">
+            <label class="gate-label">Who are you?</label>
+            <select id="gate-user-select" class="gate-input" style="cursor:pointer;">
+              <option value="">— Choose a user —</option>
+              <optgroup label="Werfen">
+                <option value="u-w1">Jonah Adelman · Admin</option>
+                <option value="u-w2">Suz Stetson · Sr HRBP</option>
+                <option value="u-w3">Hiring Manager · Hiring Mgr</option>
+                <option value="u-w4">Dir. Talent Acquisition · Executive</option>
+              </optgroup>
+              <optgroup label="HiArc">
+                <option value="u-h1">Jonah Adelman · Admin</option>
+                <option value="u-h2">HiArc Manager · Hiring Mgr</option>
+                <option value="u-h3">HRBP Lead · HRBP</option>
+                <option value="u-h4">Mike Aschettino · Director</option>
+                <option value="u-h5">Nate Doemling · President</option>
+                <option value="u-h6">Dana Smathers · Executive</option>
+              </optgroup>
+              <optgroup label="General">
+                <option value="u-d1">Admin · General</option>
+              </optgroup>
+            </select>
           </div>
+          <button class="gate-submit" onclick="gateUserLogin()" style="margin-top:16px;">Enter TalentBase →</button>
+          <div class="gate-err" id="gate-err-user"></div>
         </div>
 
-        </form>
-        <button class="gate-submit" id="gate-btn" onclick="gateLogin()">Sign in to TalentBase</button>
-        <div class="gate-err" id="gate-err"></div>
+        <!-- TAB 2: Email / Password (existing flow) -->
+        <div id="gate-panel-pass" style="display:none;">
+          <div class="gate-headline" style="margin-bottom:6px;">Run your hiring system</div>
+          <div class="gate-subline" style="margin-bottom:16px;">Sign in to access your pipeline,<br>candidates, and deals.</div>
+          <form onsubmit="event.preventDefault();gateLogin();" style="display:contents;">
+          <div class="gate-field">
+            <label class="gate-label" for="gate-email">Email</label>
+            <input class="gate-input" id="gate-email" type="email"
+              placeholder="you@company.com"
+              onkeydown="if(event.key==='Enter')document.getElementById('gate-input').focus()"
+              autocomplete="email"/>
+          </div>
+          <div class="gate-field">
+            <label class="gate-label" for="gate-input">Password</label>
+            <div class="gate-input-wrap">
+              <input class="gate-input" id="gate-input" type="password"
+                placeholder="••••••••••••"
+                onkeydown="if(event.key==='Enter')gateLogin()"
+                autocomplete="current-password"/>
+              <button class="gate-eye" onclick="toggleGateEye()" id="gate-eye-btn" title="Show password" type="button">
+                <svg id="gate-eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          </form>
+          <button class="gate-submit" id="gate-btn" onclick="gateLogin()" style="margin-top:4px;">Sign in to TalentBase</button>
+          <div class="gate-err" id="gate-err"></div>
+        </div>
       </div>
 
       <div class="gate-trust">
@@ -3900,6 +3941,47 @@ async function _unlockApp(role) {
   } catch(e){}
 }
 // ── MAIN GATE LOGIN ───────────────────────────────────────────
+async function gateShowTab(tab) {
+  var isUser = tab === 'user';
+  document.getElementById('gate-panel-user').style.display = isUser ? '' : 'none';
+  document.getElementById('gate-panel-pass').style.display = isUser ? 'none' : '';
+  document.getElementById('gate-tab-user').style.borderBottomColor = isUser ? 'var(--accent)' : 'transparent';
+  document.getElementById('gate-tab-user').style.color = isUser ? 'var(--text)' : 'var(--text4)';
+  document.getElementById('gate-tab-user').style.fontWeight = isUser ? '700' : '600';
+  document.getElementById('gate-tab-pass').style.borderBottomColor = isUser ? 'transparent' : 'var(--accent)';
+  document.getElementById('gate-tab-pass').style.color = isUser ? 'var(--text4)' : 'var(--text)';
+  document.getElementById('gate-tab-pass').style.fontWeight = isUser ? '600' : '700';
+}
+
+function gateUserLogin() {
+  var sel = document.getElementById('gate-user-select');
+  var userId = sel ? sel.value : '';
+  if (!userId) {
+    document.getElementById('gate-err-user').textContent = 'Please select a user.';
+    return;
+  }
+  var user = TB_USERS.find(function(u){ return u.id === userId; });
+  if (!user) {
+    document.getElementById('gate-err-user').textContent = 'User not found.';
+    return;
+  }
+  // Set current user + workspace
+  currentUser     = user;
+  currentWorkspace = user.workspaceId;
+  _currentUserId  = user.id;
+  localStorage.setItem('tb_current_user', user.id);
+  localStorage.setItem('tb_workspace', user.workspaceId);
+  // Set role override
+  if (user.role === 'admin') {
+    localStorage.removeItem('tb_role_override');
+  } else {
+    localStorage.setItem('tb_role_override', user.role);
+  }
+  // Use dev session to bypass Supabase
+  _setDevSession(user.email || 'user@local');
+  _unlockApp('admin');
+}
+
 async function gateLogin() {
   var email = ((document.getElementById('gate-email')||{}).value||'').trim();
   var pass  = ((document.getElementById('gate-input')||{}).value||'').trim();
