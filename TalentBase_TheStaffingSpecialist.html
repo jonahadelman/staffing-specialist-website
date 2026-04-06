@@ -12392,6 +12392,26 @@ async function initAppData(){
     var _de = JSON.parse(localStorage.getItem('tb_doc_edits')||'{}');
     Object.keys(_de).forEach(function(k){ _docEdits[k] = _de[k]; });
   } catch(e) {}
+
+  // ── 7. Migrate legacy data — stamp workspaceId on any untagged records ──
+  // This runs once per load; after migration records always match wsFilter
+  try {
+    var _migrated = false;
+    var _ws = currentWorkspace || 'default';
+    (cands||[]).forEach(function(item){ if(!item.workspaceId){ item.workspaceId=_ws; _migrated=true; } });
+    (jobs||[]).forEach(function(item){ if(!item.workspaceId){ item.workspaceId=_ws; _migrated=true; } });
+    (deals||[]).forEach(function(item){ if(!item.workspaceId){ item.workspaceId=_ws; _migrated=true; } });
+    // Migrate tasks from localStorage
+    var _tasks = JSON.parse(localStorage.getItem('tb_tasks')||'[]');
+    _tasks.forEach(function(item){ if(!item.workspaceId){ item.workspaceId=_ws; _migrated=true; } });
+    if(_migrated){
+      try{ saveCands(); }catch(e){}
+      try{ saveJobsStore(); }catch(e){}
+      try{ saveDeals(); }catch(e){}
+      try{ localStorage.setItem('tb_tasks', JSON.stringify(_tasks)); tasks=_tasks; }catch(e){}
+      console.log('[TalentBase] Migrated legacy records to workspace:', _ws);
+    }
+  } catch(e){ console.warn('Migration error:', e); }
 }
 
 // ═══ INIT APP ════════════════════════════════════════════════
