@@ -1619,6 +1619,10 @@ button, .btn { white-space:nowrap !important; }
         Tutorial
       </div>
     </div>
+    <div class="ni" data-nav="command" id="ni-command">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+      Command Center
+    </div>
 
     <div style="flex:1;"></div>
     <div class="ni" data-nav="workspace" data-nav="workspace" id="ni-workspace">
@@ -3396,23 +3400,96 @@ CREATE POLICY "staff_read_feedback" ON client_feedback FOR SELECT
 ═══════════════════════════════════════════════════════════════ -->
 
 <!-- V2: Command Center view (hidden until V2 enabled) -->
-<div class="view" id="v-command" style="flex-direction:column;overflow:hidden;">
-  <div class="topbar" style="display:flex;align-items:center;justify-content:space-between;">
+<div class="view" id="v-command" style="flex-direction:column;">
+  <div class="topbar">
     <div>
-      <div class="topbar-title" style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:16px;">&#9889;</span> Command Center
-      </div>
-      <div class="topbar-sub" id="cc-subtitle">What to do today</div>
+      <div class="topbar-title">⚡ Command Center</div>
+      <div class="topbar-sub">Shared execution board — recruiters &amp; hiring managers</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <div id="cc-clock" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;"></div>
-      <button class="btn btn-ghost btn-sm" onclick="v2ToggleMode()" id="v2-toggle-btn" style="font-size:11px;white-space:nowrap;">Switch to Classic</button>
+      <select id="cc-filter" onchange="renderCommandCenter()" style="font-size:12px;padding:5px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);outline:none;">
+        <option value="all">All Tasks</option>
+        <option value="mine">My Tasks</option>
+        <option value="high">High Priority</option>
+        <option value="open">Open Only</option>
+        <option value="completed">Completed</option>
+      </select>
+      <button id="cc-mgr-btn" class="btn btn-ghost btn-sm" onclick="ccToggleManagerView()" style="font-size:11px;">👔 Manager View</button>
+      <button class="btn btn-primary btn-sm" onclick="ccOpenAddTask()">+ Add Task</button>
     </div>
   </div>
-  <div style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:16px;" id="cc-body">
-    <div style="text-align:center;padding:40px;color:var(--text4);font-size:13px;">Loading command center...</div>
+  <div style="flex:1;overflow-y:auto;padding:20px 24px;" id="cc-body"></div>
+</div>
+
+<!-- Command Center: Add/Edit Task Modal -->
+<div class="overlay" id="ov-task">
+  <div class="modal" style="max-width:560px;width:100%;">
+    <button class="modal-close" onclick="closeModal('ov-task')">✕</button>
+    <h2 id="cc-modal-title" style="margin-bottom:20px;">Add Task</h2>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <div class="ws-label">Task Item <span style="color:var(--red);font-size:10px;">required</span></div>
+          <input id="ct-item" class="ws-input" placeholder="e.g. Schedule interviews for FSE role"/>
+        </div>
+        <div>
+          <div class="ws-label">Owner</div>
+          <input id="ct-owner" class="ws-input" placeholder="e.g. Anthony"/>
+        </div>
+      </div>
+      <div>
+        <div class="ws-label">Detail</div>
+        <textarea id="ct-detail" class="ws-input" style="height:72px;resize:none;" placeholder="Additional context or instructions..."></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div>
+          <div class="ws-label">Priority</div>
+          <select id="ct-priority" class="ws-input">
+            <option value="High">🔥 High</option>
+            <option value="Medium" selected>⚡ Medium</option>
+            <option value="Low">📌 Low</option>
+          </select>
+        </div>
+        <div>
+          <div class="ws-label">Status</div>
+          <select id="ct-status" class="ws-input">
+            <option value="Open">Open</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+        <div>
+          <div class="ws-label">Due Date</div>
+          <input id="ct-due" class="ws-input" type="date"/>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <div class="ws-label">Linked Job (optional)</div>
+          <select id="ct-job" class="ws-input">
+            <option value="">— None —</option>
+          </select>
+        </div>
+        <div>
+          <div class="ws-label">Linked Candidate (optional)</div>
+          <select id="ct-cand" class="ws-input">
+            <option value="">— None —</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div class="ws-label">Notes (internal)</div>
+        <textarea id="ct-notes" class="ws-input" style="height:60px;resize:none;" placeholder="Internal notes — hidden in Manager View"></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:20px;">
+      <button class="btn btn-primary" onclick="ccSaveTask()">Save Task</button>
+      <button class="btn btn-ghost" onclick="closeModal('ov-task')">Cancel</button>
+      <div id="cc-task-err" style="font-size:12px;color:var(--red);align-self:center;margin-left:8px;"></div>
+    </div>
   </div>
 </div>
+
 
 <!-- V2: Talent Radar view -->
 <div class="view" id="v-radar" style="flex-direction:column;">
@@ -5092,7 +5169,7 @@ function nav(view) {
   if (v==='integrations') { try { checkIntegrationStatus(); } catch(e) {} }
   if (v==='campaigns')    { try { renderCampaigns&&renderCampaigns(); } catch(e) {} }
   if (v==='workspace')    { try { initWorkspaceSettings&&initWorkspaceSettings(); } catch(e) {} }
-  if (v==='command')      { try { renderCommandCenter&&renderCommandCenter(); } catch(e) {} }
+  if (v==='command')      { try { renderCommandCenter(); } catch(e) {} }
   if (v==='radar')        { try { renderRadar&&renderRadar(); } catch(e) {} }
   if (v==='aitools')      { try { initAITools&&initAITools(); } catch(e) {} }
 }
@@ -12079,6 +12156,24 @@ function initApp() {
   }
 }
 document.addEventListener('DOMContentLoaded', function(){ initApp(); });
+// Command Center button delegation
+document.addEventListener('click', function(e) {
+  var el = e.target.closest('[data-cc-complete],[data-cc-edit],[data-cc-delete],[data-link-cand]') || e.target;
+  if(el.dataset.ccComplete){ ccCompleteTask(el.dataset.ccComplete); return; }
+  if(el.dataset.ccEdit)    { ccOpenEditTask(el.dataset.ccEdit); return; }
+  if(el.dataset.ccDelete)  { ccDeleteTask(el.dataset.ccDelete); return; }
+  if(el.dataset.linkCand)  {
+    nav('candidates');
+    setTimeout(function(){ try{ selCand(el.dataset.linkCand); }catch(ex){} }, 120);
+    return;
+  }
+});
+document.addEventListener('change', function(e) {
+  var el = e.target;
+  if(el.dataset.ccStatus){ ccUpdateTaskField(el.dataset.ccStatus,'status',el.value); }
+  if(el.dataset.tid)     { ccUpdateTaskField(el.dataset.tid,'notes',el.value); }
+});
+
 // Event delegation — ONLY nav trigger for sidebar
 document.addEventListener('click', function(e) {
   var item = e.target.closest('[data-nav]');
@@ -12667,86 +12762,248 @@ function v2ToggleMode(){
 
 function showCommandCenter(){ nav('command'); renderCommandCenter(); }
 
-function renderCommandCenter(){
-  var body=document.getElementById('cc-body');
-  if(!body) return;
-  var now=new Date();
-  var hour=now.getHours();
-  var greeting=hour<12?'Good morning':'hour<17'?'Good afternoon':'Good evening';
-  if(hour>=12&&hour<17) greeting='Good afternoon';
-  else if(hour>=17) greeting='Good evening';
+// ═══ COMMAND CENTER ══════════════════════════════════════════════════════
+var tasks = JSON.parse(localStorage.getItem('tb_tasks')||'[]');
+var ccManagerView = false;
+var ccEditTaskId = null;
 
-  // Update clock
-  var clock=document.getElementById('cc-clock');
-  if(clock) clock.textContent=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+function saveTasks(){
+  try{ localStorage.setItem('tb_tasks', JSON.stringify(tasks)); }catch(e){}
+}
 
-  var hotCands=cands.filter(function(c){ return getCRMFields(c).temperature==='hot'; });
-  var openDeals=deals.filter(function(d){ return d.stage!=='Closed'; });
-  var attnItems=runAutomation(cands, deals);
+function ccToggleManagerView(){
+  ccManagerView = !ccManagerView;
+  var btn = document.getElementById('cc-mgr-btn');
+  if(btn) btn.textContent = ccManagerView ? '🔧 Recruiter View' : '👔 Manager View';
+  if(btn) btn.style.background = ccManagerView ? 'rgba(59,130,246,.15)' : '';
+  renderCommandCenter();
+}
 
-  var html='';
-
-  // Today's focus
-  html+='<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:20px 22px;">' +
-    '<div style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Today\'s Focus</div>';
-  if(!attnItems.length&&!hotCands.length&&!openDeals.length){
-    html+='<div style="font-size:14px;color:var(--text3);">All clear — nothing needs attention right now.</div>';
-  } else {
-    if(attnItems.length){
-      html+='<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;">'+attnItems.length+' item'+(attnItems.length>1?'s':'')+' need attention</div>';
-      var _ccAttnIdx=-1;
-      html+=attnItems.slice(0,3).map(function(item){ _ccAttnIdx++;
-        var col={high:'var(--red)',medium:'var(--amber)',low:'var(--text4)'}[item.urgency]||'var(--text4)';
-        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border2);">'+
-          '<span style="font-size:14px;">'+item.icon+'</span>'+
-          '<div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--text);">'+esc(item.label)+'</div>'+
-          '<div style="font-size:11px;color:'+col+';">'+esc(item.subtext)+'</div></div>'+
-          '<button class="cc-attn-btn" data-cc-idx="'+_ccAttnIdx+'" style="font-size:11px;padding:4px 10px;background:var(--accent-dim);color:var(--accent2);border:1px solid var(--accent-border);border-radius:5px;cursor:pointer;font-family:inherit;white-space:nowrap;">'+esc(item.actionLabel||'Review')+'</button>'+
-          '</div>';
-      }).join('');
-    }
-  }
-  html+='</div>';
-
-  // Pipeline snapshot
-  html+='<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:20px 22px;">' +
-    '<div style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;">Pipeline</div>' +
-    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;">';
-  var stages=['New','Screening','Interviewing','Offer','Hired'];
-  var colors={New:'var(--blue)',Screening:'var(--purple)',Interviewing:'var(--amber)',Offer:'var(--teal)',Hired:'var(--green)'};
-  stages.forEach(function(s){
-    var n=cands.filter(function(c){ return c.status===s; }).length;
-    html+='<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:14px 8px;text-align:center;cursor:pointer;" onclick="nav(\'pipeline\')">' +
-      '<div style="font-size:10px;font-weight:600;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">'+s+'</div>' +
-      '<div style="font-size:32px;font-weight:700;letter-spacing:-1px;color:'+colors[s]+';">'+n+'</div>' +
-      '</div>';
+function ccOpenAddTask(){
+  ccEditTaskId = null;
+  document.getElementById('cc-modal-title').textContent = 'Add Task';
+  ['ct-item','ct-owner','ct-detail','ct-notes'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
   });
-  html+='</div></div>';
+  document.getElementById('ct-priority').value = 'Medium';
+  document.getElementById('ct-status').value   = 'Open';
+  document.getElementById('ct-due').value       = '';
+  document.getElementById('cc-task-err').textContent = '';
+  // Populate linked dropdowns
+  var jSel = document.getElementById('ct-job');
+  jSel.innerHTML = '<option value="">— None —</option>' +
+    (jobs||[]).map(function(j){ return '<option value="'+j.id+'">'+esc(j.title)+' #'+esc(j.reqNum||'')+'</option>'; }).join('');
+  var cSel = document.getElementById('ct-cand');
+  cSel.innerHTML = '<option value="">— None —</option>' +
+    (cands||[]).map(function(cc){ return '<option value="'+cc.id+'">'+esc(cc.first)+' '+esc(cc.last)+'</option>'; }).join('');
+  openModal('ov-task');
+}
 
-  // Hot leads
-  if(hotCands.length){
-    html+='<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:20px 22px;">' +
-      '<div style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">🔥 Hot Candidates ('+hotCands.length+')</div>' +
-      hotCands.slice(0,5).map(function(c){
-        var[bg,fg]=avColor(c);
-        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border2);cursor:pointer;" onclick="nav(\'candidates\');setTimeout(function(){selCand(\''+c.id+'\')},100)">' +
-          '<div style="width:30px;height:30px;border-radius:50%;background:'+bg+';color:'+fg+';display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0;">'+ini(c)+'</div>' +
-          '<div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--text);">'+esc(c.first)+' '+esc(c.last)+'</div>' +
-          '<div style="font-size:11px;color:var(--text4);">'+esc(c.title||'')+(c.company?' · '+esc(c.company):'')+'</div></div>' +
-          '<span style="font-size:11px;font-weight:600;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);padding:2px 8px;border-radius:10px;">'+esc(c.status)+'</span>' +
-        '</div>';
-      }).join('') +
-    '</div>';
+function ccOpenEditTask(id){
+  var t = tasks.find(function(x){ return x.id===id; });
+  if(!t) return;
+  ccEditTaskId = id;
+  document.getElementById('cc-modal-title').textContent = 'Edit Task';
+  document.getElementById('ct-item').value    = t.item||'';
+  document.getElementById('ct-owner').value   = t.owner||'';
+  document.getElementById('ct-detail').value  = t.detail||'';
+  document.getElementById('ct-notes').value   = t.notes||'';
+  document.getElementById('ct-priority').value= t.priority||'Medium';
+  document.getElementById('ct-status').value  = t.status||'Open';
+  document.getElementById('ct-due').value     = t.dueDate||'';
+  document.getElementById('cc-task-err').textContent = '';
+  var jSel = document.getElementById('ct-job');
+  jSel.innerHTML = '<option value="">— None —</option>' +
+    (jobs||[]).map(function(j){ return '<option value="'+j.id+'">'+esc(j.title)+' #'+esc(j.reqNum||'')+'</option>'; }).join('');
+  jSel.value = t.jobId||'';
+  var cSel = document.getElementById('ct-cand');
+  cSel.innerHTML = '<option value="">— None —</option>' +
+    (cands||[]).map(function(cc){ return '<option value="'+cc.id+'">'+esc(cc.first)+' '+esc(cc.last)+'</option>'; }).join('');
+  cSel.value = t.candidateId||'';
+  openModal('ov-task');
+}
+
+function ccSaveTask(){
+  var item = (document.getElementById('ct-item').value||'').trim();
+  if(!item){ document.getElementById('cc-task-err').textContent='Task item is required.'; return; }
+  var userName = (_sbUser&&_sbUser.email) ? _sbUser.email.split('@')[0] : 'Admin';
+  var now = Date.now();
+  if(ccEditTaskId){
+    var idx = tasks.findIndex(function(x){ return x.id===ccEditTaskId; });
+    if(idx>=0){
+      var prev = tasks[idx];
+      tasks[idx] = Object.assign({}, prev, {
+        item:   item,
+        owner:  document.getElementById('ct-owner').value.trim(),
+        detail: document.getElementById('ct-detail').value.trim(),
+        notes:  document.getElementById('ct-notes').value.trim(),
+        priority:    document.getElementById('ct-priority').value,
+        status:      document.getElementById('ct-status').value,
+        dueDate:     document.getElementById('ct-due').value,
+        jobId:       document.getElementById('ct-job').value||null,
+        candidateId: document.getElementById('ct-cand').value||null,
+        updatedAt:   now,
+      });
+      if(!tasks[idx].history) tasks[idx].history=[];
+      tasks[idx].history.push({user:userName, action:'updated task', timestamp:now});
+    }
+  } else {
+    var newTask = {
+      id: uid(),
+      item:        item,
+      owner:       document.getElementById('ct-owner').value.trim(),
+      detail:      document.getElementById('ct-detail').value.trim(),
+      notes:       document.getElementById('ct-notes').value.trim(),
+      priority:    document.getElementById('ct-priority').value,
+      status:      'Open',
+      dueDate:     document.getElementById('ct-due').value,
+      jobId:       document.getElementById('ct-job').value||null,
+      candidateId: document.getElementById('ct-cand').value||null,
+      dateAssigned: now,
+      visibleTo:   ['recruiter','hiring_manager'],
+      history:     [{user:userName, action:'created task', timestamp:now}]
+    };
+    tasks.unshift(newTask);
+  }
+  saveTasks();
+  closeModal('ov-task');
+  renderCommandCenter();
+}
+
+function ccCompleteTask(id){
+  var t = tasks.find(function(x){ return x.id===id; });
+  if(!t) return;
+  t.status = 'Completed';
+  t.completedAt = Date.now();
+  var userName = (_sbUser&&_sbUser.email) ? _sbUser.email.split('@')[0] : 'Admin';
+  if(!t.history) t.history=[];
+  t.history.push({user:userName, action:'marked complete', timestamp:Date.now()});
+  saveTasks();
+  renderCommandCenter();
+  // Refresh dashboard Needs Action if visible
+  if(window._activeView==='dashboard') try{ renderDash(); }catch(e){}
+}
+
+function ccUpdateTaskField(id, field, val){
+  var t = tasks.find(function(x){ return x.id===id; });
+  if(!t) return;
+  t[field] = val;
+  t.updatedAt = Date.now();
+  var userName = (_sbUser&&_sbUser.email) ? _sbUser.email.split('@')[0] : 'Admin';
+  if(!t.history) t.history=[];
+  t.history.push({user:userName, action:'updated '+field+' to "'+val+'"', timestamp:Date.now()});
+  saveTasks();
+  // Update dashboard Needs Action if relevant
+  if(window._activeView==='dashboard') renderDash();
+}
+
+function ccDeleteTask(id){
+  if(!confirm('Delete this task?')) return;
+  tasks = tasks.filter(function(x){ return x.id!==id; });
+  saveTasks();
+  renderCommandCenter();
+}
+
+function renderCommandCenter(){
+  // Always reload from storage for consistency
+  tasks = JSON.parse(localStorage.getItem('tb_tasks')||'[]');
+
+  var el = document.getElementById('cc-body');
+  if(!el) return;
+
+  var filter = (document.getElementById('cc-filter')||{value:'all'}).value;
+  var userName = (_sbUser&&_sbUser.email) ? _sbUser.email.split('@')[0] : 'Admin';
+
+  var filtered = tasks.filter(function(t){
+    if(filter==='mine')      return t.owner && t.owner.toLowerCase()===userName.toLowerCase();
+    if(filter==='high')      return t.priority==='High';
+    if(filter==='open')      return t.status!=='Completed';
+    if(filter==='completed') return t.status==='Completed';
+    return true;
+  });
+
+  var now = Date.now();
+  var priorityOrder = {High:0, Medium:1, Low:2};
+
+  // Sort: incomplete first, then by priority, then by due date
+  filtered.sort(function(a,b){
+    if(a.status==='Completed' && b.status!=='Completed') return 1;
+    if(b.status==='Completed' && a.status!=='Completed') return -1;
+    var po = (priorityOrder[a.priority]||1) - (priorityOrder[b.priority]||1);
+    if(po!==0) return po;
+    if(a.dueDate && b.dueDate) return a.dueDate.localeCompare(b.dueDate);
+    return (b.dateAssigned||0) - (a.dateAssigned||0);
+  });
+
+  if(!filtered.length){
+    el.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--text4);">'+
+      '<div style="font-size:32px;margin-bottom:12px;">✅</div>'+
+      '<div style="font-size:14px;font-weight:600;color:var(--text3);">No tasks found</div>'+
+      '<div style="font-size:12px;margin-top:6px;">Click "+ Add Task" to create your first task</div>'+
+      '</div>';
+    return;
   }
 
-  body.innerHTML=html;
+  el.innerHTML = filtered.map(function(t){
+    var isOverdue = t.dueDate && t.status!=='Completed' && new Date(t.dueDate) < new Date();
+    var pColors = {High:'var(--red)', Medium:'var(--amber)', Low:'var(--text4)'};
+    var pBg     = {High:'rgba(239,68,68,.08)', Medium:'rgba(245,158,11,.08)', Low:'var(--bg3)'};
+    var pIcons  = {High:'🔥', Medium:'⚡', Low:'📌'};
+    var sColors = {'Open':'var(--accent)', 'In Progress':'var(--amber)', 'Completed':'var(--green)'};
 
-  // Clock ticker
-  if(window._ccClockInterval) clearInterval(window._ccClockInterval);
-  window._ccClockInterval=setInterval(function(){
-    var cl=document.getElementById('cc-clock');
-    if(cl) cl.textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-  },30000);
+    // Linked job/candidate
+    var linkedJob   = t.jobId    ? jobs.find(function(j){ return j.id===t.jobId; })    : null;
+    var linkedCand  = t.candidateId ? cands.find(function(cc){ return cc.id===t.candidateId; }) : null;
+
+    var linkHtml = '';
+    if(linkedJob)  linkHtml += '<span data-nav="jobs" style="cursor:pointer;font-size:11px;background:rgba(59,130,246,.1);color:var(--accent);padding:2px 8px;border-radius:999px;margin-right:6px;">💼 '+esc(linkedJob.title)+'</span>';
+    if(linkedCand) linkHtml += '<span data-link-cand="'+linkedCand.id+'" style="cursor:pointer;font-size:11px;background:rgba(20,212,196,.1);color:var(--teal);padding:2px 8px;border-radius:999px;">👤 '+esc(linkedCand.first)+' '+esc(linkedCand.last)+'</span>';
+
+    var notesHtml = ccManagerView ? '' :
+      '<div style="margin-top:10px;">'+
+      '<textarea data-task-id="'+t.id+'" placeholder="Internal notes..." '+
+      'onchange="(function(el){ccUpdateTaskField(el.dataset.tid,\'notes\',el.value);})(this)" data-tid="'+t.id+'" '+
+
+      'style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:7px 10px;font-size:11.5px;color:var(--text3);resize:none;height:52px;font-family:inherit;outline:none;">'+esc(t.notes||'')+'</textarea>'+
+      '</div>';
+
+    var historyHtml = '';
+    if(!ccManagerView && t.history && t.history.length){
+      var last = t.history[t.history.length-1];
+      var lastDate = new Date(last.timestamp);
+      historyHtml = '<div style="font-size:10px;color:var(--text4);margin-top:6px;">Last: '+esc(last.user)+' '+esc(last.action)+' — '+lastDate.toLocaleDateString()+'</div>';
+    }
+
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;border-left:3px solid '+(pColors[t.priority]||'var(--border)')+';'+(t.status==='Completed'?'opacity:.6;':'')+'">' +
+      '<div style="display:flex;align-items:flex-start;gap:12px;">' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">' +
+            '<span style="font-size:11px;font-weight:700;color:'+(pColors[t.priority]||'var(--text4)')+';background:'+(pBg[t.priority]||'var(--bg3)')+';padding:2px 8px;border-radius:999px;">'+(pIcons[t.priority]||'')+' '+(t.priority||'Medium').toUpperCase()+'</span>' +
+            '<span style="font-size:12px;font-weight:700;color:var(--text);">'+esc(t.item)+'</span>' +
+            (isOverdue ? '<span style="font-size:10px;background:rgba(239,68,68,.15);color:var(--red);padding:2px 7px;border-radius:999px;font-weight:700;">OVERDUE</span>' : '') +
+          '</div>' +
+          (t.detail ? '<div style="font-size:12px;color:var(--text3);margin-bottom:6px;line-height:1.5;">'+esc(t.detail)+'</div>' : '') +
+          '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--text4);">' +
+            (t.owner ? '<span>👤 '+esc(t.owner)+'</span>' : '') +
+            (t.dueDate ? '<span style="color:'+(isOverdue?'var(--red)':'var(--text4)')+';">📅 '+esc(t.dueDate)+'</span>' : '') +
+          '</div>' +
+          (linkHtml ? '<div style="margin-top:6px;">'+linkHtml+'</div>' : '') +
+          notesHtml +
+          historyHtml +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0;">' +
+          '<select data-cc-status="'+t.id+'" onchange="(function(el){ccUpdateTaskField(el.dataset.ccStatus,\'status\',el.value);})(this)" style="font-size:11px;padding:4px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:'+(sColors[t.status]||'var(--text)')+';outline:none;">' +
+            '<option value="Open"'+(t.status==='Open'?' selected':'')+'>Open</option>' +
+            '<option value="In Progress"'+(t.status==='In Progress'?' selected':'')+'>In Progress</option>' +
+            '<option value="Completed"'+(t.status==='Completed'?' selected':'')+'>Completed</option>' +
+          (t.status!=='Completed' ? '<button data-cc-complete="'+t.id+'" class="btn btn-ghost btn-sm" style="font-size:10.5px;white-space:nowrap;">✓ Complete</button>' : '<span style="font-size:10px;color:var(--green);font-weight:700;">✓ Done</span>') +
+          (!ccManagerView ? '<button data-cc-edit="'+t.id+'" class="btn btn-ghost btn-sm" style="font-size:10.5px;">Edit</button>' : '') +
+          (!ccManagerView ? '<button data-cc-delete="'+t.id+'" class="btn btn-ghost btn-sm" style="font-size:10.5px;color:var(--red);">✕</button>' : '') +
+          (!ccManagerView ? '<button data-cc-delete="'+t.id+'" class="btn btn-ghost btn-sm" style="font-size:10.5px;color:var(--red);">✕</button>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
 
 // ── WORKSPACE INIT (called when nav('workspace') fires) ───────
@@ -14264,5 +14521,31 @@ function downloadScorecard(scId) {
 }
 
 </style>
+</body>
+</htm  // ── STEP 5: High priority + overdue tasks from Command Center ──
+  var ccTasks = [];
+  try{ ccTasks = JSON.parse(localStorage.getItem('tb_tasks')||'[]'); }catch(e){}
+  ccTasks.forEach(function(t){
+    if(t.status==='Completed') return;
+    var isOverdue = t.dueDate && new Date(t.dueDate) < new Date();
+    if(t.priority==='High' || isOverdue){
+      items.push({
+        type:'task', icon:'📋', urgency: isOverdue ? 'high' : (t.priority==='High' ? 'medium' : 'low'),
+        label: t.item,
+        subtext: (t.owner?'Owner: '+t.owner+' · ':'') + (isOverdue?'OVERDUE':'High priority') + (t.dueDate?' · Due: '+t.dueDate:''),
+        action: function(){ nav('command'); },
+        actionLabel: 'View Task →',
+        id: 'task-'+t.id
+      });
+    }
+  });
+
+  return items;
+}
+
+
+</script>
+
+
 </body>
 </html>
