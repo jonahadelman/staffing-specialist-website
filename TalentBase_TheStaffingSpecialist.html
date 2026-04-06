@@ -1337,6 +1337,22 @@ button, .btn { white-space:nowrap !important; }
   overflow: hidden;
 }
 
+
+/* ═══ DOCUMENT EDITOR ═══════════════════════════════════════ */
+.doc-editor {
+  outline: none;
+  cursor: text;
+}
+.doc-editor:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.08) !important;
+}
+.doc-editor:empty:before {
+  content: 'Click to start editing...';
+  color: var(--text4);
+  pointer-events: none;
+}
+
 </style>
 </head>
 <body>
@@ -2378,6 +2394,7 @@ button, .btn { white-space:nowrap !important; }
     <div><div class="topbar-title">Offer Builder</div><div class="topbar-sub">Professional offer letters — fill fields, generate, edit inline, print or send</div></div>
     <div style="display:flex;gap:8px;" id="ob-action-btns">
       <button class="btn btn-ghost btn-sm" id="ob-copy-btn" onclick="copyOffer()" style="display:none;">&#128203; Copy</button>
+      <button class="btn btn-primary btn-sm" id="ob-download-btn" onclick="downloadDoc('Offer Letter',document.getElementById('ob-doc').innerHTML)" style="display:none;">↓ Download PDF</button>
       <button class="btn btn-ghost btn-sm" id="ob-print-btn" onclick="printOffer()" style="display:none;">&#128424; Print / Save PDF</button>
     </div>
   </div>
@@ -2479,7 +2496,7 @@ button, .btn { white-space:nowrap !important; }
     <div style="overflow-y:auto;background:#f0f0f0;padding:28px 40px;" id="ob-doc-wrapper">
 
       <!-- Document -->
-      <div id="ob-doc" style="background:#fff;max-width:740px;margin:0 auto;padding:48px 56px;min-height:900px;font-family:Georgia,serif;position:relative;">
+      <div id="ob-doc" contenteditable="true" class="doc-editor" data-doc-id="ob-offer" style="background:#fff;max-width:740px;margin:0 auto;padding:48px 56px;min-height:900px;font-family:Georgia,serif;position:relative;outline:none;">
 
         <!-- Logo / Company header -->
         <div style="text-align:center;margin-bottom:32px;padding-bottom:20px;border-bottom:2px solid #1a1a2e;">
@@ -9223,6 +9240,7 @@ async function generateOffer(){
     outputEl.innerHTML = html || '<p>'+text+'</p>';
 
     document.getElementById('ob-copy-btn').style.display='inline-flex';
+    var _obDl=document.getElementById('ob-download-btn'); if(_obDl) _obDl.style.display='inline-flex';
     document.getElementById('ob-print-btn').style.display='inline-flex';
 
     // Update step 3
@@ -11632,16 +11650,55 @@ function renderLibrary(){
 }
 
 
+// ═══ DOCUMENT SYSTEM ═══════════════════════════════════════════════════════
+
+var _docEdits = {};  // in-memory edits: { itemId: htmlString }
+
+function renderTemplate(template, data) {
+  if (!template) return '';
+  return template.replace(/{{([^}]+)}}/g, function(_, key) {
+    return data[key.trim()] || '<span style="background:rgba(59,130,246,.15);color:var(--accent2);border-radius:3px;padding:1px 5px;font-size:11px;">{{'+key.trim()+'}}</span>';
+  });
+}
+
+function saveDocEdit(itemId, html) {
+  _docEdits[itemId] = html;
+  // Also persist to localStorage
+  try {
+    var stored = JSON.parse(localStorage.getItem('tb_doc_edits') || '{}');
+    stored[itemId] = html;
+    localStorage.setItem('tb_doc_edits', JSON.stringify(stored));
+  } catch(e) {}
+}
+
+function getDocEdit(itemId) {
+  // Check in-memory first, then localStorage
+  if (_docEdits[itemId]) return _docEdits[itemId];
+  try {
+    var stored = JSON.parse(localStorage.getItem('tb_doc_edits') || '{}');
+    if (stored[itemId]) { _docEdits[itemId] = stored[itemId]; return stored[itemId]; }
+  } catch(e) {}
+  return null;
+}
+
+function downloadDoc(title, contentHtml) {
+  var win = window.open('', '_blank', 'width=900,height=900');
+  if (!win) { alert('Allow popups to download document.'); return; }
+  win.document.write('<!DOCTYPE html><html><head><title>' + esc(title||'Document') + '</title>' +
+    '<style>' +
+    'body{font-family:Georgia,serif;padding:48px 56px;max-width:800px;margin:0 auto;color:#1a1a2e;line-height:1.7;}' +
+    'h1,h2,h3{font-family:Arial,sans-serif;}' +
+    'span[style]{font-family:monospace;background:#f0f4ff;color:#3b82f6;border-radius:3px;padding:1px 5px;}' +
+    '@media print{body{padding:0;}}' +
+    '</style></head><body>' + contentHtml + '</body></html>');
+  win.document.close();
+  setTimeout(function(){ win.print(); }, 400);
+}
+
 function viewLibItem(id) {
-  if (!Array.isArray(window.libraryItems)) {
-    console.error('[Library] libraryItems missing');
-    return;
-  }
+  if (!Array.isArray(window.libraryItems)) return;
   var item = window.libraryItems.find(function(i){ return i && i.id === id; });
-  if (!item) {
-    console.error('[Library] Item not found:', id);
-    return;
-  }
+  if (!item) return;
   var viewer = document.getElementById('lib-viewer');
   if (!viewer) return;
 
@@ -11656,173 +11713,43 @@ function viewLibItem(id) {
     activeRow.style.borderLeft = '2px solid var(--accent)';
   }
 
-  var body = (item.body || item.content || '').replace(/{{([^}]+)}}/g,
-    '<span style="background:rgba(59,130,246,.15);color:var(--accent2);border-radius:3px;padding:1px 4px;font-size:11px;">{{$1}}</span>');
+  // Get content — saved edit OR original
+  var savedEdit = getDocEdit(id);
+  var rawBody   = savedEdit || (item.body || item.content || '');
 
-  viewer.innerHTML = '<div style="padding:24px 28px;max-width:800px;margin:0 auto;">' +
-    '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;">' +
-      '<span style="font-size:20px;">' + (item.icon||'📄') + '</span>' +
-      '<div>' +
-        '<div style="font-size:16px;font-weight:700;color:var(--text);">' + esc(item.title||'Untitled') + '</div>' +
-        '<div style="font-size:11px;color:var(--text4);margin-top:3px;">' + esc((item.tags||[]).join(' · ')) + '</div>' +
+  // Highlight template variables in display
+  var displayBody = rawBody.replace(/{{([^}]+)}}/g,
+    '<span style="background:rgba(59,130,246,.15);color:var(--accent2);border-radius:3px;padding:1px 5px;font-size:11px;">{{$1}}</span>');
+
+  viewer.innerHTML =
+    '<div style="padding:20px 24px;max-width:840px;margin:0 auto;width:100%;">' +
+      // Header row
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">' +
+        '<span style="font-size:20px;">' + (item.icon||'📄') + '</span>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:15px;font-weight:700;color:var(--text);">' + esc(item.title||'Untitled') + '</div>' +
+          '<div style="font-size:11px;color:var(--text4);margin-top:2px;">' + esc((item.tags||[]).join(' · ')) + '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:6px;flex-shrink:0;">' +
+          '<button class="btn btn-ghost btn-sm" onclick="copyLibBody(this.dataset.lid)" data-lid="' + id + '">📋 Copy</button>' +
+          '<button class="btn btn-primary btn-sm" data-dl-title="'+esc(item.title||'Document')+'" data-dl-body="lib-doc-body-'+id+'" onclick="downloadDoc(this.dataset.dlTitle,document.getElementById(this.dataset.dlBody).innerHTML)">↓ Download PDF</button>' +
+        '</div>' +
       '</div>' +
-      '<button onclick="copyLibBody(this.dataset.lid)" data-lid="' + id + '" class="btn btn-ghost btn-sm" style="margin-left:auto;flex-shrink:0;">Copy</button>' +
-    '</div>' +
-    '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:20px;font-family:\'DM Mono\',monospace;font-size:12px;line-height:1.8;color:var(--text2);white-space:pre-wrap;">' +
-      body +
-    '</div>' +
-  '</div>';
+      // Editable doc body
+      '<div id="lib-doc-body-' + id + '" contenteditable="true" class="doc-editor" data-doc-id="' + id + '" ' +
+        'style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:24px 28px;' +
+        'font-family:Georgia,serif;font-size:13px;line-height:1.9;color:var(--text2);' +
+        'white-space:pre-wrap;outline:none;min-height:300px;' +
+        'transition:border-color .15s;" ' +
+        '' +
+        '' +
+        '' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--text4);margin-top:8px;">✏️ Click to edit · Changes save automatically · {{variables}} are highlighted</div>' +
+    '</div>';
+
   viewer.style.display = 'flex';
 }
-
-function copyLibBody(id) {
-  var item = (window.libraryItems||[]).find(function(i){ return i && i.id === id; });
-  if (!item) return;
-  navigator.clipboard.writeText(item.body || item.content || '').then(function(){
-    var btn = document.querySelector('.lib-row[data-lib-id="'+id+'"]');
-  }).catch(function(){});
-}
-
-function libShowTab(itemId, tab){
-  var item = libraryItems.find(function(x){ return x.id === itemId; });
-  if(!item) return;
-  var body = item.body || '';
-
-  // Update tab styles
-  document.querySelectorAll('[data-lib-tab]').forEach(function(btn){
-    var isActive = btn.getAttribute('data-lib-tab') === tab;
-    btn.style.fontWeight = isActive ? '600' : '500';
-    btn.style.borderBottom = isActive ? '2px solid var(--accent)' : '2px solid transparent';
-    btn.style.color = isActive ? 'var(--text)' : 'var(--text4)';
-  });
-
-  var content = document.getElementById('lib-doc-content');
-  if(!content) return;
-
-  // Extract sections from body text
-  var lines = body.split('\n');
-  var filtered;
-
-  if(tab === 'full'){
-    filtered = lines;
-  } else if(tab === 'summary'){
-    // First section up to first ━━━ divider
-    var divIdx = lines.findIndex(function(l){ return /^━+/.test(l.trim()); });
-    filtered = divIdx > 0 ? lines.slice(0, divIdx) : lines.slice(0, 20);
-  } else if(tab === 'requirements'){
-    // Lines containing REQUIRED or QUALIF or bullets after those headers
-    var inSection = false;
-    filtered = [];
-    lines.forEach(function(l){
-      var upper = l.toUpperCase();
-      if(upper.includes('REQUIRED') || upper.includes('QUALIF') || upper.includes('MINIMUM')){
-        inSection = true;
-      } else if(/^━+/.test(l.trim()) && inSection){
-        filtered.push(''); inSection = false;
-      }
-      if(inSection || l.startsWith('•') || l.startsWith('-')) filtered.push(l);
-    });
-    if(!filtered.length) filtered = ['No requirements section found in this template.'];
-  } else if(tab === 'notes'){
-    filtered = ['Notes for: '+(item.title||''), '', 'Add your interview notes, hiring manager feedback, or candidate observations here.', '', '— This section is for your personal use and is not sent to anyone.'];
-  }
-
-  var bodyHtml = (filtered||[]).join('\n').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  content.innerHTML = '<pre style="margin:0;white-space:pre-wrap;font-family:DM Mono,ui-monospace,monospace;font-size:12.5px;line-height:1.8;color:var(--text2);">'+bodyHtml+'</pre>';
-}
-
-function openLibraryModal(id){ viewLibItem(id); }
-function closeLibraryModal(){ /* no-op: right panel only */ }
-
-
-function copyLibItem(id){
-  const item = libraryItems.find(x=>x.id===id);
-  if(!item) return;
-  navigator.clipboard.writeText(item.body||'').then(()=>{
-    alert('Copied to clipboard!');
-  });
-}
-
-function copyLibItemFull(id){
-  const item = libraryItems.find(x=>x.id===id);
-  if(!item) return;
-  const text = (item.subject?'Subject: '+item.subject+'\n\n':'') + (item.body||'');
-  navigator.clipboard.writeText(text).then(()=>alert('Copied with subject line!'));
-}
-
-function editLibItem(id){
-  const item = libraryItems.find(x=>x.id===id);
-  if(!item) return;
-  const title = prompt('Title:', item.title);
-  if(!title) return;
-  item.title = title;
-  if(item.subject !== undefined){
-    item.subject = prompt('Subject:', item.subject)||item.subject;
-  }
-  item.body = prompt('Body (use {{variable}} for variables):', item.body)||item.body;
-  saveLibrary();
-  renderLibrary();
-  viewLibItem(id);
-}
-
-function deleteLibItem(id){
-  if(!confirm('Remove from library?')) return;
-  libraryItems = libraryItems.filter(x=>x.id!==id);
-  libSelectedId = null;
-  saveLibrary();
-  renderLibrary();
-  const viewer = document.getElementById('lib-viewer');
-  if(viewer) viewer.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:12px;color:var(--text4);"><div style="font-size:40px;">📚</div><div style="font-size:13px;">Select an item from the library to view it</div></div>';
-}
-
-function openNewLibraryItem(){
-  const cats = ['email','offer','script','jd','playbook','misc'];
-  const cat = prompt('Category (email / offer / script / jd / playbook / misc):','email');
-  if(!cat || !cats.includes(cat)) return;
-  const title = prompt('Title:');
-  if(!title) return;
-  const hasSubject = cat==='email'||cat==='offer';
-  const subject = hasSubject ? (prompt('Subject line (leave blank if none):') || '') : '';
-  const body = prompt('Content (use {{variable_name}} for variables):') || '';
-  const tagsStr = prompt('Tags (comma separated, e.g. outreach,follow-up):') || '';
-  const tags = tagsStr.split(',').map(t=>t.trim()).filter(Boolean);
-  const catIcon = {email:'📧',offer:'📄',script:'📞',jd:'💼',playbook:'📋',misc:'📁'};
-  libraryItems.push({
-    id: uid(),
-    cat, title, icon: catIcon[cat]||'📄',
-    subject, body, tags, vars:[]
-  });
-  saveLibrary();
-  renderLibrary();
-}
-
-// Backwards compat — redirect old template calls
-function renderTemplates(){ renderLibrary(); }
-function openNewTemplate(){ openNewLibraryItem(); }
-
-// ═══ INTEGRATION STATUS ════════════════════════════// ═══ INTEGRATION STATUS ════════════════════════════
-function checkIntegrationStatus(){
-  const key = getKey();
-  const badge = document.getElementById('ai-status-badge');
-  const keyStatus = document.getElementById('int-key-status');
-  if(badge && keyStatus){
-    if(key){
-      badge.textContent = 'Connected';
-      badge.style.background = 'var(--green-bg)';
-      badge.style.color = 'var(--green)';
-      badge.style.borderColor = 'var(--green-border)';
-      keyStatus.textContent = key.slice(0,12)+'...';
-      keyStatus.style.color = 'var(--green)';
-    } else {
-      badge.textContent = 'Not Connected';
-      badge.style.background = 'var(--red-bg)';
-      badge.style.color = 'var(--red)';
-      badge.style.borderColor = 'var(--red-border)';
-      keyStatus.textContent = 'Not configured';
-    }
-  }
-}
-
 
 
 // ═══════════════════════════════════════════════════
@@ -12188,6 +12115,12 @@ async function initAppData(){
     var apiField = document.getElementById('api-key');
     if(apiField){ apiField.value = k; updateApiDot(k); }
   } catch(e){}
+
+  // ── 6. Doc edits ────────────────────────────────────────────────────────
+  try {
+    var _de = JSON.parse(localStorage.getItem('tb_doc_edits')||'{}');
+    Object.keys(_de).forEach(function(k){ _docEdits[k] = _de[k]; });
+  } catch(e) {}
 }
 
 // ═══ INIT APP ════════════════════════════════════════════════
@@ -12219,6 +12152,14 @@ function initApp() {
   }
 }
 document.addEventListener('DOMContentLoaded', function(){ initApp(); });
+
+// Auto-save contenteditable documents
+document.addEventListener('input', function(e) {
+  if (e.target && e.target.classList.contains('doc-editor')) {
+    var docId = e.target.getAttribute('data-doc-id');
+    if (docId) saveDocEdit(docId, e.target.innerHTML);
+  }
+});
 
 // Command Center button delegation
 document.addEventListener('click', function(e) {
