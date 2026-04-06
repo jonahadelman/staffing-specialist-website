@@ -1516,30 +1516,14 @@ input::placeholder, textarea::placeholder {
 
         <!-- TAB 1: User picker -->
         <div id="gate-panel-user">
-          <div class="gate-headline" style="margin-bottom:6px;">Select your profile</div>
-          <div class="gate-subline" style="margin-bottom:16px;">No password required for workspace access.</div>
+          <div class="gate-headline" style="margin-bottom:6px;">Secure Access</div>
+          <div class="gate-subline" style="margin-bottom:16px;">Enter your email address to continue.</div>
           <div class="gate-field">
-            <label class="gate-label">Who are you?</label>
-            <select id="gate-user-select" class="gate-input" style="cursor:pointer;">
-              <option value="">— Choose a user —</option>
-              <optgroup label="Werfen">
-                <option value="u-w1">Jonah Adelman · Admin</option>
-                <option value="u-w2">Suz Stetson · Sr HRBP</option>
-                <option value="u-w3">Hiring Manager · Hiring Mgr</option>
-                <option value="u-w4">Dir. Talent Acquisition · Executive</option>
-              </optgroup>
-              <optgroup label="HiArc">
-                <option value="u-h1">Jonah Adelman · Admin</option>
-                <option value="u-h2">HiArc Manager · Hiring Mgr</option>
-                <option value="u-h3">HRBP Lead · HRBP</option>
-                <option value="u-h4">Mike Aschettino · Director</option>
-                <option value="u-h5">Nate Doemling · President</option>
-                <option value="u-h6">Dana Smathers · Executive</option>
-              </optgroup>
-              <optgroup label="General">
-                <option value="u-d1">Admin · General</option>
-              </optgroup>
-            </select>
+            <label class="gate-label" for="gate-user-email">Email</label>
+            <input id="gate-user-email" class="gate-input" type="email"
+              placeholder="you@company.com"
+              onkeydown="if(event.key==='Enter')gateUserLogin()"
+              autocomplete="email"/>
           </div>
           <button class="gate-submit" onclick="gateUserLogin()" style="margin-top:16px;">Enter TalentBase →</button>
           <div class="gate-err" id="gate-err-user"></div>
@@ -3954,15 +3938,15 @@ async function gateShowTab(tab) {
 }
 
 function gateUserLogin() {
-  var sel = document.getElementById('gate-user-select');
-  var userId = sel ? sel.value : '';
-  if (!userId) {
-    document.getElementById('gate-err-user').textContent = 'Please select a user.';
+  var emailInput = document.getElementById('gate-user-email');
+  var email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+  if (!email) {
+    document.getElementById('gate-err-user').textContent = 'Please enter your email address.';
     return;
   }
-  var user = TB_USERS.find(function(u){ return u.id === userId; });
+  var user = TB_USERS.find(function(u){ return (u.email||'').toLowerCase() === email; });
   if (!user) {
-    document.getElementById('gate-err-user').textContent = 'User not found.';
+    document.getElementById('gate-err-user').textContent = 'Access not found. Contact your administrator.';
     return;
   }
   // Set current user + workspace
