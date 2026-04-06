@@ -1434,6 +1434,31 @@ input::placeholder, textarea::placeholder {
 
 /* Section spacing */
 .section { margin-bottom: 28px; }
+
+/* ═══ UI SPACING POLISH ══════════════════════════════════════ */
+/* Topbar consistent padding */
+.topbar {
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+}
+/* Dashboard topbar has its own override — keep it */
+#v-dashboard .topbar {
+  padding-left: 32px !important;
+  padding-right: 24px !important;
+}
+/* Sidebar logo breathing room */
+.sidebar .logo {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+/* Main content right padding */
+.main {
+  padding-right: 0;
+}
+/* View content consistent padding */
+.view-scroll {
+  padding: 20px 24px !important;
+}
 </style>
 </head>
 <body>
@@ -1684,6 +1709,14 @@ input::placeholder, textarea::placeholder {
       <div class="logo-byline">TalentBase</div>
     </div>
   </div>
+  <!-- Match Alert Bell -->
+  <div id="tb-alert-bell-bar" onclick="openAlertInbox()" style="padding:6px 12px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background=''">
+    <div style="font-size:11px;font-weight:600;color:var(--text3);display:flex;align-items:center;gap:6px;">
+      <span>🔔</span><span>Match Alerts</span>
+    </div>
+    <div id="tb-alert-badge" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:800;border-radius:999px;padding:1px 7px;"></div>
+  </div>
+
   <div class="nav">
 
     <!-- PRIMARY NAV -->
@@ -3577,7 +3610,8 @@ CREATE POLICY "staff_read_feedback" ON client_feedback FOR SELECT
       <div class="topbar-sub">Shared execution board — recruiters &amp; hiring managers</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <select id="cc-filter" onchange="renderCommandCenter()" style="font-size:12px;padding:5px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);outline:none;">
+      <button class="btn btn-ghost btn-sm" id="cc-planner-tab-btn" onclick="ccShowPlanner()" style="font-size:11px;">📅 Daily Planner</button>
+      <select id="cc-filter" onchange="renderCommandCenter()"  style="font-size:12px;padding:5px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);outline:none;">
         <option value="all">All Tasks</option>
         <option value="mine">My Tasks</option>
         <option value="high">High Priority</option>
@@ -3589,6 +3623,22 @@ CREATE POLICY "staff_read_feedback" ON client_feedback FOR SELECT
     </div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:20px 24px;" id="cc-body"></div>
+  <div style="flex:1;overflow-y:auto;padding:20px 24px;display:none;" id="cc-planner-panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:var(--text);">📅 Daily Planner</div>
+        <div id="cc-planner-date" style="font-size:12px;color:var(--text4);margin-top:2px;"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="ccAddPlannerBlock()" style="font-size:11px;">+ Add Time Block</button>
+        <button class="btn btn-ghost btn-sm" onclick="ccShowTasks()" style="font-size:11px;">← Tasks</button>
+      </div>
+    </div>
+    <!-- Quick templates -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;" id="cc-planner-templates"></div>
+    <!-- Time blocks -->
+    <div id="cc-planner-blocks" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
 </div>
 
 <!-- Command Center: Add/Edit Task Modal -->
@@ -3671,6 +3721,20 @@ CREATE POLICY "staff_read_feedback" ON client_feedback FOR SELECT
 
 </div><!-- /main -->
 </div><!-- /app -->
+
+<!-- ═══ MATCH ALERT INBOX ═══ -->
+<div class="overlay" id="ov-alerts">
+  <div class="modal" style="max-width:620px;width:100%;max-height:85vh;display:flex;flex-direction:column;">
+    <button class="modal-close" onclick="closeModal('ov-alerts')">✕</button>
+    <h2 style="margin-bottom:4px;">🔔 Match Alerts</h2>
+    <p style="font-size:12px;color:var(--text4);margin-bottom:16px;">Auto-generated matches · Active for 30 days</p>
+    <div id="alert-inbox-body" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px;"></div>
+    <div style="padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <button class="btn btn-ghost btn-sm" onclick="clearExpiredAlerts();renderAlertInbox();" style="font-size:11px;">Clear Expired</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('ov-alerts')" style="font-size:11px;">Close</button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ MODAL: ADD/EDIT CANDIDATE ═══ -->
 <div class="overlay" id="ov-cand">
@@ -3917,6 +3981,8 @@ async function _unlockApp(role) {
   try { renderScorecards(); } catch(e){}
   try { renderTutorial(); }   catch(e){}
   try { applyNavRestrictions(); } catch(e){}
+  // Load alerts
+  try { loadAlerts(); updateAlertBadge(); } catch(e) {}
   // Init user system
   try {
     // Restore current user from storage
@@ -7246,6 +7312,10 @@ function saveCand(){
   document.getElementById('nb-cands').textContent=cands.length;
   updateRoleFilter();doSearch();
   if(selCandId)selCand(selCandId);
+  // Auto match: trigger on new candidate
+  if(!editCandId){
+    try{ var _newC=cands.find(function(x){return x.id===selCandId;}); if(_newC) setTimeout(function(){triggerCandidateMatch(_newC);},500); }catch(e){}
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -7876,6 +7946,10 @@ async function saveJob(){
 
   saveJobsStore(); closeModal('ov-job'); renderJobsList(); selJob(jid);
   document.getElementById('nb-jobs').textContent=jobs.filter(j=>j.status==='Open').length;
+  // Auto match: trigger on new job
+  if(!editJobId){
+    try{ var _newJ=jobs.find(function(x){return x.id===jid;}); if(_newJ) setTimeout(function(){triggerJobMatch(_newJ);},500); }catch(e){}
+  }
 
   // ── STEP 1: Auto boolean search ───────────────────────────
   if(desc&&!boolStr&&getKey()){
@@ -12835,6 +12909,26 @@ function renderClientDash() {
   var overdueTasks = wsTasks.filter(function(t){ return t.status!=='Completed' && t.dueDate && t.dueDate < todayStr; });
   var openTasks    = wsTasks.filter(function(t){ return t.status!=='Completed'; });
 
+  // ── EXEC SUMMARY ────────────────────────────────────────────────────────
+  var criticalReqs = openJobs.filter(function(j){ return j.created && (now-j.created)/86400000 > 90; });
+  var atRiskReqs   = openJobs.filter(function(j){ return j.created && (now-j.created)/86400000 > 60; });
+  var overallStatus = criticalReqs.length >= 3 ? '🚨 Critical' : atRiskReqs.length >= 2 ? '⚠️ At Risk' : '✅ On Track';
+  var overallColor  = criticalReqs.length >= 3 ? 'var(--red)' : atRiskReqs.length >= 2 ? 'var(--amber)' : 'var(--green)';
+
+  var topRisks = [];
+  if (criticalReqs.length) topRisks.push(criticalReqs.length + ' role'+(criticalReqs.length>1?'s':'')+' open >90 days — immediate action required');
+  if (offerCands.length) topRisks.push(offerCands.length + ' offer'+(offerCands.length>1?'s':'')+' pending — candidate decisions may lapse');
+  if (openJobs.filter(function(j){ return !wsCands.find(function(c){ return c.jobId===j.id; }); }).length)
+    topRisks.push('Roles with no pipeline — sourcing not yet underway');
+  if (!topRisks.length) topRisks.push('No critical risks identified — pipeline is healthy');
+
+  var weekFocus = [];
+  if (offerCands.length) weekFocus.push('Close ' + offerCands.length + ' pending offer'+(offerCands.length>1?'s':''));
+  if (interviewCands.length) weekFocus.push('Advance ' + interviewCands.length + ' candidate'+(interviewCands.length>1?'s':'')+' through interview stage');
+  if (criticalReqs.length) weekFocus.push('Reset sourcing strategy on ' + criticalReqs.length + ' aging role'+(criticalReqs.length>1?'s':''));
+  if (overdueTasks.length) weekFocus.push('Resolve ' + overdueTasks.length + ' overdue task'+(overdueTasks.length>1?'s':''));
+  if (!weekFocus.length) weekFocus.push('Maintain pipeline momentum — no urgent actions');
+
   var metrics = [
     { label:'Total Open Reqs',    val:openJobs.length,    color:'#60a5fa', sub: wsJobs.length + ' total reqs' },
     { label:'Active Candidates',  val:activeCands.length, color:'#a78bf5', sub: interviewCands.length + ' interviewing' },
@@ -12878,6 +12972,24 @@ function renderClientDash() {
 
   // ── RENDER ────────────────────────────────────────────────────────────────
   var html = '';
+
+  // ── Exec Summary banner ──────────────────────────────────────────────────
+  html += '<div style="background:var(--bg2);border:1px solid var(--border);border-left:4px solid '+overallColor+';border-radius:12px;padding:18px 22px;margin-bottom:24px;">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">' +
+      '<div style="font-size:15px;font-weight:800;color:var(--text);">Hiring Status: <span style="color:'+overallColor+';">'+overallStatus+'</span></div>' +
+      '<div style="font-size:11px;color:var(--text4);">'+hiredCands.length+' hired YTD · '+activeCands.length+' active · '+offerCands.length+' offers pending</div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">' +
+      '<div>' +
+        '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Top Risks</div>' +
+        topRisks.map(function(r){ return '<div style="font-size:12px;color:var(--text3);margin-bottom:4px;padding-left:10px;border-left:2px solid var(--red);">'+esc(r)+'</div>'; }).join('') +
+      '</div>' +
+      '<div>' +
+        '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">This Week Focus</div>' +
+        weekFocus.map(function(f){ return '<div style="font-size:12px;color:var(--text3);margin-bottom:4px;padding-left:10px;border-left:2px solid var(--accent);">'+esc(f)+'</div>'; }).join('') +
+      '</div>' +
+    '</div>' +
+  '</div>';
 
   // Metric tiles
   html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;">';
@@ -12971,6 +13083,345 @@ function renderClientDash() {
   }
 
   el.innerHTML = html;
+}
+
+// ═══ MATCH ENGINE + ALERT SYSTEM ════════════════════════════════════════════
+
+var tbAlerts = [];
+
+function loadAlerts() {
+  try {
+    var stored = JSON.parse(localStorage.getItem('tb_alerts') || '[]');
+    tbAlerts = stored.filter(function(a){ return a.expires > Date.now(); });
+  } catch(e) { tbAlerts = []; }
+}
+
+function saveAlerts() {
+  try { localStorage.setItem('tb_alerts', JSON.stringify(tbAlerts)); } catch(e) {}
+}
+
+function clearExpiredAlerts() {
+  tbAlerts = tbAlerts.filter(function(a){ return a.expires > Date.now(); });
+  saveAlerts();
+  updateAlertBadge();
+}
+
+function updateAlertBadge() {
+  var badge = document.getElementById('tb-alert-badge');
+  var unread = tbAlerts.filter(function(a){ return !a.read; }).length;
+  if (badge) {
+    badge.style.display = unread > 0 ? '' : 'none';
+    badge.textContent = unread > 9 ? '9+' : String(unread);
+  }
+}
+
+function openAlertInbox() {
+  renderAlertInbox();
+  openModal('ov-alerts');
+  // Mark all as read
+  tbAlerts.forEach(function(a){ a.read = true; });
+  saveAlerts();
+  updateAlertBadge();
+}
+
+function renderAlertInbox() {
+  var el = document.getElementById('alert-inbox-body');
+  if (!el) return;
+  loadAlerts();
+  if (!tbAlerts.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text4);"><div style="font-size:28px;margin-bottom:10px;">🔔</div><div style="font-size:13px;">No match alerts yet.</div><div style="font-size:11px;margin-top:6px;">Add candidates or jobs to trigger automatic matching.</div></div>';
+    return;
+  }
+  var sorted = tbAlerts.slice().sort(function(a,b){ return b.created - a.created; });
+  el.innerHTML = sorted.map(function(alert) {
+    var daysLeft = Math.ceil((alert.expires - Date.now()) / 86400000);
+    var isNew = !alert.read;
+    var typeLabel = alert.type === 'candidate_match' ? '👤 Candidate → Jobs' : '💼 Job → Candidates';
+    var typeColor = alert.type === 'candidate_match' ? 'var(--accent)' : 'var(--teal)';
+    var matchItems = (alert.matches || []).map(function(m) {
+      var name  = alert.type === 'candidate_match' ? esc(m.job ? m.job.title : '') : esc(m.candidate ? (m.candidate.first+' '+m.candidate.last) : '');
+      var score = m.score || 0;
+      var pct   = Math.min(100, Math.round(score * 12.5));
+      var why   = m.why || (score >= 6 ? 'Strong match — title + skills + location' : score >= 4 ? 'Good match — title + skills' : score >= 2 ? 'Partial match — skill overlap' : 'Possible match');
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:13px;font-weight:600;color:var(--text);">'+name+'</div>' +
+          '<div style="font-size:11px;color:var(--text4);margin-top:2px;">'+esc(why)+'</div>' +
+        '</div>' +
+        '<div style="text-align:right;flex-shrink:0;">' +
+          '<div style="font-size:12px;font-weight:700;color:'+(pct>=70?'var(--green)':pct>=50?'var(--amber)':'var(--text4)')+';">'+pct+'%</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    var emailDraft = alert.emailDraft || '';
+    return '<div style="background:var(--bg2);border:1px solid var(--border)'+(isNew?';border-left:3px solid var(--accent)':'')+';border-radius:10px;padding:14px 16px;">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
+        '<span style="font-size:11px;font-weight:700;color:'+typeColor+';background:rgba(59,130,246,.1);padding:2px 8px;border-radius:999px;">'+typeLabel+'</span>' +
+        (isNew?'<span style="font-size:9px;font-weight:800;color:var(--accent);background:rgba(59,130,246,.12);padding:1px 6px;border-radius:999px;">NEW</span>':'') +
+        '<span style="font-size:11px;color:var(--text4);margin-left:auto;">'+daysLeft+'d remaining</span>' +
+      '</div>' +
+      '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;">'+esc(alert.headline)+'</div>' +
+      matchItems +
+      (emailDraft ? '<details style="margin-top:10px;"><summary style="font-size:11px;font-weight:600;color:var(--accent2);cursor:pointer;padding:4px 0;">📧 View email draft</summary>' +
+        '<div style="margin-top:8px;background:var(--bg3);border-radius:6px;padding:12px;font-size:12px;color:var(--text3);white-space:pre-wrap;font-family:Georgia,serif;line-height:1.6;">'+esc(emailDraft)+'</div>' +
+        '<button onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent)" class="btn btn-ghost btn-sm" style="font-size:10px;margin-top:6px;">📋 Copy</button>' +
+      '</details>' : '') +
+    '</div>';
+  }).join('');
+}
+
+// ── SCORING ────────────────────────────────────────────────────────────────────
+function calculateMatch(cand, job) {
+  var score = 0;
+  var reasons = [];
+  var ct = (cand.title||'').toLowerCase();
+  var jt = (job.title||'').toLowerCase();
+  var cl = (cand.location||'').toLowerCase();
+  var jl = (job.location||'').toLowerCase();
+  var cs = (cand.skills||[]).map(function(s){ return s.toLowerCase(); });
+  var jd = (job.description||'').toLowerCase() + ' ' + (job.boolSearch||'').toLowerCase();
+
+  // Title match
+  if (ct && jt && (ct.includes(jt.split(' ')[0]) || jt.includes(ct.split(' ')[0]))) {
+    score += 3; reasons.push('title alignment');
+  }
+  // Skills overlap
+  var matchedSkills = cs.filter(function(s){ return jd.includes(s) && s.length > 2; });
+  if (matchedSkills.length >= 3) { score += 3; reasons.push(matchedSkills.length + ' matching skills'); }
+  else if (matchedSkills.length >= 1) { score += 1; reasons.push('skill overlap'); }
+  // Location
+  if (cl && jl && (cl.includes(jl.split(',')[0].toLowerCase()) || jl.includes(cl.split(',')[0].toLowerCase()))) {
+    score += 2; reasons.push('location match');
+  }
+  // Experience level
+  if (cand.yoe && job.description) {
+    var yoe = parseInt(cand.yoe);
+    if (!isNaN(yoe)) {
+      var descLow = job.description.toLowerCase();
+      if ((yoe >= 8 && descLow.includes('senior')) || (yoe >= 5 && descLow.includes('manager'))) {
+        score += 1; reasons.push('experience level');
+      }
+    }
+  }
+  return { score: score, why: reasons.join(' · ') || 'profile overlap' };
+}
+
+function matchCandidateToJobs(cand) {
+  var wsJobs = wsFilter(jobs).filter(function(j){ return j.status === 'Open'; });
+  return wsJobs.map(function(job) {
+    var m = calculateMatch(cand, job);
+    return { job: job, score: m.score, why: m.why };
+  }).filter(function(m){ return m.score > 0; })
+    .sort(function(a,b){ return b.score - a.score; })
+    .slice(0, 5);
+}
+
+function matchJobToCandidates(job) {
+  var wsCands = wsFilter(cands).filter(function(c){ return !['Hired','Rejected'].includes(c.status); });
+  return wsCands.map(function(cand) {
+    var m = calculateMatch(cand, job);
+    return { candidate: cand, score: m.score, why: m.why };
+  }).filter(function(m){ return m.score > 0; })
+    .sort(function(a,b){ return b.score - a.score; })
+    .slice(0, 5);
+}
+
+function triggerCandidateMatch(cand) {
+  var matches = matchCandidateToJobs(cand);
+  if (!matches.length) return;
+  var name = cand.first + ' ' + cand.last;
+  var emailDraft = 'Hi ' + cand.first + ',\n\nBased on your background in ' + (cand.title||'your field') + ', a few roles align well right now:\n\n' +
+    matches.map(function(m){ return '• ' + m.job.title + (m.job.location?' ('+m.job.location+')':'') + ' — ' + m.why; }).join('\n') +
+    '\n\nWould you be open to a quick call to discuss fit?\n\n— Jonah Adelman\nThe Staffing Specialist\n603.401.2901';
+  var alert = {
+    id: uid(), type: 'candidate_match',
+    headline: '🔥 ' + matches.length + ' role' + (matches.length>1?'s':'') + ' match ' + name,
+    matches: matches, emailDraft: emailDraft,
+    workspaceId: currentWorkspace,
+    created: Date.now(), expires: Date.now() + 30*86400000, read: false
+  };
+  loadAlerts();
+  tbAlerts.unshift(alert);
+  saveAlerts();
+  updateAlertBadge();
+}
+
+function triggerJobMatch(job) {
+  var matches = matchJobToCandidates(job);
+  if (!matches.length) return;
+  var emailDraft = 'Hi,\n\nFor the ' + job.title + ' role, here are 5 strong candidates in our active pipeline:\n\n' +
+    matches.map(function(m){ return '• ' + m.candidate.first + ' ' + m.candidate.last + ' — ' + (m.candidate.title||'') + ' · ' + m.why; }).join('\n') +
+    '\n\nLet me know who you\'d like to review or schedule.\n\n— Jonah Adelman\nThe Staffing Specialist\n603.401.2901';
+  var alert = {
+    id: uid(), type: 'job_match',
+    headline: '💼 ' + matches.length + ' candidate' + (matches.length>1?'s':'') + ' match ' + job.title,
+    matches: matches, emailDraft: emailDraft,
+    workspaceId: currentWorkspace,
+    created: Date.now(), expires: Date.now() + 30*86400000, read: false
+  };
+  loadAlerts();
+  tbAlerts.unshift(alert);
+  saveAlerts();
+  updateAlertBadge();
+}
+
+// ═══ DAILY PLANNER ═══════════════════════════════════════════════════════════
+
+var PLANNER_TEMPLATES = [
+  { emoji:'🔍', label:'Pipeline Review', time:'09:00', type:'admin' },
+  { emoji:'📧', label:'Outreach Block',  time:'10:00', type:'outreach' },
+  { emoji:'📞', label:'Candidate Calls', time:'11:00', type:'calls' },
+  { emoji:'🍽️', label:'Lunch',           time:'12:00', type:'break' },
+  { emoji:'👔', label:'HM Calls',        time:'14:00', type:'calls' },
+  { emoji:'✉️', label:'Follow Ups',      time:'15:00', type:'outreach' },
+  { emoji:'📋', label:'Admin / Wrap',    time:'16:00', type:'admin' },
+];
+
+var plannerBlocks = [];
+var plannerReminderInterval = null;
+
+function loadPlannerBlocks() {
+  var todayKey = 'tb_planner_' + new Date().toISOString().split('T')[0];
+  try { plannerBlocks = JSON.parse(localStorage.getItem(todayKey) || '[]'); } catch(e) { plannerBlocks = []; }
+}
+
+function savePlannerBlocks() {
+  var todayKey = 'tb_planner_' + new Date().toISOString().split('T')[0];
+  try { localStorage.setItem(todayKey, JSON.stringify(plannerBlocks)); } catch(e) {}
+}
+
+function ccShowPlanner() {
+  var body = document.getElementById('cc-body');
+  var panel = document.getElementById('cc-planner-panel');
+  if (body)  body.style.display  = 'none';
+  if (panel) panel.style.display = '';
+  // Update date
+  var dateEl = document.getElementById('cc-planner-date');
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  loadPlannerBlocks();
+  renderPlannerTemplates();
+  renderPlannerBlocks();
+  startPlannerReminders();
+}
+
+function ccShowTasks() {
+  var body = document.getElementById('cc-body');
+  var panel = document.getElementById('cc-planner-panel');
+  if (body)  body.style.display  = '';
+  if (panel) panel.style.display = 'none';
+}
+
+function renderPlannerTemplates() {
+  var el = document.getElementById('cc-planner-templates');
+  if (!el) return;
+  el.innerHTML = PLANNER_TEMPLATES.map(function(t) {
+    return '<button class="btn btn-ghost btn-sm" onclick="ccAddTemplateBlock('+JSON.stringify(t).replace(/"/g,"'")+');" style="font-size:11px;">' +
+      t.emoji + ' ' + t.label + '</button>';
+  }).join('');
+}
+
+function ccAddTemplateBlock(template) {
+  plannerBlocks.push({
+    id: uid(), time: template.time, title: template.label,
+    type: template.type, reminder: true, done: false,
+    linkedCandidateId: null, linkedJobId: null
+  });
+  plannerBlocks.sort(function(a,b){ return a.time.localeCompare(b.time); });
+  savePlannerBlocks();
+  renderPlannerBlocks();
+}
+
+function ccAddPlannerBlock() {
+  var time  = prompt('Time (e.g. 09:00):', '09:00');
+  if (!time) return;
+  var title = prompt('What are you doing?', 'Pipeline Review');
+  if (!title) return;
+  plannerBlocks.push({
+    id: uid(), time: time, title: title,
+    type: 'custom', reminder: true, done: false,
+    linkedCandidateId: null, linkedJobId: null
+  });
+  plannerBlocks.sort(function(a,b){ return a.time.localeCompare(b.time); });
+  savePlannerBlocks();
+  renderPlannerBlocks();
+}
+
+function ccTogglePlannerDone(id) {
+  var b = plannerBlocks.find(function(x){ return x.id===id; });
+  if (b) { b.done = !b.done; savePlannerBlocks(); renderPlannerBlocks(); }
+}
+
+function ccDeletePlannerBlock(id) {
+  plannerBlocks = plannerBlocks.filter(function(x){ return x.id!==id; });
+  savePlannerBlocks();
+  renderPlannerBlocks();
+}
+
+function renderPlannerBlocks() {
+  var el = document.getElementById('cc-planner-blocks');
+  if (!el) return;
+  if (!plannerBlocks.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text4);">' +
+      '<div style="font-size:28px;margin-bottom:10px;">📅</div>' +
+      '<div style="font-size:13px;font-weight:600;color:var(--text3);">No time blocks yet</div>' +
+      '<div style="font-size:12px;margin-top:6px;">Click a template above or + Add Time Block</div>' +
+    '</div>';
+    return;
+  }
+  var nowHHMM = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
+  var typeColors = { outreach:'var(--accent)', calls:'var(--teal)', admin:'var(--text4)', break:'var(--green)', custom:'var(--accent2)' };
+  el.innerHTML = plannerBlocks.map(function(b) {
+    var isPast  = b.time < nowHHMM;
+    var isCurrent = !b.done && b.time <= nowHHMM && nowHHMM < (b.time.slice(0,2)*1+1).toString().padStart(2,'0')+b.time.slice(2);
+    var color = typeColors[b.type] || 'var(--accent2)';
+    return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg2);border:1px solid var(--border);' +
+      (isCurrent?'border-left:3px solid var(--accent);':'border-left:3px solid '+(b.done?'var(--text4)':color)+';') +
+      'border-radius:10px;opacity:'+(b.done?'.55':'1')+';' +
+      (isCurrent?'box-shadow:0 0 0 1px rgba(59,130,246,.2);':'')+'">' +
+      '<div style="font-size:14px;font-weight:800;color:'+(b.done?'var(--text4)':isCurrent?'var(--accent)':'var(--text3)')+';font-family:\'DM Mono\',monospace;min-width:44px;">'+b.time+'</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:13px;font-weight:600;color:var(--text);'+(b.done?'text-decoration:line-through;':'')+'">' + esc(b.title) + (isCurrent?' <span style="font-size:10px;color:var(--accent);font-weight:700;">▶ NOW</span>':'') + '</div>' +
+        (b.linkedCandidateId||b.linkedJobId?'<div style="font-size:11px;color:var(--accent2);cursor:pointer;">🔗 linked</div>':'') +
+      '</div>' +
+      '<div style="display:flex;gap:6px;">' +
+        '<input type="checkbox"'+(b.done?' checked':'')+' onchange="ccTogglePlannerDone(\''+b.id+'\')" style="cursor:pointer;accent-color:var(--accent);width:16px;height:16px;"/>' +
+        '<button onclick="ccDeletePlannerBlock(\''+b.id+'\')" class="btn btn-ghost btn-sm" style="font-size:10px;color:var(--text4);padding:2px 6px;">✕</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function startPlannerReminders() {
+  if (plannerReminderInterval) clearInterval(plannerReminderInterval);
+  plannerReminderInterval = setInterval(function() {
+    if (!plannerBlocks.length) return;
+    var now = new Date();
+    var hhmm = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+    plannerBlocks.forEach(function(b) {
+      if (b.done || !b.reminder) return;
+      if (b.time === hhmm) {
+        // Browser notification if permitted
+        if (window.Notification && Notification.permission === 'granted') {
+          new Notification('TalentBase Reminder', { body: b.time + ' — ' + b.title, icon: '' });
+        } else {
+          // In-app toast
+          var toast = document.createElement('div');
+          toast.style.cssText = 'position:fixed;top:20px;right:24px;z-index:99999;background:#0f172a;border:1px solid var(--accent);border-radius:10px;padding:14px 18px;box-shadow:0 8px 30px rgba(0,0,0,.6);font-family:inherit;max-width:300px;';
+          toast.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:4px;">⏰ Reminder</div>' +
+            '<div style="font-size:13px;color:var(--text);">' + esc(b.time) + ' — ' + esc(b.title) + '</div>' +
+            '<button onclick="this.parentNode.remove()" style="position:absolute;top:8px;right:10px;background:none;border:none;color:var(--text4);cursor:pointer;font-size:16px;">×</button>';
+          document.body.appendChild(toast);
+          setTimeout(function(){ if(toast.parentNode) toast.remove(); }, 10000);
+        }
+        b.reminder = false; // don't fire again this session
+        savePlannerBlocks();
+      }
+    });
+  }, 30000); // check every 30 seconds
+  // Request notification permission
+  if (window.Notification && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', function(){ initApp(); });
