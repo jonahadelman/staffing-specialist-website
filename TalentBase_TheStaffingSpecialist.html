@@ -1353,6 +1353,13 @@ button, .btn { white-space:nowrap !important; }
   pointer-events: none;
 }
 
+
+/* ═══ DEMO MODE ANIMATION ═══════════════════════════════════ */
+@keyframes demoFadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 </style>
 </head>
 <body>
@@ -12169,142 +12176,218 @@ var _demoActive = false;
 
 var DEMO_STEPS = [
   {
-    view:    'dashboard',
-    title:   '👋 Welcome to TalentBase',
-    body:    'Your hiring command center. Everything you need — pipeline, tasks, candidates, and automation — in one place.',
-    highlight: null,
+    view:  'dashboard',
+    title: '👋 Welcome to TalentBase',
+    body:  'Your hiring command center. Real-time pipeline, automated tasks, and full team visibility — in one place. No setup required.',
+    stat:  '1,500+ hires facilitated',
   },
   {
-    view:    'jobs',
-    title:   '💼 Open Roles',
-    body:    'Every active req tracked in real time. Filter by status, department, or priority. Each job links directly to its candidates.',
-    highlight: null,
+    view:  'candidates',
+    title: '👤 Candidate Pipeline',
+    body:  'Every candidate tracked from first contact to offer. Search, filter by stage, and open any profile for full history and actions.',
+    stat:  '26,000+ candidate records',
   },
   {
-    view:    'candidates',
-    title:   '👤 Candidate Pipeline',
-    body:    'Your full candidate database. Search, filter by stage, and open any profile for history, notes, and actions.',
-    highlight: null,
+    view:  'pipeline',
+    title: '📋 Visual Pipeline',
+    body:  'Job-filtered kanban. See every candidate stage at a glance. Stage changes auto-create tasks — nothing falls through.',
+    stat:  'Zero manual follow-up reminders',
   },
   {
-    view:    'pipeline',
-    title:   '📋 Visual Pipeline',
-    body:    'Kanban view filtered by job. See every candidate stage at a glance. Move them forward with one click.',
-    highlight: null,
+    view:  'command',
+    title: '⚡ Command Center',
+    body:  'Shared execution board for recruiters AND hiring managers. Tasks auto-generate on stage changes. Role-based visibility built in.',
+    stat:  'Hiring managers always in the loop',
   },
   {
-    view:    'command',
-    title:   '⚡ Command Center',
-    body:    'Shared execution board for recruiters and hiring managers. Auto-generated tasks, role-based visibility, and real-time activity logs.',
-    highlight: null,
+    view:  'jobs',
+    title: '💼 Open Roles',
+    body:  'Every req tracked with status, department, and candidate count. Each job links directly to its pipeline and tasks.',
+    stat:  '200+ roles per year, team of 4',
   },
   {
-    view:    'library',
-    title:   '📚 Document Library',
-    body:    '141 live templates — offer letters, job descriptions, outreach, compliance. Every doc is editable and downloadable as PDF.',
-    highlight: null,
-  },
-  {
-    view:    'analytics',
-    title:   '📊 Analytics',
-    body:    'Pipeline health, hiring funnel, and candidate distribution — all from live data. No spreadsheets required.',
-    highlight: null,
+    view:  'analytics',
+    title: '📊 Pipeline Analytics',
+    body:  'Hiring funnel, stage distribution, and candidates by role — all live. No spreadsheets. No manual reporting.',
+    stat:  '92% offer acceptance rate',
   },
 ];
 
 function checkDemoMode() {
   var params = new URLSearchParams(window.location.search);
-  if (params.get('demo') === 'true') {
-    setTimeout(function(){ startDemo(); }, 600);
+  var demoVal = params.get('demo');
+  if (demoVal) {
+    // Future: support ?demo=medical-device, ?demo=startup etc.
+    // For now treat any truthy value as demo=true
+    setTimeout(function(){ startDemo(demoVal); }, 700);
   }
 }
 
-function startDemo() {
+function startDemo(demoType) {
   _demoActive = true;
   _demoIndex  = 0;
-  // Close any open overlays
+  // Close any open overlays cleanly
   document.querySelectorAll('.overlay, .modal-overlay').forEach(function(el){
     el.classList.remove('on');
     el.style.display = 'none';
   });
+  // Remove any stale demo overlay
+  var stale = document.getElementById('tb-demo-overlay');
+  if (stale) stale.remove();
+  // Land on dashboard first
+  try { nav('dashboard'); } catch(e) {}
   runDemoStep();
 }
 
 function runDemoStep() {
-  // Remove any existing demo overlay
+  // Always remove existing overlay before building new one
   var existing = document.getElementById('tb-demo-overlay');
   if (existing) existing.remove();
 
+  // Past last step — show end screen
   if (_demoIndex >= DEMO_STEPS.length) {
-    endDemo();
+    showDemoEndScreen();
     return;
   }
 
-  var step = DEMO_STEPS[_demoIndex];
+  var step   = DEMO_STEPS[_demoIndex];
   var isLast = (_demoIndex === DEMO_STEPS.length - 1);
+  var pct    = Math.round(((_demoIndex + 1) / DEMO_STEPS.length) * 100);
 
-  // Navigate to the step's view
+  // Navigate to step view
   try { nav(step.view); } catch(e) {}
 
-  // Build demo overlay card
   var overlay = document.createElement('div');
   overlay.id = 'tb-demo-overlay';
-  overlay.style.cssText = [
-    'position:fixed',
-    'bottom:32px',
-    'left:50%',
-    'transform:translateX(-50%)',
-    'z-index:9999',
-    'background:#0f172a',
-    'border:1px solid rgba(59,130,246,.4)',
-    'border-radius:16px',
-    'padding:22px 28px',
-    'min-width:360px',
-    'max-width:520px',
-    'box-shadow:0 8px 40px rgba(0,0,0,.6)',
-    'font-family:inherit',
-    'display:flex',
-    'flex-direction:column',
-    'gap:12px',
-  ].join(';');
-
-  var progress = (_demoIndex + 1) + ' / ' + DEMO_STEPS.length;
+  overlay.style.cssText =
+    'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:9999;' +
+    'background:#0d1117;border:1px solid rgba(59,130,246,.35);border-radius:16px;' +
+    'padding:20px 24px;min-width:380px;max-width:540px;width:calc(100vw - 48px);' +
+    'box-shadow:0 12px 48px rgba(0,0,0,.7),0 0 0 1px rgba(59,130,246,.08);' +
+    'font-family:inherit;display:flex;flex-direction:column;gap:14px;' +
+    'animation:demoFadeIn .25s ease;';
 
   overlay.innerHTML =
-    '<div style="display:flex;align-items:center;justify-content:space-between;">' +
-      '<span style="font-size:10px;font-weight:700;color:rgba(59,130,246,.8);text-transform:uppercase;letter-spacing:.12em;">Live Demo · ' + progress + '</span>' +
-      '<button onclick="endDemo()" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:18px;line-height:1;padding:0;" title="Exit demo">&times;</button>' +
+    // Top row: badge + step counter + close
+    '<div style="display:flex;align-items:center;gap:8px;">' +
+      '<span style="font-size:9px;font-weight:800;color:#3b82f6;text-transform:uppercase;letter-spacing:.14em;' +
+             'background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);border-radius:999px;padding:2px 9px;">LIVE DEMO</span>' +
+      '<span style="font-size:11px;color:rgba(255,255,255,.25);margin-left:2px;">' + (_demoIndex+1) + ' of ' + DEMO_STEPS.length + '</span>' +
+      '<span style="flex:1;"></span>' +
+      '<button onclick="endDemo()" style="background:none;border:none;color:rgba(255,255,255,.25);cursor:pointer;' +
+              'font-size:20px;line-height:1;padding:0;transition:color .15s;" ' +
+              ' ' +
+              ' title="Exit demo">&times;</button>' +
     '</div>' +
+    // Content
     '<div>' +
-      '<div style="font-size:16px;font-weight:700;color:#f1f5f9;margin-bottom:6px;">' + step.title + '</div>' +
-      '<div style="font-size:13px;color:#94a3b8;line-height:1.6;">' + step.body + '</div>' +
+      '<div style="font-size:17px;font-weight:700;color:#f8fafc;margin-bottom:5px;letter-spacing:-.2px;">' + step.title + '</div>' +
+      '<div style="font-size:13px;color:#94a3b8;line-height:1.65;">' + step.body + '</div>' +
+      (step.stat ? '<div style="margin-top:8px;font-size:11px;font-weight:700;color:#22d3ee;' +
+                   'background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.15);' +
+                   'border-radius:6px;padding:4px 10px;display:inline-block;">✦ ' + step.stat + '</div>' : '') +
     '</div>' +
+    // Progress bar
+    '<div style="height:3px;background:rgba(255,255,255,.07);border-radius:999px;">' +
+      '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#3b82f6,#06b6d4);' +
+           'border-radius:999px;transition:width .4s ease;"></div>' +
+    '</div>' +
+    // Nav buttons
     '<div style="display:flex;gap:8px;align-items:center;">' +
       (_demoIndex > 0
-        ? '<button onclick="_demoIndex--;runDemoStep();" style="padding:7px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:transparent;color:#94a3b8;cursor:pointer;font-size:12px;font-family:inherit;">← Back</button>'
-        : '<span style="width:60px;"></span>') +
-      '<button onclick="_demoIndex++;runDemoStep();" style="padding:7px 20px;border-radius:8px;border:none;background:#3b82f6;color:#fff;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;">' +
-        (isLast ? 'Finish ✓' : 'Next →') +
+        ? '<button onclick="_demoIndex--;runDemoStep();" ' +
+          'style="padding:8px 18px;border-radius:8px;border:1px solid rgba(255,255,255,.12);' +
+          'background:transparent;color:#94a3b8;cursor:pointer;font-size:12px;font-family:inherit;' +
+          'transition:all .15s;" ' +
+          '>← Back</button>'
+        : '') +
+      '<button onclick="_demoIndex++;runDemoStep();" ' +
+      'style="padding:8px 22px;border-radius:8px;border:none;' +
+      'background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;cursor:pointer;' +
+      'font-size:12px;font-weight:700;font-family:inherit;letter-spacing:.02em;' +
+      'box-shadow:0 2px 12px rgba(59,130,246,.35);transition:all .15s;" ' +
+      ' ' +
+      '>' +
+        (isLast ? 'See the full picture →' : 'Next →') +
       '</button>' +
-      '<div style="flex:1;height:3px;background:rgba(255,255,255,.08);border-radius:999px;margin-left:4px;">' +
-        '<div style="height:100%;width:' + Math.round(((_demoIndex+1)/DEMO_STEPS.length)*100) + '%;background:#3b82f6;border-radius:999px;transition:width .3s;"></div>' +
-      '</div>' +
+      '<span style="flex:1;"></span>' +
+      '<button onclick="endDemo()" style="font-size:11px;color:rgba(255,255,255,.2);background:none;border:none;' +
+             'cursor:pointer;padding:0;font-family:inherit;transition:color .15s;" ' +
+             '>Exit demo</button>' +
     '</div>';
 
   document.body.appendChild(overlay);
 }
 
+function showDemoEndScreen() {
+  // Remove step overlay if still there
+  var existing = document.getElementById('tb-demo-overlay');
+  if (existing) existing.remove();
+
+  // Return to dashboard for the end screen backdrop
+  try { nav('dashboard'); } catch(e) {}
+
+  var end = document.createElement('div');
+  end.id = 'tb-demo-overlay';
+  end.style.cssText =
+    'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;' +
+    'background:rgba(5,8,18,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);' +
+    'animation:demoFadeIn .3s ease;';
+
+  end.innerHTML =
+    '<div style="background:#0d1117;border:1px solid rgba(59,130,246,.3);border-radius:20px;' +
+         'padding:52px 56px;max-width:520px;width:calc(100vw - 48px);text-align:center;' +
+         'box-shadow:0 24px 80px rgba(0,0,0,.8);">' +
+      '<div style="font-size:13px;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:.14em;margin-bottom:20px;">The Staffing Specialist</div>' +
+      '<h2 style="font-size:30px;font-weight:800;color:#f8fafc;margin:0 0 14px;letter-spacing:-.5px;line-height:1.2;">Your hiring system —<br>live and running.</h2>' +
+      '<p style="font-size:15px;color:#94a3b8;line-height:1.7;margin:0 0 32px;">' +
+        'Real-time pipeline visibility, automated task creation, and a shared execution layer for your entire team. Built by a recruiter, for the way recruiting actually works.' +
+      '</p>' +
+      '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;">' +
+        '<div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:14px 20px;min-width:110px;">' +
+          '<div style="font-size:22px;font-weight:800;color:#f8fafc;">1,500+</div>' +
+          '<div style="font-size:11px;color:#64748b;margin-top:2px;">Hires facilitated</div>' +
+        '</div>' +
+        '<div style="background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.18);border-radius:10px;padding:14px 20px;min-width:110px;">' +
+          '<div style="font-size:22px;font-weight:800;color:#f8fafc;">$10M+</div>' +
+          '<div style="font-size:11px;color:#64748b;margin-top:2px;">Agency fees saved</div>' +
+        '</div>' +
+        '<div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.18);border-radius:10px;padding:14px 20px;min-width:110px;">' +
+          '<div style="font-size:22px;font-weight:800;color:#f8fafc;">92%</div>' +
+          '<div style="font-size:11px;color:#64748b;margin-top:2px;">Offer acceptance</div>' +
+        '</div>' +
+      '</div>' +
+      '<a href="mailto:jonah@thestaffingspecialist.com?subject=I saw the TalentBase demo" ' +
+         'style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#3b82f6,#2563eb);' +
+         'color:#fff;border-radius:10px;text-decoration:none;font-size:14px;font-weight:700;' +
+         'letter-spacing:.02em;box-shadow:0 4px 20px rgba(59,130,246,.4);margin-bottom:14px;' +
+         'transition:all .2s;" ' +
+         ' ' +
+         '>' +
+         'See what this looks like for your team &rarr;' +
+      '</a>' +
+      '<div><button onclick="endDemo()" ' +
+        'style="background:none;border:none;color:rgba(255,255,255,.25);cursor:pointer;' +
+        'font-size:12px;font-family:inherit;padding:8px;transition:color .15s;" ' +
+        ' ' +
+        '>Continue exploring TalentBase</button></div>' +
+    '</div>';
+
+  document.body.appendChild(end);
+}
+
 function endDemo() {
   _demoActive = false;
+  // Remove all demo UI
   var overlay = document.getElementById('tb-demo-overlay');
   if (overlay) overlay.remove();
-  // Clean up demo session param without reloading
+  // Clean URL param
   try {
     var url = new URL(window.location.href);
     url.searchParams.delete('demo');
     window.history.replaceState({}, '', url.toString());
   } catch(e) {}
-  // Return to dashboard cleanly
+  // Return to clean dashboard
   try { nav('dashboard'); } catch(e) {}
 }
 
@@ -13541,7 +13624,7 @@ function loadWsSettings(){
   </nav>
   <div id="cp-header-right" style="display:flex;align-items:center;gap:12px;">
     <div id="cp-user-info" style="text-align:right;line-height:1.5;"></div>
-    <button onclick="sbSignOut()" style="padding:6px 14px;border:1px solid rgba(255,255,255,.15);border-radius:6px;background:transparent;color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;" onmouseover="this.style.color='#f1f5f9';this.style.borderColor='rgba(255,255,255,.3)'" onmouseout="this.style.color='#94a3b8';this.style.borderColor='rgba(255,255,255,.15)'">Sign Out</button>
+    <button onclick="sbSignOut()" style="padding:6px 14px;border:1px solid rgba(255,255,255,.15);border-radius:6px;background:transparent;color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;" onmouseover="" onmouseout="this.style.color='#94a3b8';this.style.borderColor='rgba(255,255,255,.15)'">Sign Out</button>
   </div>
 </div>
 <div id="cp-body">
