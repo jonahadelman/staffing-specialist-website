@@ -2139,6 +2139,21 @@ input::placeholder, textarea::placeholder {
   </button>
 </div>
     <div id="pipeline-toast" style="position:fixed;bottom:80px;right:24px;z-index:9999;pointer-events:none;"></div>
+
+<!-- Match Alert Panel -->
+<div id="match-alert-panel" style="display:none;position:fixed;top:0;right:0;width:420px;height:100vh;background:var(--bg2);border-left:1px solid var(--border2);z-index:10000;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.5);">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border2);">
+    <div>
+      <div id="match-alert-title" style="font-size:14px;font-weight:800;color:var(--text);">Top Matches</div>
+      <div id="match-alert-sub" style="font-size:11px;color:var(--text4);margin-top:2px;"></div>
+    </div>
+    <button onclick="document.getElementById('match-alert-panel').style.display='none';" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:20px;padding:0;line-height:1;">&times;</button>
+  </div>
+  <div id="match-alert-body" style="flex:1;overflow-y:auto;padding:16px 20px;"></div>
+  <div style="padding:12px 20px;border-top:1px solid var(--border2);">
+    <button onclick="document.getElementById('match-alert-panel').style.display='none';" class="btn btn-ghost btn-sm" style="width:100%;">Dismiss</button>
+  </div>
+</div>
   </div>
 </div>
 
@@ -7307,9 +7322,26 @@ function saveCand(){
     data.id=uid();data.created=Date.now();data.lastActivity=Date.now();data.workspaceId=currentWorkspace;data.activity=[{ts:Date.now(),text:'Added to TalentBase',type:'created'}];
     if(window._pendingCompAnalysis){data.compAnalysis=window._pendingCompAnalysis;window._pendingCompAnalysis=null;}
     cands.unshift(data);selCandId=data.id;
+    // Auto-match: find top jobs for this new candidate
+    setTimeout(function(){
+      try {
+        var _matches = matchCandidateToJobs(data);
+        showMatchAlertAI('candidate', _matches, (data.first||'')+' '+(data.last||''));
+      } catch(e) { console.warn('Match alert failed:', e); }
+    }, 800);
   }
   saveCands();closeModal('ov-cand');
   document.getElementById('nb-cands').textContent=cands.length;
+  // Auto match: show top 5 jobs for new candidate
+  if (!editCandId) {
+    try {
+      var _newCand = cands.find(function(x){ return x.id === data.id; }) || data;
+      var _candMatches = matchCandidateToJobs(_newCand);
+      if (_candMatches.length) {
+        setTimeout(function(){ showMatchAlert('candidate_match', _candMatches, _newCand); }, 400);
+      }
+    } catch(e) {}
+  }
   updateRoleFilter();doSearch();
   if(selCandId)selCand(selCandId);
   // Auto match: trigger on new candidate
@@ -7942,9 +7974,28 @@ async function saveJob(){
     data.id=uid(); data.created=Date.now(); data.workspaceId=currentWorkspace;
     data._flow={dealId:null,campaignId:null,matchedAt:null,postedAt:null};
     jobs.unshift(data); jid=data.id;
+    // Auto-match: find top candidates for this new job
+    setTimeout(function(){
+      try {
+        var _jmatches = matchJobToCandidates(data);
+        showMatchAlertAI('job', _jmatches, data.title||'New Job');
+      } catch(e) { console.warn('Job match alert failed:', e); }
+    }, 800);
   }
 
   saveJobsStore(); closeModal('ov-job'); renderJobsList(); selJob(jid);
+  // Auto match: show top 5 candidates for new job
+  if (!editJobId) {
+    try {
+      var _newJob = jobs.find(function(x){ return x.id === jid; });
+      if (_newJob) {
+        var _jobMatches = matchJobToCandidates(_newJob);
+        if (_jobMatches.length) {
+          setTimeout(function(){ showMatchAlert('job_match', _jobMatches, _newJob); }, 400);
+        }
+      }
+    } catch(e) {}
+  }
   document.getElementById('nb-jobs').textContent=jobs.filter(j=>j.status==='Open').length;
   // Auto match: trigger on new job
   if(!editJobId){
@@ -13244,6 +13295,8 @@ function triggerCandidateMatch(cand) {
   tbAlerts.unshift(alert);
   saveAlerts();
   updateAlertBadge();
+  // Show immediate visual alert to recruiter
+  setTimeout(function(){ showMatchAlert('candidate_match', matches, cand); }, 600);
 }
 
 function triggerJobMatch(job) {
@@ -13424,6 +13477,233 @@ function startPlannerReminders() {
   }
 }
 
+// ═══ AUTO MATCH ALERT SYSTEM ════════════════════════════════════════════════
+
+function showMatchAlert(type, matches, context) {
+  // Remove any existing match alert
+  var existing = document.getElementById('tb-match-alert');
+  if (existing) existing.remove();
+
+  if (!matches || !matches.length) return;
+
+  var overlay = document.createElement('div');
+  overlay.id = 'tb-match-alert';
+  overlay.style.cssText =
+    'position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;' +
+    'background:rgba(5,8,18,.75);backdrop-filter:blur(6px);animation:demoFadeIn .2s ease;';
+
+  var isCandidate = type === 'candidate_match';
+  var title = isCandidate
+    ? '🎯 Top Job Matches for ' + esc((context.first||'') + ' ' + (context.last||''))
+    : '👤 Top Candidate Matches for ' + esc(context.title||'New Role');
+
+  var rows = matches.map(function(m, i) {
+    var pct = Math.min(100, Math.round((m.score / 10) * 100));
+    var barColor = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--amber)' : 'var(--accent)';
+    var label = isCandidate
+      ? '<strong>' + esc(m.job.title) + '</strong>' + (m.job.dept ? ' · ' + esc(m.job.dept) : '') + (m.job.location ? ' · ' + esc(m.job.location) : '')
+      : '<strong>' + esc(m.candidate.first) + ' ' + esc(m.candidate.last) + '</strong>' + (m.candidate.title ? ' · ' + esc(m.candidate.title) : '') + (m.candidate.company ? ' · ' + esc(m.candidate.company) : '');
+    var why = (m.why || []).slice(0, 3).join(' · ') || 'General alignment';
+    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);">' +
+      '<div style="font-size:13px;font-weight:700;color:' + barColor + ';min-width:36px;text-align:right;">' + pct + '%</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:13px;color:#f1f5f9;margin-bottom:3px;">' + label + '</div>' +
+        '<div style="font-size:11px;color:#64748b;">' + esc(why) + '</div>' +
+        '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:999px;margin-top:5px;">' +
+          '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:999px;transition:width .4s;"></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  overlay.innerHTML =
+    '<div style="background:#0d1117;border:1px solid rgba(59,130,246,.3);border-radius:16px;' +
+         'padding:28px 32px;max-width:560px;width:calc(100vw - 40px);' +
+         'box-shadow:0 20px 60px rgba(0,0,0,.7);">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">' +
+        '<div style="font-size:15px;font-weight:800;color:#f8fafc;">' + title + '</div>' +
+        '<button data-close-match="1" ' +
+          'style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:20px;padding:0;line-height:1;">&times;</button>' +
+      '</div>' +
+      '<div>' + rows + '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:20px;">' +
+        '<button data-close-match="1" ' +
+          'style="flex:1;padding:10px;background:linear-gradient(135deg,#3b82f6,#2563eb);border:none;border-radius:8px;' +
+               'color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Got it</button>' +
+        (isCandidate ? '<button data-nav="match" onclick="(function(){var a=document.getElementById(\'tb-match-alert\');if(a)a.remove();})()">Open AI Match</button>' : '<button data-nav="candidates" onclick="(function(){var a=document.getElementById(\'tb-match-alert\');if(a)a.remove();})()">View Candidates</button>') +
+
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  // Click outside to close
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) overlay.remove();
+  });
+}
+
+// ═══ AUTO-MATCH ENGINE ═══════════════════════════════════════════════════════
+
+function _matchScore(cand, job) {
+  var score = 0;
+  var reasons = [];
+
+  // Skill overlap
+  var candSkills = (cand.skills||[]).map(function(s){ return s.toLowerCase(); });
+  var jobText = ((job.description||'')+(job.title||'')+(job.boolSearch||'')).toLowerCase();
+  var skillHits = candSkills.filter(function(s){ return s.length>2 && jobText.indexOf(s)>=0; });
+  if (skillHits.length) {
+    score += Math.min(skillHits.length * 12, 48);
+    reasons.push(skillHits.slice(0,3).join(', ') + ' skill match');
+  }
+
+  // Title similarity
+  var candTitle = (cand.title||'').toLowerCase();
+  var jobTitle  = (job.title||'').toLowerCase();
+  var titleWords = jobTitle.split(/\s+/).filter(function(w){ return w.length>3; });
+  var titleHits = titleWords.filter(function(w){ return candTitle.indexOf(w)>=0; });
+  if (titleHits.length) {
+    score += titleHits.length * 10;
+    reasons.push('title match: '+titleHits[0]);
+  }
+
+  // Location match
+  if (cand.location && job.location) {
+    var cLoc = cand.location.toLowerCase();
+    var jLoc = job.location.toLowerCase();
+    var state1 = cLoc.split(',').pop().trim();
+    var state2 = jLoc.split(',').pop().trim();
+    if (state1 && state2 && state1 === state2) {
+      score += 15;
+      reasons.push('location match');
+    }
+  }
+
+  // YOE vs seniority
+  var yoe = parseInt(cand.yoe)||0;
+  var jt = (job.title||'').toLowerCase();
+  if ((jt.indexOf('senior')>=0||jt.indexOf('director')>=0||jt.indexOf('principal')>=0) && yoe>=8) {
+    score += 10; reasons.push('seniority fit');
+  } else if ((jt.indexOf('senior')<0&&jt.indexOf('director')<0) && yoe>=2 && yoe<=8) {
+    score += 8; reasons.push('experience level fit');
+  }
+
+  // Stage bonus — active candidates score higher
+  if (cand.status && !['Hired','Rejected'].includes(cand.status)) score += 5;
+
+  return { score: Math.min(score, 100), reasons: reasons };
+}
+
+function matchCandidateToJobs(cand) {
+  var wsJobs = wsFilter(jobs).filter(function(j){ return j.status==='Open'; });
+  return wsJobs.map(function(j){
+    var m = _matchScore(cand, j);
+    return { job:j, score:m.score, reasons:m.reasons };
+  }).sort(function(a,b){ return b.score-a.score; }).slice(0,5);
+}
+
+function matchJobToCandidates(job) {
+  var wsCands = wsFilter(cands).filter(function(c){ return !['Hired','Rejected'].includes(c.status); });
+  return wsCands.map(function(cc){
+    var m = _matchScore(cc, job);
+    return { candidate:cc, score:m.score, reasons:m.reasons };
+  }).sort(function(a,b){ return b.score-a.score; }).slice(0,5);
+}
+
+function showMatchAlert(type, matches, contextName) {
+  var panel = document.getElementById('match-alert-panel');
+  var titleEl = document.getElementById('match-alert-title');
+  var subEl   = document.getElementById('match-alert-sub');
+  var bodyEl  = document.getElementById('match-alert-body');
+  if (!panel||!bodyEl) return;
+
+  var isJob = (type === 'job');
+  titleEl.textContent = isJob ? 'Top Candidate Matches' : 'Top Job Matches';
+  subEl.textContent   = 'Auto-matched for: ' + contextName;
+
+  if (!matches.length) {
+    bodyEl.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text4);">No strong matches found yet.<br>Add more '+(isJob?'candidates':'jobs')+' to see matches.</div>';
+    panel.style.display = 'flex';
+    return;
+  }
+
+  bodyEl.innerHTML = matches.map(function(m, i){
+    var item   = isJob ? m.candidate : m.job;
+    var name   = isJob ? esc(item.first+' '+item.last) : esc(item.title);
+    var sub1   = isJob ? esc(item.title||'') : esc(item.dept||item.location||'');
+    var sub2   = isJob ? esc(item.company||item.location||'') : esc(item.location||'');
+    var score  = m.score;
+    var bar    = score >= 70 ? 'var(--green)' : score >= 45 ? 'var(--amber)' : 'var(--text4)';
+    var reasons = (m.reasons||[]).slice(0,3);
+
+    return '<div style="padding:14px 0;border-bottom:1px solid var(--border);">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">' +
+        '<div style="width:26px;height:26px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--accent);flex-shrink:0;">'+(i+1)+'</div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+name+'</div>' +
+          (sub1?'<div style="font-size:11px;color:var(--text4);">'+sub1+(sub2?' · '+sub2:'')+'</div>':'') +
+        '</div>' +
+        '<div style="text-align:right;flex-shrink:0;">' +
+          '<div style="font-size:16px;font-weight:800;color:'+bar+';">'+score+'</div>' +
+          '<div style="font-size:9px;color:var(--text4);">score</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="height:4px;background:var(--bg4);border-radius:999px;margin-bottom:8px;">' +
+        '<div style="height:100%;width:'+score+'%;background:'+bar+';border-radius:999px;transition:width .4s;"></div>' +
+      '</div>' +
+      (reasons.length?'<div style="display:flex;flex-wrap:wrap;gap:4px;">' +
+        reasons.map(function(r){ return '<span style="font-size:10px;background:var(--bg3);color:var(--text3);padding:2px 8px;border-radius:999px;">'+esc(r)+'</span>'; }).join('') +
+      '</div>':'') +
+    '</div>';
+  }).join('') +
+  '<div style="padding-top:12px;font-size:11px;color:var(--text4);text-align:center;">Scores based on skills, title, location, and experience</div>';
+
+  panel.style.display = 'flex';
+}
+
+// Async AI-enhanced match: calls AI for richer reasons, then updates panel
+async function showMatchAlertAI(type, matches, contextName) {
+  // Show immediate score-based results first
+  showMatchAlert(type, matches, contextName);
+  var key = getKey();
+  if (!key || !matches.length) return;
+
+  var isJob = (type === 'job');
+  var topItems = matches.slice(0,3);
+
+  try {
+    var prompt = isJob
+      ? 'You are a recruiter reviewing candidate matches for a new job opening: "'+esc(contextName)+'". For each candidate below, provide a ONE-sentence reason why they are a strong match. Be specific about skills and experience. Return ONLY a JSON array of strings, one per candidate, no markdown.\n\nCandidates:\n' +
+        topItems.map(function(m,i){ return (i+1)+'. '+m.candidate.first+' '+m.candidate.last+' — '+m.candidate.title+' ('+((m.candidate.skills||[]).slice(0,4).join(', '))+')'; }).join('\n')
+      : 'You are a recruiter reviewing job matches for a new candidate: "'+esc(contextName)+'". For each job below, provide a ONE-sentence reason why the candidate is a strong fit. Be specific. Return ONLY a JSON array of strings, one per job, no markdown.\n\nJobs:\n' +
+        topItems.map(function(m,i){ return (i+1)+'. '+m.job.title+' — '+m.job.dept+' ('+m.job.location+')'; }).join('\n');
+
+    var txt = await callAI([{role:'user', content:prompt}], 400);
+    var clean = txt.replace(/```json|```/g,'').trim();
+    var aiReasons = JSON.parse(clean);
+
+    // Inject AI reasons into top 3 matches
+    topItems.forEach(function(m, i){
+      if (aiReasons[i]) m.aiReason = aiReasons[i];
+    });
+
+    // Re-render with AI reasons
+    var bodyEl = document.getElementById('match-alert-body');
+    if (!bodyEl) return;
+    // Update just the AI reason lines
+    var cards = bodyEl.querySelectorAll('[data-match-idx]');
+    topItems.forEach(function(m, i){
+      var card = bodyEl.querySelector('[data-match-idx="'+i+'"]');
+      if (card && m.aiReason) {
+        var aiEl = card.querySelector('.ai-reason');
+        if (aiEl) aiEl.textContent = '🤖 ' + m.aiReason;
+      }
+    });
+  } catch(e) {
+    console.warn('AI match reason failed:', e.message);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function(){ initApp(); });
 
 // Auto-save contenteditable documents
@@ -13431,6 +13711,17 @@ document.addEventListener('input', function(e) {
   if (e.target && e.target.classList.contains('doc-editor')) {
     var docId = e.target.getAttribute('data-doc-id');
     if (docId) saveDocEdit(docId, e.target.innerHTML);
+  }
+});
+
+// Match alert close delegation
+document.addEventListener('click', function(e) {
+  var el = e.target.closest('[data-close-match]') || e.target;
+  if (el && el.getAttribute('data-close-match')) {
+    var navAfter = el.getAttribute('data-nav-after');
+    var ma = document.getElementById('tb-match-alert');
+    if (ma) ma.remove();
+    if (navAfter) try{ nav(navAfter); }catch(ex){}
   }
 });
 
