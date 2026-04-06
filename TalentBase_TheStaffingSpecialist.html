@@ -1545,6 +1545,17 @@ button, .btn { white-space:nowrap !important; }
 
 <!-- ═══════════════ SIDEBAR ═══════════════ -->
 <div class="sidebar">
+  <!-- Workspace Switcher -->
+  <div id="ws-switcher-bar" style="padding:8px 12px 0;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:2px;">
+    <div style="font-size:9px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Workspace</div>
+    <select id="ws-switcher" onchange="switchWorkspace(this.value)"
+      style="width:100%;font-size:12px;padding:5px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);outline:none;font-family:inherit;font-weight:600;">
+      <option value="werfen">Werfen</option>
+      <option value="hiarc">HiArc</option>
+      <option value="default">General</option>
+    </select>
+  </div>
+
   <div class="logo">
     <div class="logo-mark">
       <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
@@ -3782,6 +3793,11 @@ async function _unlockApp(role) {
   try { renderScorecards(); } catch(e){}
   try { renderTutorial(); }   catch(e){}
   try { applyNavRestrictions(); } catch(e){}
+  // Init workspace switcher
+  try {
+    var swEl = document.getElementById('ws-switcher');
+    if (swEl) swEl.value = currentWorkspace;
+  } catch(e){}
 }
 // ── MAIN GATE LOGIN ───────────────────────────────────────────
 async function gateLogin() {
@@ -4301,6 +4317,40 @@ async function sbRestoreSession() {
 // DATA LAYER
 // ═══════════════════════════════════════════════
 const CK='tb_cands_v3', JK='tb_jobs_v3', AK='tb_apikey', DK='tb_deals_v1';
+
+// ── WORKSPACE SYSTEM ──────────────────────────────────────
+var WORKSPACES = [
+  { id: 'werfen', name: 'Werfen' },
+  { id: 'hiarc',  name: 'HiArc'  },
+  { id: 'default', name: 'General' },
+];
+var currentWorkspace = localStorage.getItem('tb_workspace') || 'default';
+
+function switchWorkspace(id) {
+  currentWorkspace = id;
+  localStorage.setItem('tb_workspace', id);
+  // Update switcher UI
+  var sw = document.getElementById('ws-switcher');
+  if (sw) sw.value = id;
+  // Update topbar subtitle
+  var ws = WORKSPACES.find(function(w){ return w.id === id; }) || {};
+  var sub = document.getElementById('ws-name-badge');
+  if (sub) sub.textContent = ws.name || id;
+  // Re-render current view with filtered data
+  try { renderDash(); }         catch(e) {}
+  try { renderJobsList(); }     catch(e) {}
+  try { doSearch(); }           catch(e) {}
+  try { renderKanban(); }       catch(e) {}
+  try { renderCommandCenter(); }catch(e) {}
+  if (window._activeView) try { nav(window._activeView); } catch(e) {}
+}
+
+function wsFilter(arr) {
+  // If item has no workspaceId, treat as visible in all workspaces (legacy data)
+  return (arr || []).filter(function(item) {
+    return !item.workspaceId || item.workspaceId === currentWorkspace || currentWorkspace === 'default';
+  });
+}
 const SB_TABLE = {'tb_cands_v3':'candidates','tb_jobs_v3':'jobs','tb_deals_v1':'deals'};
 
 // ── CENTRAL STATE STORE ────────────────────────────────────
@@ -5331,13 +5381,15 @@ function doSearch(){
   const raw=(document.getElementById('q').value||'').trim();
   const st=document.getElementById('fr')?document.getElementById('fr').value:'';
   const chip=activeChip;
+  // Apply workspace filter before search
+  const _wsCands = wsFilter(cands);
   const fn=parseBool(raw);
   const terms=extractTerms(raw);
   const advF = getAdvFilters();
   const hasAdv = Object.values(advF).some(v=>v);
 
   // For CRM temp filters: pre-compute scores once, not per-candidate in the sort
-  fil=cands.filter(c=>{
+  fil = _wsCands.filter(p=>{
     if(chip==='__hot'){return getCRMFields(c).temperature==='hot';}
     if(chip==='__warm'){return getCRMFields(c).temperature==='warm';}
     if(chip==='__cold'){return getCRMFields(c).temperature==='cold';}
@@ -6809,7 +6861,7 @@ function openAddCand(){
   var mfJob = document.getElementById('mf-job');
   if (mfJob) {
     mfJob.innerHTML = '<option value="">— Select a Job —</option>' +
-      (jobs||[]).filter(function(j){return j.status==='Open';}).map(function(j){
+      wsFilter(jobs||[]).filter(function(j){return j.status==='Open';}).map(function(j){
         return '<option value="'+esc(j.id)+'">'+esc(j.title)+' #'+esc(j.reqNum||'')+'</option>';
       }).join('');
     mfJob.value = '';
@@ -6850,7 +6902,7 @@ function openEditCand(id){
   }
     var mfJobEdit = document.getElementById('mf-job');
   if(mfJobEdit){
-    mfJobEdit.innerHTML = '<option value="">— Select a Job —</option>'+(jobs||[]).filter(function(j){return j.status==="Open";}).map(function(j){return '<option value="'+esc(j.id)+'">'+esc(j.title)+' #'+esc(j.reqNum||'')+'</option>';}).join('');
+    mfJobEdit.innerHTML = '<option value="">— Select a Job —</option>'+wsFilter(jobs||[]).filter(function(j){return j.status==="Open";}).map(function(j){return '<option value="'+esc(j.id)+'">'+esc(j.title)+' #'+esc(j.reqNum||'')+'</option>';}).join('');
     mfJobEdit.value = c.jobId||'';
   }
 openModal('ov-cand');
@@ -6903,7 +6955,7 @@ function saveCand(){
     }
     selCandId=editCandId;
   }else{
-    data.id=uid();data.created=Date.now();data.lastActivity=Date.now();data.activity=[{ts:Date.now(),text:'Added to TalentBase',type:'created'}];
+    data.id=uid();data.created=Date.now();data.lastActivity=Date.now();data.workspaceId=currentWorkspace;data.activity=[{ts:Date.now(),text:'Added to TalentBase',type:'created'}];
     if(window._pendingCompAnalysis){data.compAnalysis=window._pendingCompAnalysis;window._pendingCompAnalysis=null;}
     cands.unshift(data);selCandId=data.id;
   }
@@ -7152,9 +7204,10 @@ function renderCompAnalysis(d){
 // JOBS
 // ═══════════════════════════════════════════════
 function renderJobsList(){
-  document.getElementById('nb-jobs').textContent=jobs.filter(j=>j.status==='Open').length;
+  var _jobs = wsFilter(jobs);
+  document.getElementById('nb-jobs').textContent=_jobs.filter(j=>j.status==='Open').length;
   const col=document.getElementById('jobs-list-col');
-  col.innerHTML=jobs.length?jobs.map(j=>`
+  col.innerHTML=_jobs.length?jobs.map(j=>`
     <div class="job-card${selJobId===j.id?' on':''}" onclick="selJob('${j.id}')">
       <div class="job-title">${esc(j.title)}</div>
       <div class="job-meta">${j.dept?esc(j.dept)+' · ':''}Req #${esc(j.reqNum||'—')} · ${esc(j.location||'')} · <span style="color:${j.status==='Open'?'var(--green)':'var(--text3)'}">${esc(j.status)}</span>${j.source==='Happy Hunting'?` <span style="font-family:'DM Mono',monospace;font-size:10px;color:#ff4d00;background:rgba(255,77,0,.1);border:1px solid rgba(255,77,0,.25);padding:1px 6px;border-radius:3px;">HH</span>`:''}</div>
@@ -7529,7 +7582,7 @@ async function saveJob(){
     if(i>=0) jobs[i]={...jobs[i],...data};
     jid=editJobId;
   } else {
-    data.id=uid(); data.created=Date.now();
+    data.id=uid(); data.created=Date.now(); data.workspaceId=currentWorkspace;
     data._flow={dealId:null,campaignId:null,matchedAt:null,postedAt:null};
     jobs.unshift(data); jid=data.id;
   }
@@ -8317,15 +8370,17 @@ function saveRewrittenResume(candId){
 function updateKbJobFilter(){
   const s=document.getElementById('kb-job-filter');
   const cur=s.value;
-  s.innerHTML='<option value="">All Jobs</option>'+jobs.map(j=>`<option value="${esc(j.id)}">${esc(j.title)} #${esc(j.reqNum||'')}</option>`).join('');
+  const _wsJobs=wsFilter(jobs);
+  s.innerHTML='<option value="">All Jobs</option>'+_wsJobs.map(j=>`<option value="${esc(j.id)}">${esc(j.title)} #${esc(j.reqNum||'')}</option>`).join('');
   s.value=cur;
 }
 function renderKanban(){
   const jf=document.getElementById('kb-job-filter').value;
   const KANBAN_STAGES=['New','Screening','Interviewing','Offer','Hired'];
   const board=document.getElementById('kanban-board');
+  const _wcands = wsFilter(cands);
   board.innerHTML=KANBAN_STAGES.map(stage=>{
-    const stageCands=cands.filter(c=>c.status===stage&&(!jf||(c.jobId===jf)));
+    const stageCands=_wcands.filter(c=>c.status===stage&&(!jf||(c.jobId===jf)));
     const col=STAGE_PIPE_COLORS[stage]||'#555';
     return`<div class="kb-col">
       <div class="kb-col-head">
@@ -8504,6 +8559,8 @@ function getNeedsAction(candList, dealList) {
 
 // Thin wrapper — preserves backward compat, persists flags as side effect
 function runAutomation(candList, dealList){
+  candList = wsFilter(candList || cands);
+  dealList = wsFilter(dealList || deals);
   var items = getNeedsAction(candList, dealList);
   // Auto-create follow-up tasks for idle candidates
   var _now = Date.now(); var _DAY = 86400000;
@@ -8584,7 +8641,7 @@ function renderDash(){
 
 function renderDashKPIs(){
   var rev = (typeof getRevenueStats === 'function') ? getRevenueStats() : {pipelineValue:0,expectedRevenue:0};
-  var safeCands = cands || [];
+  var safeCands = wsFilter(cands) || [];
   var pl  = document.getElementById('dm-pipeline');
   var ex  = document.getElementById('dm-expected');
   var cd  = document.getElementById('dm-cands');
@@ -9157,12 +9214,12 @@ function populateOfferDropdowns(){
   if(!cs||!js) return;
 
   cs.innerHTML = '<option value="">Select candidate...</option>' +
-    cands.map(function(c){
+    wsFilter(cands).map(function(c){
       return '<option value="'+c.id+'">'+esc(c.first)+' '+esc(c.last)+' — '+esc(c.title||'No title')+'</option>';
     }).join('');
 
   js.innerHTML = '<option value="">Select job...</option>' +
-    jobs.map(function(j){
+    wsFilter(jobs).map(function(j){
       return '<option value="'+j.id+'">'+esc(j.title)+(j.reqNum?' #'+esc(j.reqNum):'')+' — '+esc(j.dept||'')+'</option>';
     }).join('');
 
@@ -13039,6 +13096,7 @@ function autoCreateStageTask(cand, newStage) {
 
   var newTask = {
     id:           uid(),
+    workspaceId:  currentWorkspace,
     item:         template.item,
     detail:       template.detail + (cand ? ' — ' + cand.first + ' ' + cand.last : ''),
     owner:        '',
@@ -13069,6 +13127,7 @@ function autoCreateFollowupTask(cand) {
 
   var newTask = {
     id:           uid(),
+    workspaceId:  currentWorkspace,
     item:         item,
     detail:       cand.status + ' — no activity for 2+ days. Re-engage immediately.',
     owner:        '',
@@ -13133,7 +13192,7 @@ function ccOpenAddTask(){
   // Populate linked dropdowns
   var jSel = document.getElementById('ct-job');
   jSel.innerHTML = '<option value="">— None —</option>' +
-    (jobs||[]).map(function(j){ return '<option value="'+j.id+'">'+esc(j.title)+' #'+esc(j.reqNum||'')+'</option>'; }).join('');
+    wsFilter(jobs||[]).map(function(j){ return '<option value="'+j.id+'">'+esc(j.title)+' #'+esc(j.reqNum||'')+'</option>'; }).join('');
   var cSel = document.getElementById('ct-cand');
   cSel.innerHTML = '<option value="">— None —</option>' +
     (cands||[]).map(function(cc){ return '<option value="'+cc.id+'">'+esc(cc.first)+' '+esc(cc.last)+'</option>'; }).join('');
@@ -13251,6 +13310,7 @@ function renderCommandCenter(){
   if(roleSel) roleSel.value = getRole();
   // Always reload from storage for consistency
   tasks = JSON.parse(localStorage.getItem('tb_tasks')||'[]');
+  var _wsTasks = wsFilter(tasks);
 
   var el = document.getElementById('cc-body');
   if(!el) return;
@@ -13259,7 +13319,7 @@ function renderCommandCenter(){
   var userName = (_sbUser&&_sbUser.email) ? _sbUser.email.split('@')[0] : 'Admin';
 
   var role = getRole();
-  var filtered = tasks.filter(function(t){
+  var filtered = _wsTasks.filter(function(t){
     // Role-based visibility
     if(role === 'hiring_manager'){
       // Only see tasks linked to their jobs or general tasks
@@ -13299,9 +13359,9 @@ function renderCommandCenter(){
 
   // ── TODAY'S FOCUS section ────────────────────────────────────────
   var todayStr = new Date().toISOString().split('T')[0];
-  var overdueT  = tasks.filter(function(t){ return t.status!=='Completed' && t.dueDate && t.dueDate < todayStr; });
-  var dueTodayT = tasks.filter(function(t){ return t.status!=='Completed' && t.dueDate === todayStr; });
-  var highT     = tasks.filter(function(t){ return t.status!=='Completed' && t.priority==='High' && (!t.dueDate || t.dueDate > todayStr); });
+  var overdueT  = _wsTasks.filter(function(t){ return t.status!=='Completed' && t.dueDate && t.dueDate < todayStr; });
+  var dueTodayT = _wsTasks.filter(function(t){ return t.status!=='Completed' && t.dueDate === todayStr; });
+  var highT     = _wsTasks.filter(function(t){ return t.status!=='Completed' && t.priority==='High' && (!t.dueDate || t.dueDate > todayStr); });
 
   var focusHtml = '';
   if(overdueT.length || dueTodayT.length || highT.length){
