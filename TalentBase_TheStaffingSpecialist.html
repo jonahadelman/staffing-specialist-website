@@ -2262,6 +2262,9 @@ input::placeholder, textarea::placeholder {
     <button class="btn btn-ghost" onclick="openImport()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import
     </button>
+    <button class="btn btn-ghost" onclick="openUploadResume()" style="border-color:var(--accent-border);color:var(--accent2);" title="Upload resume → auto-create candidate">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload Resume
+    </button>
     <button class="btn btn-primary" onclick="openAddCand()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Candidate
     </button>
@@ -7037,9 +7040,19 @@ function confirmStage(){
 // ═══════════════════════════════════════════════
 // CANDIDATE MODAL
 // ═══════════════════════════════════════════════
+function openUploadResume(){
+  // Open Add Candidate modal and immediately trigger file picker
+  openAddCand();
+  setTimeout(function(){
+    var fi = document.getElementById('file-in');
+    if(fi) fi.click();
+  }, 150);
+}
+
 function openAddCand(){
   editCandId=null;
-  document.getElementById('mc-title').textContent='Add Candidate';
+  var _wsNameForModal = (WORKSPACES.find(function(w){return w.id===currentWorkspace;})||{}).name || currentWorkspace;
+  document.getElementById('mc-title').textContent = 'Add Candidate — ' + _wsNameForModal;
   ['first','last','title','company','email','phone','location','linkedin','role','skills','resume','notes'].forEach(f=>{const el=document.getElementById('mf-'+f);if(el)el.value='';});
   document.getElementById('mf-status').value='New';
   document.getElementById('mf-source').value='';
