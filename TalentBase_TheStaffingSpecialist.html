@@ -1361,17 +1361,7 @@ button, .btn { white-space:nowrap !important; }
 }
 
 
-/* ═══ COMMAND CENTER HEADER USER ═══════════════════════════ */
-.cc-header-user {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--accent2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 220px;
-  margin-top: 2px;
-}
+
 </style>
 </head>
 <body>
@@ -2072,11 +2062,11 @@ button, .btn { white-space:nowrap !important; }
 <div class="view" id="v-dashboard">
 
   <!-- TOPBAR -->
-  <div class="topbar" style="padding:0 32px;gap:16px;">
-    <div style="flex:1;min-width:0;">
+  <div class="topbar" style="padding:0 32px;gap:16px;align-items:flex-start;">
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">
       <div style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--text);">Hiring Command Center</div>
-      <div id="dash-date" style="font-size:11px;color:var(--text4);margin-top:1px;"></div>
-      <div id="dash-user-greeting" class="cc-header-user"></div>
+      <div id="dash-date" style="font-size:11px;color:var(--text4);"></div>
+      <div id="dash-user-greeting" style="font-size:12px;color:var(--accent2);font-weight:600;opacity:.85;"></div>
     </div>
     <div style="display:flex;gap:8px;">
       <button class="btn btn-ghost btn-sm" onclick="openAddJob()">
@@ -8738,7 +8728,7 @@ function renderDash(){
     var greetEl = document.getElementById('dash-user-greeting');
     if (greetEl) {
       var _firstName = (currentUser.name || 'User').split(' ')[0];
-      greetEl.textContent = 'Welcome, ' + _firstName;
+      greetEl.textContent = 'Welcome back, ' + _firstName;
     }
   } catch(e) {}
   // Safety: ensure arrays exist even if data not loaded
