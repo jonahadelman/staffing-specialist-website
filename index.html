@@ -315,7 +315,13 @@
       .tb-mock-bar,.talentbase-mockup{display:none;}
     }
 
-  </style>
+  
+@keyframes pulseGlow {
+  0%   { box-shadow: 0 6px 30px rgba(59,130,246,.4); }
+  50%  { box-shadow: 0 8px 40px rgba(59,130,246,.7); }
+  100% { box-shadow: 0 6px 30px rgba(59,130,246,.4); }
+}
+</style>
 </head>
 <body>
   <!-- Mobile Nav -->
@@ -409,7 +415,7 @@
           </div>
           <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:24px;">
             <a href="/TalentBase_TheStaffingSpecialist.html?demo=true"
-               style="display:inline-block;padding:16px 34px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border-radius:12px;font-size:16px;font-weight:900;text-decoration:none;box-shadow:0 6px 30px rgba(59,130,246,.5);transition:transform .15s;"
+               style="display:inline-block;padding:16px 34px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border-radius:12px;font-size:16px;font-weight:900;text-decoration:none;box-shadow:0 6px 30px rgba(59,130,246,.5);transition:transform .15s;animation:pulseGlow 2.5s infinite;"
                onmouseover="this.style.transform='translateY(-2px)'"
                onmouseout="this.style.transform='translateY(0px)'">
               ▶ Watch Live Demo
@@ -418,6 +424,15 @@
             <a href="#proof" class="btn secondary">See The Proof</a>
           </div>
           <p style="margin-top:12px;font-size:13px;color:#8899bb;text-align:center;">What most firms hide, we show — live.</p>
+          <div style="margin-top:28px;padding:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;max-width:520px;margin-left:auto;margin-right:auto;text-align:left;">
+            <div style="font-size:11px;color:#7eb8d4;text-transform:uppercase;font-weight:700;margin-bottom:6px;">Live System Preview</div>
+            <div style="font-size:14px;color:#c9d6ff;line-height:1.8;">
+              • 7 candidates in pipeline<br>
+              • 2 need follow-up today<br>
+              • 1 offer ready to send
+            </div>
+          </div>
+          <p style="margin-top:10px;font-size:12px;color:#7a87a5;text-align:center;">Takes 60 seconds &nbsp;·&nbsp; No login required &nbsp;·&nbsp; Real system, not a demo video</p>
         </div>
         <div class="card" style="padding:22px">
           <h3 style="margin-top:0">Immediate Hiring Needs?</h3>
