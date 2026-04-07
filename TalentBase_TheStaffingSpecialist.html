@@ -15,13 +15,10 @@
 <style>/* ═══ VIEW SYSTEM — SINGLE SOURCE OF TRUTH ══════════════════ */
 .view {
   display: none;
-  position: absolute;
-  inset: 0;
 }
 .view.active {
   display: flex;
   flex-direction: column;
-  position: relative;
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -1497,6 +1494,7 @@ input::placeholder, textarea::placeholder {
 <body>
 
 <!-- ═══ ACCESS GATE ═══ -->
+<input type="password" id="api-key" style="display:none;" oninput="saveKey(this.value)" autocomplete="off" aria-hidden="true"/>
 <div id="gate">
   <div class="gate-layout">
 
@@ -1753,109 +1751,67 @@ input::placeholder, textarea::placeholder {
   <div class="nav">
 
     <!-- PRIMARY NAV -->
-    <div class="ni on" data-nav="dashboard" data-nav="dashboard" id="ni-dashboard">
+    <div class="ni on" data-nav="dashboard" id="ni-dashboard">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
       Dashboard
     </div>
-    <div class="ni" data-nav="jobs" data-nav="jobs">
+    <div class="ni" data-nav="jobs" id="ni-jobs">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
       Jobs
       <span class="ni-badge" id="nb-jobs"></span>
     </div>
-    <div class="ni" data-nav="candidates" data-nav="candidates">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
+    <div class="ni" data-nav="candidates" id="ni-candidates">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       Candidates
       <span class="ni-badge" id="nb-cands"></span>
     </div>
-    <div class="ni" data-nav="pipeline" data-nav="pipeline">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+    <div class="ni" data-nav="pipeline" id="ni-pipeline">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12H2M12 2l10 10-10 10"/></svg>
       Pipeline
     </div>
-    <div class="ni" data-nav="deals" data-nav="deals" id="ni-deals">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-      Deals
-      <span class="ni-badge" id="nb-deals"></span>
+    <div class="ni" data-nav="command" id="ni-command">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+      Command Center
     </div>
-
-    <div style="height:1px;background:var(--border);margin:10px 8px 4px;"></div>
-    <div style="font-size:9px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.12em;padding:4px 18px 2px;">More</div>
-    <div class="ni ni-more" id="ni-tools-toggle" onclick="toggleNavTools(this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      More
-    </div>
-
-    <div id="nav-tools-drawer" style="display:none;">
-      <div class="ni" data-nav="match" data-nav="match">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
-        AI Match
-      </div>
-      <div class="ni" data-nav="campaigns" data-nav="campaigns">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-        Campaigns
-      </div>
-      <div class="ni" data-nav="offer" data-nav="offer">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        Offer Builder
-      </div>
-      <div class="ni" data-nav="scorecard" data-nav="scorecard">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-        Scorecards
-      </div>
-      <div class="ni" data-nav="library" data-nav="library">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-        Doc Library
-      </div>
-      <div class="ni" data-nav="prompts" data-nav="prompts" id="ni-prompts">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        Prompt Library
-      </div>
-      <div class="ni" data-nav="analytics" data-nav="analytics" id="ni-analytics">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        Analytics
-      </div>
-          <div class="ni" data-nav="clientdash" id="ni-clientdash">
+    <div class="ni" data-nav="clientdash" id="ni-clientdash">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
       Client Dashboard
     </div>
-<div class="ni" data-nav="happyhunting" data-nav="happyhunting" id="ni-happyhunting">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0;color:#ff4d00;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        <span>Happy Hunting</span>
-      </div>
-      <div class="ni" data-nav="nlsearch" data-nav="nlsearch">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        AI Sourcing
-      </div>
-      <div class="ni" data-nav="headcount" data-nav="headcount">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        Headcount
-      </div>
-      <div class="ni" data-nav="aitools" data-nav="aitools" id="ni-aitools">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        AI Tools
-      </div>
-      <div class="ni" data-nav="integrations" data-nav="integrations">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
-        Integrations
-      </div>
-      <div class="ni" data-nav="tutorial" data-nav="tutorial">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        Tutorial
-      </div>
+
+    <!-- SECTION DIVIDER -->
+    <div style="height:1px;background:rgba(255,255,255,.07);margin:8px 10px;"></div>
+    <div style="font-size:9px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:4px 12px 2px;">Tools</div>
+
+    <div class="ni" data-nav="match" id="ni-match">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      AI Match
     </div>
-    <div class="ni" data-nav="command" id="ni-command">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
-      Command Center
+    <div class="ni" data-nav="offer" id="ni-offer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Offer Builder
+    </div>
+    <div class="ni" data-nav="analytics" id="ni-analytics">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Analytics
+    </div>
+    <div class="ni" data-nav="library" id="ni-library">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      Templates
+    </div>
+    <div class="ni" data-nav="happyhunting" id="ni-happyhunting">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M8 11s.5-2 3-2 3 2 3 2"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Happy Hunting
     </div>
 
-    <div style="flex:1;"></div>
-    <div class="ni" data-nav="workspace" data-nav="workspace" id="ni-workspace">
+    <!-- SECTION DIVIDER -->
+    <div style="height:1px;background:rgba(255,255,255,.07);margin:8px 10px;"></div>
+
+    <div class="ni" data-nav="workspace" id="ni-workspace">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
       Settings
     </div>
-  </div>
 
-
-  <div class="sidebar-bottom">
+class="sidebar-bottom">
     <!-- V2 toggle — shown only when enabled -->
     <div id="v2-sidebar-toggle" style="margin-bottom:6px;display:none;">
       <button onclick="v2ToggleMode()" id="v2-sidebar-btn"
@@ -1864,13 +1820,11 @@ input::placeholder, textarea::placeholder {
         <span id="v2-btn-label">Command Center: ON</span>
       </button>
     </div>
-    <!-- API key -->
-    <div class="api-box">
-      <div class="api-top">
-        <div class="api-label">Anthropic API Key</div>
-        <div class="api-dot" id="api-dot"></div>
-      </div>
-      <input type="password" class="api-field" id="api-key" placeholder="sk-ant-..." oninput="saveKey(this.value)" autocomplete="off"/>
+    <!-- API key moved to Settings → shown as compact indicator only -->
+    <div style="padding:4px 8px 2px;display:flex;align-items:center;gap:6px;">
+      <div class="api-dot" id="api-dot" style="width:6px;height:6px;border-radius:50%;background:var(--text4);flex-shrink:0;"></div>
+      <span style="font-size:10px;color:var(--text4);" id="api-status-label">API key not set</span>
+      <button onclick="nav('workspace')" style="margin-left:auto;font-size:9px;color:var(--accent2);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;">Set →</button>
     </div>
     <!-- Role controlled by user picker above -->
     <!-- User + sign out -->
@@ -2284,7 +2238,7 @@ input::placeholder, textarea::placeholder {
     </div>
 
     <!-- WIDGET GRID -->
-    <div id="dash-grid" style="display:grid;grid-template-columns:repeat(12,1fr);gap:14px;align-items:start;">
+    <div id="dash-grid" style="display:grid;grid-template-columns:repeat(12,1fr);gap:14px;align-items:start;grid-auto-rows:minmax(120px, auto);">
     </div>
 
     <!-- EMPTY STATE -->
@@ -4395,9 +4349,7 @@ function applyNavRestrictions() {
 
   // Map: nav item ID → permission required to see it
   var navPermissions = {
-    'ni-deals'     : 'viewDeals',
     'ni-analytics' : 'viewAnalytics',
-    'ni-aitools'   : 'viewAITools',
     'ni-workspace' : 'viewSettings',
   };
 
@@ -5542,7 +5494,14 @@ function deleteDeal(dealId){
   renderDeals();
 }
 function saveKey(v){localStorage.setItem(AK,v);updateApiDot(v);}
-function updateApiDot(v){document.getElementById('api-dot').className='api-dot'+(v&&v.length>10?' ok':'');}
+function updateApiDot(v){
+  var dot = document.getElementById('api-dot');
+  if(dot) dot.className='api-dot'+(v&&v.length>10?' ok':'');
+  dot = document.getElementById('api-dot'); // also the sidebar one
+  if(dot) dot.style.background = (v&&v.length>10)?'var(--green)':'var(--text4)';
+  var lbl = document.getElementById('api-status-label');
+  if(lbl) lbl.textContent = (v&&v.length>10)?'API key active':'API key not set';
+}
 function getKey(){return document.getElementById('api-key').value.trim();}
 
 function seedCands(){
@@ -5613,6 +5572,7 @@ function nav(view) {
   // ── HIDE ALL VIEWS ────────────────────────────────────────
   document.querySelectorAll('.view').forEach(function(v) {
     v.classList.remove('active');
+    v.style.display = '';   // let CSS rule take over
   });
 
   // ── ACTIVATE TARGET VIEW ──────────────────────────────────
@@ -5620,8 +5580,6 @@ function nav(view) {
   if (!target) { console.error('[nav] Missing view: v-' + view); return; }
   target.classList.add('active');
   window._activeView = view;
-  // Force the view to be visible regardless of any CSS overrides
-  target.style.display = 'flex';
 
   // ── VIEW-SPECIFIC RENDERS ─────────────────────────────────
   var v = view;
