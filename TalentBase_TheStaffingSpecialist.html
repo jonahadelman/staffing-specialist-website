@@ -1479,6 +1479,19 @@ input::placeholder, textarea::placeholder {
 .view-scroll {
   padding: 20px 24px !important;
 }
+
+/* ═══ WIDGET DASHBOARD ═══════════════════════════════════════ */
+@keyframes dashPulse {
+  0%,100% { opacity:1; }
+  50%      { opacity:.5; }
+}
+#dash-grid { transition: all .2s; }
+#dash-grid > [id^="dw-"] {
+  cursor: grab;
+}
+#dash-grid > [id^="dw-"]:active {
+  cursor: grabbing;
+}
 </style>
 </head>
 <body>
@@ -2255,93 +2268,49 @@ input::placeholder, textarea::placeholder {
     </div>
   </div>
 
-  <!-- SCROLL AREA -->
-  <div style="flex:1;overflow-y:auto;overflow-x:hidden;background:var(--bg);">
-    <div style="max-width:1400px;margin:0 auto;padding:32px 48px;display:flex;flex-direction:column;gap:24px;">
+  <!-- SCROLL AREA — WIDGET GRID -->
+  <div id="dash-scroll" style="flex:1;overflow-y:auto;overflow-x:hidden;background:var(--bg);padding:24px 32px 40px;">
 
-      <!-- KPI BAR — 3 revenue metrics -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-xl);padding:24px 28px;">
-          <div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.14em;margin-bottom:12px;">Pipeline Value</div>
-          <div id="dm-pipeline" style="font-size:36px;font-weight:800;letter-spacing:-1.5px;color:var(--teal);line-height:1;">$0</div>
-          <div id="dm-pipeline-sub" style="font-size:12px;color:var(--text4);margin-top:8px;">0 open roles</div>
-        </div>
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-xl);padding:24px 28px;">
-          <div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.14em;margin-bottom:12px;">Expected Revenue</div>
-          <div id="dm-expected" style="font-size:36px;font-weight:800;letter-spacing:-1.5px;color:var(--green);line-height:1;">$0</div>
-          <div style="font-size:12px;color:var(--text4);margin-top:8px;">Probability-weighted</div>
-        </div>
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-xl);padding:24px 28px;">
-          <div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.14em;margin-bottom:12px;">Candidates in Play</div>
-          <div id="dm-cands" style="font-size:36px;font-weight:800;letter-spacing:-1.5px;color:var(--accent2);line-height:1;">0</div>
-          <div id="dm-cands-sub" style="font-size:12px;color:var(--text4);margin-top:8px;">0 interviewing</div>
-        </div>
-      </div>
-
-      <!-- ROW 2: Needs Action + Pipeline -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--r-xl);overflow:hidden;display:flex;flex-direction:column;min-height:200px;">
-          <div style="padding:16px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;">
-            <div style="font-size:13px;font-weight:700;color:var(--text);">Needs Action</div>
-            <span id="dash-attention-count" style="display:none;font-size:10px;font-weight:700;color:var(--red);background:var(--red-bg);border:1px solid var(--red-border);padding:1px 7px;border-radius:10px;"></span>
-          </div>
-          <div id="dash-attention-list" style="padding:4px 22px;flex:1;"><div style="padding:16px 0;font-size:12px;color:var(--text4);">Loading...</div></div>
-          <div id="dash-all-clear" style="display:none;padding:32px 22px;text-align:center;">
-            <div style="font-size:22px;margin-bottom:8px;color:var(--green);">✓</div>
-            <div style="font-size:12px;color:var(--text4);">All clear — you're on top of everything</div>
-          </div>
-        </div>
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;display:flex;flex-direction:column;min-height:200px;" id="dash-pipeline-row">
-          <div style="padding:16px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-            <div style="font-size:13px;font-weight:700;color:var(--text);">Pipeline</div>
-            <button class="btn btn-ghost btn-sm" onclick="nav('pipeline')" style="font-size:11px;padding:3px 10px;">View Board →</button>
-          </div>
-          <div id="dash-pipeline" style="padding:16px 22px;display:flex;flex-direction:column;gap:8px;flex:1;"><div style="font-size:12px;color:var(--text4);padding:8px 0;">Loading pipeline...</div></div>
-        </div>
-      </div>
-
-      <!-- ROW 3: Hot Candidates + Deal Pipeline -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;display:flex;flex-direction:column;min-height:180px;" id="dash-hot-panel">
-          <div style="padding:16px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div style="font-size:13px;font-weight:700;color:var(--text);">Hot Candidates</div>
-              <span id="dash-hot-count" style="font-size:10px;font-weight:700;color:var(--red);background:var(--red-bg);border:1px solid var(--red-border);padding:1px 6px;border-radius:10px;"></span>
-            </div>
-            <button class="btn btn-ghost btn-sm" onclick="nav('candidates');setTimeout(()=>setChip('__hot'),100)" style="font-size:11px;padding:3px 10px;">View All →</button>
-          </div>
-          <div id="dash-hot-list" style="padding:4px 22px;flex:1;"></div>
-        </div>
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;display:flex;flex-direction:column;min-height:180px;" id="dash-top-deals-panel">
-          <div style="padding:16px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-            <div style="font-size:13px;font-weight:700;color:var(--text);">Deal Pipeline</div>
-            <button class="btn btn-ghost btn-sm" onclick="nav('deals')" style="font-size:11px;padding:3px 10px;">View All →</button>
-          </div>
-          <div id="dash-top-deals" style="padding:4px 22px;flex:1;"></div>
-        </div>
-      </div>
-
-      <!-- EMPTY STATE -->
-      <div id="dash-empty" style="display:none;padding:80px 0;text-align:center;">
-        <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;">Your recruiting OS is ready.</div>
-        <div style="font-size:13px;color:var(--text4);margin-bottom:28px;line-height:1.8;">Create a job to build your pipeline.<br>Add candidates and the system drives everything else.</div>
-        <div style="display:flex;gap:10px;justify-content:center;">
-          <button class="btn btn-primary" onclick="openAddJob()">Create First Job</button>
-          <button class="btn btn-ghost" onclick="openAddCand()">Add Candidate</button>
-          <button class="btn btn-ghost" onclick="nav('happyhunting')">⚡ Happy Hunting →</button>
-        </div>
-      </div>
-
-      <!-- legacy refs -->
-      <div id="dash-stats" style="display:none;"></div>
-      <div id="dash-revenue-row" style="display:none;"></div>
-      <div id="dash-attention-panel" style="display:none;"></div>
-
+    <!-- WIDGET TOOLBAR -->
+    <div id="dash-toolbar" style="display:flex;align-items:center;gap:8px;margin-bottom:18px;">
+      <button class="btn btn-ghost btn-sm" onclick="dashAddWidget()" title="Add widget"
+        style="font-size:11px;gap:4px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:11px;height:11px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Widget
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="dashResetLayout()" title="Reset layout"
+        style="font-size:11px;">Reset Layout</button>
+      <div id="dash-save-indicator" style="font-size:10px;color:var(--text4);margin-left:4px;opacity:0;transition:opacity .4s;"></div>
     </div>
-  </div>
-</div>
 
-<!-- ── CANDIDATES ── -->
+    <!-- WIDGET GRID -->
+    <div id="dash-grid" style="display:grid;grid-template-columns:repeat(12,1fr);gap:14px;align-items:start;">
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div id="dash-empty" style="display:none;padding:80px 0;text-align:center;">
+      <div style="font-size:40px;margin-bottom:12px;">📋</div>
+      <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;">Your recruiting OS is ready.</div>
+      <div style="font-size:13px;color:var(--text4);margin-bottom:24px;">Add your first job or candidate to see live data.</div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button class="btn btn-primary" onclick="openAddJob()">Add First Job</button>
+        <button class="btn btn-ghost" onclick="openAddCand()">Add Candidate</button>
+      </div>
+    </div>
+
+    <!-- WIDGET PICKER MODAL -->
+    <div id="dash-widget-picker" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+      <div style="background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:24px 28px;width:480px;max-width:calc(100vw - 32px);box-shadow:0 24px 60px rgba(0,0,0,.7);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+          <div style="font-size:15px;font-weight:800;color:var(--text);">Add Widget</div>
+          <button onclick="document.getElementById('dash-widget-picker').style.display='none'" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:20px;line-height:1;">&times;</button>
+        </div>
+        <div id="dash-widget-list" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+      </div>
+    </div>
+
+  </div>
+
 <div class="view" id="v-candidates">
   <div class="topbar">
     <div><div class="topbar-title">Candidates</div></div>
@@ -9066,260 +9035,6 @@ function runAutomation(candList, dealList){
 }
 
 
-function renderDash(){
-  // Show content area immediately — never blank
-  var dashBody = document.querySelector('#v-dashboard [style*="overflow-y:auto"]') ||
-                 document.querySelector('#v-dashboard .view-scroll');
-  // Safety: ensure arrays exist even if data not loaded
-  if(!Array.isArray(cands)) { cands = TB.store.cands = []; }
-  if(!Array.isArray(jobs))  { jobs  = TB.store.jobs  = []; }
-  if(!Array.isArray(deals)) { deals = TB.store.deals = []; }
-  try{ escalateOverdueTasks(); }catch(e){}
-  // Update user greeting
-  try {
-    var greetEl = document.getElementById('dash-user-greeting');
-    if (greetEl) {
-      var _firstName = (currentUser.name || 'User').split(' ')[0];
-      greetEl.textContent = 'Welcome back, ' + _firstName;
-    }
-  } catch(e) {}
-  // Safety: ensure arrays exist even if data not loaded
-  if(!Array.isArray(cands)) { cands = TB.store.cands = []; }
-  if(!Array.isArray(jobs))  { jobs  = TB.store.jobs  = []; }
-  if(!Array.isArray(deals)) { deals = TB.store.deals = []; }
-
-  // Date header
-  var now = new Date();
-  var days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var dateEl = document.getElementById('dash-date');
-  if(dateEl){
-    var timeStr = now.toLocaleString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit',hour12:true});
-    dateEl.textContent = days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear()+' · '+timeStr+' EST';
-  }
-
-
-  // Render each panel independently — one failure won't cascade
-  try { renderDashKPIs(); } catch(e) {
-    console.warn('[KPIs]',e);
-    ['dm-pipeline','dm-expected','dm-cands'].forEach(function(id){
-      var el=document.getElementById(id); if(el) el.textContent='—';
-    });
-  }
-  try { renderDashAttention(); } catch(e) {
-    console.warn('[Attention]',e);
-    var ael=document.getElementById('dash-attention-list');
-    if(ael) ael.innerHTML='<div style="padding:16px;font-size:12px;color:var(--text4);">Unable to load action items.</div>';
-  }
-  try { renderDashPipeline(); } catch(e) {
-    console.warn('[Pipeline]',e);
-    var pel=document.getElementById('dash-pipeline');
-    if(pel) pel.innerHTML='<div style="padding:16px;font-size:12px;color:var(--text4);">No pipeline data.</div>';
-  }
-  try { renderDashHot(); } catch(e) { console.warn('[Hot]',e); }
-  try { renderDashDeals(); } catch(e) { console.warn('[Deals]',e); }
-
-  // Empty state — never show a blank screen
-  var hasData = (wsFilter(cands)||[]).length || (wsFilter(jobs)||[]).length;
-  var emptyEl = document.getElementById('dash-empty');
-  if (emptyEl) {
-    if (!hasData) {
-      emptyEl.style.display = 'block';
-      emptyEl.innerHTML = '<div style="font-size:40px;margin-bottom:12px;">📋</div>' +
-        '<div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;">Your recruiting OS is ready.</div>' +
-        '<div style="font-size:13px;color:var(--text4);margin-bottom:24px;">Add your first job or candidate to see live data.</div>' +
-        '<div style="display:flex;gap:10px;justify-content:center;">' +
-          '<button class="btn btn-primary" onclick="openAddJob()">Add First Job</button>' +
-          '<button class="btn btn-ghost" onclick="openAddCand()">Add Candidate</button>' +
-        '</div>';
-    } else {
-      emptyEl.style.display = 'none';
-    }
-  }
-}
-
-// ═══════════════════════════════════════════════
-// DASHBOARD SUB-RENDERS
-// ═══════════════════════════════════════════════
-
-function renderDashKPIs(){
-  var rev = (typeof getRevenueStats === 'function') ? getRevenueStats() : {pipelineValue:0,expectedRevenue:0,closedRevenue:0};
-  var safeCands = wsFilter(cands) || [];
-  var safeJobs  = wsFilter(jobs)  || [];
-  var pl  = document.getElementById('dm-pipeline');
-  var ex  = document.getElementById('dm-expected');
-  var cd  = document.getElementById('dm-cands');
-  var cs  = document.getElementById('dm-cands-sub');
-  var ps  = document.getElementById('dm-pipeline-sub');
-  var fmt = function(n){ if(!n) return '$0'; return n>=1000000?'$'+(n/1000000).toFixed(1)+'M':n>=1000?'$'+(n/1000).toFixed(0)+'K':'$'+n.toFixed(0); };
-  if(pl) pl.textContent = fmt(rev.pipelineValue || 0);
-  if(ex) ex.textContent = fmt(rev.expectedRevenue || 0);
-  var activeCount = safeCands.filter(function(cc){return cc.status!=='Hired'&&cc.status!=='Rejected';}).length;
-  var interviewCount = safeCands.filter(function(cc){return cc.status==='Interviewing';}).length;
-  if(cd) cd.textContent = activeCount;
-  if(cs) cs.textContent = interviewCount + ' interviewing';
-  var openJobs = (jobs||[]).filter(function(j){return j.status==='Open';}).length;
-  var totalCands = (cands||[]).length;
-  var activeCands = (cands||[]).filter(function(cc){return cc.status!=='Hired'&&cc.status!=='Rejected';}).length;
-  if(ps) ps.textContent = openJobs + ' open role' + (openJobs!==1?'s':'');
-  var dateEl = document.getElementById('dash-date');
-  if(dateEl){
-    var now=new Date();
-    var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    var timeStr = now.toLocaleString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit',hour12:true});
-    dateEl.textContent = days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear()+' · '+timeStr+' EST';
-  }
-}
-
-
-function renderDashAttention(){
-  var list  = document.getElementById('dash-attention-list');
-  var count = document.getElementById('dash-attention-count');
-  var clear = document.getElementById('dash-all-clear');
-  if(!list) return;
-  var items = [];
-  try { items = runAutomation ? runAutomation(cands, deals) : []; } catch(e){ }
-
-  if(items.length){
-    if(count){ count.textContent = items.length; count.style.display = ''; }
-    if(clear) clear.style.display = 'none';
-
-    var urgColors = {high:'var(--red)', medium:'var(--amber)', low:'var(--text4)'};
-    list.innerHTML = items.map(function(item, idx){
-      var col = urgColors[item.urgency] || 'var(--text4)';
-      var urgBg = item.urgency==='high' ? 'rgba(239,68,68,.06)' :
-                  item.urgency==='medium' ? 'rgba(245,158,11,.06)' : 'transparent';
-      return '<div class="dash-attn-item" data-attn-idx="'+idx+'" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;background:'+urgBg+';border-radius:6px;padding-left:8px;">' +
-        '<span style="font-size:18px;flex-shrink:0;width:24px;text-align:center;">'+item.icon+'</span>' +
-        '<div style="flex:1;min-width:0;">' +
-          '<div style="font-size:13px;font-weight:600;color:var(--text);">'+esc(item.label)+'</div>' +
-          '<div style="font-size:11px;color:'+col+';margin-top:2px;">'+esc(item.subtext||'')+'</div>' +
-        '</div>' +
-        '<button class="btn btn-ghost btn-sm" data-attn-idx="'+idx+'" style="font-size:11px;padding:4px 10px;flex-shrink:0;">'+esc(item.actionLabel||'Review')+'</button>' +
-      '</div>';
-    }).join('');
-
-    // Bind via onclick property — safe to re-render, no stacking
-    list.querySelectorAll('.dash-attn-item').forEach(function(el){
-      var idx2 = parseInt(el.getAttribute('data-attn-idx'));
-      var item2 = items[idx2];
-      if(item2 && item2.action){
-        el.onclick = function(e){ e.stopPropagation(); try{ item2.action(); }catch(err){} };
-      }
-    });
-    list.querySelectorAll('.dash-attn-item button').forEach(function(el){
-      var idx2 = parseInt(el.getAttribute('data-attn-idx'));
-      var item2 = items[idx2];
-      if(item2 && item2.action){
-        el.onclick = function(e){ e.stopPropagation(); try{ item2.action(); }catch(err){} };
-      }
-    });
-
-  } else {
-    if(count) count.style.display = 'none';
-    if(clear) clear.style.display = 'block';
-    list.innerHTML = '';
-  }
-}
-
-function renderDashPipeline(){
-  var el=document.getElementById('dash-pipeline');
-  if(!el) return;
-  if(!cands || !cands.length){
-    el.innerHTML='<div style="font-size:12px;color:var(--text4);padding:16px 0;text-align:center;">No candidates yet — add one to see the pipeline.</div>';
-    return;
-  }
-  var STAGES_SHOW=['New','Screening','Interviewing','Offer','Hired'];
-  var COLORS={New:'var(--blue)',Screening:'var(--purple)',Interviewing:'var(--amber)',Offer:'var(--teal)',Hired:'var(--green)'};
-  var total=cands.length;
-  if(!total){
-    el.innerHTML='<div style="font-size:12px;color:var(--text4);padding:16px 0;text-align:center;">No candidates yet</div>';
-    return;
-  }
-  var rows='';
-  for(var si=0;si<STAGES_SHOW.length;si++){
-    var s=STAGES_SHOW[si];
-    var n=cands.filter(function(cc){return cc.status===s;}).length;
-    var pct=total>0?Math.round(n/total*100):0;
-    var col=COLORS[s];
-    var numColor=n?col:'var(--text4)';
-    rows+='<div style="display:flex;align-items:center;gap:10px;padding:5px 0;cursor:pointer;" onclick="nav(\'pipeline\')">'; 
-    rows+='<div style="font-size:11px;font-weight:600;color:var(--text3);width:82px;flex-shrink:0;">'+s+'</div>';
-    rows+='<div style="flex:1;background:var(--bg3);border-radius:3px;height:5px;overflow:hidden;">';
-    rows+='<div style="width:'+pct+'%;height:100%;background:'+col+';border-radius:3px;transition:width .3s;"></div>';
-    rows+='</div>';
-    rows+='<div style="font-size:12px;font-weight:600;color:'+numColor+';width:22px;text-align:right;">'+n+'</div>';
-    rows+='</div>';
-  }
-  el.innerHTML=rows;
-}
-
-function renderDashHot(){
-  var el=document.getElementById('dash-hot-list');
-  var ct=document.getElementById('dash-hot-count');
-  if(!el) return;
-  var hot=cands.filter(function(cc){return cc.responded||cc.opened;})
-    .sort(function(a,b){return (b.responded?2:b.opened?1:0)-(a.responded?2:a.opened?1:0);})
-    .slice(0,5);
-  if(ct) ct.textContent=hot.length||'';
-  if(!hot.length){
-    el.innerHTML='<div style="font-size:12px;color:var(--text4);padding:20px 0;text-align:center;">No engagement signals yet.</div>';
-    return;
-  }
-  var rows='';
-  hot.forEach(function(cc){
-    var badge=cc.responded?'🔥 Replied':cc.opened?'👀 Opened':'';
-    var initials=((cc.first||'?')[0]+(cc.last||'?')[0]).toUpperCase();
-    rows+='<div class="dash-hot-row" data-cid="'+esc(cc.id)+'" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;">';
-    rows+='<div style="width:32px;height:32px;border-radius:50%;background:var(--accent-dim);border:1px solid var(--accent-border);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--accent2);flex-shrink:0;">'+initials+'</div>';
-    rows+='<div style="flex:1;min-width:0;">';
-    rows+='<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(cc.first+' '+cc.last)+'</div>';
-    rows+='<div style="font-size:11px;color:var(--text4);">'+esc(cc.title||cc.status||'')+'</div>';
-    rows+='</div>';
-    if(badge) rows+='<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);">'+badge+'</span>';
-    rows+='</div>';
-  });
-  el.innerHTML=rows;
-  el.querySelectorAll('.dash-hot-row').forEach(function(row){
-    var cid = row.getAttribute('data-cid');
-    row.onclick = function(){
-      nav('candidates');
-      setTimeout(function(){ try{selCand(cid);}catch(e){} }, 120);
-    };
-  });
-}
-
-function renderDashDeals(){
-  var el=document.getElementById('dash-top-deals');
-  if(!el) return;
-  var active=(deals||[]).filter(function(d){return d.stage!=='Closed Lost';})
-    .sort(function(a,b){return (b.fee||0)*(b.prob||0)-(a.fee||0)*(a.prob||0);})
-    .slice(0,4);
-  if(!active.length){
-    el.innerHTML='<div style="font-size:12px;color:var(--text4);padding:20px 0;text-align:center;">No active deals yet.</div>';
-    return;
-  }
-  var fmt=function(n){return n>=1000?'$'+(n/1000).toFixed(0)+'K':'$'+n;};
-  var rows='';
-  active.forEach(function(d){
-    var prob=d.prob||50;
-    var probCol=prob>=70?'var(--green)':prob>=40?'var(--amber)':'var(--red)';
-    rows+='<div class="dash-deal-row" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;">';
-    rows+='<div style="flex:1;min-width:0;">';
-    rows+='<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(d.company||'Unnamed')+'</div>';
-    rows+='<div style="font-size:11px;color:var(--text4);">'+esc(d.role||d.stage||'')+'</div>';
-    rows+='</div>';
-    rows+='<div style="text-align:right;flex-shrink:0;">';
-    rows+='<div style="font-size:13px;font-weight:700;color:var(--teal);">'+fmt(d.fee||0)+'</div>';
-    rows+='<div style="font-size:10px;font-weight:600;color:'+probCol+';">'+prob+'% prob</div>';
-    rows+='</div></div>';
-  });
-  el.innerHTML=rows;
-  el.querySelectorAll('.dash-deal-row').forEach(function(row){
-    row.onclick = function(){ nav('deals'); };
-  });
-}
 
 // ═══════════════════════════════════════════════
 // ANALYTICS
@@ -13879,6 +13594,573 @@ function getCandExperienceScore(cc) {
   var label = score >= 75 ? 'Strong' : score >= 50 ? 'At Risk' : 'Poor';
   return { score: score, color: color, label: label, breakdown: breakdown };
 }
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TALENTBASE WIDGET DASHBOARD SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════
+
+var DASH_WIDGET_DEFS = {
+  open_jobs: {
+    id:'open_jobs', label:'Open Jobs', icon:'💼',
+    cols:3, rows:1, minCols:2,
+    render: function(data){
+      var n = data.openJobs;
+      return dashMetricCard('Open Jobs','💼',n,'var(--accent2)',
+        data.totalJobs+' total reqs', data.filledJobs+' filled YTD');
+    }
+  },
+  pipeline_value: {
+    id:'pipeline_value', label:'Pipeline Value', icon:'💰',
+    cols:4, rows:1, minCols:3,
+    render: function(data){
+      return dashMetricCard('Pipeline Value','💰',fmtMoney(data.pipelineValue),'var(--teal)',
+        fmtMoney(data.expectedRevenue)+' expected','Probability-weighted');
+    }
+  },
+  hires_ytd: {
+    id:'hires_ytd', label:'Hires YTD', icon:'✅',
+    cols:3, rows:1, minCols:2,
+    render: function(data){
+      return dashMetricCard('Hires YTD','✅',data.hiresYTD,'var(--green)',
+        data.offersOut+' offer'+(data.offersOut!==1?'s':'')+' pending','Active this quarter');
+    }
+  },
+  time_to_fill: {
+    id:'time_to_fill', label:'Avg Time to Fill', icon:'⏱',
+    cols:2, rows:1, minCols:2,
+    render: function(data){
+      var color = data.avgDays>60?'var(--red)':data.avgDays>30?'var(--amber)':'var(--green)';
+      return dashMetricCard('Avg Days Open','⏱',data.avgDays+'d',color,
+        data.criticalReqs+' critical (>90d)','Median across open reqs');
+    }
+  },
+  needs_action: {
+    id:'needs_action', label:'Needs Action', icon:'⚡',
+    cols:12, rows:2, minCols:6,
+    render: function(data){
+      if(!data.attention.length){
+        return '<div style="padding:20px;text-align:center;color:var(--text4);font-size:12px;">'+
+          '<div style="font-size:24px;margin-bottom:8px;color:var(--green);">✓</div>'+
+          'All clear — no action items right now.</div>';
+      }
+      return data.attention.slice(0,8).map(function(item){
+        var bColor = item.level==='critical'?'var(--red)':'var(--amber)';
+        return '<div onclick="'+item.onclick+'" style="display:flex;align-items:center;gap:12px;padding:11px 14px;'+
+          'background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);'+
+          'border-left:3px solid '+bColor+';border-radius:8px;margin-bottom:8px;cursor:pointer;'+
+          'transition:background .15s;" onmouseover="this.style.background=\'rgba(255,255,255,.05)\'" '+
+          'onmouseout="this.style.background=\'rgba(255,255,255,.02)\'">' +
+          '<span style="font-size:16px;flex-shrink:0;">'+item.icon+'</span>'+
+          '<div style="flex:1;min-width:0;">'+
+            '<div style="font-size:13px;font-weight:600;color:var(--text);">'+esc(item.label)+'</div>'+
+            '<div style="font-size:11px;color:var(--text4);margin-top:1px;">'+esc(item.sub)+'</div>'+
+          '</div>'+
+          '<div style="font-size:11px;font-weight:700;color:'+bColor+';flex-shrink:0;">'+esc(item.action)+'</div>'+
+        '</div>';
+      }).join('');
+    }
+  },
+  pipeline_stages: {
+    id:'pipeline_stages', label:'Pipeline Stages', icon:'📊',
+    cols:6, rows:2, minCols:4,
+    render: function(data){
+      var stages=['New','Screening','Interviewing','Offer','Hired'];
+      var colors={'New':'var(--accent)','Screening':'var(--accent2)','Interviewing':'var(--amber)','Offer':'var(--green)','Hired':'#22c55e'};
+      var total = data.candsByStage.New+data.candsByStage.Screening+data.candsByStage.Interviewing+data.candsByStage.Offer+data.candsByStage.Hired || 1;
+      return '<div style="display:flex;flex-direction:column;gap:8px;">' +
+        stages.map(function(s){
+          var n = data.candsByStage[s]||0;
+          var pct = Math.round((n/total)*100);
+          return '<div style="display:flex;align-items:center;gap:10px;">'+
+            '<div style="font-size:11px;color:var(--text4);width:72px;flex-shrink:0;">'+s+'</div>'+
+            '<div style="flex:1;height:6px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;">'+
+              '<div style="height:100%;width:'+pct+'%;background:'+colors[s]+';border-radius:999px;transition:width .6s ease;"></div>'+
+            '</div>'+
+            '<div style="font-size:12px;font-weight:700;color:var(--text);width:24px;text-align:right;">'+n+'</div>'+
+          '</div>';
+        }).join('') +
+      '</div>';
+    }
+  },
+  interviews_week: {
+    id:'interviews_week', label:'Interviews This Week', icon:'📅',
+    cols:3, rows:1, minCols:2,
+    render: function(data){
+      return dashMetricCard('Interviews This Week','📅',data.interviewsWeek,'var(--purple)',
+        data.interviewsCands+' candidate'+(data.interviewsCands!==1?'s':''),'In interview stage');
+    }
+  },
+  offers_out: {
+    id:'offers_out', label:'Offers Out', icon:'📝',
+    cols:3, rows:1, minCols:2,
+    render: function(data){
+      var color = data.offersOut>0?'var(--amber)':'var(--text4)';
+      return dashMetricCard('Offers Pending','📝',data.offersOut,color,
+        'Awaiting candidate decision','Average 48hr decision window');
+    }
+  },
+  aging_reqs: {
+    id:'aging_reqs', label:'Aging Reqs', icon:'🚨',
+    cols:6, rows:2, minCols:4,
+    render: function(data){
+      if(!data.agingJobs.length){
+        return '<div style="padding:20px;text-align:center;color:var(--text4);font-size:12px;">'+
+          '<span style="color:var(--green);font-size:18px;">✓</span><br>No aging reqs — all roles are healthy.</div>';
+      }
+      return '<div style="display:flex;flex-direction:column;gap:6px;">' +
+        data.agingJobs.slice(0,6).map(function(j){
+          var color = j.days>90?'var(--red)':'var(--amber)';
+          var flag  = j.days>90?'🚨':'⚠️';
+          return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.02);border-radius:7px;border-left:2px solid '+color+';">'+
+            '<span>'+flag+'</span>'+
+            '<div style="flex:1;min-width:0;overflow:hidden;">'+
+              '<div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(j.title)+'</div>'+
+              '<div style="font-size:10px;color:var(--text4);">#'+esc(j.reqNum||'—')+'</div>'+
+            '</div>'+
+            '<div style="font-size:12px;font-weight:700;color:'+color+';flex-shrink:0;">'+j.days+'d</div>'+
+          '</div>';
+        }).join('') +
+      '</div>';
+    }
+  },
+  source_performance: {
+    id:'source_performance', label:'Source Performance', icon:'📡',
+    cols:4, rows:2, minCols:3,
+    render: function(data){
+      if(!data.sources.length){
+        return '<div style="padding:20px;text-align:center;color:var(--text4);font-size:12px;">No source data yet.</div>';
+      }
+      var max = Math.max.apply(null, data.sources.map(function(s){return s.count;})) || 1;
+      return '<div style="display:flex;flex-direction:column;gap:7px;">' +
+        data.sources.map(function(s){
+          var pct = Math.round((s.count/max)*100);
+          return '<div style="display:flex;align-items:center;gap:8px;">'+
+            '<div style="font-size:11px;color:var(--text3);width:80px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(s.name)+'</div>'+
+            '<div style="flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:999px;">'+
+              '<div style="height:100%;width:'+pct+'%;background:var(--accent);border-radius:999px;"></div>'+
+            '</div>'+
+            '<div style="font-size:11px;font-weight:700;color:var(--text);width:20px;text-align:right;">'+s.count+'</div>'+
+          '</div>';
+        }).join('') +
+      '</div>';
+    }
+  }
+};
+
+var DASH_DEFAULT_LAYOUT = [
+  {id:'open_jobs',        cols:3, col:1},
+  {id:'pipeline_value',   cols:4, col:4},
+  {id:'hires_ytd',        cols:3, col:8},
+  {id:'time_to_fill',     cols:2, col:11},
+  {id:'needs_action',     cols:12,col:1},
+  {id:'pipeline_stages',  cols:6, col:1},
+  {id:'aging_reqs',       cols:6, col:7},
+  {id:'interviews_week',  cols:3, col:1},
+  {id:'offers_out',       cols:3, col:4},
+  {id:'source_performance',cols:6,col:7},
+];
+
+var _dashLayout = null;
+var _dashDragState = null;
+
+// ── Layout persistence ────────────────────────────────────────────────────────
+function dashSaveLayout(){
+  try {
+    var key = 'tb_dash_layout_'+(currentUser.id||'default');
+    localStorage.setItem(key, JSON.stringify(_dashLayout));
+    var ind = document.getElementById('dash-save-indicator');
+    if(ind){ ind.textContent='Layout saved'; ind.style.opacity='1';
+      setTimeout(function(){ ind.style.opacity='0'; }, 1500); }
+  } catch(e){}
+}
+
+function dashLoadLayout(){
+  try {
+    var key = 'tb_dash_layout_'+(currentUser.id||'default');
+    var saved = localStorage.getItem(key);
+    if(saved) return JSON.parse(saved);
+  } catch(e){}
+  return null;
+}
+
+function dashResetLayout(){
+  _dashLayout = JSON.parse(JSON.stringify(DASH_DEFAULT_LAYOUT));
+  dashSaveLayout();
+  renderDash();
+}
+
+// ── Data aggregation ──────────────────────────────────────────────────────────
+function dashGetData(){
+  var wsJ = wsFilter(jobs)  || [];
+  var wsC = wsFilter(cands) || [];
+  var now = Date.now();
+  var DAY = 86400000;
+  var WEEK = 7*DAY;
+
+  var openJobs  = wsJ.filter(function(j){return j.status==='Open';});
+  var filledJobs= wsJ.filter(function(j){return j.status==='Filled';});
+
+  var rev = (typeof getRevenueStats==='function') ? getRevenueStats() : {pipelineValue:0,expectedRevenue:0};
+
+  var hiresYTD = wsC.filter(function(cc){return cc.status==='Hired';}).length;
+  var offersOut= wsC.filter(function(cc){return cc.status==='Offer';}).length;
+
+  var daysArr = openJobs.map(function(j){
+    return j.created ? Math.floor((now-j.created)/DAY) : 0;
+  }).sort(function(a,b){return a-b;});
+  var avgDays = daysArr.length ? Math.round(daysArr.reduce(function(s,d){return s+d;},0)/daysArr.length) : 0;
+
+  var agingJobs = openJobs.filter(function(j){
+    return j.created && (now-j.created)/DAY > 60;
+  }).map(function(j){
+    return {title:j.title, reqNum:j.reqNum, days:Math.floor((now-j.created)/DAY)};
+  }).sort(function(a,b){return b.days-a.days;});
+
+  var criticalReqs = agingJobs.filter(function(j){return j.days>90;}).length;
+
+  var stages=['New','Screening','Interviewing','Offer','Hired'];
+  var candsByStage = {};
+  stages.forEach(function(s){ candsByStage[s]=0; });
+  wsC.forEach(function(cc){ if(candsByStage[cc.status]!==undefined) candsByStage[cc.status]++; });
+
+  var interviewsCands = candsByStage['Interviewing']||0;
+  // Week estimate: assume each interviewing cand has ~1 interview this week
+  var interviewsWeek  = interviewsCands;
+
+  // Needs action
+  var attention = [];
+  var wsTasks = JSON.parse(localStorage.getItem('tb_tasks')||'[]')
+    .filter(function(t){return !t.workspaceId||t.workspaceId===currentWorkspace;});
+  var todayStr = new Date().toISOString().split('T')[0];
+
+  // Uncontacted new candidates (>2d)
+  wsC.filter(function(cc){
+    return cc.status==='New' && cc.created && (now-cc.created)/DAY>2;
+  }).slice(0,3).forEach(function(cc){
+    attention.push({
+      level:'warn', icon:'👤',
+      label: (cc.first||'')+' '+(cc.last||'')+' — no contact',
+      sub: 'Added '+ Math.floor((now-cc.created)/DAY)+'d ago · '+esc(cc.status),
+      action:'Reach out',
+      onclick: "selCand('"+cc.id+"');nav('candidates')"
+    });
+  });
+
+  // Missing interview feedback
+  wsC.filter(function(cc){ return cc.status==='Interviewing'; }).forEach(function(cc){
+    var lastAct = (cc.activity&&cc.activity.length)
+      ? cc.activity.reduce(function(m,a){return a.ts>m?a.ts:m;},0) : cc.created||0;
+    if((now-lastAct)/DAY>2){
+      attention.push({
+        level:'warn', icon:'📋',
+        label: 'Feedback needed — '+(cc.first||'')+' '+(cc.last||''),
+        sub: 'Interviewing · idle '+ Math.floor((now-lastAct)/DAY)+'d',
+        action:'Get feedback',
+        onclick: "selCand('"+cc.id+"');nav('candidates')"
+      });
+    }
+  });
+
+  // Aging jobs >90d
+  agingJobs.filter(function(j){return j.days>90;}).slice(0,2).forEach(function(j){
+    attention.push({
+      level:'critical', icon:'🚨',
+      label: j.title+' — '+j.days+'d open',
+      sub: 'Req #'+(j.reqNum||'—')+' · critical aging',
+      action:'Review now',
+      onclick: "nav('jobs')"
+    });
+  });
+
+  // Pending offers >1d
+  wsC.filter(function(cc){ return cc.status==='Offer'; }).forEach(function(cc){
+    var lastAct = (cc.activity&&cc.activity.length)
+      ? cc.activity.reduce(function(m,a){return a.ts>m?a.ts:m;},0) : cc.created||0;
+    if((now-lastAct)/DAY>1){
+      attention.push({
+        level:'critical', icon:'📝',
+        label: 'Offer pending — '+(cc.first||'')+' '+(cc.last||''),
+        sub: 'Decision window open · '+Math.floor((now-lastAct)/DAY)+'d elapsed',
+        action:'Follow up',
+        onclick: "selCand('"+cc.id+"');nav('candidates')"
+      });
+    }
+  });
+
+  // Overdue tasks
+  wsTasks.filter(function(t){
+    return t.status!=='Completed' && t.dueDate && t.dueDate<todayStr;
+  }).slice(0,2).forEach(function(t){
+    attention.push({
+      level:'warn', icon:'⚡',
+      label: t.item,
+      sub: 'Due '+t.dueDate+' · overdue',
+      action:'Complete',
+      onclick: "nav('command')"
+    });
+  });
+
+  // Source performance
+  var sourceCounts = {};
+  wsC.forEach(function(cc){
+    var src = cc.source||'Unknown';
+    sourceCounts[src] = (sourceCounts[src]||0)+1;
+  });
+  var sources = Object.keys(sourceCounts).map(function(k){
+    return {name:k, count:sourceCounts[k]};
+  }).sort(function(a,b){return b.count-a.count;}).slice(0,6);
+
+  return {
+    openJobs:openJobs.length, totalJobs:wsJ.length, filledJobs:filledJobs.length,
+    pipelineValue:rev.pipelineValue||0, expectedRevenue:rev.expectedRevenue||0,
+    hiresYTD:hiresYTD, offersOut:offersOut,
+    avgDays:avgDays, criticalReqs:criticalReqs,
+    candsByStage:candsByStage,
+    interviewsCands:interviewsCands, interviewsWeek:interviewsWeek,
+    agingJobs:agingJobs, attention:attention, sources:sources,
+  };
+}
+
+// ── Widget card wrapper ───────────────────────────────────────────────────────
+function dashMetricCard(label, icon, value, color, sub1, sub2){
+  return '<div style="display:flex;flex-direction:column;height:100%;">'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">'+
+      '<span style="font-size:18px;">'+icon+'</span>'+
+      '<div style="font-size:28px;font-weight:800;color:'+color+';letter-spacing:-1px;line-height:1;">'+value+'</div>'+
+    '</div>'+
+    '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">'+label+'</div>'+
+    (sub1?'<div style="font-size:11px;color:var(--text3);">'+sub1+'</div>':'')+
+    (sub2?'<div style="font-size:10px;color:var(--text4);margin-top:2px;">'+sub2+'</div>':'')+
+  '</div>';
+}
+
+function dashBuildWidget(item, data){
+  var def = DASH_WIDGET_DEFS[item.id];
+  if(!def) return null;
+  var span = item.cols||def.cols;
+
+  var el = document.createElement('div');
+  el.id = 'dw-'+item.id;
+  el.dataset.wid = item.id;
+  el.dataset.cols = span;
+  el.style.cssText =
+    'grid-column: span '+span+';'+
+    'background:var(--bg2);border:1px solid rgba(255,255,255,.08);border-radius:14px;'+
+    'padding:18px 20px;position:relative;transition:box-shadow .2s, transform .15s;'+
+    'box-shadow:0 4px 20px rgba(0,0,0,.3);min-height:110px;';
+
+  // Header row: label + controls
+  el.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">' +
+      '<div style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;">'+esc(def.label)+'</div>'+
+      '<div class="dw-controls" style="display:flex;gap:4px;opacity:0;transition:opacity .15s;">'+
+        '<button onclick="dashShrink(\''+item.id+'\')" title="Shrink" '+
+          'style="background:rgba(255,255,255,.06);border:none;color:var(--text4);cursor:pointer;border-radius:4px;padding:3px 6px;font-size:11px;">◀</button>'+
+        '<button onclick="dashGrow(\''+item.id+'\')" title="Expand" '+
+          'style="background:rgba(255,255,255,.06);border:none;color:var(--text4);cursor:pointer;border-radius:4px;padding:3px 6px;font-size:11px;">▶</button>'+
+        '<button onclick="dashRemoveWidget(\''+item.id+'\')" title="Remove" '+
+          'style="background:rgba(239,68,68,.12);border:none;color:var(--red);cursor:pointer;border-radius:4px;padding:3px 6px;font-size:11px;">✕</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="dw-body" style="font-size:13px;">'+def.render(data)+'</div>';
+
+  // Hover: show controls + lift
+  el.addEventListener('mouseenter', function(){
+    el.style.boxShadow = '0 8px 32px rgba(0,0,0,.5)';
+    el.style.transform = 'translateY(-1px)';
+    var ctrl = el.querySelector('.dw-controls');
+    if(ctrl) ctrl.style.opacity = '1';
+  });
+  el.addEventListener('mouseleave', function(){
+    el.style.boxShadow = '0 4px 20px rgba(0,0,0,.3)';
+    el.style.transform = '';
+    var ctrl = el.querySelector('.dw-controls');
+    if(ctrl) ctrl.style.opacity = '0';
+  });
+
+  // Drag
+  el.setAttribute('draggable','true');
+  el.addEventListener('dragstart', function(e){
+    _dashDragState = item.id;
+    el.style.opacity = '0.5';
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  el.addEventListener('dragend', function(){
+    el.style.opacity = '';
+    _dashDragState = null;
+    document.querySelectorAll('.dw-drop-indicator').forEach(function(d){ d.remove(); });
+  });
+  el.addEventListener('dragover', function(e){
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  });
+  el.addEventListener('drop', function(e){
+    e.preventDefault();
+    if(!_dashDragState || _dashDragState===item.id) return;
+    // Swap positions
+    var fromIdx = _dashLayout.findIndex(function(x){return x.id===_dashDragState;});
+    var toIdx   = _dashLayout.findIndex(function(x){return x.id===item.id;});
+    if(fromIdx<0||toIdx<0) return;
+    var tmp = _dashLayout[fromIdx];
+    _dashLayout[fromIdx] = _dashLayout[toIdx];
+    _dashLayout[toIdx]   = tmp;
+    dashSaveLayout();
+    renderDash();
+  });
+
+  return el;
+}
+
+function dashGrow(wid){
+  var item = _dashLayout.find(function(x){return x.id===wid;});
+  if(!item) return;
+  var def = DASH_WIDGET_DEFS[wid];
+  var max = 12;
+  item.cols = Math.min(max, (item.cols||def.cols)+2);
+  dashSaveLayout(); renderDash();
+}
+function dashShrink(wid){
+  var item = _dashLayout.find(function(x){return x.id===wid;});
+  if(!item) return;
+  var def = DASH_WIDGET_DEFS[wid];
+  item.cols = Math.max(def.minCols||2, (item.cols||def.cols)-2);
+  dashSaveLayout(); renderDash();
+}
+
+function dashRemoveWidget(wid){
+  _dashLayout = _dashLayout.filter(function(x){return x.id!==wid;});
+  dashSaveLayout(); renderDash();
+}
+
+function dashAddWidget(){
+  var picker = document.getElementById('dash-widget-picker');
+  if(!picker) return;
+  var list = document.getElementById('dash-widget-list');
+  if(list){
+    var activeIds = _dashLayout.map(function(x){return x.id;});
+    list.innerHTML = Object.keys(DASH_WIDGET_DEFS).map(function(k){
+      var def = DASH_WIDGET_DEFS[k];
+      var active = activeIds.indexOf(k) >= 0;
+      return '<button onclick="dashToggleWidget(\''+k+'\')" '+
+        'style="display:flex;align-items:center;gap:10px;padding:12px 14px;'+
+        'background:'+(active?'rgba(59,130,246,.12)':'rgba(255,255,255,.04)')+';'+
+        'border:1px solid '+(active?'rgba(59,130,246,.3)':'rgba(255,255,255,.08)')+';'+
+        'border-radius:9px;cursor:pointer;font-family:inherit;text-align:left;width:100%;'+
+        'color:var(--text);transition:background .15s;">'+
+        '<span style="font-size:18px;">'+def.icon+'</span>'+
+        '<div>'+
+          '<div style="font-size:12px;font-weight:600;">'+esc(def.label)+'</div>'+
+          '<div style="font-size:10px;color:var(--text4);">'+(active?'✓ Active':'Click to add')+'</div>'+
+        '</div>'+
+        '</button>';
+    }).join('');
+  }
+  picker.style.display = 'flex';
+  picker.onclick = function(e){ if(e.target===picker) picker.style.display='none'; };
+}
+
+function dashToggleWidget(wid){
+  var existing = _dashLayout.findIndex(function(x){return x.id===wid;});
+  if(existing >= 0){
+    _dashLayout.splice(existing,1);
+  } else {
+    var def = DASH_WIDGET_DEFS[wid];
+    _dashLayout.push({id:wid, cols:def.cols});
+  }
+  dashSaveLayout();
+  renderDash();
+  // Refresh picker state
+  dashAddWidget();
+}
+
+// ── Skeleton loader ───────────────────────────────────────────────────────────
+function dashSkeleton(cols){
+  return '<div style="grid-column:span '+cols+';background:var(--bg2);border:1px solid rgba(255,255,255,.06);'+
+    'border-radius:14px;padding:18px 20px;min-height:110px;animation:dashPulse 1.4s ease-in-out infinite;">'+
+    '<div style="height:10px;width:40%;background:rgba(255,255,255,.06);border-radius:4px;margin-bottom:14px;"></div>'+
+    '<div style="height:32px;width:55%;background:rgba(255,255,255,.08);border-radius:6px;margin-bottom:10px;"></div>'+
+    '<div style="height:8px;width:70%;background:rgba(255,255,255,.05);border-radius:4px;"></div>'+
+  '</div>';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// renderDash — MAIN ENTRY POINT (replaces old version)
+// ═══════════════════════════════════════════════════════════════════════════
+function renderDash(){
+  // Safety guards
+  try{ escalateOverdueTasks(); }catch(e){}
+  if(!Array.isArray(cands)) { cands = TB.store.cands = []; }
+  if(!Array.isArray(jobs))  { jobs  = TB.store.jobs  = []; }
+  if(!Array.isArray(deals)) { deals = TB.store.deals = []; }
+
+  // Greeting + date
+  try {
+    var greetEl = document.getElementById('dash-user-greeting');
+    if(greetEl){
+      var _fn = (currentUser.name||'User').split(' ')[0];
+      greetEl.textContent = 'Welcome back, '+_fn;
+    }
+    var dateEl = document.getElementById('dash-date');
+    if(dateEl){
+      var _now = new Date();
+      var _days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      var _mos=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var _t = _now.toLocaleString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit',hour12:true});
+      dateEl.textContent = _days[_now.getDay()]+', '+_mos[_now.getMonth()]+' '+_now.getDate()+', '+_now.getFullYear()+' · '+_t+' EST';
+    }
+  } catch(e){}
+
+  var grid = document.getElementById('dash-grid');
+  if(!grid) return;
+
+  // Load layout
+  if(!_dashLayout){
+    _dashLayout = dashLoadLayout() || JSON.parse(JSON.stringify(DASH_DEFAULT_LAYOUT));
+  }
+
+  // Show skeletons while building
+  grid.innerHTML = _dashLayout.map(function(item){
+    return dashSkeleton(item.cols||(DASH_WIDGET_DEFS[item.id]||{cols:3}).cols);
+  }).join('');
+
+  // Gather data
+  var data;
+  try { data = dashGetData(); }
+  catch(e){
+    console.error('[dashGetData]', e);
+    data = {
+      openJobs:0,totalJobs:0,filledJobs:0,pipelineValue:0,expectedRevenue:0,
+      hiresYTD:0,offersOut:0,avgDays:0,criticalReqs:0,
+      candsByStage:{New:0,Screening:0,Interviewing:0,Offer:0,Hired:0},
+      interviewsCands:0,interviewsWeek:0,agingJobs:[],attention:[],sources:[]
+    };
+  }
+
+  // Build widgets
+  grid.innerHTML = '';
+  var hasWidgets = false;
+  _dashLayout.forEach(function(item){
+    var el = dashBuildWidget(item, data);
+    if(el){ grid.appendChild(el); hasWidgets=true; }
+  });
+
+  // Empty state
+  var emptyEl = document.getElementById('dash-empty');
+  var hasData  = (wsFilter(cands)||[]).length + (wsFilter(jobs)||[]).length;
+  if(emptyEl) emptyEl.style.display = (!hasWidgets || !hasData) ? 'block' : 'none';
+
+  // Log for debugging
+  console.log('[TalentBase] Dashboard rendered — cands:', cands.length, 'jobs:', jobs.length, 'widgets:', _dashLayout.length);
+}
+
+// Keep stub functions for backward compat (called by legacy code paths)
+function renderDashKPIs(){}
+function renderDashAttention(){}
+function renderDashPipeline(){}
+function renderDashHot(){}
+function renderDashDeals(){}
+
 
 document.addEventListener('DOMContentLoaded', function(){ initApp(); });
 
