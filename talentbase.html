@@ -783,6 +783,24 @@ input:focus, select:focus, textarea:focus {
 .pipe-card.risk-healthy {
   border-color: rgba(34,197,94,.25) !important;
 }
+
+/* Msg button on pipeline card */
+.pipe-msg-btn {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  padding: 0;
+  background: rgba(59,130,246,.1);
+  border: 1px solid rgba(59,130,246,.2);
+  border-radius: 6px;
+  color: var(--accent2);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pipe-msg-btn:hover { background: rgba(59,130,246,.2); }
 </style>
 </head>
 
@@ -1022,6 +1040,16 @@ input:focus, select:focus, textarea:focus {
                   <div class="empty-state-sub">No aging reqs</div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- AI Insights -->
+          <div style="margin-top:22px;">
+            <div class="section-header">
+              <div class="section-title">⚡ AI Insights</div>
+            </div>
+            <div class="card" id="dash-ai-insights" style="padding:8px 16px 4px;">
+              <div style="font-size:12px;color:var(--text4);padding:12px 0;">Loading insights...</div>
             </div>
           </div>
 
@@ -1682,6 +1710,8 @@ function renderDashboard() {
     }
   }
 
+  // Render AI insights + hiring risks panels
+  try { renderAIInsights(); } catch(e) {}
   // Render hiring risks alert panel
   try { renderHiringRisks(); } catch(e) {}
 
@@ -2390,6 +2420,12 @@ function renderPipeline() {
   // Build columns
   board.innerHTML = PIPE_STAGES.map(function(stage) {
     var stageCands = filtered.filter(function(cd) { return cd.status === stage; });
+    stageCands.sort(function(a, b) {
+      var sa = calculateExperienceScore(a);
+      var sb = calculateExperienceScore(b);
+      if (sa !== sb) return sa - sb;
+      return (a.lastActivityAt || a.createdAt || 0) - (b.lastActivityAt || b.createdAt || 0);
+    });
     var color      = PIPE_STAGE_COLORS[stage] || 'var(--text4)';
     var isLast     = stage === 'Hired';
 
@@ -2414,6 +2450,7 @@ function renderPipeline() {
           var cxRisk     = getRiskLevel(cxScore);
           var cxRiskColor = { critical: '#f87171', warning: '#fbbf24', healthy: '#4ade80' }[cxRisk];
           var cxRiskLabel = { critical: '🚨', warning: '⚠️', healthy: '✓' }[cxRisk];
+          var nba        = getNextBestAction(cd);
           // CX chips
           var cxChips = '';
           if (isStale)                   cxChips += '<span class="cx-chip cx-stale">' + idleDays + 'd idle</span>';
@@ -2428,13 +2465,16 @@ function renderPipeline() {
             '</div>' +
             (cxChips ? '<div class="cx-chips">' + cxChips + '</div>' : '') +
             '<div class="pipe-card-mid">' + escHtml(cd.company || '') + '</div>' +
+            '<div style="font-size:10px;color:var(--accent2);font-weight:600;margin-bottom:8px;">' +
+              '→ ' + escHtml(nba) +
+            '</div>' +
             '<div class="pipe-card-bottom">' +
-              '<span class="pipe-card-badge" style="' + badgeStyle + '">' + escHtml(stage) + '</span>' +
               '<button class="pipe-advance-btn"' +
                 (isLast ? ' disabled' : ' onclick="moveCandidate(' + cd.id + ')"') +
               '>' +
                 (isLast ? '✓ Hired' : 'Advance →') +
               '</button>' +
+              '<button class="pipe-msg-btn" onclick="showMessageModal(' + cd.id + ')">✉</button>' +
             '</div>' +
           '</div>';
         }).join('')
@@ -2608,6 +2648,113 @@ function renderHiringRisks() {
         '<span style="font-size:12px;font-weight:800;color:' + riskColor + ';">' + item.score + '</span>' +
         '<button onclick="gotoRiskView()" class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px;">View</button>' +
       '</div>' +
+    '</div>';
+  }).join('');
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// AI RECRUITER LAYER
+// ═══════════════════════════════════════════════════════════
+
+function getNextBestAction(cd) {
+  var now      = Date.now();
+  var daysIdle = ((cd.lastActivityAt || cd.createdAt) ? (now - (cd.lastActivityAt || cd.createdAt)) / 86400000 : 0);
+  if (!cd.firstContactAt)          return 'Contact candidate';
+  if (daysIdle > 2)                return 'Follow up';
+  if (cd.status === 'Interview')   return 'Schedule next interview';
+  if (cd.status === 'Offer')       return 'Close candidate';
+  return 'Monitor';
+}
+
+function generateMessage(cd) {
+  var firstName = (cd.name || 'there').split(' ')[0];
+  var role      = cd.title || 'the role';
+  var action    = {
+    'Contact candidate':      'I wanted to reach out about an exciting opportunity that aligns well with your background.',
+    'Follow up':              'I wanted to follow up on our recent conversation and see if you have any questions.',
+    'Schedule next interview':'I would love to schedule the next step in our process at your convenience.',
+    'Close candidate':        'We are very excited about your candidacy and wanted to discuss the offer in more detail.',
+    'Monitor':                'I wanted to touch base and keep you updated on where things stand.',
+  }[getNextBestAction(cd)] || 'I wanted to reach out regarding your candidacy.';
+
+  return 'Hi ' + firstName + ',\n\n' +
+    action + '\n\n' +
+    'Based on your background as ' + role + ', I believe you would be a strong fit for what we are building here.\n\n' +
+    'Would you be available for a quick call this week? Please feel free to reply with your availability.\n\n' +
+    'Best regards,\nThe Recruiting Team\nThe Staffing Specialist\njonah@thestaffingspecialist.com';
+}
+
+function getAIInsights() {
+  var active = candidates.filter(function(cd) { return !['Hired','Rejected'].includes(cd.status); });
+  return {
+    followUps: active.filter(function(cd) { return getNextBestAction(cd) === 'Follow up'; }).length,
+    toContact: active.filter(function(cd) { return getNextBestAction(cd) === 'Contact candidate'; }).length,
+    offers:    candidates.filter(function(cd) { return cd.status === 'Offer'; }).length,
+    stalled:   active.filter(function(cd) { return calculateExperienceScore(cd) < 60; }).length,
+    interviews:active.filter(function(cd) { return cd.status === 'Interview'; }).length,
+  };
+}
+
+function copyMsgText(btn) {
+  var t = document.getElementById('msg-text');
+  if (!t) return;
+  t.select();
+  document.execCommand('copy');
+  btn.textContent = 'Copied!';
+  setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+}
+
+function closeMsgModal() { var m = document.getElementById('msg-modal'); if (m) m.remove(); }
+
+function showMessageModal(candId) {
+  var cd  = candidates.find(function(x) { return String(x.id) === String(candId); });
+  if (!cd) return;
+  var msg = generateMessage(cd);
+
+  // Remove existing modal
+  var existing = document.getElementById('msg-modal');
+  if (existing) existing.remove();
+
+  var modal = document.createElement('div');
+  modal.id  = 'msg-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML =
+    '<div style="background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:26px 28px;width:500px;max-width:calc(100vw - 32px);box-shadow:0 24px 60px rgba(0,0,0,.7);">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
+        '<div style="font-size:15px;font-weight:800;color:var(--text);">Generated Message — ' + escHtml(cd.name) + '</div>' +
+        '<button onclick="closeMsgModal()" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:22px;line-height:1;padding:0;">&times;</button>' +
+      '</div>' +
+      '<textarea id="msg-text" style="width:100%;height:200px;padding:12px;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-size:12px;font-family:inherit;resize:vertical;outline:none;line-height:1.6;">' + escHtml(msg) + '</textarea>' +
+      '<div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;">' +
+        '<button onclick="closeMsgModal()" class="btn btn-ghost">Close</button>' +
+        '<button onclick="copyMsgText(this)" class="btn btn-primary">Copy</button>' +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(modal);
+  modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+}
+
+function renderAIInsights() {
+  var el = document.getElementById('dash-ai-insights');
+  if (!el) return;
+  var ins = getAIInsights();
+  var items = [];
+  if (ins.toContact > 0) items.push({ icon:'📞', text: ins.toContact + ' candidate' + (ins.toContact>1?'s':'') + ' need' + (ins.toContact>1?'':'s') + ' first contact' });
+  if (ins.followUps > 0) items.push({ icon:'⏱',  text: ins.followUps + ' candidate' + (ins.followUps>1?'s':'') + ' need follow-up today' });
+  if (ins.offers > 0)    items.push({ icon:'🎯',  text: ins.offers + ' candidate' + (ins.offers>1?'s are':' is') + ' ready to close' });
+  if (ins.stalled > 0)   items.push({ icon:'⚠️', text: ins.stalled + ' candidate' + (ins.stalled>1?'s are':' is') + ' stalling (score < 60)' });
+  if (ins.interviews > 0)items.push({ icon:'📅',  text: ins.interviews + ' candidate' + (ins.interviews>1?'s':'') + ' in active interview stage' });
+
+  if (!items.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text4);padding:12px 0;">Pipeline is healthy — no immediate actions needed.</div>';
+    return;
+  }
+  el.innerHTML = items.map(function(it) {
+    return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);last-child:border-none;">' +
+      '<span style="font-size:15px;flex-shrink:0;">' + it.icon + '</span>' +
+      '<span style="font-size:12px;color:var(--text2);">' + escHtml(it.text) + '</span>' +
     '</div>';
   }).join('');
 }
