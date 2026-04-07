@@ -454,6 +454,45 @@ html, body { height: 100%; overflow: hidden; }
   border-color: rgba(59,130,246,.5);
   box-shadow: 0 0 0 2px rgba(59,130,246,.12);
 }
+
+/* ── CANDIDATES SYSTEM ──────────────────────────── */
+.cand-card {
+  padding: 11px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  cursor: pointer;
+  margin-bottom: 6px;
+  transition: background .1s, border-color .1s;
+}
+.cand-card:hover  { background: var(--bg3); border-color: var(--border2); }
+.cand-card.selected {
+  background: rgba(59,130,246,.1);
+  border-color: rgba(59,130,246,.35);
+}
+.cand-card-name  { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.cand-card-meta  { font-size: 11px; color: var(--text4); display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.cand-card-job   { font-size: 10px; color: var(--accent2); margin-top: 4px; }
+
+/* Status badge colours (shared with jobs via .status-*) */
+.status-new        { background: rgba(148,163,184,.12); color: #94a3b8; }
+.status-screening  { background: rgba(96,165,250,.12);  color: #60a5fa; }
+.status-interview  { background: rgba(245,158,11,.12);  color: #f59e0b; }
+.status-offer      { background: rgba(34,197,94,.12);   color: #22c55e; }
+.status-hired      { background: rgba(167,139,245,.12); color: #a78bf5; }
+
+/* Candidate detail */
+.cand-detail-name  { font-size: 22px; font-weight: 800; letter-spacing: -.4px; color: var(--text); margin-bottom: 6px; }
+.cand-detail-meta  { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text4); margin-bottom: 22px; flex-wrap: wrap; }
+.cand-detail-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+
+/* Form focus */
+#cand-form input:focus,
+#cand-form select:focus,
+#cand-form textarea:focus {
+  border-color: rgba(59,130,246,.5);
+  box-shadow: 0 0 0 2px rgba(59,130,246,.12);
+}
 </style>
 </head>
 
@@ -790,18 +829,101 @@ html, body { height: 100%; overflow: hidden; }
 
       <!-- ── CANDIDATES ──────────────────────── -->
       <section class="view" id="v-candidates">
-        <div class="view-scroll">
-          <div class="page-header">
-            <div class="page-title">Candidates</div>
-            <div class="page-sub">Search, filter, and manage your talent pool</div>
+        <div style="display:flex;height:100%;overflow:hidden;">
+
+          <!-- Left: candidate list -->
+          <div id="cands-list-panel" style="width:320px;min-width:320px;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;">
+            <div style="padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;gap:8px;">
+              <input id="cands-search" type="text" placeholder="Search candidates..."
+                oninput="renderCandidates()"
+                style="flex:1;padding:7px 11px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;outline:none;"/>
+              <select id="cands-filter-status" onchange="renderCandidates()"
+                style="padding:7px 9px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text3);font-size:11px;font-family:inherit;outline:none;cursor:pointer;">
+                <option value="">All</option>
+                <option value="New">New</option>
+                <option value="Screening">Screening</option>
+                <option value="Interview">Interview</option>
+                <option value="Offer">Offer</option>
+                <option value="Hired">Hired</option>
+              </select>
+            </div>
+            <div id="cands-list" style="flex:1;overflow-y:auto;padding:8px;"></div>
           </div>
-          <div class="empty-state">
-            <div class="empty-state-icon">👥</div>
-            <div class="empty-state-title">No candidates yet</div>
-            <div class="empty-state-sub">Add your first candidate or import a resume to get started.</div>
-            <button class="btn btn-primary" style="margin-top:8px;" onclick="alert('Add Candidate — coming in Phase 2')">+ Add Candidate</button>
+
+          <!-- Right: candidate detail -->
+          <div id="cands-detail-panel" style="flex:1;min-width:0;overflow-y:auto;padding:28px 32px;">
+            <div id="cands-detail-content">
+              <div class="empty-state" style="padding-top:80px;">
+                <div class="empty-state-icon">👥</div>
+                <div class="empty-state-title">Select a candidate</div>
+                <div class="empty-state-sub">Click a candidate on the left, or add your first one.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Add / Edit Candidate Modal -->
+        <div id="cand-modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;">
+          <div style="background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:28px 30px;width:480px;max-width:calc(100vw - 32px);box-shadow:0 24px 60px rgba(0,0,0,.7);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+              <div style="font-size:16px;font-weight:800;color:var(--text);" id="cand-modal-title">Add Candidate</div>
+              <button onclick="closeCandModal()" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:22px;line-height:1;padding:0;">&times;</button>
+            </div>
+            <form id="cand-form" onsubmit="submitCandForm(event)" autocomplete="off">
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div>
+                  <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="cf-name">Full Name *</label>
+                  <input id="cf-name" type="text" placeholder="e.g. Sarah Johnson" required
+                    style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                  <div>
+                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="cf-title">Title</label>
+                    <input id="cf-title" type="text" placeholder="e.g. Sr. Program Manager"
+                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="cf-company">Company</label>
+                    <input id="cf-company" type="text" placeholder="Current employer"
+                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                  <div>
+                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="cf-job">Linked Job</label>
+                    <select id="cf-job"
+                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;">
+                      <option value="">— No job assigned —</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="cf-status">Status</label>
+                    <select id="cf-status"
+                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;">
+                      <option value="New">New</option>
+                      <option value="Screening">Screening</option>
+                      <option value="Interview">Interview</option>
+                      <option value="Offer">Offer</option>
+                      <option value="Hired">Hired</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="cf-notes">Notes</label>
+                  <textarea id="cf-notes" rows="3" placeholder="Background, fit, next steps..."
+                    style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
+                </div>
+                <div id="cand-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;">
+                  <button type="button" onclick="closeCandModal()" class="btn btn-ghost">Cancel</button>
+                  <button type="submit" class="btn btn-primary" id="cand-submit-btn">Add Candidate</button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
+
       </section>
 
       <!-- ── PIPELINE ────────────────────────── -->
@@ -1070,12 +1192,9 @@ function nav(viewId) {
   if (viewId === 'dashboard')    renderDashboard();
   if (viewId === 'settings')     renderSettings();
   if (viewId === 'jobs')         renderJobs();
+  if (viewId === 'candidates')   renderCandidatesView();
 }
 
-function topbarPrimaryAction() {
-  if (state.currentView === 'jobs')       alert('Add Job — Phase 2');
-  if (state.currentView === 'candidates') alert('Add Candidate — Phase 2');
-}
 function topbarSecondaryAction() {
   if (state.currentView === 'candidates') alert('Upload Resume — Phase 2');
 }
@@ -1214,6 +1333,7 @@ function renderSettings() {
 
 function init() {
   loadJobs();
+  loadCandidates();
   restoreUser();
   loadApiKey();
   nav('dashboard');
@@ -1494,10 +1614,6 @@ function deleteJob(id) {
 
 // ── Wire topbar primary button for jobs ───────────────────────
 // Override the stub from init
-function topbarPrimaryAction() {
-  if (state.currentView === 'jobs')       openAddJob();
-  if (state.currentView === 'candidates') alert('Add Candidate — coming soon');
-}
 
 // ── HTML escaper ──────────────────────────────────────────────
 function escHtml(s) {
@@ -1509,6 +1625,330 @@ function renderJobs() {
   renderJobList();
   // If no job selected, clear detail
   if (!selectedJobId) renderJobDetail(null);
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// CANDIDATES SYSTEM
+// ═══════════════════════════════════════════════════════════
+
+var CANDS_KEY          = 'tb2_candidates';
+var candidates         = [];
+var selectedCandidateId = null;
+var editingCandidateId  = null;
+
+// ── Persistence ───────────────────────────────────────────────
+function loadCandidates() {
+  try {
+    candidates = JSON.parse(localStorage.getItem(CANDS_KEY) || '[]') || [];
+  } catch(e) { candidates = []; }
+}
+
+function saveCandidates() {
+  try { localStorage.setItem(CANDS_KEY, JSON.stringify(candidates)); } catch(e) {}
+}
+
+// ── Status badge helper ───────────────────────────────────────
+function candStatusClass(status) {
+  return {
+    'New':       'status-new',
+    'Screening': 'status-screening',
+    'Interview': 'status-interview',
+    'Offer':     'status-offer',
+    'Hired':     'status-hired',
+  }[status] || 'status-new';
+}
+
+// ── Render list ───────────────────────────────────────────────
+function renderCandidates() {
+  var container = document.getElementById('cands-list');
+  if (!container) return;
+
+  var q      = ((document.getElementById('cands-search')        || {}).value || '').trim().toLowerCase();
+  var filter = ((document.getElementById('cands-filter-status') || {}).value || '');
+
+  var filtered = candidates.filter(function(cd) {
+    var text = (cd.name + ' ' + cd.title + ' ' + cd.company).toLowerCase();
+    if (q && !text.includes(q)) return false;
+    if (filter && cd.status !== filter) return false;
+    return true;
+  });
+
+  // Sort: active stages first, then by createdAt desc
+  var stageOrder = { New:0, Screening:1, Interview:2, Offer:3, Hired:4 };
+  filtered.sort(function(a, b) {
+    var so = (stageOrder[a.status] || 0) - (stageOrder[b.status] || 0);
+    if (so !== 0) return so;
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
+
+  if (!filtered.length) {
+    container.innerHTML =
+      '<div class="empty-state" style="padding:40px 12px;">' +
+        '<div class="empty-state-icon">👥</div>' +
+        '<div class="empty-state-title">' + (q || filter ? 'No matches' : 'No candidates yet') + '</div>' +
+        '<div class="empty-state-sub">' + (q || filter ? 'Try adjusting your search.' : 'Add your first candidate to get started.') + '</div>' +
+      '</div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(function(cd) {
+    var sel     = cd.id === selectedCandidateId;
+    var job     = jobs.find(function(j) { return j.id === cd.jobId; });
+    var jobName = job ? job.title : null;
+    var sc      = candStatusClass(cd.status);
+
+    return '<div class="cand-card' + (sel ? ' selected' : '') + '" ' +
+        'data-cand-id="' + cd.id + '" onclick="selectCandidate(this.dataset.candId)">' +
+      '<div class="cand-card-name">' + escHtml(cd.name) + '</div>' +
+      '<div class="cand-card-meta">' +
+        (cd.title   ? escHtml(cd.title) : '') +
+        (cd.title && cd.company ? '<span>·</span>' : '') +
+        (cd.company ? escHtml(cd.company) : '') +
+      '</div>' +
+      (jobName ? '<div class="cand-card-job">📋 ' + escHtml(jobName) + '</div>' : '') +
+      '<div style="margin-top:6px;"><span class="job-status-badge ' + sc + '">' + escHtml(cd.status) + '</span></div>' +
+    '</div>';
+  }).join('');
+
+  // Update topbar badge
+  var badge = document.getElementById('nb-cands');
+  if (badge) {
+    badge.textContent = candidates.length || '';
+    badge.style.display = candidates.length ? '' : 'none';
+  }
+}
+
+// ── Select candidate ──────────────────────────────────────────
+function selectCandidate(id) {
+  selectedCandidateId = id;
+  renderCandidates();
+  var cd = candidates.find(function(x) { return x.id == id; });
+  renderCandidateDetail(cd);
+}
+
+function renderCandidateDetail(cd) {
+  var panel = document.getElementById('cands-detail-content');
+  if (!panel) return;
+
+  if (!cd) {
+    panel.innerHTML =
+      '<div class="empty-state" style="padding-top:80px;">' +
+        '<div class="empty-state-icon">👥</div>' +
+        '<div class="empty-state-title">Select a candidate</div>' +
+        '<div class="empty-state-sub">Click a candidate on the left to view details.</div>' +
+      '</div>';
+    return;
+  }
+
+  var job  = jobs.find(function(j) { return j.id === cd.jobId; });
+  var sc   = candStatusClass(cd.status);
+  var added = cd.createdAt
+    ? new Date(cd.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+    : '—';
+
+  panel.innerHTML =
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">' +
+      '<div class="cand-detail-name">' + escHtml(cd.name) + '</div>' +
+      '<div style="display:flex;gap:8px;flex-shrink:0;">' +
+        '<button class="btn btn-ghost btn-sm" onclick="openEditCandidate(' + cd.id + ')">Edit</button>' +
+        '<button class="btn btn-sm" onclick="deleteCandidate(' + cd.id + ')" ' +
+          'style="background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);">Delete</button>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="cand-detail-meta">' +
+      '<span class="job-status-badge ' + sc + '" style="font-size:11px;padding:2px 9px;">' + escHtml(cd.status) + '</span>' +
+      (cd.title   ? '<span>💼 ' + escHtml(cd.title)   + '</span>' : '') +
+      (cd.company ? '<span>🏢 ' + escHtml(cd.company) + '</span>' : '') +
+      '<span>Added ' + added + '</span>' +
+    '</div>' +
+
+    '<div class="cand-detail-section">' +
+      '<div class="detail-section-label">Linked Job</div>' +
+      (job
+        ? '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;cursor:pointer;" data-nav-job="' + job.id + '" onclick="navToJob(this.dataset.navJob)">' +
+            '<span style="font-size:16px;">💼</span>' +
+            '<div><div style="font-size:13px;font-weight:600;color:var(--text);">' + escHtml(job.title) + '</div>' +
+            '<div style="font-size:11px;color:var(--text4);">' + escHtml(job.status) + (job.location ? ' · ' + escHtml(job.location) : '') + '</div></div>' +
+            '<span style="margin-left:auto;font-size:11px;color:var(--accent2);">View →</span>' +
+          '</div>'
+        : '<div style="font-size:12px;color:var(--text4);">No job assigned</div>') +
+    '</div>' +
+
+    (cd.notes
+      ? '<div class="cand-detail-section">' +
+          '<div class="detail-section-label">Notes</div>' +
+          '<div class="detail-notes">' + escHtml(cd.notes) + '</div>' +
+        '</div>'
+      : '');
+}
+
+// ── Add / Edit modal ──────────────────────────────────────────
+function openAddCandidateModal() {
+  editingCandidateId = null;
+  var form = document.getElementById('cand-form');
+  if (form) form.reset();
+  populateCandJobDropdown(null);
+  var errEl = document.getElementById('cand-form-error');
+  if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+  var titleEl = document.getElementById('cand-modal-title');
+  if (titleEl) titleEl.textContent = 'Add Candidate';
+  var submitBtn = document.getElementById('cand-submit-btn');
+  if (submitBtn) submitBtn.textContent = 'Add Candidate';
+  showCandModal();
+}
+
+function openEditCandidate(id) {
+  var cd = candidates.find(function(x) { return x.id == id; });
+  if (!cd) return;
+  editingCandidateId = cd.id;
+
+  document.getElementById('cf-name').value    = cd.name    || '';
+  document.getElementById('cf-title').value   = cd.title   || '';
+  document.getElementById('cf-company').value = cd.company || '';
+  document.getElementById('cf-status').value  = cd.status  || 'New';
+  document.getElementById('cf-notes').value   = cd.notes   || '';
+  populateCandJobDropdown(cd.jobId);
+
+  var errEl = document.getElementById('cand-form-error');
+  if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+  var titleEl = document.getElementById('cand-modal-title');
+  if (titleEl) titleEl.textContent = 'Edit Candidate';
+  var submitBtn = document.getElementById('cand-submit-btn');
+  if (submitBtn) submitBtn.textContent = 'Save Changes';
+  showCandModal();
+}
+
+function populateCandJobDropdown(selectedJobId) {
+  var sel = document.getElementById('cf-job');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— No job assigned —</option>' +
+    jobs.map(function(j) {
+      var selected = j.id == selectedJobId ? ' selected' : '';
+      return '<option value="' + j.id + '"' + selected + '>' + escHtml(j.title) + (j.location ? ' · ' + escHtml(j.location) : '') + '</option>';
+    }).join('');
+}
+
+function showCandModal() {
+  var backdrop = document.getElementById('cand-modal-backdrop');
+  if (backdrop) {
+    backdrop.style.display = 'flex';
+    setTimeout(function() {
+      var nf = document.getElementById('cf-name');
+      if (nf) nf.focus();
+    }, 50);
+  }
+}
+
+function closeCandModal() {
+  var backdrop = document.getElementById('cand-modal-backdrop');
+  if (backdrop) backdrop.style.display = 'none';
+  editingCandidateId = null;
+}
+
+// Close on backdrop click or Escape (reuse job modal pattern)
+document.addEventListener('click', function(e) {
+  var backdrop = document.getElementById('cand-modal-backdrop');
+  if (e.target === backdrop) closeCandModal();
+});
+// Escape key already handled globally — extend it
+(function() {
+  var origKeydown = document.onkeydown;
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeCandModal();
+  });
+}());
+
+function submitCandForm(e) {
+  e.preventDefault();
+  var name   = (document.getElementById('cf-name').value || '').trim();
+  var errEl  = document.getElementById('cand-form-error');
+
+  if (!name) {
+    errEl.textContent = 'Full name is required.';
+    errEl.style.display = 'block';
+    document.getElementById('cf-name').focus();
+    return;
+  }
+
+  var jobIdRaw = document.getElementById('cf-job').value;
+  var jobId    = jobIdRaw ? (isNaN(jobIdRaw) ? jobIdRaw : Number(jobIdRaw)) : null;
+
+  if (editingCandidateId !== null) {
+    var idx = candidates.findIndex(function(x) { return x.id == editingCandidateId; });
+    if (idx >= 0) {
+      candidates[idx].name      = name;
+      candidates[idx].title     = document.getElementById('cf-title').value.trim();
+      candidates[idx].company   = document.getElementById('cf-company').value.trim();
+      candidates[idx].status    = document.getElementById('cf-status').value;
+      candidates[idx].jobId     = jobId;
+      candidates[idx].notes     = document.getElementById('cf-notes').value.trim();
+      candidates[idx].updatedAt = Date.now();
+    }
+    saveCandidates();
+    closeCandModal();
+    renderCandidates();
+    var updated = candidates.find(function(x) { return x.id == editingCandidateId; });
+    if (updated) renderCandidateDetail(updated);
+
+  } else {
+    var newCand = {
+      id:          uid(),
+      name:        name,
+      title:       document.getElementById('cf-title').value.trim(),
+      company:     document.getElementById('cf-company').value.trim(),
+      status:      document.getElementById('cf-status').value,
+      jobId:       jobId,
+      notes:       document.getElementById('cf-notes').value.trim(),
+      workspaceId: state.currentWorkspace,
+      createdAt:   Date.now(),
+    };
+    candidates.unshift(newCand);
+    saveCandidates();
+    closeCandModal();
+    selectedCandidateId = newCand.id;
+    renderCandidates();
+    renderCandidateDetail(newCand);
+  }
+}
+
+// ── Delete ────────────────────────────────────────────────────
+function deleteCandidate(id) {
+  var cd = candidates.find(function(x) { return x.id == id; });
+  if (!cd) return;
+  if (!confirm('Delete "' + cd.name + '"? This cannot be undone.')) return;
+
+  candidates = candidates.filter(function(x) { return x.id != id; });
+  saveCandidates();
+
+  if (selectedCandidateId == id) {
+    selectedCandidateId = null;
+    renderCandidateDetail(null);
+  }
+  renderCandidates();
+}
+
+// ── Wire topbar buttons ───────────────────────────────────────
+function topbarPrimaryAction() {
+  if (state.currentView === 'jobs')       openAddJob();
+  if (state.currentView === 'candidates') openAddCandidateModal();
+}
+function topbarSecondaryAction() {
+  // Upload Resume — Phase 4
+  if (state.currentView === 'candidates') alert('Resume upload coming in Phase 4');
+}
+
+// ── Helper: navigate to a specific job ──────────────────────
+function navToJob(jobId) {
+  nav('jobs');
+  setTimeout(function() { selectJob(jobId); }, 60);
+}
+
+// ── Entry point called by nav() ───────────────────────────────
+function renderCandidatesView() {
+  renderCandidates();
+  if (!selectedCandidateId) renderCandidateDetail(null);
 }
 
 document.addEventListener('DOMContentLoaded', init);
