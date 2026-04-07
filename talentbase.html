@@ -770,6 +770,19 @@ input:focus, select:focus, textarea:focus {
   background: rgba(239,68,68,.12);
   color: #f87171;
 }
+
+/* ── EXPERIENCE RISK CLASSES ───────────────────────── */
+.pipe-card.risk-critical {
+  border-color: rgba(239,68,68,.55) !important;
+  box-shadow: 0 0 14px rgba(239,68,68,.2) !important;
+}
+.pipe-card.risk-warning {
+  border-color: rgba(245,158,11,.45) !important;
+  box-shadow: 0 0 10px rgba(245,158,11,.12) !important;
+}
+.pipe-card.risk-healthy {
+  border-color: rgba(34,197,94,.25) !important;
+}
 </style>
 </head>
 
@@ -1011,6 +1024,22 @@ input:focus, select:focus, textarea:focus {
               </div>
             </div>
           </div>
+
+          <!-- Hiring Risks -->
+          <div style="margin-top:22px;">
+            <div class="section-header">
+              <div class="section-title">🚨 Hiring Risks</div>
+              <div class="section-sub" id="dash-risks-count"></div>
+            </div>
+            <div class="card" id="dash-hiring-risks" style="padding:8px 16px;">
+              <div class="empty-state" style="padding:24px 0;">
+                <div class="empty-state-icon" style="font-size:20px;">✓</div>
+                <div class="empty-state-title">No hiring risks</div>
+                <div class="empty-state-sub">All active candidates look healthy.</div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -1550,15 +1579,118 @@ function renderDashboard() {
   if (welcomeEl) welcomeEl.textContent = greet + name;
   if (dateEl)    dateEl.textContent    = days[now.getDay()] + ', ' + mos[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
 
-  // KPI placeholders — Phase 2 will wire live data
-  var kpiOpenJobs = document.getElementById('kpi-open-jobs');
-  var kpiPipeline = document.getElementById('kpi-pipeline');
-  var kpiHires    = document.getElementById('kpi-hires');
-  var kpiDays     = document.getElementById('kpi-days');
-  if (kpiOpenJobs) kpiOpenJobs.textContent = '0';
-  if (kpiPipeline) kpiPipeline.textContent = '$0';
-  if (kpiHires)    kpiHires.textContent    = '0';
-  if (kpiDays)     kpiDays.textContent     = '—';
+  // ── Live KPIs ──────────────────────────────────────────────────────────────
+  var openJobs    = jobs.filter(function(j) { return j.status === 'Open'; });
+  var filledJobs  = jobs.filter(function(j) { return j.status === 'Filled'; });
+  var activeCands = candidates.filter(function(cd) { return !['Hired','Rejected'].includes(cd.status); });
+  var hiredCands  = candidates.filter(function(cd) { return cd.status === 'Hired'; });
+  var offerCands  = candidates.filter(function(cd) { return cd.status === 'Offer'; });
+
+  // Avg days open across open jobs
+  var daysArr  = openJobs.map(function(j) { return j.createdAt ? (Date.now() - j.createdAt) / 86400000 : 0; });
+  var avgDays  = daysArr.length ? Math.round(daysArr.reduce(function(s,d){return s+d;},0)/daysArr.length) : 0;
+  var daysColor = avgDays > 60 ? 'var(--red)' : avgDays > 30 ? 'var(--amber)' : 'var(--green)';
+
+  var elOJ  = document.getElementById('kpi-open-jobs');
+  var elOJS = document.getElementById('kpi-open-jobs-sub');
+  var elPL  = document.getElementById('kpi-pipeline');
+  var elHR  = document.getElementById('kpi-hires');
+  var elHRS = document.getElementById('kpi-offers-sub');
+  var elDY  = document.getElementById('kpi-days');
+  var elDYS = document.getElementById('kpi-days-sub');
+
+  if (elOJ)  elOJ.textContent  = openJobs.length;
+  if (elOJS) elOJS.textContent = jobs.length + ' total · ' + filledJobs.length + ' filled';
+  if (elPL)  elPL.textContent  = activeCands.length + ' active';
+  if (elHR)  elHR.textContent  = hiredCands.length;
+  if (elHRS) elHRS.textContent = offerCands.length + ' offer' + (offerCands.length !== 1 ? 's' : '') + ' pending';
+  if (elDY)  { elDY.textContent = avgDays ? avgDays + 'd' : '—'; elDY.style.color = daysColor; }
+  if (elDYS) elDYS.textContent = openJobs.length ? openJobs.length + ' open req' + (openJobs.length !== 1 ? 's' : '') : 'No open reqs';
+
+  // ── Pipeline stages bar ──────────────────────────────────────────────────────
+  var psEl = document.getElementById('pipeline-stages');
+  if (psEl) {
+    var stages = ['New','Screening','Interview','Offer','Hired'];
+    var stageColors = { New:'var(--accent)', Screening:'var(--accent2)', Interview:'var(--amber)', Offer:'var(--purple)', Hired:'var(--green)' };
+    var total = candidates.length || 1;
+    if (!candidates.length) {
+      psEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">No candidates yet</div></div>';
+    } else {
+      psEl.innerHTML = stages.map(function(s) {
+        var n   = candidates.filter(function(cd) { return cd.status === s; }).length;
+        var pct = Math.round((n / total) * 100);
+        var col = stageColors[s] || 'var(--text4)';
+        return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">' +
+          '<div style="font-size:11px;color:var(--text4);width:68px;flex-shrink:0;">' + s + '</div>' +
+          '<div style="flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;">' +
+            '<div style="height:100%;width:' + pct + '%;background:' + col + ';border-radius:99px;transition:width .4s;"></div>' +
+          '</div>' +
+          '<div style="font-size:12px;font-weight:700;color:var(--text);width:20px;text-align:right;">' + n + '</div>' +
+        '</div>';
+      }).join('');
+    }
+  }
+
+  // ── Aging reqs ───────────────────────────────────────────────────────────────
+  var arEl = document.getElementById('aging-reqs');
+  if (arEl) {
+    var aging = openJobs.filter(function(j) {
+      return j.createdAt && (Date.now() - j.createdAt) / 86400000 > 30;
+    }).sort(function(a,b) { return (b.createdAt ? b.createdAt : 0) - (a.createdAt ? a.createdAt : 0); });
+
+    if (!aging.length) {
+      arEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">No aging reqs — all roles are fresh</div></div>';
+    } else {
+      arEl.innerHTML = aging.slice(0, 5).map(function(j) {
+        var d   = Math.floor((Date.now() - j.createdAt) / 86400000);
+        var col = d > 90 ? 'var(--red)' : d > 60 ? 'var(--amber)' : 'var(--text3)';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
+          '<div style="flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(j.title) + '</div>' +
+          '<div style="font-size:12px;font-weight:700;color:' + col + ';flex-shrink:0;">' + d + 'd</div>' +
+        '</div>';
+      }).join('');
+    }
+  }
+
+  // ── Needs action (stale candidates + offer pending) ──────────────────────────
+  var naEl = document.getElementById('needs-action-list');
+  if (naEl) {
+    var actions = [];
+    offerCands.forEach(function(cd) {
+      actions.push({ icon: '📝', label: cd.name, sub: 'Offer pending — follow up', urgent: true });
+    });
+    candidates.filter(function(cd) {
+      return !['Hired','Rejected'].includes(cd.status) && getDaysSince(cd.lastActivityAt || cd.createdAt) >= 2;
+    }).slice(0, 5).forEach(function(cd) {
+      actions.push({ icon: '⏱', label: cd.name, sub: 'Idle ' + getDaysSince(cd.lastActivityAt || cd.createdAt) + 'd — send update', urgent: false });
+    });
+
+    if (!actions.length) {
+      naEl.innerHTML = '<div class="empty-state" style="padding:32px 0;"><div class="empty-state-icon">✓</div><div class="empty-state-title">All clear</div><div class="empty-state-sub">No action items right now.</div></div>';
+    } else {
+      naEl.innerHTML = actions.slice(0, 6).map(function(a) {
+        var bc = a.urgent ? 'rgba(167,139,245,.2)' : 'rgba(255,255,255,.04)';
+        var bl = a.urgent ? 'var(--purple)' : 'var(--border2)';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:' + bc + ';border-left:3px solid ' + bl + ';border-radius:6px;margin-bottom:6px;">' +
+          '<span style="font-size:15px;">' + a.icon + '</span>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:13px;font-weight:600;color:var(--text);">' + escHtml(a.label) + '</div>' +
+            '<div style="font-size:11px;color:var(--text4);">' + escHtml(a.sub) + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+  }
+
+  // Render hiring risks alert panel
+  try { renderHiringRisks(); } catch(e) {}
+
+  // Update risks count badge
+  try {
+    var alerts = getAlerts();
+    var countEl = document.getElementById('dash-risks-count');
+    if (countEl) countEl.textContent = alerts.length ? alerts.length + ' at risk' : '';
+  } catch(e) {}
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2278,14 +2410,19 @@ function renderPipeline() {
           var isStale     = idleDays >= 2 && stage !== 'Hired';
           var contactDays = cd.firstContactAt && cd.createdAt ? Math.round((cd.firstContactAt - cd.createdAt) / 86400000) : null;
           var interviews  = cd.interviewCount || 0;
+          var cxScore    = calculateExperienceScore(cd);
+          var cxRisk     = getRiskLevel(cxScore);
+          var cxRiskColor = { critical: '#f87171', warning: '#fbbf24', healthy: '#4ade80' }[cxRisk];
+          var cxRiskLabel = { critical: '🚨', warning: '⚠️', healthy: '✓' }[cxRisk];
           // CX chips
           var cxChips = '';
           if (isStale)                   cxChips += '<span class="cx-chip cx-stale">' + idleDays + 'd idle</span>';
           else if (idleDays > 0)         cxChips += '<span class="cx-chip">' + idleDays + 'd ago</span>';
           if (contactDays !== null)       cxChips += '<span class="cx-chip">contacted ' + contactDays + 'd</span>';
           if (interviews > 0)             cxChips += '<span class="cx-chip">' + interviews + ' interview' + (interviews > 1 ? 's' : '') + '</span>';
-          return '<div class="pipe-card' + (isStale ? ' stale' : '') + '" style="--pipe-accent:' + stageColor + ';">' +
-            '<div class="pipe-card-top">' +
+          return '<div class="pipe-card risk-' + cxRisk + '" style="--pipe-accent:' + stageColor + ';">' +
+            '<div class="pipe-card-top" style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;">' +
+              '<div style="flex-shrink:0;font-size:11px;font-weight:800;color:' + cxRiskColor + ';margin-top:1px;">' + cxRiskLabel + ' ' + cxScore + '</div>' +
               '<div class="pipe-card-name">' + escHtml(cd.name) + '</div>' +
               '<div class="pipe-card-role">' + escHtml(cd.title || '') + '</div>' +
             '</div>' +
@@ -2368,6 +2505,111 @@ function calculateExperienceMetrics() {
     ? Math.round(hired.reduce(function(s, cd) { return s + cd.interviewCount; }, 0) / hired.length * 10) / 10
     : null;
   return { avgContactDays: avgContact, staleCount: stale.length, avgInterviews: avgInterviews };
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// EXPERIENCE SCORING + ALERTS
+// ═══════════════════════════════════════════════════════════
+
+function calculateExperienceScore(cd) {
+  var score = 100;
+  var now   = Date.now();
+  var daysSinceCreated  = cd.createdAt  ? (now - cd.createdAt)        / 86400000 : 0;
+  var daysSinceActivity = (cd.lastActivityAt || cd.createdAt)
+                          ? (now - (cd.lastActivityAt || cd.createdAt)) / 86400000
+                          : 0;
+
+  // No contact after 2 days
+  if (!cd.firstContactAt && daysSinceCreated > 2) score -= 30;
+
+  // Idle penalty
+  if (daysSinceActivity > 2) score -= 20;
+
+  // Too many interviews
+  if ((cd.interviewCount || 0) > 3) score -= ((cd.interviewCount - 3) * 10);
+
+  // Stuck in Interview stage
+  if (cd.status === 'Interview' && daysSinceActivity > 3) score -= 15;
+
+  return Math.max(score, 0);
+}
+
+function getRiskLevel(score) {
+  if (score < 50) return 'critical';
+  if (score < 75) return 'warning';
+  return 'healthy';
+}
+
+function getAlertReasons(cd) {
+  var reasons = [];
+  var now = Date.now();
+  var daysSinceCreated  = cd.createdAt  ? (now - cd.createdAt)        / 86400000 : 0;
+  var daysSinceActivity = (cd.lastActivityAt || cd.createdAt)
+                          ? (now - (cd.lastActivityAt || cd.createdAt)) / 86400000
+                          : 0;
+
+  if (!cd.firstContactAt && daysSinceCreated > 2)
+    reasons.push('No contact after ' + Math.floor(daysSinceCreated) + ' days');
+  if (daysSinceActivity > 2)
+    reasons.push('Idle for ' + Math.floor(daysSinceActivity) + ' days');
+  if ((cd.interviewCount || 0) > 3)
+    reasons.push('Too many interviews (' + cd.interviewCount + ')');
+  if (cd.status === 'Interview' && daysSinceActivity > 3)
+    reasons.push('Stuck in Interview stage');
+  return reasons;
+}
+
+function getAlerts() {
+  return candidates
+    .filter(function(cd) {
+      return cd.status !== 'Hired' && cd.status !== 'Rejected';
+    })
+    .map(function(cd) {
+      return { cd: cd, score: calculateExperienceScore(cd), reasons: getAlertReasons(cd) };
+    })
+    .filter(function(item) { return item.score < 75; })
+    .sort(function(a, b) { return a.score - b.score; });
+}
+
+// ── Render alert panel on dashboard ──────────────────────────────────────────
+function gotoRiskView() { nav('pipeline'); }
+
+function renderHiringRisks() {
+  var el = document.getElementById('dash-hiring-risks');
+  if (!el) return;
+
+  var alerts = getAlerts();
+  if (!alerts.length) {
+    el.innerHTML =
+      '<div class="empty-state" style="padding:24px 0;">' +
+        '<div class="empty-state-icon" style="font-size:20px;">✓</div>' +
+        '<div class="empty-state-title">No hiring risks</div>' +
+        '<div class="empty-state-sub">All active candidates look healthy.</div>' +
+      '</div>';
+    return;
+  }
+
+  el.innerHTML = alerts.slice(0, 8).map(function(item) {
+    var cd   = item.cd;
+    var risk = getRiskLevel(item.score);
+    var riskColor = { critical: 'var(--red)', warning: 'var(--amber)', healthy: 'var(--green)' }[risk];
+    var riskLabel = { critical: '🚨 Critical', warning: '⚠️ At Risk', healthy: '✓ Healthy' }[risk];
+
+    return '<div style="display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.05);">' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">' +
+          '<span style="font-size:13px;font-weight:600;color:var(--text);">' + escHtml(cd.name) + '</span>' +
+          '<span style="font-size:10px;font-weight:700;color:' + riskColor + ';">' + riskLabel + '</span>' +
+        '</div>' +
+        '<div style="font-size:11px;color:var(--text4);">' + escHtml(item.reasons[0] || '') + '</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
+        '<span style="font-size:12px;font-weight:800;color:' + riskColor + ';">' + item.score + '</span>' +
+        '<button onclick="gotoRiskView()" class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px;">View</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
 
 document.addEventListener('DOMContentLoaded', init);
