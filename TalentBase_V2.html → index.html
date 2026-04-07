@@ -493,6 +493,101 @@ html, body { height: 100%; overflow: hidden; }
   border-color: rgba(59,130,246,.5);
   box-shadow: 0 0 0 2px rgba(59,130,246,.12);
 }
+
+/* ── PIPELINE ───────────────────────────────────── */
+.pipe-col {
+  flex: 0 0 220px;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+}
+.pipe-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 10px;
+  flex-shrink: 0;
+}
+.pipe-col-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text4);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.pipe-col-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.pipe-col-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text4);
+  background: rgba(255,255,255,.07);
+  padding: 1px 7px;
+  border-radius: 99px;
+  min-width: 20px;
+  text-align: center;
+}
+.pipe-col-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 0 2px 8px;
+  min-height: 80px;
+}
+.pipe-col-body::-webkit-scrollbar { width: 3px; }
+.pipe-col-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+.pipe-empty {
+  padding: 16px 10px;
+  border: 1px dashed rgba(255,255,255,.08);
+  border-radius: 9px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text4);
+}
+
+.pipe-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 11px 12px;
+  transition: border-color .12s, box-shadow .12s;
+}
+.pipe-card:hover {
+  border-color: var(--border2);
+  box-shadow: 0 3px 12px rgba(0,0,0,.3);
+}
+.pipe-card-name    { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.pipe-card-sub     { font-size: 11px; color: var(--text4); margin-bottom: 6px; }
+.pipe-card-job     { font-size: 10px; color: var(--accent2); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pipe-advance-btn {
+  width: 100%;
+  padding: 5px 0;
+  background: rgba(59,130,246,.08);
+  border: 1px solid rgba(59,130,246,.2);
+  border-radius: 6px;
+  color: var(--accent2);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background .1s;
+}
+.pipe-advance-btn:hover { background: rgba(59,130,246,.16); }
+.pipe-advance-btn:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
 </style>
 </head>
 
@@ -928,56 +1023,26 @@ html, body { height: 100%; overflow: hidden; }
 
       <!-- ── PIPELINE ────────────────────────── -->
       <section class="view" id="v-pipeline">
-        <div class="view-scroll" style="padding-bottom:0;">
-          <div class="page-header">
-            <div class="page-title">Pipeline</div>
-            <div class="page-sub">Kanban board — track candidates through hiring stages</div>
+        <div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+
+          <!-- Toolbar: job filter -->
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 24px;border-bottom:1px solid var(--border);flex-shrink:0;">
+            <label style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;">Filter by job</label>
+            <select id="pipe-job-filter" onchange="renderPipeline()"
+              style="padding:6px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;outline:none;cursor:pointer;min-width:200px;">
+              <option value="">All Jobs</option>
+            </select>
+            <div id="pipe-summary" style="margin-left:auto;font-size:11px;color:var(--text4);"></div>
           </div>
-          <!-- Pipeline board — horizontal scroll -->
-          <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:24px;align-items:flex-start;">
-            <div style="flex:0 0 220px;" id="col-new">
-              <div style="padding:8px 12px;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-                <span style="width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block;"></span> New
-              </div>
-              <div style="min-height:60px;" class="pipe-col-body" id="col-new-body">
-                <div style="padding:12px;border:1px dashed var(--border);border-radius:var(--radius);text-align:center;font-size:11px;color:var(--text4);">No candidates</div>
-              </div>
-            </div>
-            <div style="flex:0 0 220px;">
-              <div style="padding:8px 12px;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-                <span style="width:7px;height:7px;border-radius:50%;background:var(--accent2);display:inline-block;"></span> Screening
-              </div>
-              <div style="min-height:60px;" class="pipe-col-body">
-                <div style="padding:12px;border:1px dashed var(--border);border-radius:var(--radius);text-align:center;font-size:11px;color:var(--text4);">No candidates</div>
-              </div>
-            </div>
-            <div style="flex:0 0 220px;">
-              <div style="padding:8px 12px;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-                <span style="width:7px;height:7px;border-radius:50%;background:var(--amber);display:inline-block;"></span> Interviewing
-              </div>
-              <div style="min-height:60px;" class="pipe-col-body">
-                <div style="padding:12px;border:1px dashed var(--border);border-radius:var(--radius);text-align:center;font-size:11px;color:var(--text4);">No candidates</div>
-              </div>
-            </div>
-            <div style="flex:0 0 220px;">
-              <div style="padding:8px 12px;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-                <span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;"></span> Offer
-              </div>
-              <div style="min-height:60px;" class="pipe-col-body">
-                <div style="padding:12px;border:1px dashed var(--border);border-radius:var(--radius);text-align:center;font-size:11px;color:var(--text4);">No candidates</div>
-              </div>
-            </div>
-            <div style="flex:0 0 220px;">
-              <div style="padding:8px 12px;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-                <span style="width:7px;height:7px;border-radius:50%;background:#a78bf5;display:inline-block;"></span> Hired
-              </div>
-              <div style="min-height:60px;" class="pipe-col-body">
-                <div style="padding:12px;border:1px dashed var(--border);border-radius:var(--radius);text-align:center;font-size:11px;color:var(--text4);">No candidates</div>
-              </div>
-            </div>
+
+          <!-- Kanban board -->
+          <div id="pipe-board" style="display:flex;flex-direction:row;gap:12px;overflow-x:auto;overflow-y:hidden;padding:20px 24px 24px;flex:1;align-items:flex-start;">
+            <!-- Populated by renderPipeline() -->
           </div>
+
         </div>
       </section>
+
 
       <!-- ── AI MATCH ────────────────────────── -->
       <section class="view" id="v-match">
@@ -1193,6 +1258,7 @@ function nav(viewId) {
   if (viewId === 'settings')     renderSettings();
   if (viewId === 'jobs')         renderJobs();
   if (viewId === 'candidates')   renderCandidatesView();
+  if (viewId === 'pipeline')     renderPipeline();
 }
 
 function topbarSecondaryAction() {
@@ -1949,6 +2015,114 @@ function navToJob(jobId) {
 function renderCandidatesView() {
   renderCandidates();
   if (!selectedCandidateId) renderCandidateDetail(null);
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// PIPELINE SYSTEM
+// ═══════════════════════════════════════════════════════════
+
+var PIPE_STAGES = ['New', 'Screening', 'Interview', 'Offer', 'Hired'];
+
+var PIPE_STAGE_COLORS = {
+  'New':        'var(--accent)',
+  'Screening':  'var(--accent2)',
+  'Interview':  'var(--amber)',
+  'Offer':      'var(--green)',
+  'Hired':      'var(--purple)',
+};
+
+// ── Populate job filter dropdown ──────────────────────────────
+function populatePipeJobFilter() {
+  var sel = document.getElementById('pipe-job-filter');
+  if (!sel) return;
+  var current = sel.value;
+  sel.innerHTML = '<option value="">All Jobs</option>' +
+    jobs.map(function(j) {
+      return '<option value="' + j.id + '"' + (j.id == current ? ' selected' : '') + '>' +
+        escHtml(j.title) + (j.location ? ' — ' + escHtml(j.location) : '') + '</option>';
+    }).join('');
+}
+
+// ── Main render ───────────────────────────────────────────────
+function renderPipeline() {
+  populatePipeJobFilter();
+
+  var board = document.getElementById('pipe-board');
+  if (!board) return;
+
+  var jobFilter = (document.getElementById('pipe-job-filter') || {}).value || '';
+
+  // Filter candidates by job if selected
+  var filtered = jobFilter
+    ? candidates.filter(function(cd) { return String(cd.jobId) === String(jobFilter); })
+    : candidates;
+
+  // Summary
+  var summaryEl = document.getElementById('pipe-summary');
+  if (summaryEl) {
+    var total = filtered.length;
+    var jobName = jobFilter ? (jobs.find(function(j){ return String(j.id) === String(jobFilter); }) || {}).title : null;
+    summaryEl.textContent = total + ' candidate' + (total !== 1 ? 's' : '') +
+      (jobName ? ' on ' + jobName : ' across all jobs');
+  }
+
+  // Build columns
+  board.innerHTML = PIPE_STAGES.map(function(stage) {
+    var stageCands = filtered.filter(function(cd) { return cd.status === stage; });
+    var color      = PIPE_STAGE_COLORS[stage] || 'var(--text4)';
+    var isLast     = stage === 'Hired';
+
+    var cardsHtml = stageCands.length
+      ? stageCands.map(function(cd) {
+          var job     = jobs.find(function(j) { return String(j.id) === String(cd.jobId); });
+          var jobName = job ? job.title : null;
+
+          return '<div class="pipe-card">' +
+            '<div class="pipe-card-name">' + escHtml(cd.name) + '</div>' +
+            '<div class="pipe-card-sub">' +
+              (cd.title ? escHtml(cd.title) : '') +
+              (cd.title && cd.company ? ' · ' : '') +
+              (cd.company ? escHtml(cd.company) : '') +
+            '</div>' +
+            (jobName ? '<div class="pipe-card-job">📋 ' + escHtml(jobName) + '</div>' : '') +
+            '<button class="pipe-advance-btn"' +
+              (isLast ? ' disabled title="Already at final stage"' : ' onclick="moveCandidate(' + cd.id + ')"') +
+            '>' +
+              (isLast ? '✓ Hired' : 'Advance →') +
+            '</button>' +
+          '</div>';
+        }).join('')
+      : '<div class="pipe-empty">No candidates</div>';
+
+    return '<div class="pipe-col">' +
+      '<div class="pipe-col-header">' +
+        '<div class="pipe-col-label">' +
+          '<span class="pipe-col-dot" style="background:' + color + ';"></span>' +
+          escHtml(stage) +
+        '</div>' +
+        '<span class="pipe-col-count">' + stageCands.length + '</span>' +
+      '</div>' +
+      '<div class="pipe-col-body">' + cardsHtml + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ── Move candidate to next stage ──────────────────────────────
+function moveCandidate(id) {
+  var cd = candidates.find(function(x) { return String(x.id) === String(id); });
+  if (!cd) return;
+
+  var currentIndex = PIPE_STAGES.indexOf(cd.status);
+  if (currentIndex < 0) currentIndex = 0;
+
+  if (currentIndex < PIPE_STAGES.length - 1) {
+    cd.status = PIPE_STAGES[currentIndex + 1];
+    saveCandidates();
+    renderPipeline();
+    // Also refresh candidates list badge
+    try { renderCandidates(); } catch(e) {}
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
