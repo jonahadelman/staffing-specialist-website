@@ -5900,7 +5900,23 @@ function _renderCandDetail(c){
         <div style="flex:1;min-width:0;">
           <div style="font-size:15px;font-weight:700;letter-spacing:-.2px;">${esc(c.first)} ${esc(c.last)}</div>
           <div style="font-size:11.5px;color:var(--text3);margin-top:1px;">${esc(c.title||'')}${c.company?' · '+esc(c.company):''}</div>
-          ${(()=>{const na=getNextAction(c);const crm=getCRMFields(c);const col=_naUrgency(c);return`<div style="margin-top:6px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);">
+          ${(()=>{const na=getNextAction(c);const crm=getCRMFields(c);const col=_naUrgency(c);
+  // Stage timeline map
+  const STAGE_NEXT={'New':'Initial outreach & qualification call','Screening':'Phone screen scheduled','Interviewing':'Panel interview & feedback collection','Offer':'Offer letter preparation & delivery','Hired':'Onboarding & start date confirmation','On Hold':'Re-engagement when timing aligns','Rejected':'Position closed for this candidate'};
+  const STAGE_TL={'New':'24–48 hours','Screening':'3–5 business days','Interviewing':'5–7 business days','Offer':'24–48 hours','Hired':'Per start date','On Hold':'TBD','Rejected':'N/A'};
+  const nextStep=STAGE_NEXT[c.status]||'Review in progress';
+  const timeline=STAGE_TL[c.status]||'TBD';
+  const daysSinceLast=crm.daysIdle||0;
+  const slaBreached=(['Screening','Interviewing','Offer'].includes(c.status)&&daysSinceLast>=2);
+  return`<div style="margin-top:8px;padding:12px 14px;background:var(--bg3);border:1px solid ${slaBreached?'var(--amber)':'var(--border)'};border-left:3px solid ${slaBreached?'var(--amber)':'var(--accent)'};border-radius:8px;">
+        <div style="font-size:9px;font-weight:800;color:${slaBreached?'var(--amber)':'var(--text4)'};text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">${slaBreached?'⚠️ SLA BREACHED — ACTION REQUIRED':'📍 WHERE THEY STAND'}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <div><div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Current Stage</div><div style="font-size:12px;font-weight:700;color:var(--text);">${esc(c.status)}</div></div>
+          <div><div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Next Step</div><div style="font-size:12px;color:var(--text2);">${esc(nextStep)}</div></div>
+          <div><div style="font-size:9px;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Expected Timeline</div><div style="font-size:12px;color:${slaBreached?'var(--amber)':'var(--text2)'};">${slaBreached?daysSinceLast+'d idle — follow up now':esc(timeline)}</div></div>
+        </div>
+      </div>
+      <div style="margin-top:6px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
               <span style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;">Next Action</span>
               <div style="display:flex;align-items:center;gap:5px;">${urgencyBadge(na.urgency)}${tempDot(crm.temperature)}<span style="font-size:10px;color:var(--text4);">${crm.temperature} · ${crm.engagementScore}% engaged</span></div>
@@ -5918,11 +5934,13 @@ function _renderCandDetail(c){
         <div style="background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:5px 10px;text-align:center;"><div style="font-size:15px;font-weight:700;color:var(--text);letter-spacing:-1px;">${(c.activity||[]).filter(a=>a.text.toLowerCase().includes('submit')||a.text.toLowerCase().includes('submission')).length||0}</div><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;">Submissions</div></div>
         ${c.source?`<div style="background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:5px 10px;text-align:center;"><div style="font-size:11px;font-weight:600;color:var(--text);">${esc(c.source)}</div><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;">Source</div></div>`:''}
         ${c.location?`<div style="background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:5px 10px;"><div style="font-size:11px;color:var(--text3);">📍 ${esc(c.location)}</div></div>`:''}
+        \${(function(){var cx=getCandExperienceScore(c);return '<div style="background:var(--bg4);border:1px solid '+(cx.color.replace('var(--green)','rgba(34,197,94,.25)').replace('var(--amber)','rgba(245,158,11,.25)').replace('var(--red)','rgba(239,68,68,.25)'))+';border-radius:var(--r-sm);padding:5px 10px;text-align:center;"><div style="font-size:15px;font-weight:700;color:'+cx.color+';letter-spacing:-1px;">'+cx.score+'</div><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;">CX Score</div></div>';}())}
       </div>
       <!-- Row 3: Action buttons -->
       <div style="display:flex;gap:6px;width:100%;">
         <button class="btn btn-primary btn-sm" style="flex:1;" onclick="openStageModal('${c.id}')">Submit to Job ↑</button>
         <button class="btn btn-ghost btn-sm" onclick="openEditCand('${c.id}')">Edit</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--accent2);font-weight:600;" onclick="openStatusUpdateEmail('${c.id}')" title="Generate status update email for candidate">📬 Send Update</button>
         <button class="btn btn-ghost btn-sm" onclick="openGmailForCand('${c.id}','outreach')" style="color:#ea4335;border-color:rgba(234,67,53,.3);">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
         Gmail
@@ -13722,6 +13740,98 @@ async function showMatchAlertAI(type, matches, contextName) {
   } catch(e) {
     console.warn('AI match reason failed:', e.message);
   }
+}
+
+// ═══ CANDIDATE EXPERIENCE LAYER ══════════════════════════════════════════════
+
+var STAGE_NEXT_STEP = {
+  'New':          'Initial outreach and qualification call',
+  'Screening':    'Phone screen and skills discussion',
+  'Interviewing': 'Panel interview and hiring team feedback',
+  'Offer':        'Offer letter review and decision',
+  'Hired':        'Onboarding details and start date confirmation',
+  'On Hold':      'Re-engagement when timing aligns',
+  'Rejected':     'Position closed',
+};
+
+var STAGE_TIMELINE = {
+  'New':          '24–48 hours',
+  'Screening':    '3–5 business days',
+  'Interviewing': '5–7 business days',
+  'Offer':        '24–48 hours',
+  'Hired':        'Per your start date',
+  'On Hold':      'We will reach out when the timing is right',
+  'Rejected':     'N/A',
+};
+
+function openStatusUpdateEmail(candId) {
+  var cc = cands.find(function(x){ return x.id === candId; });
+  if (!cc) return;
+
+  var firstName  = cc.first || cc.name || 'there';
+  var stage      = cc.status || 'review';
+  var nextStep   = STAGE_NEXT_STEP[stage] || 'next steps to be confirmed';
+  var timeline   = STAGE_TIMELINE[stage]  || 'shortly';
+  var job        = cc.jobId ? (jobs.find(function(j){ return j.id===cc.jobId; })||{}).title || 'the role' : 'the role';
+  var recruiter  = currentUser.name || 'The Staffing Specialist Team';
+
+  var subject = 'Update on Your Application — ' + job;
+  var body = 'Hi ' + firstName + ',\n\n' +
+    'I wanted to reach out with a quick update on your candidacy for ' + job + '.\n\n' +
+    'Current Stage: ' + stage + '\n' +
+    'Next Step: ' + nextStep + '\n' +
+    'Expected Timeline: ' + timeline + '\n\n' +
+    'I will be in close contact and will make sure you are never left wondering where things stand. ' +
+    'If you have any questions in the meantime, please reach out.\n\n' +
+    'Best,\n' + recruiter + '\nThe Staffing Specialist\njonah@thestaffingspecialist.com\n603.401.2901';
+
+  // Open Gmail with pre-filled email
+  var to   = cc.email || '';
+  var gUrl = 'https://mail.google.com/mail/?view=cm&fs=1' +
+    '&to='      + encodeURIComponent(to) +
+    '&su='      + encodeURIComponent(subject) +
+    '&body='    + encodeURIComponent(body);
+
+  window.open(gUrl, '_blank');
+
+  // Log activity
+  if (!cc.activity) cc.activity = [];
+  cc.activity.push({ ts: Date.now(), text: 'Status update email sent (' + stage + ')', type: 'email' });
+  cc.lastActivity = Date.now();
+  saveCands();
+}
+
+function getCandExperienceScore(cc) {
+  // Score 0-100 based on: response speed, stage progression, communication
+  var score = 100;
+  var breakdown = [];
+  var now = Date.now();
+  var DAY = 86400000;
+
+  // Response time
+  var lastAct = cc.lastActivity || cc.created || now;
+  var idle = (now - lastAct) / DAY;
+  if (idle > 7)       { score -= 30; breakdown.push('7+ days no contact (-30)'); }
+  else if (idle > 3)  { score -= 15; breakdown.push('3+ days no contact (-15)'); }
+  else if (idle > 1)  { score -= 5;  breakdown.push('1+ day no contact (-5)'); }
+  else                { breakdown.push('Recent contact (+0)'); }
+
+  // Activity volume
+  var acts = (cc.activity||[]).length;
+  if (acts >= 5) breakdown.push('Active engagement (+0)');
+  else if (acts === 0) { score -= 20; breakdown.push('No activity logged (-20)'); }
+
+  // Stage progression speed
+  var created = cc.created || now;
+  var ageDays = (now - created) / DAY;
+  if (['New','Screening'].includes(cc.status) && ageDays > 14) {
+    score -= 10; breakdown.push('Stalled in early stage (-10)');
+  }
+
+  score = Math.max(0, Math.min(100, score));
+  var color = score >= 75 ? 'var(--green)' : score >= 50 ? 'var(--amber)' : 'var(--red)';
+  var label = score >= 75 ? 'Strong' : score >= 50 ? 'At Risk' : 'Poor';
+  return { score: score, color: color, label: label, breakdown: breakdown };
 }
 
 document.addEventListener('DOMContentLoaded', function(){ initApp(); });
