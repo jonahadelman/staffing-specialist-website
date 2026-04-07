@@ -980,17 +980,12 @@ input:focus, select:focus, textarea:focus {
             <div style="font-size:12px;color:var(--text4);margin-top:3px;" id="dash-date"></div>
           </div>
 
-          <!-- KPI row -->
-          <div class="kpi-grid" id="kpi-grid">
+          <!-- KPI row — 3 cards -->
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;" id="kpi-grid">
             <div class="kpi-card" style="border-left:3px solid var(--accent2);">
               <div class="kpi-label">Open Jobs</div>
               <div class="kpi-value" style="color:var(--accent2);" id="kpi-open-jobs">—</div>
               <div class="kpi-sub" id="kpi-open-jobs-sub">No jobs yet</div>
-            </div>
-            <div class="kpi-card" style="border-left:3px solid var(--teal);">
-              <div class="kpi-label">Pipeline Value</div>
-              <div class="kpi-value" style="color:var(--teal);" id="kpi-pipeline">—</div>
-              <div class="kpi-sub">Probability-weighted</div>
             </div>
             <div class="kpi-card" style="border-left:3px solid var(--green);">
               <div class="kpi-label">Hires YTD</div>
@@ -998,28 +993,22 @@ input:focus, select:focus, textarea:focus {
               <div class="kpi-sub" id="kpi-offers-sub">— offers pending</div>
             </div>
             <div class="kpi-card" style="border-left:3px solid var(--amber);">
-              <div class="kpi-label">Avg Days Open</div>
+              <div class="kpi-label">Avg Time to Fill</div>
               <div class="kpi-value" style="color:var(--amber);" id="kpi-days">—</div>
               <div class="kpi-sub" id="kpi-days-sub">Across open reqs</div>
             </div>
           </div>
 
-          <!-- Needs Action -->
+          <!-- Needs Action — activity board -->
           <div style="margin-bottom:22px;">
             <div class="section-header">
               <div class="section-title">⚡ Needs Action</div>
               <div class="section-sub" id="needs-action-count"></div>
             </div>
-            <div class="card" id="needs-action-list">
-              <div class="empty-state" style="padding:32px 0;">
-                <div class="empty-state-icon">✓</div>
-                <div class="empty-state-title">All clear</div>
-                <div class="empty-state-sub">No action items right now.</div>
-              </div>
-            </div>
+            <div class="card" id="needs-action-list" style="padding:6px 8px;"></div>
           </div>
 
-          <!-- Row 3: Pipeline + Aging -->
+          <!-- Pipeline Stages + Aging Reqs -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             <div>
               <div class="section-header">
@@ -1039,42 +1028,6 @@ input:focus, select:focus, textarea:focus {
                 <div class="empty-state" style="padding:24px 0;">
                   <div class="empty-state-sub">No aging reqs</div>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- AI Task Queue -->
-          <div style="margin-top:22px;">
-            <div class="section-header">
-              <div class="section-title">🤖 AI Task Queue</div>
-              <div id="dash-ai-nudge" style="display:none;font-size:11px;font-weight:700;color:var(--red);background:rgba(239,68,68,.1);padding:3px 10px;border-radius:99px;border:1px solid rgba(239,68,68,.25);"></div>
-            </div>
-            <div class="card" id="dash-ai-tasks" style="padding:8px 8px 4px;">
-              <div style="font-size:12px;color:var(--text4);padding:12px 8px;">Generating tasks...</div>
-            </div>
-          </div>
-
-          <!-- AI Insights -->
-          <div style="margin-top:22px;">
-            <div class="section-header">
-              <div class="section-title">⚡ AI Insights</div>
-            </div>
-            <div class="card" id="dash-ai-insights" style="padding:8px 16px 4px;">
-              <div style="font-size:12px;color:var(--text4);padding:12px 0;">Loading insights...</div>
-            </div>
-          </div>
-
-          <!-- Hiring Risks -->
-          <div style="margin-top:22px;">
-            <div class="section-header">
-              <div class="section-title">🚨 Hiring Risks</div>
-              <div class="section-sub" id="dash-risks-count"></div>
-            </div>
-            <div class="card" id="dash-hiring-risks" style="padding:8px 16px;">
-              <div class="empty-state" style="padding:24px 0;">
-                <div class="empty-state-icon" style="font-size:20px;">✓</div>
-                <div class="empty-state-title">No hiring risks</div>
-                <div class="empty-state-sub">All active candidates look healthy.</div>
               </div>
             </div>
           </div>
@@ -1630,48 +1583,40 @@ function loadApiKey() {
 // ═══════════════════════════════════════════════════════════
 
 function renderDashboard() {
-  // Greeting + date
   var now   = new Date();
   var hours = now.getHours();
   var greet = hours < 12 ? 'Good morning' : hours < 17 ? 'Good afternoon' : 'Good evening';
   var name  = state.currentUser ? ', ' + state.currentUser.name.split(' ')[0] : '';
   var days  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var mos   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
   var welcomeEl = document.getElementById('dash-welcome');
   var dateEl    = document.getElementById('dash-date');
   if (welcomeEl) welcomeEl.textContent = greet + name;
   if (dateEl)    dateEl.textContent    = days[now.getDay()] + ', ' + mos[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
 
-  // ── Live KPIs ──────────────────────────────────────────────────────────────
-  var openJobs    = jobs.filter(function(j) { return j.status === 'Open'; });
-  var filledJobs  = jobs.filter(function(j) { return j.status === 'Filled'; });
-  var activeCands = candidates.filter(function(cd) { return !['Hired','Rejected'].includes(cd.status); });
-  var hiredCands  = candidates.filter(function(cd) { return cd.status === 'Hired'; });
-  var offerCands  = candidates.filter(function(cd) { return cd.status === 'Offer'; });
-
-  // Avg days open across open jobs
-  var daysArr  = openJobs.map(function(j) { return j.createdAt ? (Date.now() - j.createdAt) / 86400000 : 0; });
-  var avgDays  = daysArr.length ? Math.round(daysArr.reduce(function(s,d){return s+d;},0)/daysArr.length) : 0;
-  var daysColor = avgDays > 60 ? 'var(--red)' : avgDays > 30 ? 'var(--amber)' : 'var(--green)';
+  var openJobs   = jobs.filter(function(j) { return j.status === 'Open'; });
+  var filledJobs = jobs.filter(function(j) { return j.status === 'Filled'; });
+  var hiredCands = candidates.filter(function(cd) { return cd.status === 'Hired'; });
+  var offerCands = candidates.filter(function(cd) { return cd.status === 'Offer'; });
+  var daysArr    = openJobs.map(function(j) { return j.createdAt ? (Date.now() - j.createdAt) / 86400000 : 0; });
+  var avgDays    = daysArr.length ? Math.round(daysArr.reduce(function(s,d){return s+d;},0)/daysArr.length) : 0;
+  var daysColor  = avgDays > 60 ? 'var(--red)' : avgDays > 30 ? 'var(--amber)' : 'var(--green)';
 
   var elOJ  = document.getElementById('kpi-open-jobs');
   var elOJS = document.getElementById('kpi-open-jobs-sub');
-  var elPL  = document.getElementById('kpi-pipeline');
   var elHR  = document.getElementById('kpi-hires');
   var elHRS = document.getElementById('kpi-offers-sub');
   var elDY  = document.getElementById('kpi-days');
   var elDYS = document.getElementById('kpi-days-sub');
-
   if (elOJ)  elOJ.textContent  = openJobs.length;
   if (elOJS) elOJS.textContent = jobs.length + ' total · ' + filledJobs.length + ' filled';
-  if (elPL)  elPL.textContent  = activeCands.length + ' active';
   if (elHR)  elHR.textContent  = hiredCands.length;
   if (elHRS) elHRS.textContent = offerCands.length + ' offer' + (offerCands.length !== 1 ? 's' : '') + ' pending';
   if (elDY)  { elDY.textContent = avgDays ? avgDays + 'd' : '—'; elDY.style.color = daysColor; }
   if (elDYS) elDYS.textContent = openJobs.length ? openJobs.length + ' open req' + (openJobs.length !== 1 ? 's' : '') : 'No open reqs';
 
-  // ── Pipeline stages bar ──────────────────────────────────────────────────────
+  renderActivityBoard();
+
   var psEl = document.getElementById('pipeline-stages');
   if (psEl) {
     var stages = ['New','Screening','Interview','Offer','Hired'];
@@ -1695,70 +1640,27 @@ function renderDashboard() {
     }
   }
 
-  // ── Aging reqs ───────────────────────────────────────────────────────────────
   var arEl = document.getElementById('aging-reqs');
   if (arEl) {
     var aging = openJobs.filter(function(j) {
-      return j.createdAt && (Date.now() - j.createdAt) / 86400000 > 30;
-    }).sort(function(a,b) { return (b.createdAt ? b.createdAt : 0) - (a.createdAt ? a.createdAt : 0); });
-
+      return j.createdAt && (Date.now() - j.createdAt) / 86400000 > 20;
+    }).sort(function(a,b) { return a.createdAt - b.createdAt; });
     if (!aging.length) {
-      arEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">No aging reqs — all roles are fresh</div></div>';
+      arEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">All roles are fresh</div></div>';
     } else {
       arEl.innerHTML = aging.slice(0, 5).map(function(j) {
         var d   = Math.floor((Date.now() - j.createdAt) / 86400000);
-        var col = d > 90 ? 'var(--red)' : d > 60 ? 'var(--amber)' : 'var(--text3)';
-        return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
+        var col = d > 60 ? 'var(--red)' : d > 30 ? 'var(--amber)' : 'var(--text3)';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
           '<div style="flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(j.title) + '</div>' +
+          (j.location ? '<div style="font-size:11px;color:var(--text4);flex-shrink:0;margin-right:8px;">' + escHtml(j.location) + '</div>' : '') +
           '<div style="font-size:12px;font-weight:700;color:' + col + ';flex-shrink:0;">' + d + 'd</div>' +
         '</div>';
       }).join('');
     }
   }
-
-  // ── Needs action (stale candidates + offer pending) ──────────────────────────
-  var naEl = document.getElementById('needs-action-list');
-  if (naEl) {
-    var actions = [];
-    offerCands.forEach(function(cd) {
-      actions.push({ icon: '📝', label: cd.name, sub: 'Offer pending — follow up', urgent: true });
-    });
-    candidates.filter(function(cd) {
-      return !['Hired','Rejected'].includes(cd.status) && getDaysSince(cd.lastActivityAt || cd.createdAt) >= 2;
-    }).slice(0, 5).forEach(function(cd) {
-      actions.push({ icon: '⏱', label: cd.name, sub: 'Idle ' + getDaysSince(cd.lastActivityAt || cd.createdAt) + 'd — send update', urgent: false });
-    });
-
-    if (!actions.length) {
-      naEl.innerHTML = '<div class="empty-state" style="padding:32px 0;"><div class="empty-state-icon">✓</div><div class="empty-state-title">All clear</div><div class="empty-state-sub">No action items right now.</div></div>';
-    } else {
-      naEl.innerHTML = actions.slice(0, 6).map(function(a) {
-        var bc = a.urgent ? 'rgba(167,139,245,.2)' : 'rgba(255,255,255,.04)';
-        var bl = a.urgent ? 'var(--purple)' : 'var(--border2)';
-        return '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:' + bc + ';border-left:3px solid ' + bl + ';border-radius:6px;margin-bottom:6px;">' +
-          '<span style="font-size:15px;">' + a.icon + '</span>' +
-          '<div style="flex:1;min-width:0;">' +
-            '<div style="font-size:13px;font-weight:600;color:var(--text);">' + escHtml(a.label) + '</div>' +
-            '<div style="font-size:11px;color:var(--text4);">' + escHtml(a.sub) + '</div>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-    }
-  }
-
-  // Render AI task queue, insights + hiring risks panels
-  try { renderAITasks(); } catch(e) {}
-  try { renderAIInsights(); } catch(e) {}
-  // Render hiring risks alert panel
-  try { renderHiringRisks(); } catch(e) {}
-
-  // Update risks count badge
-  try {
-    var alerts = getAlerts();
-    var countEl = document.getElementById('dash-risks-count');
-    if (countEl) countEl.textContent = alerts.length ? alerts.length + ' at risk' : '';
-  } catch(e) {}
 }
+
 
 // ═══════════════════════════════════════════════════════════
 // SETTINGS RENDER
@@ -1783,6 +1685,8 @@ function renderSettings() {
 function init() {
   loadJobs();
   loadCandidates();
+  loadActivityBoard();
+  seedDataIfEmpty();
   restoreUser();
   loadApiKey();
   nav('dashboard');
@@ -2942,6 +2846,148 @@ function updateAIMode(mode) {
   if (state.currentView === 'dashboard') {
     try { renderAITasks(); } catch(e) {}
   }
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// ACTIVITY BOARD
+// ═══════════════════════════════════════════════════════════
+
+var ACTIVITY_KEY  = 'tb2_activity';
+var activityBoard = [];
+
+function loadActivityBoard() {
+  try {
+    activityBoard = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]');
+  } catch(e) { activityBoard = []; }
+}
+
+function saveActivityBoard() {
+  try { localStorage.setItem(ACTIVITY_KEY, JSON.stringify(activityBoard)); } catch(e) {}
+}
+
+function toggleActivity(idx) {
+  if (activityBoard[idx]) {
+    activityBoard[idx].completed = !activityBoard[idx].completed;
+    saveActivityBoard();
+    renderActivityBoard();
+  }
+}
+
+function submitActivityInput() {
+  var inp = document.getElementById('new-activity-input');
+  if (inp) { addActivityItem(inp.value); inp.value = ''; }
+}
+
+function handleActivityKey(e) {
+  if (e.key === 'Enter') {
+    var inp = document.getElementById('new-activity-input');
+    if (inp) { addActivityItem(inp.value); inp.value = ''; }
+  }
+}
+
+function addActivityItem(text) {
+  if (!text || !text.trim()) return;
+  activityBoard.push({ id: uid(), text: text.trim(), completed: false, createdAt: Date.now() });
+  saveActivityBoard();
+  renderActivityBoard();
+}
+
+function renderActivityBoard() {
+  var el    = document.getElementById('needs-action-list');
+  var count = document.getElementById('needs-action-count');
+  if (!el) return;
+
+  var pending   = activityBoard.filter(function(t) { return !t.completed; });
+  var completed = activityBoard.filter(function(t) { return t.completed; });
+  if (count) count.textContent = pending.length ? pending.length + ' pending' : '';
+
+  if (!activityBoard.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:24px 0;">' +
+      '<div class="empty-state-icon">✓</div>' +
+      '<div class="empty-state-title">All clear</div>' +
+      '<div class="empty-state-sub">No action items right now.</div>' +
+    '</div>';
+    return;
+  }
+
+  var itemHtml = function(task, idx) {
+    var done  = task.completed;
+    var style = done ? 'opacity:.45;text-decoration:line-through;' : '';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:7px;margin-bottom:2px;background:rgba(255,255,255,.02);">' +
+      '<input type="checkbox" data-idx="' + idx + '" ' + (done ? 'checked' : '') + ' ' +
+        'onchange="toggleActivity(parseInt(this.dataset.idx))" ' +
+        'style="width:15px;height:15px;accent-color:var(--accent2);cursor:pointer;flex-shrink:0;"/>' +
+      '<span style="font-size:13px;color:var(--text);' + style + 'flex:1;">' + escHtml(task.text) + '</span>' +
+    '</div>';
+  };
+
+  var rows = activityBoard.map(function(t, i) { return itemHtml(t, i); }).join('');
+
+  rows += '<div style="display:flex;gap:8px;padding:8px 10px 4px;border-top:1px solid rgba(255,255,255,.05);margin-top:4px;">' +
+    '<input id="new-activity-input" type="text" placeholder="Add task..." ' +
+      'onkeydown="handleActivityKey(event)" ' +
+      'style="flex:1;padding:6px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit;outline:none;"/>' +
+    '<button onclick="submitActivityInput()" class="btn btn-ghost btn-sm" style="font-size:11px;padding:5px 10px;">Add</button>' +
+      'class="btn btn-ghost btn-sm" style="font-size:11px;padding:5px 10px;">Add</button>' +
+  '</div>';
+
+  el.innerHTML = rows;
+}
+
+// ═══════════════════════════════════════════════════════════
+// SEED DATA — runs once if localStorage is empty
+// ═══════════════════════════════════════════════════════════
+
+function seedDataIfEmpty() {
+  if (jobs.length > 0 || candidates.length > 0) return;
+
+  var now   = Date.now();
+  var day   = 86400000;
+
+  // ── Seed jobs ──────────────────────────────────────────────
+  var seedJobs = [
+    { id: 'sj1', title: 'Senior Program Manager',        dept: 'Operations',   location: 'Boston, MA',    status: 'Open',     type: 'Full-time', createdAt: now - 45*day, workspaceId: state.currentWorkspace, notes: 'Hybrid role. Reports to VP of Ops. 7+ years required.' },
+    { id: 'sj2', title: 'Principal Systems Engineer',    dept: 'Engineering',  location: 'Waltham, MA',   status: 'Open',     type: 'Full-time', createdAt: now - 62*day, workspaceId: state.currentWorkspace, notes: 'Medical device embedded systems. FDA experience a plus.' },
+    { id: 'sj3', title: 'Electrical Engineering Manager',dept: 'Engineering',  location: 'San Diego, CA', status: 'Open',     type: 'Full-time', createdAt: now - 28*day, workspaceId: state.currentWorkspace, notes: 'Leads team of 6 EEs. PCB design background preferred.' },
+    { id: 'sj4', title: 'Sr. Quality Systems Specialist',dept: 'Quality',      location: 'Boston, MA',    status: 'On Hold',  type: 'Full-time', createdAt: now - 90*day, workspaceId: state.currentWorkspace, notes: 'ISO 13485 / FDA 21 CFR Part 820 experience required.' },
+  ];
+
+  // ── Seed candidates ────────────────────────────────────────
+  var seedCands = [
+    // New
+    { id:'sc1',  name:'Marcus Webb',      title:'Program Manager II',         company:'Integra LifeSciences', status:'New',        jobId:'sj1', createdAt: now-3*day,  lastActivityAt: now-3*day,  firstContactAt: null,           interviewCount:0 },
+    { id:'sc2',  name:'Priya Nair',       title:'Systems Engineer III',       company:'Haemonetics',          status:'New',        jobId:'sj2', createdAt: now-1*day,  lastActivityAt: now-1*day,  firstContactAt: null,           interviewCount:0 },
+    // Screening
+    { id:'sc3',  name:'Daniel Park',      title:'Sr. Program Manager',        company:'Stryker',              status:'Screening',  jobId:'sj1', createdAt: now-10*day, lastActivityAt: now-2*day,  firstContactAt: now-9*day,      interviewCount:0 },
+    { id:'sc4',  name:'Sarah Johnson',    title:'Principal Engineer',         company:'Medtronic',            status:'Screening',  jobId:'sj2', createdAt: now-8*day,  lastActivityAt: now-3*day,  firstContactAt: now-7*day,      interviewCount:0 },
+    { id:'sc5',  name:'Aiden Torres',     title:'Electrical Engineer IV',     company:'Zimmer Biomet',        status:'Screening',  jobId:'sj3', createdAt: now-6*day,  lastActivityAt: now-1*day,  firstContactAt: now-5*day,      interviewCount:0 },
+    // Interview
+    { id:'sc6',  name:'Rachel Kim',       title:'Engineering Manager',        company:'Boston Scientific',    status:'Interview',  jobId:'sj3', createdAt: now-18*day, lastActivityAt: now-4*day,  firstContactAt: now-16*day,     interviewCount:2 },
+    { id:'sc7',  name:'James Okafor',     title:'Sr. Systems Engineer',       company:'Abbott',               status:'Interview',  jobId:'sj2', createdAt: now-14*day, lastActivityAt: now-1*day,  firstContactAt: now-13*day,     interviewCount:1 },
+    { id:'sc8',  name:'Leila Hassan',     title:'Quality Systems Lead',       company:'Becton Dickinson',     status:'Interview',  jobId:'sj4', createdAt: now-12*day, lastActivityAt: now-5*day,  firstContactAt: now-11*day,     interviewCount:3 },
+    // Offer
+    { id:'sc9',  name:'Rachel Torres',    title:'Director, Program Management',company:'Insulet Corporation', status:'Offer',      jobId:'sj1', createdAt: now-30*day, lastActivityAt: now-2*day,  firstContactAt: now-28*day,     interviewCount:4 },
+    // Hired
+    { id:'sc10', name:'Thomas Brennan',   title:'Principal Systems Engineer', company:'Hologic',              status:'Hired',      jobId:'sj2', createdAt: now-45*day, lastActivityAt: now-5*day,  firstContactAt: now-43*day,     interviewCount:3 },
+  ];
+
+  jobs       = seedJobs;
+  candidates = seedCands;
+  saveJobs();
+  saveCandidates();
+
+  // ── Seed activity board ───────────────────────────────────
+  activityBoard = [
+    { id:'at1', text:'Follow up with Sarah Johnson re: Systems Engineer role',      completed: false, createdAt: now-2*day },
+    { id:'at2', text:'Schedule Teams interview with Daniel Park',                   completed: false, createdAt: now-1*day },
+    { id:'at3', text:'Send offer letter to Rachel Torres — Program Manager role',   completed: false, createdAt: now       },
+    { id:'at4', text:'Review resume: Priya Nair — Principal Systems Engineer',      completed: false, createdAt: now       },
+    { id:'at5', text:'Check in: Leila Hassan stuck in interview 5d',                completed: false, createdAt: now       },
+  ];
+  saveActivityBoard();
+
+  console.log('[TalentBase] Seed data loaded — ' + seedJobs.length + ' jobs, ' + seedCands.length + ' candidates');
 }
 
 document.addEventListener('DOMContentLoaded', init);
