@@ -1043,6 +1043,17 @@ input:focus, select:focus, textarea:focus {
             </div>
           </div>
 
+          <!-- AI Task Queue -->
+          <div style="margin-top:22px;">
+            <div class="section-header">
+              <div class="section-title">🤖 AI Task Queue</div>
+              <div id="dash-ai-nudge" style="display:none;font-size:11px;font-weight:700;color:var(--red);background:rgba(239,68,68,.1);padding:3px 10px;border-radius:99px;border:1px solid rgba(239,68,68,.25);"></div>
+            </div>
+            <div class="card" id="dash-ai-tasks" style="padding:8px 8px 4px;">
+              <div style="font-size:12px;color:var(--text4);padding:12px 8px;">Generating tasks...</div>
+            </div>
+          </div>
+
           <!-- AI Insights -->
           <div style="margin-top:22px;">
             <div class="section-header">
@@ -1384,6 +1395,31 @@ input:focus, select:focus, textarea:focus {
             </form>
           </div>
 
+          <!-- AI Mode -->
+          <div class="card" style="max-width:520px;margin-bottom:16px;">
+            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">AI Recruiter Mode</div>
+            <div style="font-size:11px;color:var(--text4);margin-bottom:14px;">Controls how proactively AI surfaces tasks and highlights candidates.</div>
+            <div style="display:flex;gap:8px;">
+              <button class="ai-mode-btn" data-mode="assist" onclick="updateAIMode(this.dataset.mode)"
+                style="flex:1;padding:8px 0;border-radius:8px;border:1px solid var(--border2);background:rgba(255,255,255,.05);color:var(--text3);font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;">
+                🔍 Assist
+              </button>
+              <button class="ai-mode-btn" data-mode="guided" onclick="updateAIMode(this.dataset.mode)"
+                style="flex:1;padding:8px 0;border-radius:8px;border:1px solid var(--border2);background:rgba(255,255,255,.05);color:var(--text3);font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;">
+                🧭 Guided
+              </button>
+              <button class="ai-mode-btn" data-mode="auto" onclick="updateAIMode(this.dataset.mode)"
+                style="flex:1;padding:8px 0;border-radius:8px;border:1px solid var(--border2);background:rgba(255,255,255,.05);color:var(--text3);font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;">
+                ⚡ Auto
+              </button>
+            </div>
+            <div style="font-size:10px;color:var(--text4);margin-top:10px;line-height:1.6;">
+              <b style="color:var(--text3);">Assist</b> — Show task queue on demand.&nbsp;
+              <b style="color:var(--text3);">Guided</b> — Surface tasks with nudges.&nbsp;
+              <b style="color:var(--text3);">Auto</b> — Highlight top 3 urgent tasks automatically.
+            </div>
+          </div>
+
           <!-- Workspace info -->
           <div class="card" style="max-width:520px;">
             <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">Workspace</div>
@@ -1710,7 +1746,8 @@ function renderDashboard() {
     }
   }
 
-  // Render AI insights + hiring risks panels
+  // Render AI task queue, insights + hiring risks panels
+  try { renderAITasks(); } catch(e) {}
   try { renderAIInsights(); } catch(e) {}
   // Render hiring risks alert panel
   try { renderHiringRisks(); } catch(e) {}
@@ -1736,6 +1773,7 @@ function renderSettings() {
   if (wsEl)   wsEl.textContent   = ws ? ws.name : state.currentWorkspace;
   if (nameEl) nameEl.textContent = state.currentUser ? state.currentUser.name : '—';
   if (roleEl) roleEl.textContent = state.currentUser ? (state.currentUser.title || state.currentUser.role) : '—';
+  try { updateAIMode(aiMode); } catch(e) {}
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2322,6 +2360,7 @@ function submitCandForm(e) {
     };
     candidates.unshift(newCand);
     saveCandidates();
+    try { generateAITasks(); } catch(e) {}
     closeCandModal();
     selectedCandidateId = newCand.id;
     renderCandidates();
@@ -2516,6 +2555,7 @@ function moveCandidate(id) {
     saveCandidates();
     renderPipeline();
     try { renderCandidates(); } catch(e) {}
+    try { if (state.currentView === 'dashboard') renderAITasks(); } catch(e) {}
   }
 }
 
@@ -2613,6 +2653,8 @@ function getAlerts() {
 }
 
 // ── Render alert panel on dashboard ──────────────────────────────────────────
+function gotoCandidates() { nav('candidates'); }
+
 function gotoRiskView() { nav('pipeline'); }
 
 function renderHiringRisks() {
@@ -2757,6 +2799,149 @@ function renderAIInsights() {
       '<span style="font-size:12px;color:var(--text2);">' + escHtml(it.text) + '</span>' +
     '</div>';
   }).join('');
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// AI TASK QUEUE SYSTEM
+// ═══════════════════════════════════════════════════════════
+
+var AI_MODE_KEY = 'tb2_ai_mode';
+var aiTasks     = [];
+var aiMode      = localStorage.getItem(AI_MODE_KEY) || 'assist';
+
+// ── Generate task queue from current candidate state ─────────────────────────
+function generateAITasks() {
+  aiTasks = [];
+  candidates.forEach(function(cd) {
+    if (['Hired','Rejected'].includes(cd.status)) return;
+
+    var action = getNextBestAction(cd);
+    var score  = calculateExperienceScore(cd);
+
+    if (action === 'Follow up') {
+      aiTasks.push({
+        type:        'follow_up',
+        candidateId: cd.id,
+        candName:    cd.name,
+        priority:    score < 50 ? 'high' : 'medium',
+        message:     'Candidate idle — send a follow-up',
+        score:       score,
+      });
+    }
+
+    if (action === 'Contact candidate') {
+      aiTasks.push({
+        type:        'first_contact',
+        candidateId: cd.id,
+        candName:    cd.name,
+        priority:    'high',
+        message:     'No first contact made yet',
+        score:       score,
+      });
+    }
+
+    if (cd.status === 'Offer') {
+      aiTasks.push({
+        type:        'close',
+        candidateId: cd.id,
+        candName:    cd.name,
+        priority:    'high',
+        message:     'Offer stage — close or decline',
+        score:       score,
+      });
+    }
+  });
+
+  // Sort: high → medium → low, then lowest score first
+  var pOrder = { high: 0, medium: 1, low: 2 };
+  aiTasks.sort(function(a, b) {
+    var pd = (pOrder[a.priority] || 1) - (pOrder[b.priority] || 1);
+    if (pd !== 0) return pd;
+    return a.score - b.score;
+  });
+}
+
+// ── Render AI Task Queue on dashboard ────────────────────────────────────────
+function renderAITasks() {
+  generateAITasks();
+
+  var el = document.getElementById('dash-ai-tasks');
+  if (!el) return;
+
+  // Smart nudge banner
+  var nudgeEl   = document.getElementById('dash-ai-nudge');
+  var highCount = aiTasks.filter(function(t) { return t.priority === 'high'; }).length;
+  if (nudgeEl) {
+    if (highCount > 3) {
+      nudgeEl.style.display = '';
+      nudgeEl.textContent   = '🚨 You have ' + highCount + ' urgent hiring actions';
+    } else {
+      nudgeEl.style.display = 'none';
+    }
+  }
+
+  if (!aiTasks.length) {
+    el.innerHTML =
+      '<div class="empty-state" style="padding:20px 0;">' +
+        '<div class="empty-state-icon" style="font-size:18px;">✓</div>' +
+        '<div class="empty-state-title">No queued actions</div>' +
+        '<div class="empty-state-sub">All candidates are on track.</div>' +
+      '</div>';
+    return;
+  }
+
+  // In Auto mode surface top 3 with accent
+  var display = aiMode === 'auto' ? aiTasks.slice(0, 3) : aiTasks.slice(0, 8);
+
+  var pColors = { high: '#f87171', medium: '#fbbf24', low: '#94a3b8' };
+  var pLabels = { high: 'HIGH',    medium: 'MED',     low: 'LOW'    };
+  var tLabels = { follow_up: 'Follow up', first_contact: 'First contact', close: 'Close offer' };
+  var tIcons  = { follow_up: '⏱',         first_contact: '📞',            close: '🎯'          };
+
+  el.innerHTML = display.map(function(task) {
+    var pc  = pColors[task.priority] || '#94a3b8';
+    var pl  = pLabels[task.priority] || '';
+    var tl  = tLabels[task.type]     || task.type;
+    var ti  = tIcons[task.type]      || '•';
+    var isAuto = aiMode === 'auto' && task.priority === 'high';
+    var bg  = isAuto ? 'rgba(59,130,246,.06)' : 'rgba(255,255,255,.02)';
+
+    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:' + bg + ';border-radius:9px;margin-bottom:6px;">' +
+      '<span style="font-size:16px;flex-shrink:0;">' + ti + '</span>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(task.candName) + '</div>' +
+        '<div style="font-size:11px;color:var(--text4);">' + tl + ' — ' + escHtml(task.message) + '</div>' +
+      '</div>' +
+      '<span style="font-size:9px;font-weight:800;color:' + pc + ';background:' + pc.replace(')', ',.12)').replace('rgb', 'rgba') + ';padding:2px 7px;border-radius:99px;flex-shrink:0;">' + pl + '</span>' +
+      '<button onclick="showMessageModal(' + task.candidateId + ')" class="btn btn-ghost btn-sm" style="font-size:10px;padding:4px 9px;flex-shrink:0;">Take Action</button>' +
+    '</div>';
+  }).join('') +
+  (aiTasks.length > display.length
+    ? '<div style="font-size:11px;color:var(--text4);text-align:center;padding:6px 0;">' + (aiTasks.length - display.length) + ' more tasks — ' +
+        '<button onclick="gotoCandidates()" style="background:none;border:none;color:var(--accent2);font-size:11px;cursor:pointer;font-family:inherit;">View all</button></div>'
+    : '');
+}
+
+// ── AI Mode toggle ────────────────────────────────────────────────────────────
+function updateAIMode(mode) {
+  aiMode = mode || 'assist';
+  localStorage.setItem(AI_MODE_KEY, aiMode);
+
+  // Update toggle UI
+  var btns = document.querySelectorAll('.ai-mode-btn');
+  btns.forEach(function(btn) {
+    var active = btn.dataset.mode === aiMode;
+    btn.style.background     = active ? 'rgba(59,130,246,.2)'  : 'rgba(255,255,255,.05)';
+    btn.style.borderColor    = active ? 'rgba(59,130,246,.5)'  : 'var(--border2)';
+    btn.style.color          = active ? 'var(--accent2)' : 'var(--text3)';
+    btn.style.fontWeight     = active ? '700' : '500';
+  });
+
+  // Re-render tasks if on dashboard
+  if (state.currentView === 'dashboard') {
+    try { renderAITasks(); } catch(e) {}
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
