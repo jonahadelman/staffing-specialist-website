@@ -1366,11 +1366,31 @@ button, .btn { white-space:nowrap !important; }
 /* ═══ PRODUCTION POLISH ══════════════════════════════════════ */
 
 /* Card depth + separation */
-.card, .kb-col, .detail-panel, .modal, .ws-panel, .ws-export-card {
+.card, .kb-col, .detail-panel, .ws-panel, .ws-export-card {
   background: linear-gradient(180deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.02) 100%);
   border: 1px solid rgba(255,255,255,.09);
   border-radius: 14px;
   box-shadow: 0 8px 30px rgba(0,0,0,.35);
+}
+/* Modals: solid, never transparent */
+.modal {
+  background: #111827 !important;
+  border: 1px solid rgba(255,255,255,.1) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 24px 60px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.04) !important;
+}
+.modal input:not([type=checkbox]):not([type=radio]),
+.modal textarea,
+.modal select {
+  background: #0b1220 !important;
+  border: 1px solid rgba(255,255,255,.1) !important;
+  color: var(--text) !important;
+}
+/* Overlay backdrop: dark + blur */
+.overlay, .modal-overlay {
+  background: rgba(0,0,0,.82) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
 }
 .card:hover {
   transform: translateY(-2px);
