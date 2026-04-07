@@ -1489,12 +1489,43 @@ input::placeholder, textarea::placeholder {
 #dash-grid > [id^="dw-"]:active {
   cursor: grabbing;
 }
+
+/* ── NAV GROUPS ─────────────────────────────────────── */
+.nav-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--text4);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  padding: 8px 14px 3px;
+  margin-top: 2px;
+}
+/* ── PIPELINE COLUMN FIX ────────────────────────────── */
+#kanban-board {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 12px;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: 16px;
+}
+.kb-col {
+  flex: 0 0 220px !important;
+  min-width: 200px !important;
+  max-width: 260px !important;
+  overflow: visible !important;
+}
+.kb-col > .kb-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 </style>
 </head>
 <body>
 
 <!-- ═══ ACCESS GATE ═══ -->
-<input type="password" id="api-key" style="display:none;" oninput="saveKey(this.value)" autocomplete="off" aria-hidden="true"/>
+<input type="text" autocomplete="off" id="api-key" style="display:none;" oninput="saveKey(this.value)" autocomplete="off" aria-hidden="true"/>
 <div id="gate">
   <div class="gate-layout">
 
@@ -1589,7 +1620,7 @@ input::placeholder, textarea::placeholder {
         <div id="gate-panel-pass" style="display:none;">
           <div class="gate-headline" style="margin-bottom:6px;">Run your hiring system</div>
           <div class="gate-subline" style="margin-bottom:16px;">Sign in to access your pipeline,<br>candidates, and deals.</div>
-          <form onsubmit="event.preventDefault();gateLogin();" style="display:contents;">
+          <form onsubmit="event.preventDefault();gateLogin();" style="display:flex;flex-direction:column;gap:0;">
           <div class="gate-field">
             <label class="gate-label" for="gate-email">Email</label>
             <input class="gate-input" id="gate-email" type="email"
@@ -1657,11 +1688,11 @@ input::placeholder, textarea::placeholder {
         <!-- Key field -->
         <div class="gate-field">
           <label class="gate-label" for="gate-sb-key">Anon Key <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text4);">(anon public)</span></label>
-          <input class="gate-input" id="gate-sb-key" type="password"
+          <input class="gate-input" id="gate-sb-key" type="text"
             placeholder="eyJhbGciOiJIUzI1NiIs..."
             onkeydown="if(event.key==='Enter')gateConnectDB()"
             autocomplete="off" spellcheck="false" autocorrect="off"
-            style="font-family:'DM Mono',monospace;font-size:13px;letter-spacing:.02em;"/>
+            style="font-family:'DM Mono',monospace;font-size:13px;letter-spacing:.02em;-webkit-text-security:disc;"/>
         </div>
 
         <!-- Connect button -->
@@ -1750,49 +1781,32 @@ input::placeholder, textarea::placeholder {
 
   <div class="nav">
 
-    <!-- PRIMARY NAV -->
+    <div class="nav-label">Main</div>
     <div class="ni on" data-nav="dashboard" id="ni-dashboard">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
       Dashboard
     </div>
     <div class="ni" data-nav="jobs" id="ni-jobs">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
-      Jobs
-      <span class="ni-badge" id="nb-jobs"></span>
+      Jobs <span class="ni-badge" id="nb-jobs"></span>
     </div>
     <div class="ni" data-nav="candidates" id="ni-candidates">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      Candidates
-      <span class="ni-badge" id="nb-cands"></span>
+      Candidates <span class="ni-badge" id="nb-cands"></span>
     </div>
     <div class="ni" data-nav="pipeline" id="ni-pipeline">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12H2M12 2l10 10-10 10"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       Pipeline
     </div>
-    <div class="ni" data-nav="command" id="ni-command">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-      Command Center
-    </div>
-    <div class="ni" data-nav="clientdash" id="ni-clientdash">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
-      Client Dashboard
-    </div>
 
-    <!-- SECTION DIVIDER -->
-    <div style="height:1px;background:rgba(255,255,255,.07);margin:8px 10px;"></div>
-    <div style="font-size:9px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:4px 12px 2px;">Tools</div>
-
+    <div class="nav-label">Tools</div>
     <div class="ni" data-nav="match" id="ni-match">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
       AI Match
     </div>
     <div class="ni" data-nav="offer" id="ni-offer">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       Offer Builder
-    </div>
-    <div class="ni" data-nav="analytics" id="ni-analytics">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Analytics
     </div>
     <div class="ni" data-nav="library" id="ni-library">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
@@ -1803,15 +1817,18 @@ input::placeholder, textarea::placeholder {
       Happy Hunting
     </div>
 
-    <!-- SECTION DIVIDER -->
-    <div style="height:1px;background:rgba(255,255,255,.07);margin:8px 10px;"></div>
-
+    <div class="nav-label">System</div>
+    <div class="ni" data-nav="analytics" id="ni-analytics">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Analytics
+    </div>
     <div class="ni" data-nav="workspace" id="ni-workspace">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
       Settings
     </div>
 
-class="sidebar-bottom">
+  </div>
+  class="sidebar-bottom">
     <!-- V2 toggle — shown only when enabled -->
     <div id="v2-sidebar-toggle" style="margin-bottom:6px;display:none;">
       <button onclick="v2ToggleMode()" id="v2-sidebar-btn"
@@ -2010,7 +2027,7 @@ class="sidebar-bottom">
               <div style="font-size:13px;font-weight:700;color:#d4703a;text-transform:uppercase;letter-spacing:.08em;">Step 1: Add Your API Key</div>
               <div id="hh-key-status" style="margin-left:auto;font-size:12px;"></div>
             </div>
-            <input id="hh-api-key-input" type="password"
+            <input id="hh-api-key-input" type="text" autocomplete="off"
               placeholder="Paste your Anthropic key here → sk-ant-api03-..."
               style="width:100%;background:#0e0c0a;border:2px solid #3a2a1a;color:#f0e8dc;font-family:'DM Mono',monospace;font-size:13px;padding:10px 12px;outline:none;border-radius:5px;box-sizing:border-box;margin-bottom:6px;"
               oninput="hhSaveKey(this.value); hhCheckKey();"
@@ -3250,7 +3267,7 @@ class="sidebar-bottom">
       </div>
       <div style="margin-bottom:16px;">
         <div class="ws-label">Anon / Public Key</div>
-        <input class="ws-input" id="sb-key-input" type="password" placeholder="eyJhbGciOiJIUzI1NiIs..." style="font-family:'DM Mono',monospace;font-size:12px;"/>
+        <input class="ws-input" id="sb-key-input" type="text" autocomplete="off" placeholder="eyJhbGciOiJIUzI1NiIs..." style="font-family:'DM Mono',monospace;font-size:12px;"/>
         <div style="font-size:11px;color:var(--text4);margin-top:4px;">Public key — safe to use in browser</div>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:24px;">
@@ -3272,7 +3289,7 @@ class="sidebar-bottom">
           </div>
           <div>
             <div class="ws-label">Password</div>
-            <input class="ws-input" id="sb-password" type="password" placeholder="••••••••"/>
+            <input class="ws-input" id="sb-password" type="text" autocomplete="off" style="-webkit-text-security:disc;" placeholder="••••••••"/>
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
@@ -3500,7 +3517,7 @@ CREATE POLICY "staff_read_feedback" ON client_feedback FOR SELECT
       </div>
       <div style="margin-bottom:20px;">
         <div class="ws-label">Email Secret <span style="color:var(--text4);font-weight:400;">Security token for send-email.js</span></div>
-        <input class="ws-input" id="email-secret-field" type="password" placeholder="Paste your EMAIL_SECRET value here" style="font-family:'DM Mono',monospace;font-size:12px;"/>
+        <input class="ws-input" id="email-secret-field" type="text" autocomplete="off" placeholder="Paste your EMAIL_SECRET value here" style="font-family:'DM Mono',monospace;font-size:12px;"/>
         <div style="font-size:11px;color:var(--text4);margin-top:4px;">
           Generate once: <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">openssl rand -hex 32</code> →
           add as <code style="background:var(--bg4);padding:1px 5px;border-radius:3px;">EMAIL_SECRET</code> in Vercel env vars, and paste the same value here.
@@ -4351,6 +4368,8 @@ function applyNavRestrictions() {
   var navPermissions = {
     'ni-analytics' : 'viewAnalytics',
     'ni-workspace' : 'viewSettings',
+    'ni-offer'     : 'editCandidates',
+    'ni-match'     : 'viewCandidates',
   };
 
   Object.keys(navPermissions).forEach(function(id) {
@@ -14301,7 +14320,7 @@ function wsAddUser() {
       '<button class="modal-close" onclick="document.getElementById(\'ws-invite-modal\').remove()">×</button>' +
       '<h2>Invite User</h2>' +
       '<div class="field"><label>Email</label><input id="wsi-email" type="email" placeholder="user@company.com" class="ws-input" style="width:100%;"/></div>' +
-      '<div class="field"><label>Password</label><input id="wsi-pass" type="password" placeholder="Min 8 characters" class="ws-input" style="width:100%;"/></div>' +
+      '<div class="field"><label>Password</label><input id="wsi-pass" type="text" autocomplete="off" placeholder="Min 8 characters" class="ws-input" style="width:100%;"/></div>' +
       '<div class="field"><label>Role</label>' +
         '<select id="wsi-role" class="ws-input" style="width:100%;">' +
           '<option value="recruiter">Recruiter</option>' +
