@@ -2285,7 +2285,7 @@ input::placeholder, textarea::placeholder {
             <div style="font-size:13px;font-weight:700;color:var(--text);">Needs Action</div>
             <span id="dash-attention-count" style="display:none;font-size:10px;font-weight:700;color:var(--red);background:var(--red-bg);border:1px solid var(--red-border);padding:1px 7px;border-radius:10px;"></span>
           </div>
-          <div id="dash-attention-list" style="padding:4px 22px;flex:1;"></div>
+          <div id="dash-attention-list" style="padding:4px 22px;flex:1;"><div style="padding:16px 0;font-size:12px;color:var(--text4);">Loading...</div></div>
           <div id="dash-all-clear" style="display:none;padding:32px 22px;text-align:center;">
             <div style="font-size:22px;margin-bottom:8px;color:var(--green);">✓</div>
             <div style="font-size:12px;color:var(--text4);">All clear — you're on top of everything</div>
@@ -2296,7 +2296,7 @@ input::placeholder, textarea::placeholder {
             <div style="font-size:13px;font-weight:700;color:var(--text);">Pipeline</div>
             <button class="btn btn-ghost btn-sm" onclick="nav('pipeline')" style="font-size:11px;padding:3px 10px;">View Board →</button>
           </div>
-          <div id="dash-pipeline" style="padding:16px 22px;display:flex;flex-direction:column;gap:8px;flex:1;"></div>
+          <div id="dash-pipeline" style="padding:16px 22px;display:flex;flex-direction:column;gap:8px;flex:1;"><div style="font-size:12px;color:var(--text4);padding:8px 0;">Loading pipeline...</div></div>
         </div>
       </div>
 
@@ -4011,11 +4011,20 @@ async function _unlockApp(role) {
     el.classList.remove('on');
   });
   nav('dashboard');
-  try { renderDash(); }       catch(e){}
+  // Explicit render with console logging for debugging
+  console.log('[TalentBase] Data loaded — cands:', cands.length, 'jobs:', jobs.length);
+  try { renderDash(); } catch(e){ console.error('[renderDash]', e); }
   try { renderLibrary(); }    catch(e){}
   try { renderScorecards(); } catch(e){}
   try { renderTutorial(); }   catch(e){}
   try { applyNavRestrictions(); } catch(e){}
+  // Ensure dashboard is still active after nav restrictions
+  try {
+    var dashView = document.getElementById('v-dashboard');
+    if (dashView && !dashView.classList.contains('active')) {
+      dashView.classList.add('active');
+    }
+  } catch(e) {}
   // Load alerts
   try { loadAlerts(); updateAlertBadge(); } catch(e) {}
   // Init user system
@@ -4074,7 +4083,8 @@ function gateUserLogin() {
   }
   // Use dev session to bypass Supabase
   _setDevSession(user.email || 'user@local');
-  _unlockApp('admin');
+  // _unlockApp is async — must await or chain
+  Promise.resolve(_unlockApp('admin')).catch(function(e){ console.error('[gateUserLogin]', e); });
 }
 
 async function gateLogin() {
@@ -5641,6 +5651,8 @@ function nav(view) {
   if (!target) { console.error('[nav] Missing view: v-' + view); return; }
   target.classList.add('active');
   window._activeView = view;
+  // Force the view to be visible regardless of any CSS overrides
+  target.style.display = 'flex';
 
   // ── VIEW-SPECIFIC RENDERS ─────────────────────────────────
   var v = view;
@@ -9055,6 +9067,13 @@ function runAutomation(candList, dealList){
 
 
 function renderDash(){
+  // Show content area immediately — never blank
+  var dashBody = document.querySelector('#v-dashboard [style*="overflow-y:auto"]') ||
+                 document.querySelector('#v-dashboard .view-scroll');
+  // Safety: ensure arrays exist even if data not loaded
+  if(!Array.isArray(cands)) { cands = TB.store.cands = []; }
+  if(!Array.isArray(jobs))  { jobs  = TB.store.jobs  = []; }
+  if(!Array.isArray(deals)) { deals = TB.store.deals = []; }
   try{ escalateOverdueTasks(); }catch(e){}
   // Update user greeting
   try {
@@ -9081,16 +9100,42 @@ function renderDash(){
 
 
   // Render each panel independently — one failure won't cascade
-  try { renderDashKPIs();       } catch(e){ console.warn('KPIs:',e); }
-  try { renderDashAttention();  } catch(e){ console.warn('Attention:',e); }
-  try { renderDashPipeline();   } catch(e){ console.warn('Pipeline:',e); }
-  try { renderDashHot();        } catch(e){ console.warn('Hot:',e); }
-  try { renderDashDeals();      } catch(e){ console.warn('Deals:',e); }
+  try { renderDashKPIs(); } catch(e) {
+    console.warn('[KPIs]',e);
+    ['dm-pipeline','dm-expected','dm-cands'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.textContent='—';
+    });
+  }
+  try { renderDashAttention(); } catch(e) {
+    console.warn('[Attention]',e);
+    var ael=document.getElementById('dash-attention-list');
+    if(ael) ael.innerHTML='<div style="padding:16px;font-size:12px;color:var(--text4);">Unable to load action items.</div>';
+  }
+  try { renderDashPipeline(); } catch(e) {
+    console.warn('[Pipeline]',e);
+    var pel=document.getElementById('dash-pipeline');
+    if(pel) pel.innerHTML='<div style="padding:16px;font-size:12px;color:var(--text4);">No pipeline data.</div>';
+  }
+  try { renderDashHot(); } catch(e) { console.warn('[Hot]',e); }
+  try { renderDashDeals(); } catch(e) { console.warn('[Deals]',e); }
 
-  // Empty state
-  var hasData = cands.length || jobs.length || deals.length;
+  // Empty state — never show a blank screen
+  var hasData = (wsFilter(cands)||[]).length || (wsFilter(jobs)||[]).length;
   var emptyEl = document.getElementById('dash-empty');
-  if(emptyEl) emptyEl.style.display = hasData ? 'none' : 'block';
+  if (emptyEl) {
+    if (!hasData) {
+      emptyEl.style.display = 'block';
+      emptyEl.innerHTML = '<div style="font-size:40px;margin-bottom:12px;">📋</div>' +
+        '<div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;">Your recruiting OS is ready.</div>' +
+        '<div style="font-size:13px;color:var(--text4);margin-bottom:24px;">Add your first job or candidate to see live data.</div>' +
+        '<div style="display:flex;gap:10px;justify-content:center;">' +
+          '<button class="btn btn-primary" onclick="openAddJob()">Add First Job</button>' +
+          '<button class="btn btn-ghost" onclick="openAddCand()">Add Candidate</button>' +
+        '</div>';
+    } else {
+      emptyEl.style.display = 'none';
+    }
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -9098,8 +9143,9 @@ function renderDash(){
 // ═══════════════════════════════════════════════
 
 function renderDashKPIs(){
-  var rev = (typeof getRevenueStats === 'function') ? getRevenueStats() : {pipelineValue:0,expectedRevenue:0};
+  var rev = (typeof getRevenueStats === 'function') ? getRevenueStats() : {pipelineValue:0,expectedRevenue:0,closedRevenue:0};
   var safeCands = wsFilter(cands) || [];
+  var safeJobs  = wsFilter(jobs)  || [];
   var pl  = document.getElementById('dm-pipeline');
   var ex  = document.getElementById('dm-expected');
   var cd  = document.getElementById('dm-cands');
@@ -12707,7 +12753,7 @@ function initApp() {
 
   if (valid) {
     if (gate) gate.style.cssText = 'display:none!important';
-    if (app)  app.style.cssText  = 'display:flex!important';
+    if (app)  { app.style.cssText = 'display:flex!important'; app.style.visibility = 'visible'; }
     try { sbInit(); } catch(e){}
     try {
       var u = JSON.parse(session);
