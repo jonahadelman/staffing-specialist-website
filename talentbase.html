@@ -871,6 +871,25 @@ input:focus, textarea:focus, select:focus {
 .cand-detail-section {
   border-bottom: 1px solid rgba(255,255,255,.05);
 }
+
+/* pipe-action-btn — contextual card primary action */
+.pipe-action-btn {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 5px 0;
+  border: none;
+  border-radius: 7px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: .03em;
+  transition: opacity .1s ease, transform .1s ease;
+  display: block;
+}
+.pipe-action-btn:hover  { opacity: .9; transform: translateY(-1px); }
+.pipe-action-btn:active { transform: scale(.97); }
 </style>
 </head>
 
@@ -1265,60 +1284,18 @@ input:focus, textarea:focus, select:focus {
               <button onclick="closeCandModal()" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:22px;line-height:1;padding:0;">&times;</button>
             </div>
             <form id="cand-form" onsubmit="submitCandForm(event)" autocomplete="off">
-              <div style="display:flex;flex-direction:column;gap:14px;">
-                <div>
-                  <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="cf-name">Full Name *</label>
-                  <input id="cf-name" type="text" placeholder="e.g. Sarah Johnson" required
-                    style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                  <div>
-                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="cf-title">Title</label>
-                    <input id="cf-title" type="text" placeholder="e.g. Sr. Program Manager"
-                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="cf-company">Company</label>
-                    <input id="cf-company" type="text" placeholder="Current employer"
-                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
-                  </div>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                  <div>
-                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="cf-job">Linked Job</label>
-                    <select id="cf-job"
-                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;">
-                      <option value="">— No job assigned —</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="cf-status">Status</label>
-                    <select id="cf-status"
-                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;">
-                      <option value="New">New</option>
-                      <option value="Screening">Screening</option>
-                      <option value="Interview">Interview</option>
-                      <option value="Submitted">Submitted</option>
-                      <option value="Offer">Offer</option>
-                      <option value="Hired">Hired</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="cf-notes">Notes</label>
-                  <textarea id="cf-notes" rows="3" placeholder="Background, fit, next steps..."
-                    style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
-                </div>
-                <div>
-                  <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="cf-resume">Resume / Background</label>
-                  <textarea id="cf-resume" onblur="analyzeResume(this.value)" rows="4" placeholder="Paste resume text, LinkedIn summary, or key background notes..."
-                    style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Full Name <span style="color:var(--red);">*</span></label><input id="cf-name" type="text" placeholder="e.g. Sarah Johnson" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
+                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Linked Job <span style="color:var(--red);">*</span></label><select id="cf-job" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">— Select job —</option></select></div>
+                <div><button type="button" id="cf-more-toggle" onclick="toggleCandMore()" style="background:none;border:none;color:var(--text4);font-size:11px;font-family:inherit;cursor:pointer;padding:0;">&#9881; More Details <span id="cf-more-arrow">&#9662;</span></button></div>
+                <div id="cf-more" style="display:none;flex-direction:column;gap:12px;">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Current Title</label><input id="cf-title" type="text" placeholder="e.g. Sr. Program Manager" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Current Employer</label><input id="cf-company" type="text" placeholder="Current employer" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div></div>
+                  <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Stage</label><select id="cf-status" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="New">New</option><option value="Screening">Screening</option><option value="Interview">Interview</option><option value="Submitted">Submitted</option><option value="Offer">Offer</option><option value="Hired">Hired</option></select></div>
+                  <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Notes</label><textarea id="cf-notes" rows="2" placeholder="Background, fit, next steps..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
+                  <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Resume / Background</label><textarea id="cf-resume" onblur="analyzeResume(this.value)" rows="3" placeholder="Paste resume text or LinkedIn summary..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
                 </div>
                 <div id="cand-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
-                <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;">
-                  <button type="button" onclick="closeCandModal()" class="btn btn-ghost">Cancel</button>
-                  <button type="submit" class="btn btn-primary" id="cand-submit-btn">Add Candidate</button>
-                </div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;"><button type="button" onclick="closeCandModal()" class="btn btn-ghost">Cancel</button><button type="submit" class="btn btn-primary" id="cand-submit-btn">Add Candidate</button></div>
               </div>
             </form>
           </div>
@@ -1808,6 +1785,7 @@ function renderDashboard() {
           '<div style="font-size:12px;font-weight:700;color:var(--text);width:20px;text-align:right;">' + n + '</div>' +
         '</div>';
       }).join('');
+  board.scrollLeft = _pipeScroll;
     }
   }
 
@@ -2197,6 +2175,17 @@ function submitJobForm(e) {
     selectedJobId = newJob.id;
     renderJobList();
     renderJobDetail(newJob);
+    // Auto-flow: open Add Candidate pre-linked to this job
+    setTimeout(function() {
+      openAddCandidateModal();
+      setTimeout(function() {
+        populateCandJobDropdown(null);
+        var jobSel = document.getElementById('cf-job');
+        if (jobSel) jobSel.value = String(newJob.id);
+        var nm = document.getElementById('cf-name');
+        if (nm) nm.focus();
+      }, 80);
+    }, 120);
   }
 }
 
@@ -2690,7 +2679,8 @@ function submitCandForm(e) {
     closeCandModal();
     selectedCandidateId = newCand.id;
     renderCandidates();
-    renderCandidateDetail(newCand);
+    // Auto-flow: go straight to pipeline
+    setTimeout(function() { nav('pipeline'); }, 100);
   }
 }
 
@@ -2784,6 +2774,7 @@ function renderPipeline() {
   }
 
   // Build columns
+  var _pipeScroll = board.scrollLeft;
   board.innerHTML = PIPE_STAGES.map(function(stage) {
     var stageCands = filtered.filter(function(cd) { return cd.status === stage; });
     stageCands.sort(function(a, b) {
@@ -2816,8 +2807,12 @@ function renderPipeline() {
               '-> ' + escHtml(nba) +
             '</div>' +
             (cd.status === 'Interview'
-              ? '<button data-cid="' + cd.id + '" onclick="openSubmitModal(this.dataset.cid)" style="width:100%;margin-bottom:8px;padding:5px 0;background:linear-gradient(135deg,var(--teal),#0d9488);border:none;border-radius:7px;color:#fff;font-size:10px;font-weight:800;font-family:inherit;cursor:pointer;letter-spacing:.03em;">Submit</button>'
-              : '') +
+              ? '<button data-cid="' + cd.id + '" data-action="submit" class="pipe-action-btn" style="background:linear-gradient(135deg,var(--teal),#0d9488);">Submit</button>'
+              : cd.status === 'Submitted'
+                ? '<button data-cid="' + cd.id + '" data-action="followup" class="pipe-action-btn" style="background:linear-gradient(135deg,var(--amber),#d97706);">Follow Up</button>'
+                : cd.status === 'Offer'
+                  ? '<button data-cid="' + cd.id + '" data-action="close" class="pipe-action-btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);">Close</button>'
+                  : '') +
             (cd.submissions && cd.submissions.length
               ? '<div style="font-size:9px;color:var(--teal);font-weight:700;margin-bottom:6px;">Submitted to ' + cd.submissions.length + ' compan' + (cd.submissions.length===1?'y':'ies') + '</div>'
               : '') +
@@ -4070,17 +4065,15 @@ function submitCompanyForm(e) {
   renderCompaniesView();
   addActivityItem('Company added: '+name);
   saveActivityBoard();
-  // Prompt: create first job for this company
-  if (!jobs.filter(function(j){return j.companyId===co.id;}).length) {
-    if (confirm('Company "'+name+'" created. Add a job for this company now?')) {
-      openAddJob();
-      setTimeout(function(){
-        populateCompanyDropdown(co.id);
-        var sel=document.getElementById('jf-company');
-        if(sel) sel.value=co.id;
-      },100);
-    }
-  }
+  // Auto-flow: open Add Job immediately, pre-filled
+  openAddJob();
+  setTimeout(function() {
+    populateCompanyDropdown(co.id);
+    var sel = document.getElementById('jf-company');
+    if (sel) sel.value = co.id;
+    var t = document.getElementById('jf-title');
+    if (t) t.focus();
+  }, 80);
 }
 
 function renderCompaniesView() {
@@ -4161,6 +4154,40 @@ function declineOffer(candId) {
   try{renderCandidateDetail(cd);}catch(e){}
   try{renderPipeline();}catch(e){}
   try{renderDashboard();}catch(e){}
+}
+
+// Pipe-board action handler — no extra modals, no nav jumps
+function _pipeActionHandler(e) {
+  var btn = e.target.closest('.pipe-action-btn');
+  if (!btn) return;
+  e.stopPropagation();
+  var cid    = btn.dataset.cid;
+  var action = btn.dataset.action;
+  if (action === 'submit')  { openSubmitModal(cid); }
+  if (action === 'followup') {
+    var cd = candidates.find(function(x){ return String(x.id)===String(cid); });
+    if (cd) {
+      cd.lastActivityAt = Date.now();
+      saveCandidates();
+      addActivityItem('Followed up on submission: ' + cd.name);
+      saveActivityBoard();
+      // Refresh card in-place without full re-render
+      try { renderPipeline(); } catch(e) {}
+    }
+  }
+  if (action === 'close') {
+    acceptOffer(cid);
+  }
+}
+
+// toggleCandMore — show/hide optional candidate fields
+function toggleCandMore() {
+  var el  = document.getElementById('cf-more');
+  var arr = document.getElementById('cf-more-arrow');
+  if (!el) return;
+  var open = el.style.display === 'flex';
+  el.style.display = open ? 'none' : 'flex';
+  if (arr) arr.textContent = open ? '\u25be' : '\u25b4';
 }
 
 document.addEventListener('DOMContentLoaded', init);
