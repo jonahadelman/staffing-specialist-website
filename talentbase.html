@@ -1168,6 +1168,7 @@ input:focus, select:focus, textarea:focus {
                   <button type="button" onclick="nav('analytics')"
                     style="margin-top:7px;padding:5px 12px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:7px;color:#2dd4bf;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">
                     💰 Suggest from Compensation Tool
+                  <div id="salary-suggest-banner" style="display:none;margin-top:6px;padding:7px 12px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.25);border-radius:7px;"><div style="display:flex;align-items:center;gap:10px;"><span id="salary-suggest-text" style="font-size:11px;color:#2dd4bf;flex:1;">💰 Suggested range: $95,000 — $130,000</span><button type="button" onclick="applySalarySuggestion()" style="padding:2px 10px;background:rgba(20,184,166,.2);border:1px solid rgba(20,184,166,.4);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">Apply</button><button type="button" onclick="this.parentElement.parentElement.style.display='none'" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:14px;padding:0 2px;">×</button></div></div>
                   </button>
                 </div>
 
@@ -1221,8 +1222,15 @@ input:focus, select:focus, textarea:focus {
                 <!-- Job Description -->
                 <div>
                   <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-notes">Job Description</label>
-                  <textarea id="jf-notes" rows="3" placeholder="Role overview, key requirements, hiring manager, team context..."
+                  <textarea id="jf-notes" onblur="analyzeJobDescription(this.value)" rows="3" placeholder="Role overview, key requirements, hiring manager, team context..."
                     style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
+                </div>
+                <div id="jd-improve-banner" style="display:none;padding:10px 14px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);border-radius:8px;margin-bottom:10px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+                    <div style="font-size:12px;color:var(--text3);">✨ <strong style="color:var(--text);">We improved this job description</strong></div>
+                    <div style="display:flex;gap:6px;"><button type="button" onclick="applyJobDescriptionImprovement()" class="btn btn-primary btn-sm" style="font-size:10px;padding:3px 10px;">Apply</button><button type="button" onclick="dismissJobDescriptionImprovement()" class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 10px;">Keep Original</button></div>
+                  </div>
+                  <div id="jd-improved-preview" style="font-size:11px;color:var(--text4);margin-top:7px;max-height:80px;overflow-y:auto;line-height:1.6;white-space:pre-wrap;"></div>
                 </div>
                 <div id="job-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
                 <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;">
@@ -1327,7 +1335,7 @@ input:focus, select:focus, textarea:focus {
                 </div>
                 <div>
                   <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="cf-resume">Resume / Background</label>
-                  <textarea id="cf-resume" rows="4" placeholder="Paste resume text, LinkedIn summary, or key background notes..."
+                  <textarea id="cf-resume" onblur="analyzeResume(this.value)" rows="4" placeholder="Paste resume text, LinkedIn summary, or key background notes..."
                     style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
                 </div>
                 <div id="cand-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
@@ -2435,6 +2443,22 @@ function renderCandidateDetail(cd) {
       : '') +
 
     // ── Resume ────────────────────────────────────────────────────────
+    // AI Summary
+    (cd.aiSummary
+      ? '<div class="cand-detail-section">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
+            '<div class="detail-section-label" style="margin-bottom:0;">AI Summary</div>' +
+            '<span style="font-size:9px;font-weight:700;color:var(--text4);background:rgba(255,255,255,.07);padding:1px 6px;border-radius:4px;">AI</span>' +
+          '</div>' +
+          (cd.aiSummary.summary ? '<div style="font-size:12px;color:var(--text3);line-height:1.6;margin-bottom:8px;">' + escHtml(cd.aiSummary.summary) + '</div>' : '') +
+          (cd.aiSummary.keySkills && cd.aiSummary.keySkills.length
+            ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;">' +
+                cd.aiSummary.keySkills.slice(0,6).map(function(s) { return '<span style="font-size:10px;background:rgba(124,106,247,.12);color:var(--accent2);padding:2px 8px;border-radius:99px;">' + escHtml(s) + '</span>'; }).join('') +
+              '</div>'
+            : '') +
+        '</div>'
+      : '') +
+
     (cd.resume
       ? '<div class="cand-detail-section">' +
           '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
@@ -3816,6 +3840,133 @@ function toggleTasksView() {
   if (btn) btn.textContent = showAllTasks ? 'Show Less' : 'View All';
   renderActivityBoard();
 }
+
+// === INPUT INTELLIGENCE LAYER ===
+var _pendingJDImprovement = null;
+
+function analyzeJobDescription(text) {
+  if (!text || text.trim().length < 40) return;
+  var banner  = document.getElementById('jd-improve-banner');
+  var preview = document.getElementById('jd-improved-preview');
+  if (!banner || !preview) return;
+  var improved = improveJobDescriptionText(text);
+  if (improved === text.trim()) return;
+  _pendingJDImprovement = improved;
+  preview.textContent   = improved;
+  banner.style.display  = 'block';
+  suggestSalary();
+}
+
+function improveJobDescriptionText(text) {
+  var t = text.trim();
+  t = t.charAt(0).toUpperCase() + t.slice(1);
+  if (t.length && !/[.!?]$/.test(t)) t += '.';
+  t = t.replace(/responsible for/gi, 'leads');
+  t = t.replace(/will be responsible for/gi, 'will lead');
+  t = t.replace(/must have/gi, 'requires');
+  t = t.replace(/good communication skills/gi, 'strong stakeholder communication');
+  t = t.replace(/team player/gi, 'collaborative cross-functional contributor');
+  return t;
+}
+
+function applyJobDescriptionImprovement() {
+  if (!_pendingJDImprovement) return;
+  var ta = document.getElementById('jf-notes');
+  if (ta) ta.value = _pendingJDImprovement;
+  dismissJobDescriptionImprovement();
+}
+
+function dismissJobDescriptionImprovement() {
+  _pendingJDImprovement = null;
+  var b = document.getElementById('jd-improve-banner');
+  if (b) b.style.display = 'none';
+}
+
+function getSalaryRangeForRole(text) {
+  var t = (text || '').toLowerCase();
+  if (/principal|staff|architect/.test(t))  return { min:130000, max:175000 };
+  if (/director|vp|head of/.test(t))         return { min:160000, max:220000 };
+  if (/manager/.test(t))                      return { min:120000, max:165000 };
+  if (/senior|sr|lead/.test(t))              return { min:110000, max:150000 };
+  if (/engineer|developer/.test(t))           return { min:95000,  max:135000 };
+  if (/quality|qa/.test(t))                  return { min:85000,  max:120000 };
+  if (/program manager|pmo/.test(t))          return { min:100000, max:145000 };
+  if (/recruiter|talent/.test(t))             return { min:75000,  max:110000 };
+  return null;
+}
+
+function suggestSalary() {
+  var minEl = document.getElementById('jf-salary-min');
+  var maxEl = document.getElementById('jf-salary-max');
+  if (!minEl || !maxEl || minEl.value || maxEl.value) return;
+  var title = ((document.getElementById('jf-title')||{}).value||'');
+  var dept  = ((document.getElementById('jf-dept') ||{}).value||'');
+  var range = getSalaryRangeForRole(title + ' ' + dept);
+  if (!range) return;
+  var banner = document.getElementById('salary-suggest-banner');
+  var text   = document.getElementById('salary-suggest-text');
+  if (banner && text) {
+    text.textContent     = '\U0001F4B0 Suggested: $' + range.min.toLocaleString() + ' \u2014 $' + range.max.toLocaleString();
+    banner.style.display = 'block';
+    banner._range        = range;
+  }
+}
+
+function applySalarySuggestion() {
+  var banner = document.getElementById('salary-suggest-banner');
+  var range  = banner && banner._range;
+  if (!range) return;
+  var minEl = document.getElementById('jf-salary-min');
+  var maxEl = document.getElementById('jf-salary-max');
+  if (minEl) minEl.value = String(range.min);
+  if (maxEl) maxEl.value = String(range.max);
+  banner.style.display = 'none';
+}
+
+function buildResumeSummary(text) {
+  var lines  = text.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+  var words  = text.toLowerCase();
+  var skills = ['FDA','ISO 13485','GMP','SolidWorks','CAD','PCB','FPGA','Python',
+    'SQL','PMP','Agile','Scrum','JIRA','DHF','FMEA','Systems Engineering','Embedded',
+    'Medical Device','Life Sciences','Program Management','Six Sigma','Cross-functional'];
+  var found  = skills.filter(function(sk){return words.indexOf(sk.toLowerCase())>=0;}).slice(0,6);
+  var first  = lines[0] || '';
+  var summ   = first.length > 20
+    ? (first.length > 120 ? first.slice(0,120)+'...' : first)
+    : text.slice(0,150).replace(/\n/g,' ').trim()+(text.length>150?'...':'');
+  var ym     = words.match(/(\d+)\+?\s*years?/);
+  var hl     = [];
+  if (ym) hl.push(ym[1]+'+ years experience');
+  if (found.length) hl.push(found.length+' key skills detected');
+  return { summary:summ, keySkills:found, highlights:hl };
+}
+
+function analyzeResume(text) {
+  if (!text || text.trim().length < 30) return;
+  window._pendingResumeAnalysis = buildResumeSummary(text);
+}
+
+(function patchSubmitCand() {
+  var orig = window.submitCandForm;
+  if (typeof orig !== 'function') { setTimeout(patchSubmitCand, 50); return; }
+  window.submitCandForm = function(e) {
+    orig.call(this, e);
+    if (!window._pendingResumeAnalysis) return;
+    var rv = ((document.getElementById('cf-resume')||{}).value||'').trim();
+    if (!rv) { window._pendingResumeAnalysis = null; return; }
+    var eid    = window.editingCandidateId;
+    var target = eid
+      ? candidates.find(function(x){return String(x.id)===String(eid);})
+      : candidates[0];
+    if (target) { target.aiSummary = window._pendingResumeAnalysis; saveCandidates(); }
+    window._pendingResumeAnalysis = null;
+  };
+})();
+
+document.addEventListener('DOMContentLoaded', function() {
+  var t = document.getElementById('jf-title');
+  if (t) t.addEventListener('blur', suggestSalary);
+});
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
