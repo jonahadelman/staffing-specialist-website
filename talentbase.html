@@ -1019,9 +1019,31 @@ input:focus, select:focus, textarea:focus {
           <div style="margin-bottom:22px;">
             <div class="section-header">
               <div class="section-title">⚡ Needs Action</div>
-              <div class="section-sub" id="needs-action-count"></div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="section-sub" id="needs-action-count"></div>
+                <button id="tasks-toggle-btn" onclick="toggleTasksView()" style="display:none;background:none;border:1px solid var(--border2);border-radius:6px;color:var(--accent2);font-size:10px;font-weight:700;font-family:inherit;padding:2px 9px;cursor:pointer;">View All</button>
+              </div>
             </div>
             <div class="card" id="needs-action-list" style="padding:6px 8px;"></div>
+          </div>
+
+
+          <!-- Entry Panels -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;">
+            <div class="card" style="padding:22px 24px;display:flex;flex-direction:column;gap:12px;border:1px solid rgba(96,165,250,.2);background:rgba(59,130,246,.04);">
+              <div>
+                <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;">Candidate Experience</div>
+                <div style="font-size:12px;color:var(--text4);line-height:1.5;">Source, review, and submit candidates through your pipeline.</div>
+              </div>
+              <button onclick="nav('candidates')" class="btn btn-primary btn-sm" style="align-self:flex-start;">Enter Candidate Flow →</button>
+            </div>
+            <div class="card" style="padding:22px 24px;display:flex;flex-direction:column;gap:12px;border:1px solid rgba(20,184,166,.2);background:rgba(20,184,166,.04);">
+              <div>
+                <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;">Company Experience</div>
+                <div style="font-size:12px;color:var(--text4);line-height:1.5;">Create jobs, track requirements, and drive hiring decisions.</div>
+              </div>
+              <button onclick="nav('jobs')" class="btn btn-primary btn-sm" style="align-self:flex-start;background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;box-shadow:0 3px 10px rgba(20,184,166,.3);">Enter Company Flow →</button>
+            </div>
           </div>
 
           <!-- Pipeline Stages + Aging Reqs -->
@@ -3327,14 +3349,25 @@ function renderActivityBoard() {
 
   var html = '';
 
-  if (autoPipelineTasks.length) {
-    html += '<div style="font-size:9px;font-weight:800;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:8px 12px 4px;">Pipeline Actions</div>';
-    html += autoPipelineTasks.slice(0,5).map(renderAuto).join('');
+  var totalAll  = autoPipelineTasks.length + activityBoard.length;
+  var showLim   = showAllTasks ? Infinity : 3;
+  var autoShown = autoPipelineTasks.slice(0, Math.min(autoPipelineTasks.length, showLim));
+  var manCap    = showAllTasks ? activityBoard.length : Math.max(0, 3 - autoShown.length);
+  var manShown  = activityBoard.slice(0, manCap);
+  var tBtn = document.getElementById('tasks-toggle-btn');
+  if (tBtn) {
+    tBtn.style.display = totalAll > 3 ? 'inline-block' : 'none';
+    tBtn.textContent   = showAllTasks ? 'Show Less' : 'View All (' + totalAll + ')';
   }
 
-  if (activityBoard.length) {
+  if (autoShown.length) {
+    html += '<div style="font-size:9px;font-weight:800;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:8px 12px 4px;">Pipeline Actions</div>';
+    html += autoShown.map(renderAuto).join('');
+  }
+
+  if (manShown.length) {
     html += '<div style="font-size:9px;font-weight:800;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:8px 12px 4px;margin-top:4px;">Your Tasks</div>';
-    html += activityBoard.map(renderManual).join('');
+    html += manShown.map(renderManual).join('');
   }
 
   html += '<div style="display:flex;gap:8px;padding:8px 10px 4px;border-top:1px solid rgba(255,255,255,.05);margin-top:6px;">' +
@@ -3774,6 +3807,14 @@ function renderTopToSubmit() {
         + 'style="padding:4px 12px;background:linear-gradient(135deg,var(--teal),#0d9488);border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">Submit</button>' +
     '</div>';
   }).join("");
+}
+
+var showAllTasks = false;
+function toggleTasksView() {
+  showAllTasks = !showAllTasks;
+  var btn = document.getElementById('tasks-toggle-btn');
+  if (btn) btn.textContent = showAllTasks ? 'Show Less' : 'View All';
+  renderActivityBoard();
 }
 
 document.addEventListener('DOMContentLoaded', init);
