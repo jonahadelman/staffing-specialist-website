@@ -879,6 +879,10 @@ input:focus, select:focus, textarea:focus {
         </svg>
         Dashboard
       </button>
+      <button class="nav-item" data-view="companies">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+        Companies
+      </button>
       <button class="nav-item" data-view="jobs">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="2" y="7" width="20" height="14" rx="2"/>
@@ -904,28 +908,28 @@ input:focus, select:focus, textarea:focus {
         Pipeline
       </button>
 
-      <div class="nav-section-label" style="margin-top:8px;">Tools</div>
-      <button class="nav-item" data-view="match">
+      <div class="nav-section-label" style="margin-top:8px;display:none;">Tools</div>
+      <button class="nav-item" data-view="match" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
         </svg>
         AI Match
       </button>
-      <button class="nav-item" data-view="offer">
+      <button class="nav-item" data-view="offer" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
         </svg>
         Offer Builder
       </button>
-      <button class="nav-item" data-view="templates">
+      <button class="nav-item" data-view="templates" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
         </svg>
         Templates
       </button>
-      <button class="nav-item" data-view="happyhunting">
+      <button class="nav-item" data-view="happyhunting" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"/>
           <path d="M8 11s.5-2 3-2 3 2 3 2"/>
@@ -1031,22 +1035,24 @@ input:focus, select:focus, textarea:focus {
           </div>
 
 
-          <!-- Entry Panels -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;">
-            <div class="card" style="padding:22px 24px;display:flex;flex-direction:column;gap:12px;border:1px solid rgba(96,165,250,.2);background:rgba(59,130,246,.04);">
-              <div>
-                <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;">Candidate Experience</div>
-                <div style="font-size:12px;color:var(--text4);line-height:1.5;">Source, review, and submit candidates through your pipeline.</div>
-              </div>
-              <button onclick="nav('candidates')" class="btn btn-primary btn-sm" style="align-self:flex-start;">Enter Candidate Flow →</button>
-            </div>
-            <div class="card" style="padding:22px 24px;display:flex;flex-direction:column;gap:12px;border:1px solid rgba(20,184,166,.2);background:rgba(20,184,166,.04);">
-              <div>
-                <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;">Company Experience</div>
-                <div style="font-size:12px;color:var(--text4);line-height:1.5;">Create jobs, track requirements, and drive hiring decisions.</div>
-              </div>
-              <button onclick="nav('jobs')" class="btn btn-primary btn-sm" style="align-self:flex-start;background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;box-shadow:0 3px 10px rgba(20,184,166,.3);">Enter Company Flow →</button>
-            </div>
+          <!-- Primary Actions -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;" id="dash-primary-actions">
+            <button onclick="openAddCompany()" class="card" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid rgba(124,106,247,.2);background:rgba(124,106,247,.04);text-align:center;">
+              <div style="font-size:20px;">&#127970;</div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);">Add Company</div>
+            </button>
+            <button onclick="openAddJob()" class="card" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid rgba(59,130,246,.2);background:rgba(59,130,246,.04);text-align:center;">
+              <div style="font-size:20px;">&#128188;</div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);">Add Job</div>
+            </button>
+            <button onclick="openAddCandidateModal()" class="card" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid rgba(20,184,166,.2);background:rgba(20,184,166,.04);text-align:center;">
+              <div style="font-size:20px;">&#128100;</div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);">Add Candidate</div>
+            </button>
+            <button onclick="nav('pipeline')" class="card" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid rgba(245,158,11,.2);background:rgba(245,158,11,.04);text-align:center;">
+              <div style="font-size:20px;">&#128203;</div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);">View Pipeline</div>
+            </button>
           </div>
 
           <!-- Pipeline Stages + Aging Reqs -->
@@ -1083,6 +1089,11 @@ input:focus, select:focus, textarea:focus {
         </div>
       </section>
 
+      <!-- ── COMPANIES ───────────────────────── -->
+      <section class="view" id="v-companies">
+        <div class="view-scroll"></div>
+      </section>
+
       <!-- ── JOBS ────────────────────────────── -->
       <section class="view" id="v-jobs">
         <div style="display:flex;height:100%;overflow:hidden;">
@@ -1110,6 +1121,23 @@ input:focus, select:focus, textarea:focus {
 
         </div>
 
+        <!-- Add Company Modal -->
+        <div id="company-modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeCompanyModal()">
+          <div style="background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:14px;width:min(480px,calc(100vw - 32px));max-height:90vh;overflow-y:auto;position:relative;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.08);">
+              <div style="font-size:15px;font-weight:800;color:var(--text);">Add Company</div>
+              <button onclick="closeCompanyModal()" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:20px;line-height:1;padding:0;">&times;</button>
+            </div>
+            <form id="company-form" onsubmit="submitCompanyForm(event)" autocomplete="off">
+              <div style="display:flex;flex-direction:column;gap:14px;padding:20px;">
+                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Company Name <span style="color:var(--red);">*</span></label><input id="co-name" type="text" placeholder="e.g. Boston Scientific" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
+                <div id="co-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;"><button type="button" onclick="closeCompanyModal()" class="btn btn-ghost">Cancel</button><button type="submit" class="btn btn-primary" id="co-submit-btn">Add Company</button></div>
+              </div>
+            </form>
+          </div>
+        </div>
+
         <!-- Add Job Modal -->
         <div id="job-modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;">
           <div style="background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:28px 30px;width:480px;max-width:calc(100vw - 32px);box-shadow:0 24px 60px rgba(0,0,0,.7);">
@@ -1119,6 +1147,7 @@ input:focus, select:focus, textarea:focus {
             </div>
             <form id="job-form" onsubmit="submitJobForm(event)" autocomplete="off">
               <div style="display:flex;flex-direction:column;gap:14px;">
+                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Company <span style="color:var(--red);">*</span></label><select id="jf-company" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">Select company...</option></select></div>
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Job Title <span style="color:var(--red);">*</span></label><input id="jf-title" type="text" placeholder="e.g. Senior Program Manager" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Location</label><input id="jf-location" type="text" placeholder="e.g. Boston, MA" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Salary Range</label><div style="display:flex;gap:8px;align-items:center;"><input id="jf-salary-min" type="number" placeholder="Min" style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/><span style="font-size:12px;color:var(--text4);flex-shrink:0;">&mdash;</span><input id="jf-salary-max" type="number" placeholder="Max" style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><button type="button" onclick="suggestSalary()" style="margin-top:7px;padding:5px 12px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:7px;color:#2dd4bf;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">&#128176; Suggest Salary</button><div id="salary-suggest-banner" style="display:none;margin-top:6px;padding:7px 12px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.25);border-radius:7px;"><div style="display:flex;align-items:center;gap:10px;"><span id="salary-suggest-text" style="font-size:11px;color:#2dd4bf;flex:1;">Suggested range</span><button type="button" onclick="applySalarySuggestion()" style="padding:2px 10px;background:rgba(20,184,166,.2);border:1px solid rgba(20,184,166,.4);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">Apply</button><button type="button" onclick="this.parentElement.parentElement.style.display='none'" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:14px;padding:0 2px;">&times;</button></div></div></div>
@@ -1564,6 +1593,7 @@ function nav(viewId) {
   // View-specific render
   if (viewId === 'dashboard')    renderDashboard();
   if (viewId === 'settings')     renderSettings();
+  if (viewId === 'companies')   renderCompaniesView();
   if (viewId === 'jobs')         renderJobs();
   if (viewId === 'candidates')   renderCandidatesView();
   if (viewId === 'pipeline')     renderPipeline();
@@ -1774,10 +1804,13 @@ function renderSettings() {
 // ═══════════════════════════════════════════════════════════
 
 function init() {
+  loadCompanies();
   loadJobs();
   loadCandidates();
   loadActivityBoard();
+  seedCompaniesIfEmpty();
   seedDataIfEmpty();
+  migrateLegacyData();
   restoreUser();
   loadApiKey();
   nav('dashboard');
@@ -1789,6 +1822,8 @@ function init() {
 // JOBS SYSTEM
 // ═══════════════════════════════════════════════════════════
 
+var COMPANIES_KEY = 'tb2_companies';
+var companies  = [];
 var JOBS_KEY = 'tb2_jobs';
 var jobs     = [];
 var selectedJobId = null;
@@ -1855,6 +1890,7 @@ function renderJobList() {
         (j.priority ? '<span style="width:7px;height:7px;border-radius:50%;background:' + priColor + ';flex-shrink:0;margin-top:4px;"></span>' : '') +
         '<div style="flex:1;min-width:0;">' +
           '<div class="job-card-title">' + escHtml(j.title) + '</div>' +
+          (j.companyId ? '<div style="font-size:10px;color:var(--text4);margin-top:1px;">' + escHtml(getCompanyName(j.companyId)) + '</div>' : '') +
           '<div class="job-card-meta">' +
             (j.dept ? '<span>' + escHtml(j.dept) + '</span><span>·</span>' : '') +
             (j.location ? '<span>' + escHtml(j.location) + '</span>' : '') +
@@ -1909,6 +1945,7 @@ function renderJobDetail(j) {
   panel.innerHTML =
     '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:6px;">' +
       '<div class="job-detail-title">' + escHtml(j.title) + '</div>' +
+      (j.companyId ? '<div style="font-size:12px;color:var(--text4);margin-top:2px;">' + escHtml(getCompanyName(j.companyId)) + '</div>' : '') +
       '<div style="display:flex;gap:8px;flex-shrink:0;">' +
         '<button class="btn btn-ghost btn-sm" onclick="openEditJob(' + j.id + ')">Edit</button>' +
         (j.approvalStatus !== 'approved'
@@ -1963,6 +2000,7 @@ function openAddJob() {
   editingJobId = null;
   var form = document.getElementById('job-form');
   if (form) form.reset();
+  populateCompanyDropdown(null);
   var errEl = document.getElementById('job-form-error');
   if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
   var titleEl = document.getElementById('job-modal-title');
@@ -1977,6 +2015,8 @@ function openEditJob(id) {
   if (!j) return;
   editingJobId = id;
 
+  populateCompanyDropdown(j.companyId || '');
+  if (document.getElementById('jf-company')) document.getElementById('jf-company').value = j.companyId || '';
   document.getElementById('jf-title').value    = j.title    || '';
   document.getElementById('jf-dept').value     = j.dept     || '';
   document.getElementById('jf-location').value = j.location || '';
@@ -2082,6 +2122,7 @@ function submitJobForm(e) {
     // New job
     var newJob = {
       id:         uid(),
+      companyId:  document.getElementById("jf-company") ? document.getElementById("jf-company").value : "",
       title:      title,
       dept:       document.getElementById('jf-dept').value.trim(),
       location:   document.getElementById('jf-location').value.trim(),
@@ -2155,6 +2196,26 @@ function loadCandidates() {
   try {
     candidates = JSON.parse(localStorage.getItem(CANDS_KEY) || '[]') || [];
   } catch(e) { candidates = []; }
+}
+
+function saveCompanies() {
+  try { localStorage.setItem(COMPANIES_KEY, JSON.stringify(companies)); } catch(e) {}
+}
+function loadCompanies() {
+  try {
+    companies = JSON.parse(localStorage.getItem(COMPANIES_KEY) || '[]') || [];
+  } catch(e) { companies = []; }
+}
+function seedCompaniesIfEmpty() {
+  if (companies.length) return;
+  var now = Date.now();
+  companies = [
+    { id:'sc_1', name:'Boston Scientific', createdAt: now-90*86400000 },
+    { id:'sc_2', name:'Becton Dickinson',  createdAt: now-85*86400000 },
+    { id:'sc_3', name:'Werfen',            createdAt: now-80*86400000 },
+    { id:'sc_4', name:'Abbott',            createdAt: now-75*86400000 },
+  ];
+  saveCompanies();
 }
 
 function saveCandidates() {
@@ -2309,7 +2370,10 @@ function renderCandidateDetail(cd) {
         '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">Next Action</div>' +
         '<div style="font-size:13px;font-weight:700;color:var(--accent2);">→ ' + escHtml(nba) + '</div>' +
       '</div>' +
-      '<button onclick="openSubmitModal(' + cd.id + ')" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;box-shadow:0 4px 18px rgba(20,184,166,.55);font-weight:800;">Submit Candidate</button>' +
+      (cd.status === 'Offer'
+        ? '<button data-cid="' + cd.id + '" onclick="acceptOffer(this.dataset.cid)" style="padding:6px 14px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;">&#10003; Accept Offer</button>' +
+          '<button data-cid="' + cd.id + '" onclick="declineOffer(this.dataset.cid)" style="padding:6px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:var(--red);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">&#10005; Decline</button>'
+        : '<button onclick="openSubmitModal(' + cd.id + ')" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;box-shadow:0 4px 18px rgba(20,184,166,.55);font-weight:800;">Submit Candidate</button>') +
       '<button onclick="showMessageModal(' + cd.id + ')" class="btn btn-ghost btn-sm" style="font-size:11px;opacity:.75;">Generate Message</button>' +
     '</div>' +
 
@@ -2548,6 +2612,7 @@ function submitCandForm(e) {
     saveCandidates();
     closeCandModal();
     renderCandidates();
+    if (state && state.currentView === 'dashboard') renderDashboard();
     var updated = candidates.find(function(x) { return x.id == editingCandidateId; });
     if (updated) renderCandidateDetail(updated);
 
@@ -3902,6 +3967,150 @@ function toggleJobAdvanced() {
   var open = el.style.display === 'flex';
   el.style.display  = open ? 'none' : 'flex';
   if (arr) arr.textContent = open ? '▾' : '▴';
+}
+
+// migrateLegacyData — stamp existing records with defaults
+function migrateLegacyData() {
+  var changed = false;
+  jobs.forEach(function(j) {
+    if (!j.companyId && companies.length) {
+      j.companyId = companies[0].id; changed = true;
+    }
+  });
+  candidates.forEach(function(cd) {
+    if (!cd.stage) { cd.stage = cd.status || 'New'; changed = true; }
+  });
+  if (changed) { saveJobs(); saveCandidates(); }
+}
+
+function populateCompanyDropdown(selectedId) {
+  var sel = document.getElementById('jf-company');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Select company...</option>' +
+    companies.map(function(co) {
+      return '<option value="' + co.id + '"' + (String(co.id)===String(selectedId)?' selected':'') + '>' + escHtml(co.name) + '</option>';
+    }).join('');
+}
+
+function getCompanyName(companyId) {
+  var co = companies.find(function(x) { return String(x.id)===String(companyId); });
+  return co ? co.name : '';
+}
+
+function openAddCompany() {
+  var f = document.getElementById('company-form');
+  if (f) f.reset();
+  var err = document.getElementById('co-form-error');
+  if (err) { err.style.display='none'; err.textContent=''; }
+  document.getElementById('company-modal-backdrop').style.display='flex';
+  setTimeout(function(){ var n=document.getElementById('co-name'); if(n)n.focus(); },50);
+}
+function closeCompanyModal() {
+  document.getElementById('company-modal-backdrop').style.display='none';
+}
+function submitCompanyForm(e) {
+  e.preventDefault();
+  var name=(document.getElementById('co-name').value||'').trim();
+  var err=document.getElementById('co-form-error');
+  if (!name) { err.textContent='Company name is required.'; err.style.display='block'; return; }
+  var co={ id:'co_'+Date.now(), name:name, createdAt:Date.now() };
+  companies.unshift(co);
+  saveCompanies();
+  closeCompanyModal();
+  renderCompaniesView();
+  addActivityItem('Company added: '+name);
+  saveActivityBoard();
+  // Prompt: create first job for this company
+  if (!jobs.filter(function(j){return j.companyId===co.id;}).length) {
+    if (confirm('Company "'+name+'" created. Add a job for this company now?')) {
+      openAddJob();
+      setTimeout(function(){
+        populateCompanyDropdown(co.id);
+        var sel=document.getElementById('jf-company');
+        if(sel) sel.value=co.id;
+      },100);
+    }
+  }
+}
+
+function renderCompaniesView() {
+  var el = document.getElementById('v-companies');
+  if (!el) return;
+  var scroll = el.querySelector('.view-scroll');
+  if (!scroll) return;
+
+  var jobCount  = function(coId) { return jobs.filter(function(j) { return String(j.companyId) === String(coId); }).length; };
+  var candCount = function(coId) { return candidates.filter(function(cd) { return jobs.some(function(j) { return String(j.companyId) === String(coId) && String(j.id) === String(cd.jobId); }); }).length; };
+
+  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">' +
+    '<div style="font-size:18px;font-weight:800;color:var(--text);">Companies</div>' +
+    '<button onclick="openAddCompany()" class="btn btn-primary btn-sm">+ Add Company</button>' +
+    '</div>';
+
+  if (!companies.length) {
+    html += '<div class="empty-state"><div class="empty-state-icon">&#127970;</div>' +
+      '<div class="empty-state-title">No companies yet</div>' +
+      '<div class="empty-state-sub">Add your first client or hiring company to get started.</div>' +
+      '<button onclick="openAddCompany()" class="btn btn-primary" style="margin-top:14px;">+ Add Company</button></div>';
+  } else {
+    html += companies.map(function(co) {
+      var jc = jobCount(co.id);
+      var cc = candCount(co.id);
+      return '<div class="card co-row" data-coid="' + escHtml(String(co.id)) + '" style="padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;gap:16px;cursor:pointer;">' +
+        '<div style="flex:1;">' +
+          '<div style="font-size:14px;font-weight:700;color:var(--text);">' + escHtml(co.name) + '</div>' +
+          '<div style="font-size:11px;color:var(--text4);margin-top:3px;">' + jc + ' job' + (jc !== 1 ? 's' : '') + ' · ' + cc + ' candidate' + (cc !== 1 ? 's' : '') + '</div>' +
+        '</div>' +
+        '<button class="co-addjob-btn btn btn-sm" data-coid="' + escHtml(String(co.id)) + '" style="background:rgba(124,106,247,.1);border:1px solid rgba(124,106,247,.3);color:var(--accent2);font-size:11px;flex-shrink:0;">+ Add Job</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  scroll.innerHTML = html;
+
+  scroll.querySelectorAll('.co-row').forEach(function(row) {
+    row.addEventListener('click', function(e) {
+      if (e.target.classList.contains('co-addjob-btn')) return;
+      nav('jobs');
+    });
+  });
+  scroll.querySelectorAll('.co-addjob-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      openAddJobForCompany(btn.dataset.coid);
+    });
+  });
+}
+
+function openAddJobForCompany(coId) {
+  openAddJob();
+  setTimeout(function() {
+    populateCompanyDropdown(coId);
+    var sel = document.getElementById('jf-company');
+    if (sel) sel.value = String(coId);
+  }, 80);
+}
+
+
+function acceptOffer(candId) {
+  var cd=candidates.find(function(x){return String(x.id)===String(candId);});
+  if(!cd) return;
+  cd.status='Hired'; cd.lastActivityAt=Date.now();
+  saveCandidates();
+  addActivityItem('Offer accepted — Hired: '+cd.name); saveActivityBoard();
+  try{renderCandidateDetail(cd);}catch(e){}
+  try{renderPipeline();}catch(e){}
+  try{renderDashboard();}catch(e){}
+}
+function declineOffer(candId) {
+  var cd=candidates.find(function(x){return String(x.id)===String(candId);});
+  if(!cd) return;
+  cd.status='Rejected'; cd.lastActivityAt=Date.now();
+  saveCandidates();
+  addActivityItem('Offer declined — Rejected: '+cd.name); saveActivityBoard();
+  try{renderCandidateDetail(cd);}catch(e){}
+  try{renderPipeline();}catch(e){}
+  try{renderDashboard();}catch(e){}
 }
 
 document.addEventListener('DOMContentLoaded', init);
