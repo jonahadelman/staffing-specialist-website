@@ -982,7 +982,7 @@ input:focus, select:focus, textarea:focus {
     <!-- Topbar -->
     <header id="topbar">
       <div id="topbar-left">
-        <div id="topbar-title">Dashboard</div>
+        <div id="topbar-title">TalentBase — Hiring Experience</div>
         <div id="topbar-sub" style="font-size:11px;color:var(--text4);"></div>
       </div>
       <div id="topbar-right">
@@ -1532,7 +1532,7 @@ var USERS = [
 ];
 
 var TOPBAR_CONFIG = {
-  dashboard:   { title: 'Dashboard',     sub: '', primary: null, secondary: null },
+  dashboard:   { title: 'TalentBase — Hiring Experience', sub: 'Start with candidates. Move them. Close roles.', primary: null, secondary: null },
   jobs:        { title: 'Jobs',          sub: 'Open requisitions', primary: '+ New Job',       secondary: null },
   candidates:  { title: 'Candidates',    sub: 'Talent pool',      primary: '+ Add Candidate', secondary: 'Upload Resume' },
   pipeline:    { title: 'Pipeline',      sub: 'Hiring board',     primary: null, secondary: null },
@@ -1705,7 +1705,7 @@ function renderDashboard() {
   var mos   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var welcomeEl = document.getElementById('dash-welcome');
   var dateEl    = document.getElementById('dash-date');
-  if (welcomeEl) welcomeEl.textContent = greet + name;
+  if (welcomeEl) welcomeEl.textContent = greet + name + " — let's move some candidates.";
   if (dateEl)    dateEl.textContent    = days[now.getDay()] + ', ' + mos[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
 
   var tbSub = document.getElementById('topbar-sub');
