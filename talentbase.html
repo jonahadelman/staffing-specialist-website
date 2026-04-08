@@ -41,7 +41,7 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
 
   /* Sizes */
   --sidebar-w: 200px;
-  --topbar-h:  54px;
+  --topbar-h:  42px;
   --radius:    10px;
   --radius-lg: 14px;
 
@@ -1033,8 +1033,8 @@ input:focus, textarea:focus, select:focus {
     <!-- Topbar -->
     <header id="topbar">
       <div id="topbar-left">
-        <div id="topbar-title">TalentBase — Hiring Experience</div>
-        <div id="topbar-sub" style="font-size:11px;color:var(--text4);"></div>
+        <div id="topbar-title" style="display:none;"></div>
+        <div id="topbar-sub" style="display:none;"></div>
       </div>
       <div id="topbar-right">
         <button class="btn btn-ghost btn-sm" id="tb-btn-secondary" onclick="topbarSecondaryAction()" style="display:none;"></button>
@@ -1049,7 +1049,7 @@ input:focus, textarea:focus, select:focus {
       <section class="view active" id="v-dashboard">
         <div class="view-scroll">
 
-          <div id="dash-greeting" style="margin-bottom:22px;">
+          <div id="dash-greeting" style="margin-bottom:20px;">
             <div style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--text);" id="dash-welcome">Good morning</div>
             <div style="font-size:12px;color:var(--text4);margin-top:3px;" id="dash-date"></div>
           </div>
@@ -1583,7 +1583,7 @@ var USERS = [
 ];
 
 var TOPBAR_CONFIG = {
-  dashboard:   { title: 'TalentBase — Hiring Experience', sub: 'Start with candidates. Move them. Close roles.', primary: null, secondary: null },
+  dashboard:   { title: '', sub: '', primary: null, secondary: null },
   jobs:        { title: 'Jobs',          sub: 'Open requisitions', primary: '+ New Job',       secondary: null },
   candidates:  { title: 'Candidates',    sub: 'Talent pool',      primary: '+ Add Candidate', secondary: 'Upload Resume' },
   pipeline:    { title: 'Pipeline',      sub: 'Hiring board',     primary: null, secondary: null },
@@ -1631,6 +1631,10 @@ function nav(viewId) {
 
   if (titleEl) titleEl.textContent = cfg.title;
   if (subEl)   subEl.textContent   = cfg.sub || '';
+  // Hide topbar text on dashboard — greeting is the sole header
+  var tLeft = document.getElementById('topbar-left');
+  if (tLeft) tLeft.style.display = (viewId === 'dashboard') ? 'none' : '';
+
 
   if (btnP) {
     btnP.style.display = cfg.primary ? '' : 'none';
@@ -1759,11 +1763,6 @@ function renderDashboard() {
   if (welcomeEl) welcomeEl.textContent = greet + name + " — let's move some candidates.";
   if (dateEl)    dateEl.textContent    = days[now.getDay()] + ', ' + mos[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
 
-  var tbSub = document.getElementById('topbar-sub');
-  if (tbSub && state.currentWorkspace) {
-    var ws = WORKSPACES.find(function(w){ return w.id === state.currentWorkspace; });
-    tbSub.textContent = ws ? ws.name + ' workspace' : '';
-  }
 
   var openJobs   = jobs.filter(function(j) { return (j.status === 'Active' || j.status === 'Approved' || j.status === 'Open'); });
   var filledJobs = jobs.filter(function(j) { return j.status === 'Filled'; });
