@@ -1231,6 +1231,11 @@ input:focus, select:focus, textarea:focus {
                   <textarea id="cf-notes" rows="3" placeholder="Background, fit, next steps..."
                     style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
                 </div>
+                <div>
+                  <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="cf-resume">Resume / Background</label>
+                  <textarea id="cf-resume" rows="4" placeholder="Paste resume text, LinkedIn summary, or key background notes..."
+                    style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
+                </div>
                 <div id="cand-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
                 <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;">
                   <button type="button" onclick="closeCandModal()" class="btn btn-ghost">Cancel</button>
@@ -2200,6 +2205,16 @@ function renderCandidateDetail(cd) {
           '</div>'
         : '<div style="font-size:12px;color:var(--text4);">No job assigned</div>') +
     '</div>' +
+    (cd.resume
+      ? '<div class="cand-detail-section">' +
+          '<div class="detail-section-label">Resume / Background</div>' +
+          '<div class="detail-notes" style="max-height:200px;overflow-y:auto;font-size:12px;line-height:1.7;">' + escHtml(cd.resume) + '</div>' +
+          '<button onclick="showMessageModal(' + cd.id + ')"' +
+            ' style="margin-top:8px;padding:5px 14px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:7px;color:#2dd4bf;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">' +
+            '✨ Improve Resume</button>' +
+        '</div>'
+      : '') +
+
 
     (cd.notes
       ? '<div class="cand-detail-section">' +
@@ -2234,7 +2249,8 @@ function openEditCandidate(id) {
   document.getElementById('cf-title').value   = cd.title   || '';
   document.getElementById('cf-company').value = cd.company || '';
   document.getElementById('cf-status').value  = cd.status  || 'New';
-  document.getElementById('cf-notes').value   = cd.notes   || '';
+  document.getElementById('cf-notes').value   = cd.notes    || '';
+  document.getElementById('cf-resume').value  = cd.resume   || '';
   populateCandJobDropdown(cd.jobId);
 
   var errEl = document.getElementById('cand-form-error');
@@ -2310,6 +2326,7 @@ function submitCandForm(e) {
       candidates[idx].status    = document.getElementById('cf-status').value;
       candidates[idx].jobId     = jobId;
       candidates[idx].notes     = document.getElementById('cf-notes').value.trim();
+      candidates[idx].resume    = document.getElementById('cf-resume').value.trim();
       candidates[idx].updatedAt = Date.now();
     }
     saveCandidates();
@@ -2329,6 +2346,7 @@ function submitCandForm(e) {
       status:         _initStatus,
       jobId:          jobId,
       notes:          document.getElementById('cf-notes').value.trim(),
+      resume:         document.getElementById('cf-resume').value.trim(),
       workspaceId:    state.currentWorkspace,
       createdAt:      _now,
       lastActivityAt: _now,
