@@ -518,6 +518,13 @@ html, body { height: 100%; overflow: hidden; }
   box-shadow: 0 0 16px rgba(20,184,166,.1);
   background: rgba(20,184,166,.03);
 }
+.pipe-card-pulse {
+  animation: sub-pulse 2.4s ease-in-out infinite;
+}
+@keyframes sub-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(20,184,166,0); }
+  50%      { box-shadow: 0 0 12px 3px rgba(20,184,166,.3); }
+}
 
 /* Sticky header inside column */
 .pipe-col-header {
@@ -1041,6 +1048,13 @@ input:focus, select:focus, textarea:focus {
             </div>
           </div>
 
+          <div style="margin-top:20px;">
+            <div class="section-header">
+              <div class="section-title">Top Candidates to Submit</div>
+              <div class="section-sub">Interview-stage, ranked by CX score</div>
+            </div>
+            <div class="card" id="dash-top-submit" style="padding:4px 16px 8px;"><div style="font-size:12px;color:var(--text4);padding:12px 0;">Loading...</div></div>
+          </div>
         </div>
       </section>
 
@@ -1766,6 +1780,7 @@ function renderDashboard() {
   if (elDYS) elDYS.textContent = openJobs.length ? openJobs.length + ' open req' + (openJobs.length !== 1 ? 's' : '') : 'No open reqs';
 
   renderActivityBoard();
+  renderTopToSubmit();
 
   var psEl = document.getElementById('pipeline-stages');
   if (psEl) {
@@ -2328,6 +2343,12 @@ function renderCandidateDetail(cd) {
     '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px;">' +
       '<div>' +
         '<div class="cand-detail-name">' + escHtml(cd.name) + '</div>' +
+        (cd.status === 'Interview' && score >= 70
+          ? '<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.35);border-radius:99px;padding:2px 10px;margin-top:4px;">' +
+              '<span style="font-size:11px;">🔥</span>' +
+              '<span style="font-size:10px;font-weight:800;color:var(--amber);letter-spacing:.05em;">READY TO SUBMIT</span>' +
+            '</div>'
+          : '') +
         '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;">' +
           '<span class="job-status-badge ' + sc + '" style="font-size:11px;padding:2px 9px;">' + escHtml(cd.status) + '</span>' +
           (cd.title   ? '<span style="font-size:12px;color:var(--text3);">' + escHtml(cd.title)   + '</span>' : '') +
@@ -2349,8 +2370,8 @@ function renderCandidateDetail(cd) {
         '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">Next Action</div>' +
         '<div style="font-size:13px;font-weight:700;color:var(--accent2);">→ ' + escHtml(nba) + '</div>' +
       '</div>' +
-      '<button onclick="showMessageModal(' + cd.id + ')" class="btn btn-ghost btn-sm">Generate Message</button>' +
-      '<button onclick="openSubmitModal(' + cd.id + ')" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;box-shadow:0 3px 12px rgba(20,184,166,.35);">Submit Candidate</button>' +
+      '<button onclick="openSubmitModal(' + cd.id + ')" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;box-shadow:0 4px 18px rgba(20,184,166,.55);font-weight:800;">Submit Candidate</button>' +
+      '<button onclick="showMessageModal(' + cd.id + ')" class="btn btn-ghost btn-sm" style="font-size:11px;opacity:.75;">Generate Message</button>' +
     '</div>' +
 
     // ── Stats ──────────────────────────────────────────────────────────
@@ -2714,7 +2735,10 @@ function renderPipeline() {
           var cxScore    = calculateExperienceScore(cd);
           var cxRisk     = getRiskLevel(cxScore);
           var isWarn     = cxRisk === 'critical' || cxRisk === 'warning';
-          return '<div class="pipe-card risk-' + cxRisk + '" style="--pipe-accent:' + stageColor + ';">' +
+          var idleDays   = getDaysSince(cd.lastActivityAt || cd.createdAt);
+          var isPulse    = cd.status === 'Submitted' && idleDays > 5;
+          var cardExtra  = isPulse ? ' pipe-card-pulse' : '';
+          return '<div class="pipe-card risk-' + cxRisk + cardExtra + '" style="--pipe-accent:' + stageColor + ';">' +
             '<div class="pipe-card-name">' + escHtml(cd.name) + '</div>' +
             '<div class="pipe-card-role">' + escHtml(cd.title || '') + '</div>' +
             (cd.company ? '<div class="pipe-card-mid">' + escHtml(cd.company) + '</div>' : '') +
@@ -2921,6 +2945,8 @@ function getNextBestAction(cd) {
   var now      = Date.now();
   var daysIdle = ((cd.lastActivityAt || cd.createdAt) ? (now - (cd.lastActivityAt || cd.createdAt)) / 86400000 : 0);
   if (!cd.firstContactAt)                         return 'Contact candidate';
+  if (cd.status === 'Submitted' && daysIdle > 7)  return '🚨 CRITICAL: Risk of losing deal';
+  if (cd.status === 'Submitted' && daysIdle > 5)  return '⚠️ URGENT: Follow up on submission';
   if (cd.status === 'Submitted' && daysIdle > 2)  return 'Follow up on submission';
   if (cd.status === 'Submitted')                  return 'Await client response';
   if (daysIdle > 2)                               return 'Follow up';
@@ -3248,7 +3274,7 @@ function renderActivityBoard() {
     }
   });
 
-  autoPipelineTasks.sort(function(a,b){ return (b.urgent?1:0)-(a.urgent?1:0); });
+  autoPipelineTasks.sort(function(a,b) { var as=(a.type==="submission"?2:0)+(a.urgent?1:0),bs=(b.type==="submission"?2:0)+(b.urgent?1:0); return bs-as; });
 
   var pending = autoPipelineTasks.length + activityBoard.filter(function(t){ return !t.completed; }).length;
   if (count) count.textContent = pending ? pending + ' action' + (pending>1?'s':'') + ' needed' : '';
@@ -3719,6 +3745,35 @@ function updateSubmissionStatus(candId, idx, newStatus) {
   try { renderCandidates(); }          catch(e) {}
   try { renderPipeline(); }            catch(e) {}
   if (state && state.currentView === 'dashboard') { try { renderDashboard(); } catch(e) {} }
+}
+
+function renderTopToSubmit() {
+  var el = document.getElementById("dash-top-submit");
+  if (!el) return;
+  var ready = candidates
+    .filter(function(cd) { return cd.status === "Interview"; })
+    .map(function(cd) { return { cd:cd, score:calculateExperienceScore(cd) }; })
+    .sort(function(a,b) { return b.score-a.score; })
+    .slice(0,3);
+  if (!ready.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text4);padding:12px 0;">No Interview-stage candidates yet.</div>';
+    return;
+  }
+  el.innerHTML = ready.map(function(item) {
+    var cd=item.cd;
+    var job=jobs.find(function(j){ return String(j.id)===String(cd.jobId); });
+    var sc=item.score;
+    var col=sc>=80?"var(--green)":sc>=60?"var(--amber)":"var(--text4)";
+    return '<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:13px;font-weight:700;color:var(--text);">' + escHtml(cd.name) + '</div>' +
+        '<div style="font-size:11px;color:var(--text4);">' + (cd.title||"") + (job?" · "+job.title:"") + '</div>' +
+      '</div>' +
+      '<div style="font-size:12px;font-weight:800;color:' + col + ';flex-shrink:0;margin-right:8px;">' + sc + '</div>' +
+      '<button data-cid="' + cd.id + '" onclick="openSubmitModal(this.dataset.cid)" '
+        + 'style="padding:4px 12px;background:linear-gradient(135deg,var(--teal),#0d9488);border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">Submit</button>' +
+    '</div>';
+  }).join("");
 }
 
 document.addEventListener('DOMContentLoaded', init);
