@@ -409,6 +409,9 @@ html, body { height: 100%; overflow: hidden; }
   border-radius: 99px;
   display: inline-block;
 }
+.status-active   { background: rgba(34,197,94,.12);  color: #22c55e; }
+.status-approved { background: rgba(59,130,246,.12); color: #60a5fa; }
+.status-draft    { background: rgba(245,158,11,.12); color: #f59e0b; }
 .status-open     { background: rgba(34,197,94,.12);  color: #22c55e; }
 .status-on-hold  { background: rgba(245,158,11,.12); color: #f59e0b; }
 .status-filled   { background: rgba(59,130,246,.12); color: #60a5fa; }
@@ -1138,9 +1141,10 @@ input:focus, select:focus, textarea:focus {
                     <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-status">Status</label>
                     <select id="jf-status"
                       style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;">
-                      <option value="Open">Open</option>
-                      <option value="On Hold">On Hold</option>
-                      <option value="Filled">Filled</option>
+                      <option value="Active">Active</option>
+                      <option value="Draft">Draft</option>
+                      <option value="Approved">Approved</option>
+                      <option value="Closed">Closed</option>
                       <option value="Closed">Closed</option>
                     </select>
                   </div>
@@ -1788,7 +1792,7 @@ function renderDashboard() {
     tbSub.textContent = ws ? ws.name + ' workspace' : '';
   }
 
-  var openJobs   = jobs.filter(function(j) { return j.status === 'Open'; });
+  var openJobs   = jobs.filter(function(j) { return (j.status === 'Active' || j.status === 'Approved' || j.status === 'Open'); });
   var filledJobs = jobs.filter(function(j) { return j.status === 'Filled'; });
   var hiredCands = candidates.filter(function(cd) { return cd.status === 'Hired'; });
   var offerCands = candidates.filter(function(cd) { return cd.status === 'Offer'; });
@@ -1946,9 +1950,10 @@ function renderJobList() {
   container.innerHTML = filtered.map(function(j) {
     var selected = j.id === selectedJobId;
     var statusClass = {
-      'Open': 'status-open', 'On Hold': 'status-on-hold',
-      'Filled': 'status-filled', 'Closed': 'status-closed'
-    }[j.status] || 'status-open';
+      'Active': 'status-active', 'Draft': 'status-draft',
+      'Approved': 'status-approved', 'Closed': 'status-closed',
+      'Open': 'status-active', 'Filled': 'status-approved', 'On Hold': 'status-draft',
+    }[j.status] || 'status-active';
 
     var jCands = candidates.filter(function(cd) { return String(cd.jobId) === String(j.id); });
     var priColor = { Critical:'var(--red)', High:'var(--amber)', Medium:'var(--accent2)', Low:'var(--text4)' }[j.priority] || 'var(--text4)';
@@ -1972,7 +1977,7 @@ function renderJobList() {
   }).join('');
 
   // Update topbar badge
-  var openCount = jobs.filter(function(j) { return j.status === 'Open'; }).length;
+  var openCount = jobs.filter(function(j) { return (j.status === 'Active' || j.status === 'Approved' || j.status === 'Open'); }).length;
   var badge = document.getElementById('nb-jobs');
   if (badge) {
     badge.textContent = openCount || '';
@@ -2014,6 +2019,10 @@ function renderJobDetail(j) {
       '<div class="job-detail-title">' + escHtml(j.title) + '</div>' +
       '<div style="display:flex;gap:8px;flex-shrink:0;">' +
         '<button class="btn btn-ghost btn-sm" onclick="openEditJob(' + j.id + ')">Edit</button>' +
+        (j.approvalStatus !== 'approved'
+          ? '<button class="btn btn-sm" onclick="markJobApproved(\'' + j.id + '\')" '
+              + 'style="background:rgba(34,197,94,.1);color:#22c55e;border:1px solid rgba(34,197,94,.3);">Mark as Approved</button>'
+          : '') +
         '<button class="btn btn-sm" onclick="deleteJob(' + j.id + ')" ' +
           'style="background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);">Delete</button>' +
       '</div>' +
@@ -2032,6 +2041,9 @@ function renderJobDetail(j) {
       (j.openings && j.openings > 1 ? '<span>🔢 ' + j.openings + ' openings</span>' : '') +
       (j.targetStart ? '<span>🎯 Start: ' + new Date(j.targetStart).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + '</span>' : '') +
       '<span>Added ' + created + (age > 0 ? ' · ' + age + 'd ago' : '') + '</span>' +
+      (j.approvalStatus === 'approved'
+        ? '<span style="font-size:10px;font-weight:700;background:rgba(34,197,94,.15);color:#22c55e;padding:2px 9px;border-radius:99px;border:1px solid rgba(34,197,94,.3);">✓ Approved</span>'
+        : '<span style="font-size:10px;font-weight:700;background:rgba(245,158,11,.12);color:#f59e0b;padding:2px 9px;border-radius:99px;border:1px solid rgba(245,158,11,.25);">Approval: Pending</span>') +
     '</div>' +
 
     '<div style="border-top:1px solid var(--border);padding-top:20px;">' +
@@ -2073,7 +2085,7 @@ function openEditJob(id) {
   document.getElementById('jf-title').value    = j.title    || '';
   document.getElementById('jf-dept').value     = j.dept     || '';
   document.getElementById('jf-location').value = j.location || '';
-  document.getElementById('jf-status').value   = j.status   || 'Open';
+  document.getElementById('jf-status').value   = j.status   || 'Active';
   document.getElementById('jf-type').value     = j.type     || 'Full-time';
   document.getElementById('jf-notes').value    = j.notes      || '';
   document.getElementById('jf-salary-min').value = j.salaryMin ? String(j.salaryMin) : '';
@@ -2156,7 +2168,8 @@ function submitJobForm(e) {
       jobs[idx].salaryMin     = salMin;
       jobs[idx].salaryMax     = salMax;
       jobs[idx].hiringManager = document.getElementById('jf-hm').value.trim();
-      jobs[idx].recruiterOwner = document.getElementById('jf-recruiter').value.trim();
+      jobs[idx].recruiterOwner  = document.getElementById('jf-recruiter').value.trim();
+      if (!jobs[idx].approvalStatus) jobs[idx].approvalStatus = 'pending';
       jobs[idx].openings      = parseInt(document.getElementById('jf-openings').value) || 1;
       jobs[idx].priority      = document.getElementById('jf-priority').value;
       jobs[idx].locationType  = document.getElementById('jf-loctype').value;
@@ -2177,7 +2190,7 @@ function submitJobForm(e) {
       title:      title,
       dept:       document.getElementById('jf-dept').value.trim(),
       location:   document.getElementById('jf-location').value.trim(),
-      status:     document.getElementById('jf-status').value,
+      status:     document.getElementById('jf-status').value || 'Active',
       type:       document.getElementById('jf-type').value,
       notes:      document.getElementById('jf-notes').value.trim(),
       salaryMin:      salMin,
@@ -2188,6 +2201,7 @@ function submitJobForm(e) {
       priority:       document.getElementById('jf-priority').value,
       locationType:   document.getElementById('jf-loctype').value,
       targetStart:    document.getElementById('jf-start').value || null,
+      approvalStatus: 'pending',
       workspaceId:    state.currentWorkspace,
       createdAt:  Date.now(),
     };
@@ -3420,10 +3434,10 @@ function seedDataIfEmpty() {
 
   // ── Seed jobs ──────────────────────────────────────────────
   var seedJobs = [
-    { id: 'sj1', title: 'Senior Program Manager',        dept: 'Operations',   location: 'Boston, MA',    status: 'Open',     type: 'Full-time', priority: 'High',     locationType: 'Hybrid',  hiringManager: 'Dana Chen',   recruiterOwner: 'Jonah Adelman', openings: 2, createdAt: now - 45*day, workspaceId: state.currentWorkspace, notes: 'Hybrid. Reports to VP of Ops. 7+ years required.' },
-    { id: 'sj2', title: 'Principal Systems Engineer',    dept: 'Engineering',  location: 'Waltham, MA',   status: 'Open',     type: 'Full-time', priority: 'Critical', locationType: 'Onsite',  hiringManager: 'Mark Lin',    recruiterOwner: 'Jonah Adelman', openings: 1, createdAt: now - 62*day, workspaceId: state.currentWorkspace, notes: 'Embedded systems. FDA experience required.' },
-    { id: 'sj3', title: 'Electrical Engineering Manager',dept: 'Engineering',  location: 'San Diego, CA', status: 'Open',     type: 'Full-time', priority: 'High',     locationType: 'Onsite',  hiringManager: 'Steve Park',  recruiterOwner: 'Jonah Adelman', openings: 1, createdAt: now - 28*day, workspaceId: state.currentWorkspace, notes: 'Leads team of 6 EEs. PCB design background preferred.' },
-    { id: 'sj4', title: 'Sr. Quality Systems Specialist',dept: 'Quality',      location: 'Boston, MA',    status: 'On Hold',  type: 'Full-time', priority: 'Medium',   locationType: 'Onsite',  hiringManager: 'Amy Walsh',   recruiterOwner: 'Jonah Adelman', openings: 1, createdAt: now - 90*day, workspaceId: state.currentWorkspace, notes: 'ISO 13485 / FDA 21 CFR Part 820 experience required.' },
+    { id: 'sj1', title: 'Senior Program Manager',        dept: 'Operations',   location: 'Boston, MA',    status: 'Active', approvalStatus: 'pending',     type: 'Full-time', priority: 'High',     locationType: 'Hybrid',  hiringManager: 'Dana Chen',   recruiterOwner: 'Jonah Adelman', openings: 2, createdAt: now - 45*day, workspaceId: state.currentWorkspace, notes: 'Hybrid. Reports to VP of Ops. 7+ years required.' },
+    { id: 'sj2', title: 'Principal Systems Engineer',    dept: 'Engineering',  location: 'Waltham, MA',   status: 'Active', approvalStatus: 'pending',     type: 'Full-time', priority: 'Critical', locationType: 'Onsite',  hiringManager: 'Mark Lin',    recruiterOwner: 'Jonah Adelman', openings: 1, createdAt: now - 62*day, workspaceId: state.currentWorkspace, notes: 'Embedded systems. FDA experience required.' },
+    { id: 'sj3', title: 'Electrical Engineering Manager',dept: 'Engineering',  location: 'San Diego, CA', status: 'Active', approvalStatus: 'pending',     type: 'Full-time', priority: 'High',     locationType: 'Onsite',  hiringManager: 'Steve Park',  recruiterOwner: 'Jonah Adelman', openings: 1, createdAt: now - 28*day, workspaceId: state.currentWorkspace, notes: 'Leads team of 6 EEs. PCB design background preferred.' },
+    { id: 'sj4', title: 'Sr. Quality Systems Specialist',dept: 'Quality',      location: 'Boston, MA',    status: 'Draft', approvalStatus: 'pending',  type: 'Full-time', priority: 'Medium',   locationType: 'Onsite',  hiringManager: 'Amy Walsh',   recruiterOwner: 'Jonah Adelman', openings: 1, createdAt: now - 90*day, workspaceId: state.currentWorkspace, notes: 'ISO 13485 / FDA 21 CFR Part 820 experience required.' },
   ];
 
   // ── Seed candidates ────────────────────────────────────────
@@ -3476,7 +3490,7 @@ function seedDataIfEmpty() {
 function renderAnalytics() {
   var stages      = ['New','Screening','Interview','Offer','Hired'];
   var stageColors = { New:'var(--accent)', Screening:'var(--accent2)', Interview:'var(--amber)', Submitted:'var(--teal)', Offer:'var(--purple)', Hired:'var(--green)' };
-  var openJobs    = jobs.filter(function(j) { return j.status === 'Open'; });
+  var openJobs    = jobs.filter(function(j) { return (j.status === 'Active' || j.status === 'Approved' || j.status === 'Open'); });
   var hiredCands  = candidates.filter(function(cd) { return cd.status === 'Hired'; });
   var offerCands  = candidates.filter(function(cd) { return cd.status === 'Offer'; });
   var activeCands = candidates.filter(function(cd) { return !['Hired','Rejected'].includes(cd.status); });
@@ -3967,6 +3981,18 @@ document.addEventListener('DOMContentLoaded', function() {
   var t = document.getElementById('jf-title');
   if (t) t.addEventListener('blur', suggestSalary);
 });
+
+function markJobApproved(id) {
+  var j = jobs.find(function(x) { return String(x.id) === String(id); });
+  if (!j) return;
+  j.approvalStatus = 'approved';
+  j.status = j.status === 'Active' ? 'Approved' : j.status;
+  saveJobs();
+  renderJobDetail(j);
+  renderJobList();
+  addActivityItem('Job approved: ' + j.title);
+  saveActivityBoard();
+}
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
