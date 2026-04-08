@@ -1130,10 +1130,15 @@ input:focus, select:focus, textarea:focus {
                 </div>
 
                 <!-- Row: Hiring Manager + Openings -->
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
                   <div>
                     <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-hm">Hiring Manager</label>
                     <input id="jf-hm" type="text" placeholder="e.g. Sarah Chen"
+                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-recruiter">Recruiter Owner</label>
+                    <input id="jf-recruiter" type="text" placeholder="Assigned recruiter"
                       style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
                   </div>
                   <div>
@@ -1980,6 +1985,7 @@ function openEditJob(id) {
   document.getElementById('jf-salary-min').value = j.salaryMin ? String(j.salaryMin) : '';
   document.getElementById('jf-salary-max').value = j.salaryMax ? String(j.salaryMax) : '';
   document.getElementById('jf-hm').value         = j.hiringManager  || '';
+  document.getElementById('jf-recruiter').value  = j.recruiterOwner || '';
   document.getElementById('jf-openings').value   = j.openings ? String(j.openings) : '1';
   document.getElementById('jf-priority').value   = j.priority      || 'Medium';
   document.getElementById('jf-loctype').value    = j.locationType   || 'Onsite';
@@ -2056,6 +2062,7 @@ function submitJobForm(e) {
       jobs[idx].salaryMin     = salMin;
       jobs[idx].salaryMax     = salMax;
       jobs[idx].hiringManager = document.getElementById('jf-hm').value.trim();
+      jobs[idx].recruiterOwner = document.getElementById('jf-recruiter').value.trim();
       jobs[idx].openings      = parseInt(document.getElementById('jf-openings').value) || 1;
       jobs[idx].priority      = document.getElementById('jf-priority').value;
       jobs[idx].locationType  = document.getElementById('jf-loctype').value;
@@ -2082,6 +2089,7 @@ function submitJobForm(e) {
       salaryMin:      salMin,
       salaryMax:      salMax,
       hiringManager:  document.getElementById('jf-hm').value.trim(),
+      recruiterOwner: document.getElementById('jf-recruiter').value.trim(),
       openings:       parseInt(document.getElementById('jf-openings').value) || 1,
       priority:       document.getElementById('jf-priority').value,
       locationType:   document.getElementById('jf-loctype').value,
@@ -3125,50 +3133,103 @@ function renderActivityBoard() {
   var count = document.getElementById('needs-action-count');
   if (!el) return;
 
-  var pending   = activityBoard.filter(function(t) { return !t.completed; });
-  var completed = activityBoard.filter(function(t) { return t.completed; });
-  if (count) count.textContent = pending.length ? pending.length + ' pending' : '';
+  // Auto-generate pipeline tasks
+  var autoPipelineTasks = [];
+  candidates.filter(function(cd) {
+    return !['Hired','Rejected'].includes(cd.status);
+  }).forEach(function(cd) {
+    var action = getNextBestAction(cd);
+    var idle   = getDaysSince(cd.lastActivityAt || cd.createdAt);
+    var job    = jobs.find(function(j){ return String(j.id) === String(cd.jobId); });
+    var role   = job ? job.title : null;
+    var suffix = role ? ' \u2014 ' + role : '';
 
-  if (!activityBoard.length) {
-    el.innerHTML = '<div class="empty-state" style="padding:24px 0;">' +
-      '<div class="empty-state-icon">✓</div>' +
-      '<div class="empty-state-title">All clear</div>' +
-      '<div class="empty-state-sub">No action items right now.</div>' +
-    '</div>';
+    if (action === 'Contact candidate') {
+      autoPipelineTasks.push({ id:'auto_'+cd.id, text:'First contact: '+cd.name+suffix, completed:false, autoId:String(cd.id), type:'contact', urgent:true });
+    } else if (action === 'Follow up' && idle >= 2) {
+      autoPipelineTasks.push({ id:'auto_'+cd.id, text:'Follow up: '+cd.name+' ('+idle+'d idle)'+suffix, completed:false, autoId:String(cd.id), type:'followup', urgent:idle>5 });
+    } else if (action === 'Close candidate') {
+      autoPipelineTasks.push({ id:'auto_'+cd.id, text:'Close offer: '+cd.name+suffix, completed:false, autoId:String(cd.id), type:'close', urgent:true });
+    } else if (action === 'Schedule next interview') {
+      autoPipelineTasks.push({ id:'auto_'+cd.id, text:'Schedule interview: '+cd.name+suffix, completed:false, autoId:String(cd.id), type:'interview', urgent:idle>3 });
+    }
+  });
+
+  autoPipelineTasks.sort(function(a,b){ return (b.urgent?1:0)-(a.urgent?1:0); });
+
+  var pending = autoPipelineTasks.length + activityBoard.filter(function(t){ return !t.completed; }).length;
+  if (count) count.textContent = pending ? pending + ' action' + (pending>1?'s':'') + ' needed' : '';
+
+  if (!autoPipelineTasks.length && !activityBoard.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:24px 0;"><div class="empty-state-icon" style="font-size:20px;">\u2713</div><div class="empty-state-title">All clear</div><div class="empty-state-sub">No action items right now.</div></div>';
     return;
   }
 
-  var itemHtml = function(task, idx) {
-    var done  = task.completed;
-    var style = done ? 'opacity:.45;text-decoration:line-through;' : '';
-    // Find candidate name match for jump link
-    var linked = candidates.find(function(cd) {
-      return task.text && cd.name && task.text.toLowerCase().includes(cd.name.toLowerCase());
-    });
-    var jumpBtn = linked
-      ? '<button onclick="nav(\'candidates\');setTimeout(function(){selectCandidate(\'' + linked.id + '\');},60)" style="background:none;border:none;color:var(--accent2);cursor:pointer;font-size:10px;padding:2px 6px;flex-shrink:0;font-family:inherit;">View →</button>'
-      : '';
-    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:7px;margin-bottom:2px;background:rgba(255,255,255,.02);">' +
-      '<input type="checkbox" data-idx="' + idx + '" ' + (done ? 'checked' : '') + ' ' +
-        'onchange="toggleActivity(parseInt(this.dataset.idx))" ' +
-        'style="width:15px;height:15px;accent-color:var(--accent2);cursor:pointer;flex-shrink:0;"/>' +
-      '<span style="font-size:13px;color:var(--text);' + style + 'flex:1;">' + escHtml(task.text) + '</span>' +
-      jumpBtn +
-      '<button onclick="deleteActivity(' + idx + ')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:2px 6px;line-height:1;flex-shrink:0;">✕</button>' +
+  var typeStyle = {
+    contact:   'background:rgba(59,130,246,.1);border-left:3px solid rgba(59,130,246,.5);',
+    followup:  'background:rgba(245,158,11,.08);border-left:3px solid rgba(245,158,11,.5);',
+    close:     'background:rgba(167,139,245,.1);border-left:3px solid rgba(167,139,245,.5);',
+    interview: 'background:rgba(20,184,166,.08);border-left:3px solid rgba(20,184,166,.5);',
+    manual:    'background:rgba(255,255,255,.02);border-left:3px solid rgba(255,255,255,.08);',
+  };
+  var typeIcon = { contact:'\ud83d\udcde', followup:'\u23f1', close:'\ud83c\udfaf', interview:'\ud83d\udcc5', manual:'\u2022' };
+
+  var renderAuto = function(t) {
+    var ts = typeStyle[t.type] || typeStyle.manual;
+    var ic = typeIcon[t.type] || '\u2022';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;' + ts + 'border-radius:0 7px 7px 0;margin-bottom:4px;">' +
+      '<span style="font-size:13px;flex-shrink:0;">' + ic + '</span>' +
+      '<span style="font-size:12px;color:var(--text);flex:1;line-height:1.4;">' + escHtml(t.text) + '</span>' +
+      '<button data-aid="' + t.autoId + '" onclick="navToCandFromTask(this.dataset.aid)" ' +
+        'style="background:none;border:none;color:var(--accent2);cursor:pointer;font-size:10px;padding:2px 6px;flex-shrink:0;font-family:inherit;">View \u2192</button>' +
     '</div>';
   };
 
-  var rows = activityBoard.map(function(t, i) { return itemHtml(t, i); }).join('');
+  var renderManual = function(t, idx) {
+    var done  = !!t.completed;
+    var style = done ? 'opacity:.4;text-decoration:line-through;' : '';
+    // Detect candidate name match for jump link
+    var linked = candidates.find(function(cd){
+      return t.text && cd.name && t.text.toLowerCase().includes(cd.name.toLowerCase());
+    });
+    var jumpBtn = linked
+      ? '<button data-cid="' + linked.id + '" onclick="navToCandFromTask(this.dataset.cid)" style="background:none;border:none;color:var(--accent2);cursor:pointer;font-size:10px;padding:2px 6px;flex-shrink:0;font-family:inherit;">View \u2192</button>'
+      : '';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;background:rgba(255,255,255,.02);border-radius:7px;margin-bottom:2px;">' +
+      '<input type="checkbox" data-idx="' + idx + '" ' + (done?'checked':'') + ' ' +
+        'onchange="toggleActivity(parseInt(this.dataset.idx))" ' +
+        'style="width:15px;height:15px;accent-color:var(--accent2);cursor:pointer;flex-shrink:0;"/>' +
+      '<span style="font-size:12px;color:var(--text);' + style + 'flex:1;">' + escHtml(t.text) + '</span>' +
+      jumpBtn +
+      '<button onclick="deleteActivity(' + idx + ')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:2px 6px;line-height:1;flex-shrink:0;">\u2715</button>' +
+    '</div>';
+  };
 
-  rows += '<div style="display:flex;gap:8px;padding:8px 10px 4px;border-top:1px solid rgba(255,255,255,.05);margin-top:4px;">' +
-    '<input id="new-activity-input" type="text" placeholder="Add task..." ' +
-      'onkeydown="handleActivityKey(event)" ' +
-      'style="flex:1;padding:6px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit;outline:none;"/>' +
+  var html = '';
+
+  if (autoPipelineTasks.length) {
+    html += '<div style="font-size:9px;font-weight:800;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:8px 12px 4px;">Pipeline Actions</div>';
+    html += autoPipelineTasks.slice(0,5).map(renderAuto).join('');
+  }
+
+  if (activityBoard.length) {
+    html += '<div style="font-size:9px;font-weight:800;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:8px 12px 4px;margin-top:4px;">Your Tasks</div>';
+    html += activityBoard.map(renderManual).join('');
+  }
+
+  html += '<div style="display:flex;gap:8px;padding:8px 10px 4px;border-top:1px solid rgba(255,255,255,.05);margin-top:6px;">' +
+    '<input id="new-activity-input" type="text" placeholder="Add task..." onkeydown="handleActivityKey(event)" style="flex:1;padding:6px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit;outline:none;"/>' +
     '<button onclick="submitActivityInput()" class="btn btn-ghost btn-sm" style="font-size:11px;padding:5px 10px;">Add</button>' +
   '</div>';
 
-  el.innerHTML = rows;
+  el.innerHTML = html;
 }
+
+function navToCandFromTask(candId) {
+  nav('candidates');
+  setTimeout(function() { selectCandidate(String(candId)); }, 80);
+}
+
 
 // ═══════════════════════════════════════════════════════════
 // SEED DATA — runs once if localStorage is empty
@@ -3182,10 +3243,10 @@ function seedDataIfEmpty() {
 
   // ── Seed jobs ──────────────────────────────────────────────
   var seedJobs = [
-    { id: 'sj1', title: 'Senior Program Manager',        dept: 'Operations',   location: 'Boston, MA',    status: 'Open',     type: 'Full-time', createdAt: now - 45*day, workspaceId: state.currentWorkspace, notes: 'Hybrid role. Reports to VP of Ops. 7+ years required.' },
-    { id: 'sj2', title: 'Principal Systems Engineer',    dept: 'Engineering',  location: 'Waltham, MA',   status: 'Open',     type: 'Full-time', createdAt: now - 62*day, workspaceId: state.currentWorkspace, notes: 'Medical device embedded systems. FDA experience a plus.' },
-    { id: 'sj3', title: 'Electrical Engineering Manager',dept: 'Engineering',  location: 'San Diego, CA', status: 'Open',     type: 'Full-time', createdAt: now - 28*day, workspaceId: state.currentWorkspace, notes: 'Leads team of 6 EEs. PCB design background preferred.' },
-    { id: 'sj4', title: 'Sr. Quality Systems Specialist',dept: 'Quality',      location: 'Boston, MA',    status: 'On Hold',  type: 'Full-time', createdAt: now - 90*day, workspaceId: state.currentWorkspace, notes: 'ISO 13485 / FDA 21 CFR Part 820 experience required.' },
+    { id: 'sj1', title: 'Senior Program Manager',        dept: 'Operations',   location: 'Boston, MA',    status: 'Open',     type: 'Full-time', priority: 'High',     locationType: 'Hybrid',  hiringManager: 'Dana Chen',   recruiterOwner: 'Jonah Adelman', openings: 2, createdAt: now - 45*day, workspaceId: state.currentWorkspace, notes: 'Hybrid. Reports to VP of Ops. 7+ years required.' },
+    { id: 'sj2', title: 'Principal Systems Engineer',    dept: 'Engineering',  location: 'Waltham, MA',   status: 'Open',     type: 'Full-time', priority: 'Critical', locationType: 'Onsite',  hiringManager: 'Mark Lin',    recruiterOwner: 'Jonah Adelman', openings: 1, createdAt: now - 62*day, workspaceId: state.currentWorkspace, notes: 'Embedded systems. FDA experience required.' },
+    { id: 'sj3', title: 'Electrical Engineering Manager',dept: 'Engineering',  location: 'San Diego, CA', status: 'Open',     type: 'Full-time', priority: 'High',     locationType: 'Onsite',  hiringManager: 'Steve Park',  recruiterOwner: 'Jonah Adelman', openings: 1, createdAt: now - 28*day, workspaceId: state.currentWorkspace, notes: 'Leads team of 6 EEs. PCB design background preferred.' },
+    { id: 'sj4', title: 'Sr. Quality Systems Specialist',dept: 'Quality',      location: 'Boston, MA',    status: 'On Hold',  type: 'Full-time', priority: 'Medium',   locationType: 'Onsite',  hiringManager: 'Amy Walsh',   recruiterOwner: 'Jonah Adelman', openings: 1, createdAt: now - 90*day, workspaceId: state.currentWorkspace, notes: 'ISO 13485 / FDA 21 CFR Part 820 experience required.' },
   ];
 
   // ── Seed candidates ────────────────────────────────────────
@@ -3454,4 +3515,3 @@ document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
-
