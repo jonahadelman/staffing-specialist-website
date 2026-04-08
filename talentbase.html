@@ -1106,12 +1106,30 @@ input:focus, select:focus, textarea:focus {
                       <option value="Full-time">Full-time</option>
                       <option value="Part-time">Part-time</option>
                       <option value="Contract">Contract</option>
+                      <option value="Contract-to-Hire">Contract-to-Hire</option>
                     </select>
                   </div>
                 </div>
+                <!-- Salary Range -->
                 <div>
-                  <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-notes">Notes</label>
-                  <textarea id="jf-notes" rows="3" placeholder="Hiring manager, requirements, notes..."
+                  <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Salary Range</label>
+                  <div style="display:flex;gap:8px;align-items:center;">
+                    <input id="jf-salary-min" type="number" placeholder="Min"
+                      style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+                    <span style="font-size:12px;color:var(--text4);flex-shrink:0;">—</span>
+                    <input id="jf-salary-max" type="number" placeholder="Max"
+                      style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+                  </div>
+                  <button type="button" onclick="nav('analytics')"
+                    style="margin-top:7px;padding:5px 12px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:7px;color:#2dd4bf;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">
+                    💰 Suggest from Compensation Tool
+                  </button>
+                </div>
+
+                <!-- Job Description -->
+                <div>
+                  <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-notes">Job Description</label>
+                  <textarea id="jf-notes" rows="3" placeholder="Role overview, key requirements, hiring manager, team context..."
                     style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
                 </div>
                 <div id="job-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
@@ -1825,10 +1843,19 @@ function renderJobDetail(j) {
     '</div>' +
 
     '<div style="border-top:1px solid var(--border);padding-top:20px;">' +
-      '<div class="detail-section-label">Notes</div>' +
+      ((j.salaryMin || j.salaryMax)
+        ? '<div style="margin-bottom:14px;">' +
+            '<div class="detail-section-label">Salary Range</div>' +
+            '<div style="font-size:14px;font-weight:700;color:var(--green);">' +
+              (j.salaryMin ? '$' + j.salaryMin.toLocaleString() : '') +
+              (j.salaryMin && j.salaryMax ? ' – ' : '') +
+              (j.salaryMax ? '$' + j.salaryMax.toLocaleString() : '') +
+            '</div></div>'
+        : '') +
+      '<div class="detail-section-label">Job Description</div>' +
       (j.notes
         ? '<div class="detail-notes">' + escHtml(j.notes) + '</div>'
-        : '<div style="font-size:12px;color:var(--text4);">No notes added.</div>') +
+        : '<div style="font-size:12px;color:var(--text4);">No description added.</div>') +
     '</div>';
 }
 
@@ -1856,7 +1883,9 @@ function openEditJob(id) {
   document.getElementById('jf-location').value = j.location || '';
   document.getElementById('jf-status').value   = j.status   || 'Open';
   document.getElementById('jf-type').value     = j.type     || 'Full-time';
-  document.getElementById('jf-notes').value    = j.notes    || '';
+  document.getElementById('jf-notes').value    = j.notes      || '';
+  document.getElementById('jf-salary-min').value = j.salaryMin ? String(j.salaryMin) : '';
+  document.getElementById('jf-salary-max').value = j.salaryMax ? String(j.salaryMax) : '';
 
   var errEl = document.getElementById('job-form-error');
   if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
@@ -1917,7 +1946,9 @@ function submitJobForm(e) {
       jobs[idx].location = document.getElementById('jf-location').value.trim();
       jobs[idx].status   = document.getElementById('jf-status').value;
       jobs[idx].type     = document.getElementById('jf-type').value;
-      jobs[idx].notes    = document.getElementById('jf-notes').value.trim();
+      jobs[idx].notes     = document.getElementById('jf-notes').value.trim();
+      jobs[idx].salaryMin = parseInt(document.getElementById('jf-salary-min').value) || null;
+      jobs[idx].salaryMax = parseInt(document.getElementById('jf-salary-max').value) || null;
       jobs[idx].updatedAt = Date.now();
     }
     saveJobs();
@@ -1937,6 +1968,8 @@ function submitJobForm(e) {
       status:     document.getElementById('jf-status').value,
       type:       document.getElementById('jf-type').value,
       notes:      document.getElementById('jf-notes').value.trim(),
+      salaryMin:  parseInt(document.getElementById('jf-salary-min').value) || null,
+      salaryMax:  parseInt(document.getElementById('jf-salary-max').value) || null,
       workspaceId: state.currentWorkspace,
       createdAt:  Date.now(),
     };
@@ -2886,6 +2919,13 @@ function handleActivityKey(e) {
   }
 }
 
+function deleteActivity(idx) {
+  if (!confirm('Delete this task?')) return;
+  activityBoard.splice(idx, 1);
+  saveActivityBoard();
+  renderActivityBoard();
+}
+
 function addActivityItem(text) {
   if (!text || !text.trim()) return;
   activityBoard.push({ id: uid(), text: text.trim(), completed: false, createdAt: Date.now() });
@@ -2919,6 +2959,7 @@ function renderActivityBoard() {
         'onchange="toggleActivity(parseInt(this.dataset.idx))" ' +
         'style="width:15px;height:15px;accent-color:var(--accent2);cursor:pointer;flex-shrink:0;"/>' +
       '<span style="font-size:13px;color:var(--text);' + style + 'flex:1;">' + escHtml(task.text) + '</span>' +
+      '<button onclick="deleteActivity(' + idx + ')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:2px 6px;line-height:1;flex-shrink:0;">✕</button>' +
     '</div>';
   };
 
@@ -2929,7 +2970,6 @@ function renderActivityBoard() {
       'onkeydown="handleActivityKey(event)" ' +
       'style="flex:1;padding:6px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit;outline:none;"/>' +
     '<button onclick="submitActivityInput()" class="btn btn-ghost btn-sm" style="font-size:11px;padding:5px 10px;">Add</button>' +
-      'class="btn btn-ghost btn-sm" style="font-size:11px;padding:5px 10px;">Add</button>' +
   '</div>';
 
   el.innerHTML = rows;
