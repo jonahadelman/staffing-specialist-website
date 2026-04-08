@@ -1119,128 +1119,20 @@ input:focus, select:focus, textarea:focus {
             </div>
             <form id="job-form" onsubmit="submitJobForm(event)" autocomplete="off">
               <div style="display:flex;flex-direction:column;gap:14px;">
-                <div>
-                  <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-title">Job Title *</label>
-                  <input id="jf-title" type="text" placeholder="e.g. Senior Program Manager" required
-                    style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                  <div>
-                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-dept">Department</label>
-                    <input id="jf-dept" type="text" placeholder="e.g. R&amp;D, Sales"
-                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-location">Location</label>
-                    <input id="jf-location" type="text" placeholder="e.g. Boston, MA"
-                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
-                  </div>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                  <div>
-                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-status">Status</label>
-                    <select id="jf-status"
-                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;">
-                      <option value="Active">Active</option>
-                      <option value="Draft">Draft</option>
-                      <option value="Approved">Approved</option>
-                      <option value="Closed">Closed</option>
-                      <option value="Closed">Closed</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-type">Type</label>
-                    <select id="jf-type"
-                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;">
-                      <option value="Full-time">Full-time</option>
-                      <option value="Part-time">Part-time</option>
-                      <option value="Contract">Contract</option>
-                      <option value="Contract-to-Hire">Contract-to-Hire</option>
-                    </select>
-                  </div>
-                </div>
-                <!-- Salary Range -->
-                <div>
-                  <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Salary Range</label>
-                  <div style="display:flex;gap:8px;align-items:center;">
-                    <input id="jf-salary-min" type="number" placeholder="Min"
-                      style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
-                    <span style="font-size:12px;color:var(--text4);flex-shrink:0;">—</span>
-                    <input id="jf-salary-max" type="number" placeholder="Max"
-                      style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
-                  </div>
-                  <button type="button" onclick="nav('analytics')"
-                    style="margin-top:7px;padding:5px 12px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:7px;color:#2dd4bf;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">
-                    💰 Suggest from Compensation Tool
-                  <div id="salary-suggest-banner" style="display:none;margin-top:6px;padding:7px 12px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.25);border-radius:7px;"><div style="display:flex;align-items:center;gap:10px;"><span id="salary-suggest-text" style="font-size:11px;color:#2dd4bf;flex:1;">💰 Suggested range: $95,000 — $130,000</span><button type="button" onclick="applySalarySuggestion()" style="padding:2px 10px;background:rgba(20,184,166,.2);border:1px solid rgba(20,184,166,.4);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">Apply</button><button type="button" onclick="this.parentElement.parentElement.style.display='none'" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:14px;padding:0 2px;">×</button></div></div>
-                  </button>
-                </div>
-
-                <!-- Row: Hiring Manager + Openings -->
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-                  <div>
-                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-hm">Hiring Manager</label>
-                    <input id="jf-hm" type="text" placeholder="e.g. Sarah Chen"
-                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-recruiter">Recruiter Owner</label>
-                    <input id="jf-recruiter" type="text" placeholder="Assigned recruiter"
-                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-openings">Openings</label>
-                    <input id="jf-openings" type="number" placeholder="1" min="1"
-                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
-                  </div>
-                </div>
-
-                <!-- Row: Priority + Location Type + Target Start -->
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-                  <div>
-                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-priority">Priority</label>
-                    <select id="jf-priority"
-                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;">
-                      <option value="Medium">Medium</option>
-                      <option value="High">High</option>
-                      <option value="Critical">Critical</option>
-                      <option value="Low">Low</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-loctype">Work Model</label>
-                    <select id="jf-loctype"
-                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;">
-                      <option value="Onsite">Onsite</option>
-                      <option value="Hybrid">Hybrid</option>
-                      <option value="Remote">Remote</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-start">Target Start</label>
-                    <input id="jf-start" type="date"
-                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"/>
-                  </div>
-                </div>
-
-                <!-- Job Description -->
-                <div>
-                  <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-notes">Job Description</label>
-                  <textarea id="jf-notes" onblur="analyzeJobDescription(this.value)" rows="3" placeholder="Role overview, key requirements, hiring manager, team context..."
-                    style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
-                </div>
-                <div id="jd-improve-banner" style="display:none;padding:10px 14px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);border-radius:8px;margin-bottom:10px;">
-                  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-                    <div style="font-size:12px;color:var(--text3);">✨ <strong style="color:var(--text);">We improved this job description</strong></div>
-                    <div style="display:flex;gap:6px;"><button type="button" onclick="applyJobDescriptionImprovement()" class="btn btn-primary btn-sm" style="font-size:10px;padding:3px 10px;">Apply</button><button type="button" onclick="dismissJobDescriptionImprovement()" class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 10px;">Keep Original</button></div>
-                  </div>
-                  <div id="jd-improved-preview" style="font-size:11px;color:var(--text4);margin-top:7px;max-height:80px;overflow-y:auto;line-height:1.6;white-space:pre-wrap;"></div>
+                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Job Title <span style="color:var(--red);">*</span></label><input id="jf-title" type="text" placeholder="e.g. Senior Program Manager" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
+                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Location</label><input id="jf-location" type="text" placeholder="e.g. Boston, MA" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
+                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Salary Range</label><div style="display:flex;gap:8px;align-items:center;"><input id="jf-salary-min" type="number" placeholder="Min" style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/><span style="font-size:12px;color:var(--text4);flex-shrink:0;">&mdash;</span><input id="jf-salary-max" type="number" placeholder="Max" style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><button type="button" onclick="suggestSalary()" style="margin-top:7px;padding:5px 12px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:7px;color:#2dd4bf;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">&#128176; Suggest Salary</button><div id="salary-suggest-banner" style="display:none;margin-top:6px;padding:7px 12px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.25);border-radius:7px;"><div style="display:flex;align-items:center;gap:10px;"><span id="salary-suggest-text" style="font-size:11px;color:#2dd4bf;flex:1;">Suggested range</span><button type="button" onclick="applySalarySuggestion()" style="padding:2px 10px;background:rgba(20,184,166,.2);border:1px solid rgba(20,184,166,.4);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">Apply</button><button type="button" onclick="this.parentElement.parentElement.style.display='none'" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:14px;padding:0 2px;">&times;</button></div></div></div>
+                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Job Description</label><textarea id="jf-notes" onblur="analyzeJobDescription(this.value)" rows="3" placeholder="Role overview, key requirements, hiring manager, team context..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
+                <div id="jd-improve-banner" style="display:none;padding:10px 14px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);border-radius:8px;"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;"><div style="font-size:12px;color:var(--text3);">&#10024; <strong style="color:var(--text);">We improved this job description</strong></div><div style="display:flex;gap:6px;"><button type="button" onclick="applyJobDescriptionImprovement()" class="btn btn-primary btn-sm" style="font-size:10px;padding:3px 10px;">Apply</button><button type="button" onclick="dismissJobDescriptionImprovement()" class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 10px;">Keep Original</button></div></div><div id="jd-improved-preview" style="font-size:11px;color:var(--text4);margin-top:7px;max-height:80px;overflow-y:auto;line-height:1.6;white-space:pre-wrap;"></div></div>
+                <div><button type="button" id="jf-advanced-toggle" onclick="toggleJobAdvanced()" style="background:none;border:none;color:var(--text4);font-size:11px;font-family:inherit;cursor:pointer;padding:0;">&#9881; Advanced Options <span id="jf-adv-arrow">&#9662;</span></button></div>
+                <div id="jf-advanced" style="display:none;flex-direction:column;gap:14px;">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Department</label><input id="jf-dept" type="text" placeholder="e.g. R&amp;D" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Status</label><select id="jf-status" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="Active">Active</option><option value="Draft">Draft</option><option value="Approved">Approved</option><option value="Closed">Closed</option></select></div></div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Employment Type</label><select id="jf-type" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="Full-time">Full-time</option><option value="Part-time">Part-time</option><option value="Contract">Contract</option><option value="Contract-to-Hire">Contract-to-Hire</option></select></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Work Model</label><select id="jf-loctype" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="Onsite">Onsite</option><option value="Hybrid">Hybrid</option><option value="Remote">Remote</option></select></div></div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Hiring Manager</label><input id="jf-hm" type="text" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Recruiter Owner</label><input id="jf-recruiter" type="text" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Openings</label><input id="jf-openings" type="number" placeholder="1" min="1" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div></div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Priority</label><select id="jf-priority" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="Medium">Medium</option><option value="High">High</option><option value="Critical">Critical</option><option value="Low">Low</option></select></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Target Start</label><input id="jf-start" type="date" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"/></div></div>
                 </div>
                 <div id="job-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
-                <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;">
-                  <button type="button" onclick="closeJobModal()" class="btn btn-ghost">Cancel</button>
-                  <button type="submit" class="btn btn-primary" id="job-submit-btn">Add Job</button>
-                </div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;"><button type="button" onclick="closeJobModal()" class="btn btn-ghost">Cancel</button><button type="submit" class="btn btn-primary" id="job-submit-btn">Add Job</button></div>
               </div>
             </form>
           </div>
@@ -2044,6 +1936,9 @@ function renderJobDetail(j) {
       (j.approvalStatus === 'approved'
         ? '<span style="font-size:10px;font-weight:700;background:rgba(34,197,94,.15);color:#22c55e;padding:2px 9px;border-radius:99px;border:1px solid rgba(34,197,94,.3);">✓ Approved</span>'
         : '<span style="font-size:10px;font-weight:700;background:rgba(245,158,11,.12);color:#f59e0b;padding:2px 9px;border-radius:99px;border:1px solid rgba(245,158,11,.25);">Approval: Pending</span>') +
+      (j.title && j.notes && (j.salaryMin || j.salaryMax)
+        ? '<span style="font-size:10px;font-weight:700;background:rgba(34,197,94,.12);color:#22c55e;padding:2px 9px;border-radius:99px;border:1px solid rgba(34,197,94,.25);">&#10003; Ready to Recruit</span>'
+        : '<span style="font-size:10px;font-weight:700;background:rgba(245,158,11,.1);color:#f59e0b;padding:2px 9px;border-radius:99px;border:1px solid rgba(245,158,11,.2);">Needs Info</span>') +
     '</div>' +
 
     '<div style="border-top:1px solid var(--border);padding-top:20px;">' +
@@ -2456,38 +2351,6 @@ function renderCandidateDetail(cd) {
           '</div></div>'
       : '') +
 
-    // ── Resume ────────────────────────────────────────────────────────
-    // AI Summary
-    (cd.aiSummary
-      ? '<div class="cand-detail-section">' +
-          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
-            '<div class="detail-section-label" style="margin-bottom:0;">AI Summary</div>' +
-            '<span style="font-size:9px;font-weight:700;color:var(--text4);background:rgba(255,255,255,.07);padding:1px 6px;border-radius:4px;">AI</span>' +
-          '</div>' +
-          (cd.aiSummary.summary ? '<div style="font-size:12px;color:var(--text3);line-height:1.6;margin-bottom:8px;">' + escHtml(cd.aiSummary.summary) + '</div>' : '') +
-          (cd.aiSummary.keySkills && cd.aiSummary.keySkills.length
-            ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;">' +
-                cd.aiSummary.keySkills.slice(0,6).map(function(s) { return '<span style="font-size:10px;background:rgba(124,106,247,.12);color:var(--accent2);padding:2px 8px;border-radius:99px;">' + escHtml(s) + '</span>'; }).join('') +
-              '</div>'
-            : '') +
-        '</div>'
-      : '') +
-
-    (cd.resume
-      ? '<div class="cand-detail-section">' +
-          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
-            '<div class="detail-section-label" style="margin-bottom:0;">Resume / Background</div>' +
-            '<button onclick="showMessageModal(' + cd.id + ')" style="padding:3px 10px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">✨ AI Parse</button>' +
-          '</div>' +
-          '<div style="max-height:180px;overflow-y:auto;font-size:12px;line-height:1.7;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;white-space:pre-wrap;">' +
-            escHtml(cd.resume) +
-          '</div>' +
-        '</div>'
-      : '<div class="cand-detail-section">' +
-          '<div class="detail-section-label">Resume / Background</div>' +
-          '<button onclick="openEditCandidate(' + cd.id + ')" style="font-size:11px;color:var(--accent2);background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:7px;padding:5px 12px;font-family:inherit;cursor:pointer;">+ Add Resume</button>' +
-        '</div>') +
-
     // ── Submissions
     (cd.submissions && cd.submissions.length
       ? '<div class="cand-detail-section">' +
@@ -2521,6 +2384,38 @@ function renderCandidateDetail(cd) {
           }).join('') +
         '</div>'
       : '') +
+
+    // ── Resume ────────────────────────────────────────────────────────
+    // AI Summary
+    (cd.aiSummary
+      ? '<div class="cand-detail-section">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
+            '<div class="detail-section-label" style="margin-bottom:0;">AI Summary</div>' +
+            '<span style="font-size:9px;font-weight:700;color:var(--text4);background:rgba(255,255,255,.07);padding:1px 6px;border-radius:4px;">AI</span>' +
+          '</div>' +
+          (cd.aiSummary.summary ? '<div style="font-size:12px;color:var(--text3);line-height:1.6;margin-bottom:8px;">' + escHtml(cd.aiSummary.summary) + '</div>' : '') +
+          (cd.aiSummary.keySkills && cd.aiSummary.keySkills.length
+            ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;">' +
+                cd.aiSummary.keySkills.slice(0,6).map(function(s) { return '<span style="font-size:10px;background:rgba(124,106,247,.12);color:var(--accent2);padding:2px 8px;border-radius:99px;">' + escHtml(s) + '</span>'; }).join('') +
+              '</div>'
+            : '') +
+        '</div>'
+      : '') +
+
+    (cd.resume
+      ? '<div class="cand-detail-section">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
+            '<div class="detail-section-label" style="margin-bottom:0;">Resume / Background</div>' +
+            '<button onclick="showMessageModal(' + cd.id + ')" style="padding:3px 10px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">✨ AI Parse</button>' +
+          '</div>' +
+          '<div style="max-height:180px;overflow-y:auto;font-size:12px;line-height:1.7;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;white-space:pre-wrap;">' +
+            escHtml(cd.resume) +
+          '</div>' +
+        '</div>'
+      : '<div class="cand-detail-section">' +
+          '<div class="detail-section-label">Resume / Background</div>' +
+          '<button onclick="openEditCandidate(' + cd.id + ')" style="font-size:11px;color:var(--accent2);background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:7px;padding:5px 12px;font-family:inherit;cursor:pointer;">+ Add Resume</button>' +
+        '</div>') +
 
     // ── Linked Job ────────────────────────────────────────────────────
     '<div class="cand-detail-section">' +
@@ -2802,9 +2697,15 @@ function renderPipeline() {
             '<div class="pipe-card-name">' + escHtml(cd.name) + '</div>' +
             '<div class="pipe-card-role">' + escHtml(cd.title || '') + '</div>' +
             (cd.company ? '<div class="pipe-card-mid">' + escHtml(cd.company) + '</div>' : '') +
-            '<div style="font-size:10px;color:var(--accent2);font-weight:600;margin:8px 0 10px;">' +
-              '→ ' + escHtml(nba) +
+            '<div style="font-size:10px;color:var(--accent2);font-weight:600;margin:6px 0 6px;">' +
+              '-> ' + escHtml(nba) +
             '</div>' +
+            (cd.status === 'Interview'
+              ? '<button data-cid="' + cd.id + '" onclick="openSubmitModal(this.dataset.cid)" style="width:100%;margin-bottom:8px;padding:5px 0;background:linear-gradient(135deg,var(--teal),#0d9488);border:none;border-radius:7px;color:#fff;font-size:10px;font-weight:800;font-family:inherit;cursor:pointer;letter-spacing:.03em;">Submit</button>'
+              : '') +
+            (cd.submissions && cd.submissions.length
+              ? '<div style="font-size:9px;color:var(--teal);font-weight:700;margin-bottom:6px;">Submitted to ' + cd.submissions.length + ' compan' + (cd.submissions.length===1?'y':'ies') + '</div>'
+              : '') +
             '<div class="pipe-card-bottom">' +
               '<button class="pipe-advance-btn"' +
                 (isLast ? ' disabled' : ' onclick="moveCandidate(' + cd.id + ')"') +
@@ -3992,6 +3893,15 @@ function markJobApproved(id) {
   renderJobList();
   addActivityItem('Job approved: ' + j.title);
   saveActivityBoard();
+}
+
+function toggleJobAdvanced() {
+  var el  = document.getElementById('jf-advanced');
+  var arr = document.getElementById('jf-adv-arrow');
+  if (!el) return;
+  var open = el.style.display === 'flex';
+  el.style.display  = open ? 'none' : 'flex';
+  if (arr) arr.textContent = open ? '▾' : '▴';
 }
 
 document.addEventListener('DOMContentLoaded', init);
