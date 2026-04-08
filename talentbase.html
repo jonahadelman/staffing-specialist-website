@@ -513,6 +513,11 @@ html, body { height: 100%; overflow: hidden; }
   overflow: hidden;
   max-height: 100%;
 }
+.pipe-col[data-stage="Submitted"] {
+  border-color: rgba(20,184,166,.4);
+  box-shadow: 0 0 16px rgba(20,184,166,.1);
+  background: rgba(20,184,166,.03);
+}
 
 /* Sticky header inside column */
 .pipe-col-header {
@@ -2406,16 +2411,31 @@ function renderCandidateDetail(cd) {
     (cd.submissions && cd.submissions.length
       ? '<div class="cand-detail-section">' +
           '<div class="detail-section-label" style="margin-bottom:8px;">Submissions (' + cd.submissions.length + ')</div>' +
-          cd.submissions.slice().reverse().map(function(sub) {
-            var dt = sub.timestamp ? new Date(sub.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+          cd.submissions.slice().reverse().map(function(sub, ri) {
+            var realIdx = cd.submissions.length - 1 - ri;
+            var dt  = sub.timestamp ? new Date(sub.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+            var st  = sub.status || 'sent';
+            var stColor = { sent:'var(--text4)', viewed:'var(--accent2)', interview:'var(--amber)', rejected:'var(--red)', hired:'var(--green)' }[st] || 'var(--text4)';
+            var stLabel = { sent:'Sent', viewed:'Viewed', interview:'→ Interview', rejected:'Rejected', hired:'Hired' }[st] || st;
             return '<div style="padding:10px 12px;background:rgba(20,184,166,.07);border:1px solid rgba(20,184,166,.2);border-radius:8px;margin-bottom:6px;">' +
-              '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">' +
+              '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
                 '<span style="font-size:13px;font-weight:700;color:var(--text);">' + escHtml(sub.company) + '</span>' +
                 '<span style="font-size:10px;color:var(--text4);">' + dt + '</span>' +
               '</div>' +
-              (sub.hiringManager ? '<div style="font-size:11px;color:var(--text4);">HM: ' + escHtml(sub.hiringManager) + '</div>' : '') +
-              (sub.compensation  ? '<div style="font-size:11px;color:var(--teal);">Comp: ' + escHtml(sub.compensation) + '</div>' : '') +
-              (sub.notes ? '<div style="font-size:11px;color:var(--text3);margin-top:4px;">' + escHtml(sub.notes) + '</div>' : '') +
+              (sub.hiringManager ? '<div style="font-size:11px;color:var(--text4);margin-bottom:3px;">HM: ' + escHtml(sub.hiringManager) + '</div>' : '') +
+              (sub.compensation  ? '<div style="font-size:11px;color:var(--teal);margin-bottom:3px;">Comp: ' + escHtml(sub.compensation) + '</div>' : '') +
+              (sub.notes ? '<div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-style:italic;">' + escHtml(sub.notes) + '</div>' : '') +
+              '<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">' +
+                '<span style="font-size:10px;font-weight:700;color:' + stColor + ';background:rgba(255,255,255,.05);padding:2px 8px;border-radius:99px;">' + stLabel + '</span>' +
+                '<select data-cid="' + cd.id + '" data-idx="' + realIdx + '" onchange="updateSubmissionStatus(this.dataset.cid,parseInt(this.dataset.idx),this.value)" ' +
+                  'style="font-size:10px;padding:2px 6px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:inherit;cursor:pointer;">' +
+                  '<option value="">Update status...</option>' +
+                  '<option value="viewed">Viewed</option>' +
+                  '<option value="interview">Moving to Interview</option>' +
+                  '<option value="rejected">Rejected</option>' +
+                  '<option value="hired">Hired</option>' +
+                '</select>' +
+              '</div>' +
             '</div>';
           }).join('') +
         '</div>'
@@ -2713,7 +2733,7 @@ function renderPipeline() {
         }).join('')
       : '<div class="pipe-empty">No candidates</div>';
 
-    return '<div class="pipe-col">' +
+    return '<div class="pipe-col" data-stage="' + stage + '">' +
       '<div class="pipe-col-header">' +
         '<div class="pipe-col-label">' +
           '<span class="pipe-col-dot" style="background:' + color + ';"></span>' +
@@ -2900,10 +2920,12 @@ function renderHiringRisks() {
 function getNextBestAction(cd) {
   var now      = Date.now();
   var daysIdle = ((cd.lastActivityAt || cd.createdAt) ? (now - (cd.lastActivityAt || cd.createdAt)) / 86400000 : 0);
-  if (!cd.firstContactAt)          return 'Contact candidate';
-  if (daysIdle > 2)                return 'Follow up';
-  if (cd.status === 'Interview')   return 'Schedule next interview';
-  if (cd.status === 'Offer')       return 'Close candidate';
+  if (!cd.firstContactAt)                         return 'Contact candidate';
+  if (cd.status === 'Submitted' && daysIdle > 2)  return 'Follow up on submission';
+  if (cd.status === 'Submitted')                  return 'Await client response';
+  if (daysIdle > 2)                               return 'Follow up';
+  if (cd.status === 'Interview')                  return 'Schedule next interview';
+  if (cd.status === 'Offer')                      return 'Close candidate';
   return 'Monitor';
 }
 
@@ -3218,6 +3240,11 @@ function renderActivityBoard() {
       autoPipelineTasks.push({ id:'auto_'+cd.id, text:'Close offer: '+cd.name+suffix, completed:false, autoId:String(cd.id), type:'close', urgent:true });
     } else if (action === 'Schedule next interview') {
       autoPipelineTasks.push({ id:'auto_'+cd.id, text:'Schedule interview: '+cd.name+suffix, completed:false, autoId:String(cd.id), type:'interview', urgent:idle>3 });
+    } else if (action === 'Follow up on submission') {
+      var lastSub = cd.submissions && cd.submissions.length ? cd.submissions[cd.submissions.length-1] : null;
+      var coName  = lastSub ? lastSub.company : '';
+      var subText = coName ? 'Follow up with ' + coName + ' on ' + cd.name : 'Follow up on submission: ' + cd.name + suffix;
+      autoPipelineTasks.push({ id:'auto_'+cd.id, text:subText, completed:false, autoId:String(cd.id), type:'submission', urgent:idle>5 });
     }
   });
 
@@ -3236,9 +3263,10 @@ function renderActivityBoard() {
     followup:  'background:rgba(245,158,11,.08);border-left:3px solid rgba(245,158,11,.5);',
     close:     'background:rgba(167,139,245,.1);border-left:3px solid rgba(167,139,245,.5);',
     interview: 'background:rgba(20,184,166,.08);border-left:3px solid rgba(20,184,166,.5);',
+    submission:'background:rgba(20,184,166,.1);border-left:3px solid rgba(20,184,166,.6);',
     manual:    'background:rgba(255,255,255,.02);border-left:3px solid rgba(255,255,255,.08);',
   };
-  var typeIcon = { contact:'\ud83d\udcde', followup:'\u23f1', close:'\ud83c\udfaf', interview:'\ud83d\udcc5', manual:'\u2022' };
+  var typeIcon = { contact:'\ud83d\udcde', followup:'\u23f1', close:'\ud83c\udfaf', interview:'\ud83d\udcc5', submission:'\ud83d\udce4', manual:'\u2022' };
 
   var renderAuto = function(t) {
     var ts = typeStyle[t.type] || typeStyle.manual;
@@ -3629,6 +3657,7 @@ function submitCandidateAction() {
     compensation:  comp || null,
     notes:         note || null,
     timestamp:     Date.now(),
+    status:        'sent',
   });
   cd.status         = 'Submitted';
   cd.lastActivityAt = Date.now();
@@ -3653,6 +3682,44 @@ document.addEventListener('keydown', function(e) {
   var bd = document.getElementById('submit-modal-backdrop');
   if (bd && bd.style.display !== 'none') closeSubmitModal();
 });
+
+
+// ─── updateSubmissionStatus ────────────────────────────────────────
+function updateSubmissionStatus(candId, idx, newStatus) {
+  if (!newStatus) return;
+  var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
+  if (!cd || !cd.submissions || !cd.submissions[idx]) return;
+
+  cd.submissions[idx].status = newStatus;
+  cd.lastActivityAt = Date.now();
+
+  // Move pipeline stage based on outcome
+  if (newStatus === 'interview') {
+    cd.status = 'Interview';
+    cd.interviewCount = (cd.interviewCount || 0) + 1;
+    cd.firstContactAt = cd.firstContactAt || Date.now();
+  } else if (newStatus === 'hired') {
+    cd.status = 'Hired';
+  } else if (newStatus === 'rejected') {
+    // Keep Submitted stage — rejection is a submission outcome, not a pipeline removal
+    // Recruiter can manually move to Rejected via edit if needed
+  }
+  // 'viewed', 'sent' — keep Submitted stage
+
+  saveCandidates();
+
+  // Log to activity board
+  var company = cd.submissions[idx].company || 'company';
+  var labelMap = { viewed:'Viewed by', interview:'Interview scheduled at', hired:'Hired at', rejected:'Rejected by' };
+  var verb = labelMap[newStatus] || 'Updated submission at';
+  addActivityItem(verb + ' ' + company + ': ' + cd.name);
+  saveActivityBoard();
+
+  try { renderCandidateDetail(cd); }  catch(e) {}
+  try { renderCandidates(); }          catch(e) {}
+  try { renderPipeline(); }            catch(e) {}
+  if (state && state.currentView === 'dashboard') { try { renderDashboard(); } catch(e) {} }
+}
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
