@@ -1129,6 +1129,48 @@ input:focus, select:focus, textarea:focus {
                   </button>
                 </div>
 
+                <!-- Row: Hiring Manager + Openings -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                  <div>
+                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-hm">Hiring Manager</label>
+                    <input id="jf-hm" type="text" placeholder="e.g. Sarah Chen"
+                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-openings">Openings</label>
+                    <input id="jf-openings" type="number" placeholder="1" min="1"
+                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+                  </div>
+                </div>
+
+                <!-- Row: Priority + Location Type + Target Start -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+                  <div>
+                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-priority">Priority</label>
+                    <select id="jf-priority"
+                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;">
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                      <option value="Critical">Critical</option>
+                      <option value="Low">Low</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-loctype">Work Model</label>
+                    <select id="jf-loctype"
+                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;">
+                      <option value="Onsite">Onsite</option>
+                      <option value="Hybrid">Hybrid</option>
+                      <option value="Remote">Remote</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-start">Target Start</label>
+                    <input id="jf-start" type="date"
+                      style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"/>
+                  </div>
+                </div>
+
                 <!-- Job Description -->
                 <div>
                   <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;" for="jf-notes">Job Description</label>
@@ -1334,20 +1376,37 @@ input:focus, select:focus, textarea:focus {
         </div>
       </section>
 
-      <!-- ── ANALYTICS ───────────────────────── -->
+            <!-- ── ANALYTICS ───────────────────────── -->
       <section class="view" id="v-analytics">
         <div class="view-scroll">
           <div class="page-header">
             <div class="page-title">Analytics</div>
-            <div class="page-sub">Hiring metrics, funnel conversion, and source performance</div>
+            <div class="page-sub">Pipeline health, funnel conversion, and hiring velocity</div>
           </div>
-          <div class="empty-state">
-            <div class="empty-state-icon">📊</div>
-            <div class="empty-state-title">Analytics</div>
-            <div class="empty-state-sub">Data will appear once you have jobs and candidates.</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;" id="an-kpi-row"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+            <div>
+              <div class="section-header"><div class="section-title">Hiring Funnel</div></div>
+              <div class="card" id="an-funnel"></div>
+            </div>
+            <div>
+              <div class="section-header"><div class="section-title">Time in Stage (avg days)</div></div>
+              <div class="card" id="an-time-stage"></div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div>
+              <div class="section-header"><div class="section-title">Offer Pipeline</div></div>
+              <div class="card" id="an-offers"></div>
+            </div>
+            <div>
+              <div class="section-header"><div class="section-title">Req Age Distribution</div></div>
+              <div class="card" id="an-req-age"></div>
+            </div>
           </div>
         </div>
       </section>
+
 
       <!-- ── SETTINGS ────────────────────────── -->
       <section class="view" id="v-settings">
@@ -1514,6 +1573,11 @@ function nav(viewId) {
   if (viewId === 'jobs')         renderJobs();
   if (viewId === 'candidates')   renderCandidatesView();
   if (viewId === 'pipeline')     renderPipeline();
+  if (viewId === 'analytics')    renderAnalytics();
+  if (viewId === 'match')        renderAIMatch();
+  if (viewId === 'offer')        renderOffer();
+  if (viewId === 'templates')    renderTemplates();
+  if (viewId === 'happyhunting') renderHappyHunting();
 }
 
 function topbarSecondaryAction() {
@@ -1619,6 +1683,12 @@ function renderDashboard() {
   var dateEl    = document.getElementById('dash-date');
   if (welcomeEl) welcomeEl.textContent = greet + name;
   if (dateEl)    dateEl.textContent    = days[now.getDay()] + ', ' + mos[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+
+  var tbSub = document.getElementById('topbar-sub');
+  if (tbSub && state.currentWorkspace) {
+    var ws = WORKSPACES.find(function(w){ return w.id === state.currentWorkspace; });
+    tbSub.textContent = ws ? ws.name + ' workspace' : '';
+  }
 
   var openJobs   = jobs.filter(function(j) { return j.status === 'Open'; });
   var filledJobs = jobs.filter(function(j) { return j.status === 'Filled'; });
@@ -1781,15 +1851,23 @@ function renderJobList() {
       'Filled': 'status-filled', 'Closed': 'status-closed'
     }[j.status] || 'status-open';
 
+    var jCands = candidates.filter(function(cd) { return String(cd.jobId) === String(j.id); });
+    var priColor = { Critical:'var(--red)', High:'var(--amber)', Medium:'var(--accent2)', Low:'var(--text4)' }[j.priority] || 'var(--text4)';
     return '<div class="job-card' + (selected ? ' selected' : '') + '" ' +
       'data-job-id="' + j.id + '" onclick="selectJob(this.dataset.jobId)">' +
-      '<div class="job-card-title">' + escHtml(j.title) + '</div>' +
-      '<div class="job-card-meta">' +
-        (j.dept ? '<span>' + escHtml(j.dept) + '</span><span>·</span>' : '') +
-        (j.location ? '<span>' + escHtml(j.location) + '</span>' : '') +
-      '</div>' +
-      '<div style="margin-top:6px;">' +
-        '<span class="job-status-badge ' + statusClass + '">' + escHtml(j.status) + '</span>' +
+      '<div style="display:flex;align-items:flex-start;gap:6px;">' +
+        (j.priority ? '<span style="width:7px;height:7px;border-radius:50%;background:' + priColor + ';flex-shrink:0;margin-top:4px;"></span>' : '') +
+        '<div style="flex:1;min-width:0;">' +
+          '<div class="job-card-title">' + escHtml(j.title) + '</div>' +
+          '<div class="job-card-meta">' +
+            (j.dept ? '<span>' + escHtml(j.dept) + '</span><span>·</span>' : '') +
+            (j.location ? '<span>' + escHtml(j.location) + '</span>' : '') +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">' +
+            '<span class="job-status-badge ' + statusClass + '">' + escHtml(j.status) + '</span>' +
+            (jCands.length ? '<span style="font-size:10px;color:var(--text4);">' + jCands.length + ' candidate' + (jCands.length>1?'s':'') + '</span>' : '') +
+          '</div>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -1844,9 +1922,16 @@ function renderJobDetail(j) {
 
     '<div class="job-detail-meta">' +
       '<span class="job-status-badge ' + statusClass + '" style="font-size:11px;padding:2px 9px;">' + escHtml(j.status) + '</span>' +
+      (j.priority ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:' +
+        ({Critical:'rgba(239,68,68,.15)',High:'rgba(245,158,11,.15)',Medium:'rgba(59,130,246,.15)',Low:'rgba(148,163,184,.1)'}[j.priority]||'rgba(255,255,255,.07)') +
+        ';color:' + ({Critical:'var(--red)',High:'var(--amber)',Medium:'var(--accent2)',Low:'var(--text4)'}[j.priority]||'var(--text4)') +
+        ';">' + escHtml(j.priority) + ' Priority</span>' : '') +
       (j.dept ? '<span>📁 ' + escHtml(j.dept) + '</span>' : '') +
-      (j.location ? '<span>📍 ' + escHtml(j.location) + '</span>' : '') +
+      (j.location ? '<span>📍 ' + escHtml(j.location) + (j.locationType ? ' · ' + escHtml(j.locationType) : '') + '</span>' : '') +
       (j.type ? '<span>⏱ ' + escHtml(j.type) + '</span>' : '') +
+      (j.hiringManager ? '<span>👤 ' + escHtml(j.hiringManager) + '</span>' : '') +
+      (j.openings && j.openings > 1 ? '<span>🔢 ' + j.openings + ' openings</span>' : '') +
+      (j.targetStart ? '<span>🎯 Start: ' + new Date(j.targetStart).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + '</span>' : '') +
       '<span>Added ' + created + (age > 0 ? ' · ' + age + 'd ago' : '') + '</span>' +
     '</div>' +
 
@@ -1894,6 +1979,11 @@ function openEditJob(id) {
   document.getElementById('jf-notes').value    = j.notes      || '';
   document.getElementById('jf-salary-min').value = j.salaryMin ? String(j.salaryMin) : '';
   document.getElementById('jf-salary-max').value = j.salaryMax ? String(j.salaryMax) : '';
+  document.getElementById('jf-hm').value         = j.hiringManager  || '';
+  document.getElementById('jf-openings').value   = j.openings ? String(j.openings) : '1';
+  document.getElementById('jf-priority').value   = j.priority      || 'Medium';
+  document.getElementById('jf-loctype').value    = j.locationType   || 'Onsite';
+  document.getElementById('jf-start').value      = j.targetStart    || '';
 
   var errEl = document.getElementById('job-form-error');
   if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
@@ -1945,6 +2035,14 @@ function submitJobForm(e) {
     return;
   }
 
+  var salMin = parseInt(document.getElementById('jf-salary-min').value) || null;
+  var salMax = parseInt(document.getElementById('jf-salary-max').value) || null;
+  if (salMin && salMax && salMin >= salMax) {
+    errEl.textContent = 'Salary min must be less than max.';
+    errEl.style.display = 'block';
+    return;
+  }
+
   if (editingJobId) {
     // Edit
     var idx = jobs.findIndex(function(x) { return x.id === editingJobId; });
@@ -1955,8 +2053,13 @@ function submitJobForm(e) {
       jobs[idx].status   = document.getElementById('jf-status').value;
       jobs[idx].type     = document.getElementById('jf-type').value;
       jobs[idx].notes     = document.getElementById('jf-notes').value.trim();
-      jobs[idx].salaryMin = parseInt(document.getElementById('jf-salary-min').value) || null;
-      jobs[idx].salaryMax = parseInt(document.getElementById('jf-salary-max').value) || null;
+      jobs[idx].salaryMin     = salMin;
+      jobs[idx].salaryMax     = salMax;
+      jobs[idx].hiringManager = document.getElementById('jf-hm').value.trim();
+      jobs[idx].openings      = parseInt(document.getElementById('jf-openings').value) || 1;
+      jobs[idx].priority      = document.getElementById('jf-priority').value;
+      jobs[idx].locationType  = document.getElementById('jf-loctype').value;
+      jobs[idx].targetStart   = document.getElementById('jf-start').value || null;
       jobs[idx].updatedAt = Date.now();
     }
     saveJobs();
@@ -1976,9 +2079,14 @@ function submitJobForm(e) {
       status:     document.getElementById('jf-status').value,
       type:       document.getElementById('jf-type').value,
       notes:      document.getElementById('jf-notes').value.trim(),
-      salaryMin:  parseInt(document.getElementById('jf-salary-min').value) || null,
-      salaryMax:  parseInt(document.getElementById('jf-salary-max').value) || null,
-      workspaceId: state.currentWorkspace,
+      salaryMin:      salMin,
+      salaryMax:      salMax,
+      hiringManager:  document.getElementById('jf-hm').value.trim(),
+      openings:       parseInt(document.getElementById('jf-openings').value) || 1,
+      priority:       document.getElementById('jf-priority').value,
+      locationType:   document.getElementById('jf-loctype').value,
+      targetStart:    document.getElementById('jf-start').value || null,
+      workspaceId:    state.currentWorkspace,
       createdAt:  Date.now(),
     };
     jobs.unshift(newJob);
@@ -2126,34 +2234,39 @@ function renderCandidateDetail(cd) {
   if (!panel) return;
 
   if (!cd) {
-    panel.innerHTML =
-      '<div class="empty-state" style="padding-top:80px;">' +
-        '<div class="empty-state-icon">👥</div>' +
-        '<div class="empty-state-title">Select a candidate</div>' +
-        '<div class="empty-state-sub">Click a candidate on the left to view details.</div>' +
-      '</div>';
+    panel.innerHTML = '<div class="empty-state" style="padding-top:80px;"><div class="empty-state-icon">👥</div><div class="empty-state-title">Select a candidate</div><div class="empty-state-sub">Click a candidate on the left.</div></div>';
     return;
   }
 
-  var job   = jobs.find(function(j) { return j.id === cd.jobId; });
+  var job   = jobs.find(function(j) { return String(j.id) === String(cd.jobId); });
   var sc    = candStatusClass(cd.status);
   var nba   = getNextBestAction(cd);
   var score = calculateExperienceScore(cd);
   var risk  = getRiskLevel(score);
+  var riskColor = { critical:'var(--red)', warning:'var(--amber)', healthy:'var(--green)' }[risk];
 
+  // Auto summary
   var summary = '';
   if (cd.title && cd.company)           summary = cd.title + ' from ' + cd.company + '.';
   else if (cd.title)                    summary = cd.title + '.';
   else if (cd.company)                  summary = 'From ' + cd.company + '.';
-  if (cd.status === 'Interview')        summary += ' Actively interviewing.';
+  if      (cd.status === 'Interview')   summary += ' Actively interviewing.';
   else if (cd.status === 'Offer')       summary += ' Offer extended — needs close.';
   else if (cd.status === 'Hired')       summary += ' Successfully placed.';
   else if (nba === 'Follow up')         summary += ' Needs follow-up.';
   else if (nba === 'Contact candidate') summary += ' Not yet contacted.';
 
-  var riskColor = { critical: 'var(--red)', warning: 'var(--amber)', healthy: 'var(--green)' }[risk];
+  // Timeline events
+  var tevs = [];
+  if (cd.createdAt)      tevs.push({ ts:cd.createdAt,      label:'Added to pipeline', icon:'➕', color:'var(--text4)' });
+  if (cd.firstContactAt) tevs.push({ ts:cd.firstContactAt, label:'First contact',     icon:'📞', color:'var(--accent2)' });
+  if (cd.interviewCount) tevs.push({ ts:cd.lastActivityAt||cd.createdAt, label:(cd.interviewCount)+' interview'+(cd.interviewCount>1?'s':'')+' completed', icon:'📅', color:'var(--amber)' });
+  if (cd.status==='Offer') tevs.push({ ts:cd.lastActivityAt, label:'Offer extended', icon:'🎉', color:'var(--purple)' });
+  if (cd.status==='Hired') tevs.push({ ts:cd.lastActivityAt, label:'Hired', icon:'✅', color:'var(--green)' });
+  tevs.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
 
   panel.innerHTML =
+    // ── Header ─────────────────────────────────────────────────────────
     '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px;">' +
       '<div>' +
         '<div class="cand-detail-name">' + escHtml(cd.name) + '</div>' +
@@ -2169,11 +2282,10 @@ function renderCandidateDetail(cd) {
       '</div>' +
     '</div>' +
 
-    (summary
-      ? '<div style="font-size:12px;color:var(--text3);line-height:1.6;padding:10px 14px;background:var(--bg3);border-radius:9px;border:1px solid var(--border);margin-bottom:16px;">' +
-          escHtml(summary) + '</div>'
-      : '') +
+    // ── Summary ───────────────────────────────────────────────────────
+    (summary ? '<div style="font-size:12px;color:var(--text3);line-height:1.6;padding:10px 14px;background:var(--bg3);border-radius:9px;border:1px solid var(--border);margin-bottom:16px;">' + escHtml(summary) + '</div>' : '') +
 
+    // ── Next Action ────────────────────────────────────────────────────
     '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);border-radius:9px;margin-bottom:16px;">' +
       '<div>' +
         '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">Next Action</div>' +
@@ -2182,21 +2294,61 @@ function renderCandidateDetail(cd) {
       '<button onclick="showMessageModal(' + cd.id + ')" class="btn btn-primary btn-sm">Generate Message</button>' +
     '</div>' +
 
+    // ── Stats ──────────────────────────────────────────────────────────
     '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">' +
       '<div style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;text-align:center;">' +
         '<div style="font-size:18px;font-weight:800;color:' + riskColor + ';">' + score + '</div>' +
         '<div style="font-size:10px;color:var(--text4);margin-top:2px;">CX Score</div>' +
       '</div>' +
       '<div style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;text-align:center;">' +
-        '<div style="font-size:18px;font-weight:800;color:var(--text);">' + (cd.interviewCount || 0) + '</div>' +
+        '<div style="font-size:18px;font-weight:800;color:var(--text);">' + (cd.interviewCount||0) + '</div>' +
         '<div style="font-size:10px;color:var(--text4);margin-top:2px;">Interviews</div>' +
       '</div>' +
       '<div style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;text-align:center;">' +
-        '<div style="font-size:18px;font-weight:800;color:var(--text);">' + getDaysSince(cd.lastActivityAt || cd.createdAt) + 'd</div>' +
+        '<div style="font-size:18px;font-weight:800;color:var(--text);">' + getDaysSince(cd.lastActivityAt||cd.createdAt) + 'd</div>' +
         '<div style="font-size:10px;color:var(--text4);margin-top:2px;">Last Active</div>' +
       '</div>' +
     '</div>' +
 
+    // ── Experience timeline ────────────────────────────────────────────
+    (tevs.length > 1
+      ? '<div class="cand-detail-section">' +
+          '<div class="detail-section-label">Experience Timeline</div>' +
+          '<div style="padding:4px 0;">' +
+          tevs.map(function(ev, i) {
+            var dt   = ev.ts ? new Date(ev.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+            var last = i === tevs.length-1;
+            return '<div style="display:flex;gap:10px;align-items:flex-start;padding-bottom:' + (last?'0':'10') + 'px;">' +
+              '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">' +
+                '<span style="font-size:13px;line-height:1;">' + ev.icon + '</span>' +
+                (!last ? '<div style="width:1px;flex:1;min-height:12px;background:rgba(255,255,255,.1);margin-top:3px;"></div>' : '') +
+              '</div>' +
+              '<div style="flex:1;padding-top:1px;">' +
+                '<span style="font-size:12px;font-weight:600;color:' + ev.color + ';">' + ev.label + '</span>' +
+                (dt ? '<span style="font-size:10px;color:var(--text4);margin-left:8px;">' + dt + '</span>' : '') +
+              '</div>' +
+            '</div>';
+          }).join('') +
+          '</div></div>'
+      : '') +
+
+    // ── Resume ────────────────────────────────────────────────────────
+    (cd.resume
+      ? '<div class="cand-detail-section">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
+            '<div class="detail-section-label" style="margin-bottom:0;">Resume / Background</div>' +
+            '<button onclick="showMessageModal(' + cd.id + ')" style="padding:3px 10px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">✨ AI Parse</button>' +
+          '</div>' +
+          '<div style="max-height:180px;overflow-y:auto;font-size:12px;line-height:1.7;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;white-space:pre-wrap;">' +
+            escHtml(cd.resume) +
+          '</div>' +
+        '</div>'
+      : '<div class="cand-detail-section">' +
+          '<div class="detail-section-label">Resume / Background</div>' +
+          '<button onclick="openEditCandidate(' + cd.id + ')" style="font-size:11px;color:var(--accent2);background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:7px;padding:5px 12px;font-family:inherit;cursor:pointer;">+ Add Resume</button>' +
+        '</div>') +
+
+    // ── Linked Job ────────────────────────────────────────────────────
     '<div class="cand-detail-section">' +
       '<div class="detail-section-label">Linked Job</div>' +
       (job
@@ -2208,17 +2360,8 @@ function renderCandidateDetail(cd) {
           '</div>'
         : '<div style="font-size:12px;color:var(--text4);">No job assigned</div>') +
     '</div>' +
-    (cd.resume
-      ? '<div class="cand-detail-section">' +
-          '<div class="detail-section-label">Resume / Background</div>' +
-          '<div class="detail-notes" style="max-height:200px;overflow-y:auto;font-size:12px;line-height:1.7;">' + escHtml(cd.resume) + '</div>' +
-          '<button onclick="showMessageModal(' + cd.id + ')"' +
-            ' style="margin-top:8px;padding:5px 14px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:7px;color:#2dd4bf;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">' +
-            '✨ Improve Resume</button>' +
-        '</div>'
-      : '') +
 
-
+    // ── Notes ─────────────────────────────────────────────────────────
     (cd.notes
       ? '<div class="cand-detail-section">' +
           '<div class="detail-section-label">Notes</div>' +
@@ -2226,6 +2369,7 @@ function renderCandidateDetail(cd) {
         '</div>'
       : '');
 }
+
 
 
 // ── Add / Edit modal ──────────────────────────────────────────
@@ -2997,11 +3141,19 @@ function renderActivityBoard() {
   var itemHtml = function(task, idx) {
     var done  = task.completed;
     var style = done ? 'opacity:.45;text-decoration:line-through;' : '';
+    // Find candidate name match for jump link
+    var linked = candidates.find(function(cd) {
+      return task.text && cd.name && task.text.toLowerCase().includes(cd.name.toLowerCase());
+    });
+    var jumpBtn = linked
+      ? '<button onclick="nav(\'candidates\');setTimeout(function(){selectCandidate(\'' + linked.id + '\');},60)" style="background:none;border:none;color:var(--accent2);cursor:pointer;font-size:10px;padding:2px 6px;flex-shrink:0;font-family:inherit;">View →</button>'
+      : '';
     return '<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:7px;margin-bottom:2px;background:rgba(255,255,255,.02);">' +
       '<input type="checkbox" data-idx="' + idx + '" ' + (done ? 'checked' : '') + ' ' +
         'onchange="toggleActivity(parseInt(this.dataset.idx))" ' +
         'style="width:15px;height:15px;accent-color:var(--accent2);cursor:pointer;flex-shrink:0;"/>' +
       '<span style="font-size:13px;color:var(--text);' + style + 'flex:1;">' + escHtml(task.text) + '</span>' +
+      jumpBtn +
       '<button onclick="deleteActivity(' + idx + ')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:2px 6px;line-height:1;flex-shrink:0;">✕</button>' +
     '</div>';
   };
@@ -3055,6 +3207,11 @@ function seedDataIfEmpty() {
     { id:'sc10', name:'Thomas Brennan',   title:'Principal Systems Engineer', company:'Hologic',              status:'Hired',      jobId:'sj2', createdAt: now-45*day, lastActivityAt: now-5*day,  firstContactAt: now-43*day,     interviewCount:3 },
   ];
 
+  seedCands.push(
+    { id:'sc11', name:'Kevin Park',    title:'Sr. Systems Engineer', company:'Danaher',  status:'New',       jobId:'sj2', createdAt: now-2*day, lastActivityAt: now-2*day, firstContactAt: null,      interviewCount:0 },
+    { id:'sc12', name:'Amara Osei',    title:'Program Manager III',  company:'Repligen', status:'New',       jobId:'sj1', createdAt: now,       lastActivityAt: now,       firstContactAt: null,      interviewCount:0 },
+    { id:'sc13', name:'Chris Mallory', title:'EE Manager',           company:'Insulet',  status:'Screening', jobId:'sj3', createdAt: now-5*day, lastActivityAt: now-1*day, firstContactAt: now-4*day, interviewCount:0 }
+  );
   jobs       = seedJobs;
   candidates = seedCands;
   saveJobs();
@@ -3073,7 +3230,228 @@ function seedDataIfEmpty() {
   console.log('[TalentBase] Seed data loaded — ' + seedJobs.length + ' jobs, ' + seedCands.length + ' candidates');
 }
 
+
+// ═══════════════════════════════════════════════════════════
+// ANALYTICS
+// ═══════════════════════════════════════════════════════════
+
+function renderAnalytics() {
+  var stages      = ['New','Screening','Interview','Offer','Hired'];
+  var stageColors = { New:'var(--accent)', Screening:'var(--accent2)', Interview:'var(--amber)', Offer:'var(--purple)', Hired:'var(--green)' };
+  var openJobs    = jobs.filter(function(j) { return j.status === 'Open'; });
+  var hiredCands  = candidates.filter(function(cd) { return cd.status === 'Hired'; });
+  var offerCands  = candidates.filter(function(cd) { return cd.status === 'Offer'; });
+  var activeCands = candidates.filter(function(cd) { return !['Hired','Rejected'].includes(cd.status); });
+  var daysArr     = openJobs.map(function(j) { return j.createdAt ? (Date.now()-j.createdAt)/86400000 : 0; });
+  var avgDays     = daysArr.length ? Math.round(daysArr.reduce(function(s,d){return s+d;},0)/daysArr.length) : 0;
+
+  // KPI row
+  var kpiEl = document.getElementById('an-kpi-row');
+  if (kpiEl) {
+    var kpis = [
+      { label:'Open Reqs',       val: openJobs.length,                color:'var(--accent2)' },
+      { label:'Active Pipeline', val: activeCands.length,             color:'var(--teal)'    },
+      { label:'Hires YTD',       val: hiredCands.length,              color:'var(--green)'   },
+      { label:'Avg Days Open',   val: avgDays ? avgDays+'d' : '\u2014', color:'var(--amber)'  },
+    ];
+    kpiEl.innerHTML = kpis.map(function(k) {
+      return '<div class="kpi-card" style="border-left:3px solid '+k.color+';">' +
+        '<div class="kpi-label">'+k.label+'</div>' +
+        '<div class="kpi-value" style="color:'+k.color+';">'+k.val+'</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  // Funnel
+  var funnelEl = document.getElementById('an-funnel');
+  if (funnelEl) {
+    if (!candidates.length) {
+      funnelEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">No candidate data yet</div></div>';
+    } else {
+      var counts = stages.map(function(s) { return candidates.filter(function(cd){ return cd.status===s; }).length; });
+      var maxN   = Math.max.apply(null, counts) || 1;
+      funnelEl.innerHTML = stages.map(function(s, i) {
+        var n   = counts[i];
+        var pct = Math.round((n/maxN)*100);
+        var col = stageColors[s] || 'var(--text4)';
+        return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">' +
+          '<div style="font-size:11px;color:var(--text4);width:72px;flex-shrink:0;">'+s+'</div>' +
+          '<div style="flex:1;height:22px;background:rgba(255,255,255,.05);border-radius:6px;overflow:hidden;">' +
+            '<div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:6px;display:flex;align-items:center;padding-left:8px;transition:width .4s;">' +
+              (n > 0 ? '<span style="font-size:11px;font-weight:700;color:#fff;">'+n+'</span>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div style="font-size:12px;font-weight:700;color:var(--text);width:22px;text-align:right;">'+n+'</div>' +
+        '</div>';
+      }).join('');
+    }
+  }
+
+  // Time in stage
+  var tsEl = document.getElementById('an-time-stage');
+  if (tsEl) {
+    if (!candidates.length) {
+      tsEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">No data yet</div></div>';
+    } else {
+      tsEl.innerHTML = stages.slice(0,-1).map(function(s) {
+        var grp = candidates.filter(function(cd){ return cd.status===s && cd.lastActivityAt; });
+        var avg = grp.length
+          ? Math.round(grp.reduce(function(sum,cd){ return sum+getDaysSince(cd.lastActivityAt); },0)/grp.length)
+          : null;
+        var col = avg > 7 ? 'var(--red)' : avg > 3 ? 'var(--amber)' : 'var(--green)';
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
+          '<div style="font-size:12px;color:var(--text3);">'+s+'</div>' +
+          '<div style="font-size:13px;font-weight:700;color:'+col+';">'+(avg !== null ? avg+'d avg' : '\u2014')+'</div>' +
+        '</div>';
+      }).join('');
+    }
+  }
+
+  // Offer pipeline
+  var ofEl = document.getElementById('an-offers');
+  if (ofEl) {
+    var rows = [];
+    offerCands.forEach(function(cd) {
+      var job = jobs.find(function(j){ return String(j.id)===String(cd.jobId); });
+      rows.push({ name:cd.name, role:job?job.title:'', status:'Offer', color:'var(--purple)' });
+    });
+    hiredCands.slice(0,3).forEach(function(cd) {
+      var job = jobs.find(function(j){ return String(j.id)===String(cd.jobId); });
+      rows.push({ name:cd.name, role:job?job.title:'', status:'Hired', color:'var(--green)' });
+    });
+    if (!rows.length) {
+      ofEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">No offers or hires yet</div></div>';
+    } else {
+      ofEl.innerHTML = rows.map(function(r) {
+        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escHtml(r.name)+'</div>' +
+            (r.role ? '<div style="font-size:10px;color:var(--text4);">'+escHtml(r.role)+'</div>' : '') +
+          '</div>' +
+          '<span style="font-size:10px;font-weight:700;background:rgba(255,255,255,.07);color:'+r.color+';padding:2px 8px;border-radius:99px;flex-shrink:0;">'+r.status+'</span>' +
+        '</div>';
+      }).join('');
+    }
+  }
+
+  // Req age distribution
+  var raEl = document.getElementById('an-req-age');
+  if (raEl) {
+    var buckets = [
+      { label:'< 30d',  min:0,  max:30,   count:0, color:'var(--green)' },
+      { label:'30-60d', min:30, max:60,   count:0, color:'var(--amber)' },
+      { label:'60-90d', min:60, max:90,   count:0, color:'var(--red)'   },
+      { label:'> 90d',  min:90, max:9999, count:0, color:'#f87171'      },
+    ];
+    openJobs.forEach(function(j) {
+      var d = j.createdAt ? Math.floor((Date.now()-j.createdAt)/86400000) : 0;
+      for (var bi=0; bi<buckets.length; bi++) {
+        if (d >= buckets[bi].min && d < buckets[bi].max) { buckets[bi].count++; break; }
+      }
+    });
+    if (!openJobs.length) {
+      raEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">No open reqs</div></div>';
+    } else {
+      var maxB = Math.max.apply(null, buckets.map(function(b){ return b.count; })) || 1;
+      raEl.innerHTML = buckets.map(function(b) {
+        var pct = Math.round((b.count/maxB)*100);
+        return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">' +
+          '<div style="font-size:11px;color:var(--text4);width:52px;flex-shrink:0;">'+b.label+'</div>' +
+          '<div style="flex:1;height:18px;background:rgba(255,255,255,.05);border-radius:6px;overflow:hidden;">' +
+            '<div style="height:100%;width:'+pct+'%;background:'+b.color+';border-radius:6px;transition:width .4s;"></div>' +
+          '</div>' +
+          '<div style="font-size:12px;font-weight:700;color:var(--text);width:18px;text-align:right;">'+b.count+'</div>' +
+        '</div>';
+      }).join('');
+    }
+  }
+}
+
+function renderAIMatch() { /* wired — no-op placeholder */ }
+
+
+// ═══════════════════════════════════════════════════════════
+// OFFER BUILDER, TEMPLATES, HAPPY HUNTING, ACTIVITY LINKS
+// ═══════════════════════════════════════════════════════════
+
+function renderOffer() {
+  var sc = document.querySelector('#v-offer .view-scroll');
+  if (!sc) return;
+  while (sc.children.length > 1) sc.removeChild(sc.lastChild);
+  var offerCands = candidates.filter(function(cd) { return cd.status === 'Offer'; });
+  var div = document.createElement('div');
+  if (!offerCands.length) {
+    div.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#128221;</div><div class="empty-state-title">No candidates at Offer stage</div><div class="empty-state-sub">Advance candidates to Offer in the Pipeline to draft messages here.</div></div>';
+  } else {
+    div.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;max-width:640px;">' +
+      offerCands.map(function(cd) {
+        var job = jobs.find(function(j){ return String(j.id)===String(cd.jobId); });
+        return '<div class="card" style="display:flex;align-items:center;gap:14px;">' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:14px;font-weight:700;color:var(--text);">' + escHtml(cd.name) + '</div>' +
+            '<div style="font-size:11px;color:var(--text4);">' + (job ? escHtml(job.title) : 'No job linked') + '</div>' +
+          '</div>' +
+          '<button onclick="showMessageModal(' + cd.id + ')" class="btn btn-primary btn-sm">Draft Offer Message</button>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+  }
+  sc.appendChild(div);
+}
+
+function renderTemplates() {
+  var TMPL = [
+    { title:'Initial Outreach',       body:'Hi {{name}},\n\nI came across your profile and believe you could be a strong fit for a {{role}} opportunity. Would you be open to a quick call this week?\n\nBest,\n{{recruiter}}' },
+    { title:'Follow-Up After Screen', body:'Hi {{name}},\n\nThank you for speaking with me today. I enjoyed learning about your background and would like to move you to the next step. Are you available for a {{nextStep}} this week?\n\nBest,\n{{recruiter}}' },
+    { title:'Interview Confirmation', body:'Hi {{name}},\n\nConfirming your interview for {{role}} on {{date}} at {{time}}. Please let me know if you have any questions.\n\n{{recruiter}}' },
+    { title:'Offer Extended',         body:'Hi {{name}},\n\nCongratulations! We are excited to extend an offer for the {{role}} position. I will send the formal offer letter shortly.\n\n{{recruiter}}' },
+    { title:'Respectful Decline',     body:'Hi {{name}},\n\nThank you for your time and interest in the {{role}} position. After careful consideration, we have decided to move forward with another candidate. I will keep your profile on file for future opportunities.\n\nBest,\n{{recruiter}}' },
+  ];
+  window._TB_TEMPLATES = TMPL;
+  var sc = document.querySelector('#v-templates .view-scroll');
+  if (!sc) return;
+  while (sc.children.length > 1) sc.removeChild(sc.lastChild);
+  var div = document.createElement('div');
+  div.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;max-width:680px;">' +
+    TMPL.map(function(t, i) {
+      return '<div class="card">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+          '<div style="font-size:13px;font-weight:700;color:var(--text);">' + escHtml(t.title) + '</div>' +
+          '<button onclick="copyTemplate(' + i + ')" class="btn btn-ghost btn-sm" style="font-size:10px;">Copy</button>' +
+        '</div>' +
+        '<pre style="font-size:11px;color:var(--text4);line-height:1.6;white-space:pre-wrap;margin:0;">' + escHtml(t.body) + '</pre>' +
+      '</div>';
+    }).join('') +
+  '</div>';
+  sc.appendChild(div);
+}
+
+function copyTemplate(idx) {
+  var t = (window._TB_TEMPLATES || [])[idx];
+  if (!t) return;
+  var el = document.createElement('textarea');
+  el.value = t.body;
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+}
+
+function renderHappyHunting() {
+  var sc = document.querySelector('#v-happyhunting .view-scroll');
+  if (!sc) return;
+  while (sc.children.length > 1) sc.removeChild(sc.lastChild);
+  var div = document.createElement('div');
+  div.innerHTML = '<div class="card" style="max-width:520px;">' +
+    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px;">&#128269; Happy Hunting</div>' +
+    '<div style="font-size:12px;color:var(--text4);line-height:1.7;margin-bottom:16px;">Happy Hunting decodes staffing agency job postings to reveal the end client company &#8212; surfacing companies actively paying recruiting fees.</div>' +
+    '<a href="/HappyHunting.html" target="_blank" class="btn btn-primary" style="display:inline-flex;text-decoration:none;">&#128640; Open Happy Hunting</a>' +
+  '</div>';
+  sc.appendChild(div);
+}
+
 document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
+
