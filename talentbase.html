@@ -684,6 +684,9 @@ html, body { height: 100%; overflow: hidden; }
   border-color: rgba(255,255,255,.18);
   color: var(--text);
 }
+.pipe-advance-btn:active {
+  transform: scale(0.96);
+}
 .pipe-advance-btn:disabled {
   opacity: .28;
   cursor: not-allowed;
@@ -2114,7 +2117,7 @@ function renderCandidates() {
 function selectCandidate(id) {
   selectedCandidateId = id;
   renderCandidates();
-  var cd = candidates.find(function(x) { return x.id == id; });
+  var cd = candidates.find(function(x) { return String(x.id) === String(id); });
   renderCandidateDetail(cd);
 }
 
@@ -2241,7 +2244,7 @@ function openAddCandidateModal() {
 }
 
 function openEditCandidate(id) {
-  var cd = candidates.find(function(x) { return x.id == id; });
+  var cd = candidates.find(function(x) { return String(x.id) === String(id); });
   if (!cd) return;
   editingCandidateId = cd.id;
 
@@ -2339,7 +2342,7 @@ function submitCandForm(e) {
     var _now = Date.now();
     var _initStatus = document.getElementById('cf-status').value;
     var newCand = {
-      id:             uid(),
+      id:             String(uid()),
       name:           name,
       title:          document.getElementById('cf-title').value.trim(),
       company:        document.getElementById('cf-company').value.trim(),
@@ -2365,11 +2368,11 @@ function submitCandForm(e) {
 
 // ── Delete ────────────────────────────────────────────────────
 function deleteCandidate(id) {
-  var cd = candidates.find(function(x) { return x.id == id; });
+  var cd = candidates.find(function(x) { return String(x.id) === String(id); });
   if (!cd) return;
   if (!confirm('Delete "' + cd.name + '"? This cannot be undone.')) return;
 
-  candidates = candidates.filter(function(x) { return x.id != id; });
+  candidates = candidates.filter(function(x) { return String(x.id) !== String(id); });
   saveCandidates();
 
   if (selectedCandidateId == id) {
@@ -2507,30 +2510,34 @@ function renderPipeline() {
 
 // ── Move candidate to next stage ──────────────────────────────
 function moveCandidate(id) {
-  var cd = candidates.find(function(x) { return String(x.id) === String(id); });
+  var sid = String(id);
+  var cd  = candidates.find(function(x) { return String(x.id) === sid; });
   if (!cd) return;
 
-  var currentIndex = PIPE_STAGES.indexOf(cd.status);
-  if (currentIndex < 0) currentIndex = 0;
+  var idx = PIPE_STAGES.indexOf(cd.status);
+  if (idx < 0) idx = 0;
 
-  if (currentIndex < PIPE_STAGES.length - 1) {
-    var nextStage = PIPE_STAGES[currentIndex + 1];
-    cd.status         = nextStage;
-    cd.lastActivityAt = Date.now();
-    // First contact — set once when entering Screening or beyond
+  if (idx < PIPE_STAGES.length - 1) {
+    var nextStage      = PIPE_STAGES[idx + 1];
+    cd.status          = nextStage;
+    cd.lastActivityAt  = Date.now();
+
     if (!cd.firstContactAt && ['Screening','Interview','Offer','Hired'].includes(nextStage)) {
       cd.firstContactAt = Date.now();
     }
-    // Interview count
     if (nextStage === 'Interview') {
       cd.interviewCount = (cd.interviewCount || 0) + 1;
     }
+
     saveCandidates();
-    renderPipeline();
-    try { renderCandidates(); } catch(e) {}
-    try { if (state.currentView === 'dashboard') renderAITasks(); } catch(e) {}
+    try { renderPipeline(); }   catch(e) { console.error('renderPipeline', e); }
+    try { renderCandidates(); } catch(e) { console.error('renderCandidates', e); }
+    if (state.currentView === 'dashboard') {
+      try { renderDashboard(); } catch(e) {}
+    }
   }
 }
+
 
 
 // ═══════════════════════════════════════════════════════════
