@@ -10,7 +10,7 @@
 <style>
 /* ── RESET ──────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; overflow: hidden; }
+html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse at 20% 20%, rgba(59,130,246,.07), transparent 45%), radial-gradient(ellipse at 80% 80%, rgba(20,184,166,.05), transparent 45%), var(--bg); }
 
 /* ── DESIGN TOKENS ──────────────────────────────── */
 :root {
@@ -129,8 +129,8 @@ html, body { height: 100%; overflow: hidden; }
 
 .nav-section-label {
   font-size: 9px;
-  font-weight: 800;
-  color: var(--text4);
+  font-weight: 700;
+  color: rgba(84,96,112,.7);
   text-transform: uppercase;
   letter-spacing: .1em;
   padding: 6px 16px 3px;
@@ -225,7 +225,9 @@ html, body { height: 100%; overflow: hidden; }
   justify-content: space-between;
   padding: 0 28px;
   border-bottom: 1px solid var(--border);
-  background: var(--bg2);
+  background: rgba(15,21,32,.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   flex-shrink: 0;
   gap: 16px;
 }
@@ -246,18 +248,19 @@ html, body { height: 100%; overflow: hidden; }
   border-radius: 8px;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: all .12s;
+  transition: all .12s ease;
   white-space: nowrap;
 }
+.btn:active { transform: scale(.96); }
 .btn svg { width: 13px; height: 13px; flex-shrink: 0; }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent), #2563eb);
+  background: linear-gradient(135deg, var(--teal), #0d9488);
   color: #fff;
-  border-color: #2563eb;
-  box-shadow: 0 3px 14px rgba(59,130,246,.35);
+  border-color: #0d9488;
+  box-shadow: 0 4px 18px rgba(20,184,166,.45);
 }
-.btn-primary:hover { box-shadow: 0 4px 20px rgba(59,130,246,.5); transform: translateY(-1px); }
+.btn-primary:hover { box-shadow: 0 6px 24px rgba(20,184,166,.6); transform: translateY(-1px); }
 
 .btn-ghost {
   background: rgba(255,255,255,.05);
@@ -288,6 +291,7 @@ html, body { height: 100%; overflow: hidden; }
   overflow-y: auto;
   overflow-x: hidden;
   padding: 28px 32px 48px;
+  scroll-behavior: smooth;
 }
 .view-scroll::-webkit-scrollbar { width: 4px; }
 .view-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
@@ -298,6 +302,12 @@ html, body { height: 100%; overflow: hidden; }
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 20px 22px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.35);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.55);
 }
 
 .kpi-grid {
@@ -314,6 +324,12 @@ html, body { height: 100%; overflow: hidden; }
   display: flex;
   flex-direction: column;
   gap: 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.3);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
 }
 .kpi-label { font-size: 10px; font-weight: 700; color: var(--text4); text-transform: uppercase; letter-spacing: .08em; }
 .kpi-value { font-size: 30px; font-weight: 800; letter-spacing: -1px; line-height: 1.1; }
@@ -618,9 +634,9 @@ html, body { height: 100%; overflow: hidden; }
   border-radius: 12px 12px 0 0;
 }
 .pipe-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255,255,255,.15);
-  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  transform: translateY(-4px);
+  border-color: rgba(255,255,255,.18);
+  box-shadow: 0 14px 36px rgba(0,0,0,.6);
 }
 
 /* Card top: name + title */
@@ -820,6 +836,41 @@ input:focus, select:focus, textarea:focus {
   justify-content: center;
 }
 .pipe-msg-btn:hover { background: rgba(59,130,246,.2); }
+
+/* ── Visual upgrade: premium micro-polish ─────── */
+html { scroll-behavior: smooth; }
+
+/* Input focus glow — Stripe-style */
+input:focus, textarea:focus, select:focus {
+  border-color: rgba(20,184,166,.5) !important;
+  box-shadow: 0 0 0 3px rgba(20,184,166,.12) !important;
+  outline: none;
+}
+
+/* Nav item hover — subtle lift */
+.nav-item {
+  transition: background .1s ease, color .1s ease;
+}
+
+/* Pipeline column header — softer weight */
+.pipe-col-header {
+  opacity: .85;
+}
+
+/* Section headers — refined spacing */
+.section-header {
+  margin-bottom: 10px;
+}
+
+/* Job list item — smoother hover */
+.job-list-item {
+  transition: background .1s ease;
+}
+
+/* Soften section dividers */
+.cand-detail-section {
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
 </style>
 </head>
 
