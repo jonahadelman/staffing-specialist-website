@@ -1285,6 +1285,8 @@ input:focus, textarea:focus, select:focus {
             </div>
             <form id="cand-form" onsubmit="submitCandForm(event)" autocomplete="off">
               <div style="display:flex;flex-direction:column;gap:12px;">
+                <div id="cf-upload-zone" onclick="document.getElementById('cf-resume-file').click()" ondragover="event.preventDefault();this.style.borderColor='var(--teal)'" ondragleave="this.style.borderColor=''" ondrop="event.preventDefault();this.style.borderColor='';handleResumeFileDrop(event)" style="border:1.5px dashed var(--border2);border-radius:10px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color .15s,background .15s;"><div style="width:32px;height:32px;background:rgba(20,184,166,.12);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;">&#128196;</div><div style="flex:1;min-width:0;"><div id="cf-upload-label" style="font-size:12px;font-weight:700;color:var(--text);">Upload Resume</div><div id="cf-upload-sub" style="font-size:11px;color:var(--text4);margin-top:1px;">PDF, DOCX, or TXT &middot; drag &amp; drop or click</div></div><button type="button" onclick="event.stopPropagation();document.getElementById('cf-resume-file').click()" style="padding:4px 12px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:7px;color:#2dd4bf;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;">Browse</button><input id="cf-resume-file" type="file" accept=".pdf,.doc,.docx,.txt" style="display:none" onchange="handleResumeFileSelect(event)"/></div>
+                <div id="cf-parse-strip" style="display:none;padding:10px 14px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.25);border-radius:8px;"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:11px;font-weight:700;color:#2dd4bf;" id="cf-parse-status">&#8987; Parsing...</span><div style="display:flex;gap:6px;margin-left:auto;"><button type="button" onclick="applyResumeParseResults()" id="cf-parse-apply-btn" style="display:none;padding:3px 10px;background:rgba(20,184,166,.2);border:1px solid rgba(20,184,166,.4);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">&#10003; Apply Fields</button><button type="button" onclick="dismissResumeParse()" style="padding:3px 8px;background:none;border:1px solid var(--border2);border-radius:6px;color:var(--text4);font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">Dismiss</button></div></div><div id="cf-parse-preview" style="margin-top:8px;font-size:11px;color:var(--text3);line-height:1.5;display:none;"></div></div>
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Full Name <span style="color:var(--red);">*</span></label><input id="cf-name" type="text" placeholder="e.g. Sarah Johnson" required oninput="document.getElementById('cand-form-error').style.display='none'" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Linked Job <span style="color:var(--red);">*</span></label><select id="cf-job" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">— Select job —</option></select></div>
                 <div><button type="button" id="cf-more-toggle" onclick="toggleCandMore()" style="background:none;border:none;color:var(--text4);font-size:11px;font-family:inherit;cursor:pointer;padding:0;">&#9881; More Details <span id="cf-more-arrow">&#9662;</span></button></div>
@@ -4301,6 +4303,278 @@ function cleanStressTest() {
   try { renderPipeline(); } catch(e) {}
   alert('Stress test data removed.');
 }
+
+// ═══════════════════════════════════════════════════════════
+// RESUME UPLOAD & PARSE FLOW
+// ═══════════════════════════════════════════════════════════
+
+var _parsedResume = null; // stores last parse result
+
+// ── File drop / select entry points ─────────────────────────
+function handleResumeFileDrop(e) {
+  var files = e.dataTransfer && e.dataTransfer.files;
+  if (files && files[0]) processResumeFile(files[0]);
+}
+
+function handleResumeFileSelect(e) {
+  var files = e.target && e.target.files;
+  if (files && files[0]) processResumeFile(files[0]);
+}
+
+function processResumeFile(file) {
+  var allowed = ['application/pdf','application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain'];
+  var ext = file.name.split('.').pop().toLowerCase();
+  if (!allowed.includes(file.type) && !['pdf','doc','docx','txt'].includes(ext)) {
+    showParseStrip('&#10007; Unsupported file type. Use PDF, DOCX, or TXT.', 'error');
+    return;
+  }
+  // Update upload zone label
+  var lbl = document.getElementById('cf-upload-label');
+  var sub = document.getElementById('cf-upload-sub');
+  if (lbl) lbl.textContent = file.name;
+  if (sub) sub.textContent = (file.size / 1024).toFixed(0) + ' KB';
+
+  showParseStrip('&#8987; Reading file…', 'loading');
+
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var raw = ev.target.result;
+    var text = '';
+    if (ext === 'pdf') {
+      text = extractTextFromPDF(raw, file.name);
+    } else if (ext === 'docx') {
+      text = extractTextFromDOCX(raw, file.name);
+    } else {
+      text = raw; // plain text
+    }
+    if (!text || text.trim().length < 20) {
+      showParseStrip('&#10007; Could not extract text. Paste resume text below instead.', 'error');
+      return;
+    }
+    runResumeParse(text);
+  };
+  reader.onerror = function() {
+    showParseStrip('&#10007; File read failed. Paste resume text below instead.', 'error');
+  };
+  if (ext === 'txt') {
+    reader.readAsText(file);
+  } else {
+    reader.readAsBinaryString(file);
+  }
+}
+
+// ── PDF text extraction (no external library — regex on binary) ──
+function extractTextFromPDF(binary, filename) {
+  // Extract readable strings from raw PDF binary
+  try {
+    var text = '';
+    // PDF text is in BT...ET blocks or plain parenthesized strings
+    var matches = binary.match(/\(([^\\)]{2,200})\)/g) || [];
+    var chunks = [];
+    matches.forEach(function(m) {
+      var s = m.slice(1, -1);
+      // Filter out binary/control characters
+      var clean = s.replace(/[\x00-\x09\x0b-\x1f\x7f-\xff]/g, ' ').trim();
+      if (clean.length > 2) chunks.push(clean);
+    });
+    text = chunks.join(' ').replace(/\s{2,}/g, ' ').trim();
+    if (text.length < 50) {
+      // Fallback: look for stream text
+      var streams = binary.match(/stream([\s\S]*?)endstream/g) || [];
+      streams.forEach(function(s) {
+        var readable = s.replace(/[\x00-\x08\x0b-\x1f\x80-\xff]/g, ' ');
+        var words = readable.match(/[A-Za-z][A-Za-z0-9 .,@-]{3,}/g) || [];
+        text += ' ' + words.join(' ');
+      });
+    }
+    return text.trim();
+  } catch(e) { return ''; }
+}
+
+// ── DOCX text extraction (unzip XML inline) ──────────────────
+function extractTextFromDOCX(binary, filename) {
+  // DOCX is a zip. Extract w:t text elements from word/document.xml
+  try {
+    // Find the XML content between PK headers
+    var xmlMatch = binary.match(/word\/document\.xml[^]*?<w:body[^]*?<\/w:body>/);
+    if (xmlMatch) {
+      var xml = xmlMatch[0];
+      var texts = xml.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) || [];
+      return texts.map(function(t) {
+        return t.replace(/<[^>]+>/g,'');
+      }).join(' ').replace(/\s+/g,' ').trim();
+    }
+    // Fallback: grab any readable text
+    var readable = binary.replace(/[\x00-\x08\x0b-\x1f\x80-\xff]/g,' ');
+    return (readable.match(/[A-Za-z][A-Za-z0-9 .,@-]{4,}/g)||[]).join(' ').slice(0,3000);
+  } catch(e) { return ''; }
+}
+
+// ── Parse extracted text → structured candidate fields ────────
+function parseResumeFields(text) {
+  var lines = text.split(/\n|\r|<br>/).map(function(l){return l.trim();}).filter(Boolean);
+  var result = { name:'', title:'', company:'', email:'', phone:'', skills:[], summary:'' };
+
+  // Name: first non-empty line that looks like a person name (no @, no digits, < 5 words)
+  for (var i = 0; i < Math.min(lines.length, 8); i++) {
+    var l = lines[i];
+    if (l.length > 2 && l.length < 60 && !/[@\/\\|<>{}]/.test(l) && !/^\d/.test(l)) {
+      var wordCount = l.split(/\s+/).length;
+      if (wordCount >= 2 && wordCount <= 5 && /[A-Z]/.test(l)) {
+        result.name = l; break;
+      }
+    }
+  }
+
+  // Email
+  var emailM = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  if (emailM) result.email = emailM[0];
+
+  // Phone
+  var phoneM = text.match(/(\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/);
+  if (phoneM) result.phone = phoneM[0].trim();
+
+  // Title: line after name that looks like a job title
+  var titleKeywords = ['engineer','manager','director','analyst','specialist','lead',
+    'coordinator','consultant','developer','designer','recruiter','officer','vp','president',
+    'associate','senior','principal','staff','architect'];
+  var lowerText = text.toLowerCase();
+  for (var i = 1; i < Math.min(lines.length, 12); i++) {
+    var l = lines[i].toLowerCase();
+    if (titleKeywords.some(function(kw){return l.indexOf(kw)>=0;}) && lines[i].length < 80) {
+      result.title = lines[i]; break;
+    }
+  }
+
+  // Company: look for 'at [Company]' or line after title
+  var atMatch = text.match(/\bat\s+([A-Z][A-Za-z0-9&\s,.-]{2,50}?)(?:\s*[|\n\r,]|$)/);
+  if (atMatch) result.company = atMatch[1].trim();
+
+  // Skills
+  var skillPatterns = ['FDA','ISO 13485','GMP','SolidWorks','CAD','PCB','FPGA','Python',
+    'SQL','PMP','Agile','Scrum','JIRA','DHF','FMEA','Systems Engineering','Embedded',
+    'Medical Device','Life Sciences','Program Management','Six Sigma','Cross-functional',
+    'Java','JavaScript','React','AWS','Azure','Excel','PowerPoint','Salesforce'];
+  result.skills = skillPatterns.filter(function(sk){
+    return lowerText.indexOf(sk.toLowerCase()) >= 0;
+  }).slice(0,8);
+
+  // Summary: first substantial paragraph
+  for (var i = 0; i < Math.min(lines.length, 20); i++) {
+    if (lines[i].length > 60 && lines[i].length < 500) {
+      result.summary = lines[i]; break;
+    }
+  }
+  if (!result.summary) result.summary = text.slice(0,200).replace(/\s+/g,' ').trim();
+
+  return result;
+}
+
+// ── Run parse and show review strip ──────────────────────────
+function runResumeParse(text) {
+  var parsed = parseResumeFields(text);
+  var summary = buildResumeSummary(text);
+  _parsedResume = { fields: parsed, summary: summary, rawText: text };
+
+  // Build preview
+  var lines = [];
+  if (parsed.name)    lines.push('&#128100; <strong>Name:</strong> ' + escHtml(parsed.name));
+  if (parsed.title)   lines.push('&#128188; <strong>Title:</strong> ' + escHtml(parsed.title));
+  if (parsed.company) lines.push('&#127970; <strong>Employer:</strong> ' + escHtml(parsed.company));
+  if (parsed.email)   lines.push('&#128231; <strong>Email:</strong> ' + escHtml(parsed.email));
+  if (parsed.skills.length) lines.push('&#10024; <strong>Skills:</strong> ' + parsed.skills.map(escHtml).join(', '));
+
+  var preview = document.getElementById('cf-parse-preview');
+  if (preview) {
+    preview.innerHTML = lines.join('<br>');
+    preview.style.display = lines.length ? 'block' : 'none';
+  }
+
+  // Also populate cf-resume textarea with raw text
+  var ta = document.getElementById('cf-resume');
+  if (ta) ta.value = text.slice(0, 4000);
+
+  // Store for AI summary
+  window._pendingResumeAnalysis = summary;
+
+  var hasFields = parsed.name || parsed.title || parsed.company;
+  showParseStrip(
+    hasFields ? '&#10003; Resume parsed \u2014 review and apply below' : '&#9888; Parsed but names unclear \u2014 review below',
+    hasFields ? 'ok' : 'warn'
+  );
+  var applyBtn = document.getElementById('cf-parse-apply-btn');
+  if (applyBtn) applyBtn.style.display = 'inline-block';
+
+  // Expand More Details so user sees the filled fields
+  var more = document.getElementById('cf-more');
+  if (more && more.style.display !== 'flex') toggleCandMore();
+}
+
+// ── Apply parsed fields to form ───────────────────────────────
+function applyResumeParseResults() {
+  if (!_parsedResume) return;
+  var f = _parsedResume.fields;
+  var set = function(id, val) {
+    var el = document.getElementById(id);
+    if (el && val && !el.value) el.value = val;
+  };
+  set('cf-name',    f.name);
+  set('cf-title',   f.title);
+  set('cf-company', f.company);
+  // Highlight applied fields briefly
+  ['cf-name','cf-title','cf-company'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el && el.value) {
+      el.style.borderColor = 'rgba(20,184,166,.6)';
+      setTimeout(function(){ el.style.borderColor = ''; }, 1800);
+    }
+  });
+  // Hide the strip
+  dismissResumeParse();
+  // Focus name if still empty
+  var nm = document.getElementById('cf-name');
+  if (nm && !nm.value) nm.focus();
+}
+
+function dismissResumeParse() {
+  var strip = document.getElementById('cf-parse-strip');
+  if (strip) strip.style.display = 'none';
+  _parsedResume = null;
+}
+
+// ── Utility: show the parse status strip ─────────────────────
+function showParseStrip(msg, type) {
+  var strip  = document.getElementById('cf-parse-strip');
+  var status = document.getElementById('cf-parse-status');
+  if (!strip || !status) return;
+  status.innerHTML = msg;
+  var colors = { ok:'rgba(20,184,166,.08)', error:'rgba(239,68,68,.08)', warn:'rgba(245,158,11,.08)', loading:'rgba(255,255,255,.04)' };
+  var borders = { ok:'rgba(20,184,166,.25)', error:'rgba(239,68,68,.25)', warn:'rgba(245,158,11,.25)', loading:'rgba(255,255,255,.1)' };
+  strip.style.background   = colors[type]  || colors.loading;
+  strip.style.borderColor  = borders[type] || borders.loading;
+  strip.style.display = 'block';
+}
+
+// Reset upload zone when modal closes
+var _origCloseCandModal = window.closeCandModal;
+(function() {
+  var origClose = window.closeCandModal;
+  if (typeof origClose !== 'function') return;
+  window.closeCandModal = function() {
+    origClose();
+    _parsedResume = null;
+    var lbl = document.getElementById('cf-upload-label');
+    var sub = document.getElementById('cf-upload-sub');
+    var inp = document.getElementById('cf-resume-file');
+    var strip = document.getElementById('cf-parse-strip');
+    if (lbl) lbl.textContent = 'Upload Resume';
+    if (sub) sub.textContent = 'PDF, DOCX, or TXT \u00b7 drag & drop or click';
+    if (inp) inp.value = '';
+    if (strip) strip.style.display = 'none';
+  };
+})();
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
