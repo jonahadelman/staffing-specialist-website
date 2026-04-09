@@ -1218,7 +1218,7 @@ input:focus, textarea:focus, select:focus {
             <form id="job-form" onsubmit="submitJobForm(event)" autocomplete="off">
               <div style="display:flex;flex-direction:column;gap:14px;">
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Company <span style="color:var(--red);">*</span></label><select id="jf-company" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">Select company...</option></select></div>
-                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Job Title <span style="color:var(--red);">*</span></label><input id="jf-title" type="text" placeholder="e.g. Senior Program Manager" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
+                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Job Title <span style="color:var(--red);">*</span></label><input id="jf-title" type="text" placeholder="e.g. Senior Program Manager" required oninput="document.getElementById('job-form-error').style.display='none'" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Location</label><input id="jf-location" type="text" placeholder="e.g. Boston, MA" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Salary Range</label><div style="display:flex;gap:8px;align-items:center;"><input id="jf-salary-min" type="number" placeholder="Min" style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/><span style="font-size:12px;color:var(--text4);flex-shrink:0;">&mdash;</span><input id="jf-salary-max" type="number" placeholder="Max" style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><button type="button" onclick="suggestSalary()" style="margin-top:7px;padding:5px 12px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:7px;color:#2dd4bf;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">&#128176; Suggest Salary</button><div id="salary-suggest-banner" style="display:none;margin-top:6px;padding:7px 12px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.25);border-radius:7px;"><div style="display:flex;align-items:center;gap:10px;"><span id="salary-suggest-text" style="font-size:11px;color:#2dd4bf;flex:1;">Suggested range</span><button type="button" onclick="applySalarySuggestion()" style="padding:2px 10px;background:rgba(20,184,166,.2);border:1px solid rgba(20,184,166,.4);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">Apply</button><button type="button" onclick="this.parentElement.parentElement.style.display='none'" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:14px;padding:0 2px;">&times;</button></div></div></div>
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Job Description</label><textarea id="jf-notes" onblur="analyzeJobDescription(this.value)" rows="3" placeholder="Role overview, key requirements, hiring manager, team context..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
@@ -1285,7 +1285,7 @@ input:focus, textarea:focus, select:focus {
             </div>
             <form id="cand-form" onsubmit="submitCandForm(event)" autocomplete="off">
               <div style="display:flex;flex-direction:column;gap:12px;">
-                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Full Name <span style="color:var(--red);">*</span></label><input id="cf-name" type="text" placeholder="e.g. Sarah Johnson" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
+                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Full Name <span style="color:var(--red);">*</span></label><input id="cf-name" type="text" placeholder="e.g. Sarah Johnson" required oninput="document.getElementById('cand-form-error').style.display='none'" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Linked Job <span style="color:var(--red);">*</span></label><select id="cf-job" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">— Select job —</option></select></div>
                 <div><button type="button" id="cf-more-toggle" onclick="toggleCandMore()" style="background:none;border:none;color:var(--text4);font-size:11px;font-family:inherit;cursor:pointer;padding:0;">&#9881; More Details <span id="cf-more-arrow">&#9662;</span></button></div>
                 <div id="cf-more" style="display:none;flex-direction:column;gap:12px;">
@@ -2202,7 +2202,7 @@ function deleteJob(id) {
   if (!j) return;
   if (!confirm('Delete "' + j.title + '"? This cannot be undone.')) return;
 
-  jobs = jobs.filter(function(x) { return x.id !== id; });
+  jobs = jobs.filter(function(x) { return String(x.id) !== String(id); });
   saveJobs();
 
   if (selectedJobId === id) {
@@ -2304,11 +2304,16 @@ function renderCandidates() {
   });
 
   if (!filtered.length) {
+    var _hasJobs = jobs.filter(function(j){ return j.status !== 'Closed'; }).length > 0;
     container.innerHTML =
       '<div class="empty-state" style="padding:40px 12px;">' +
-        '<div class="empty-state-icon">👥</div>' +
+        '<div class="empty-state-icon">&#128100;</div>' +
         '<div class="empty-state-title">' + (q || filter ? 'No matches' : 'No candidates yet') + '</div>' +
-        '<div class="empty-state-sub">' + (q || filter ? 'Try adjusting your search.' : 'Add your first candidate to get started.') + '</div>' +
+        '<div class="empty-state-sub">' + (q || filter ? 'Try adjusting your search or filter.' :
+          (_hasJobs ? 'Click + Add Candidate in the topbar to get started.' : 'Create a job first, then add candidates.')) + '</div>' +
+        ((!q && !filter) ? (_hasJobs
+          ? '<button onclick="openAddCandidateModal()" class="btn btn-primary" style="margin-top:14px;">+ Add Candidate</button>'
+          : '<button onclick="openAddJob()" class="btn btn-primary" style="margin-top:14px;">+ Create Job First</button>') : '') +
       '</div>';
     return;
   }
@@ -2648,6 +2653,19 @@ function submitCandForm(e) {
   var jobIdRaw = document.getElementById('cf-job').value;
   var jobId    = jobIdRaw ? String(jobIdRaw) : null;
 
+  // Duplicate guard: same name + same job (edit mode exempt)
+  if (editingCandidateId === null && jobId) {
+    var nameNorm = name.trim().toLowerCase();
+    var dup = candidates.find(function(x) {
+      return x.name.trim().toLowerCase() === nameNorm && String(x.jobId) === String(jobId);
+    });
+    if (dup) {
+      errEl.textContent = '"' + name + '" is already linked to this job. Check Candidates view.';
+      errEl.style.display = 'block';
+      return;
+    }
+  }
+
   if (editingCandidateId !== null) {
     var idx = candidates.findIndex(function(x) { return x.id == editingCandidateId; });
     if (idx >= 0) {
@@ -2769,6 +2787,14 @@ function renderPipeline() {
   var board = document.getElementById('pipe-board');
   if (!board) return;
 
+  // Score cache — compute once per candidate per render cycle
+  var _scoreCache = {};
+  var cachedScore = function(cd) {
+    var k = String(cd.id);
+    if (_scoreCache[k] === undefined) _scoreCache[k] = calculateExperienceScore(cd);
+    return _scoreCache[k];
+  };
+
   var jobFilter = (document.getElementById('pipe-job-filter') || {}).value || '';
 
   // Filter candidates by job if selected
@@ -2805,7 +2831,7 @@ function renderPipeline() {
 
           var stageColor = PIPE_STAGE_COLORS[stage] || 'var(--text4)';
           var nba        = getNextBestAction(cd);
-          var cxScore    = calculateExperienceScore(cd);
+          var cxScore    = cachedScore(cd);
           var cxRisk     = getRiskLevel(cxScore);
           var isWarn     = cxRisk === 'critical' || cxRisk === 'warning';
           var idleDays   = getDaysSince(cd.lastActivityAt || cd.createdAt);
@@ -3758,6 +3784,7 @@ function closeSubmitModal() {
 }
 
 function submitCandidateAction() {
+  try {
   console.log('[TalentBase] SUBMIT:', submittingCandId);
   var company = (document.getElementById('sf-company').value || '').trim();
   var errEl   = document.getElementById('submit-form-error');
@@ -3792,6 +3819,7 @@ function submitCandidateAction() {
   try { renderCandidates(); }          catch(e) {}
   try { renderPipeline(); }            catch(e) {}
   if (state && state.currentView === 'dashboard') { try { renderDashboard(); } catch(e) {} }
+  } catch(err) { console.error('[TalentBase] submitCandidateAction error:', err); }
 }
 
 document.addEventListener('click', function(e) {
@@ -4215,6 +4243,63 @@ function attachPipelineHandler() {
     board.addEventListener('click', _pipeActionHandler);
     board._handlerAttached = true;
   }
+}
+
+function deleteCompany(coId) {
+  var co = companies.find(function(x) { return String(x.id) === String(coId); });
+  if (!co) return;
+  var jobCount = jobs.filter(function(j) { return String(j.companyId) === String(coId); }).length;
+  var msg = 'Delete company "' + co.name + '"?';
+  if (jobCount) msg += ' This company has ' + jobCount + ' job(s). The jobs will remain but lose their company link.';
+  msg += ' This cannot be undone.';
+  if (!confirm(msg)) return;
+  companies = companies.filter(function(x) { return String(x.id) !== String(coId); });
+  saveCompanies();
+  try { renderCompaniesView(); } catch(e) {}
+  try { renderJobList(); } catch(e) {}
+  addActivityItem('Company deleted: ' + co.name);
+  saveActivityBoard();
+}
+
+// stressTestSeed — run in console to populate 50 candidates + 10 jobs
+function stressTestSeed() {
+  var now = Date.now(); var day = 86400000;
+  var stages = ['New','Screening','Interview','Submitted','Offer','Hired'];
+  var firstNames = ['Alex','Jordan','Taylor','Morgan','Casey','Riley','Avery','Quinn','Dakota','Reese','Sam','Drew','Jamie','Blake','Skylar','Rowan','Finley','Harper','Emerson','Logan'];
+  var lastNames  = ['Chen','Patel','Kim','Garcia','Johnson','Williams','Brown','Jones','Miller','Davis','Wilson','Moore','Taylor','Anderson','Thomas','Jackson','White','Harris','Martin','Thompson'];
+  var titles = ['Sr. Systems Engineer','Program Manager','Quality Engineer','EE Manager','RA Specialist','Clinical Engineer','R&D Engineer','Director of Operations','Principal Engineer','HRBP'];
+  if (!jobs.length) { alert('Add at least one job first'); return; }
+  var count = 0;
+  for (var i = 0; i < 50; i++) {
+    var fn = firstNames[i % firstNames.length];
+    var ln = lastNames[Math.floor(i/firstNames.length) % lastNames.length];
+    var job = jobs[i % jobs.length];
+    var stage = stages[i % stages.length];
+    candidates.push({
+      id: 'stress_'+i+'_'+Date.now(), name: fn+' '+ln,
+      title: titles[i % titles.length], company: 'Test Co '+(i%5+1),
+      status: stage, jobId: String(job.id),
+      notes: 'Stress test candidate '+i, resume: '', aiSummary: null,
+      submissions: stage==='Submitted'?[{company:'Test Client',hiringManager:null,compensation:null,notes:null,timestamp:now-i*day*2,status:'sent'}]:[],
+      workspaceId: state.currentWorkspace, createdAt: now-i*day,
+      lastActivityAt: now-Math.floor(i/2)*day,
+      firstContactAt: ['Interview','Submitted','Offer','Hired'].includes(stage)?now-i*day:null,
+      interviewCount: stage==='Interview'?1:stage==='Offer'?2:0,
+      stage: stage
+    });
+    count++;
+  }
+  saveCandidates();
+  try { renderCandidates(); } catch(e) {}
+  try { renderPipeline(); } catch(e) {}
+  alert('Added '+count+' test candidates. Run cleanStressTest() to remove them.');
+}
+function cleanStressTest() {
+  candidates = candidates.filter(function(x){ return !String(x.id).startsWith('stress_'); });
+  saveCandidates();
+  try { renderCandidates(); } catch(e) {}
+  try { renderPipeline(); } catch(e) {}
+  alert('Stress test data removed.');
 }
 
 document.addEventListener('DOMContentLoaded', init);
