@@ -2027,7 +2027,7 @@ function openAddJob() {
   editingJobId = null;
   var form = document.getElementById('job-form');
   if (form) form.reset();
-  populateCompanyDropdown(null);
+  populateCompanyDropdown(companies.length ? companies[0].id : null);
   var errEl = document.getElementById('job-form-error');
   if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
   var titleEl = document.getElementById('job-modal-title');
@@ -2561,7 +2561,7 @@ function openAddCandidateModal() {
   editingCandidateId = null;
   var form = document.getElementById('cand-form');
   if (form) form.reset();
-  populateCandJobDropdown(selectedJobId || null);
+  populateCandJobDropdown(jobs.length ? (selectedJobId || jobs[0].id) : null);
   var errEl = document.getElementById('cand-form-error');
   if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
   var titleEl = document.getElementById('cand-modal-title');
@@ -2646,7 +2646,7 @@ function submitCandForm(e) {
   }
 
   var jobIdRaw = document.getElementById('cf-job').value;
-  var jobId    = jobIdRaw ? (isNaN(jobIdRaw) ? jobIdRaw : Number(jobIdRaw)) : null;
+  var jobId    = jobIdRaw ? String(jobIdRaw) : null;
 
   if (editingCandidateId !== null) {
     var idx = candidates.findIndex(function(x) { return x.id == editingCandidateId; });
@@ -2851,6 +2851,7 @@ function renderPipeline() {
       '<div class="pipe-col-body">' + cardsHtml + '</div>' +
     '</div>';
   }).join('');
+  attachPipelineHandler();
 }
 
 // ── Move candidate to next stage ──────────────────────────────
@@ -3757,6 +3758,7 @@ function closeSubmitModal() {
 }
 
 function submitCandidateAction() {
+  console.log('[TalentBase] SUBMIT:', submittingCandId);
   var company = (document.getElementById('sf-company').value || '').trim();
   var errEl   = document.getElementById('submit-form-error');
   if (!company) {
@@ -4179,8 +4181,7 @@ function _pipeActionHandler(e) {
   var action = btn.dataset.action;
   if (!cid || !action) return;
   e.stopPropagation();
-  var cid    = btn.dataset.cid;
-  var action = btn.dataset.action;
+  console.log('[TalentBase] PIPE ACTION:', action, cid);
   if (action === 'submit')  { openSubmitModal(cid); }
   if (action === 'followup') {
     var cd = candidates.find(function(x){ return String(x.id)===String(cid); });
@@ -4208,10 +4209,13 @@ function toggleCandMore() {
   if (arr) arr.textContent = open ? '\u25be' : '\u25b4';
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+function attachPipelineHandler() {
   var board = document.getElementById('pipe-board');
-  if (board) board.addEventListener('click', _pipeActionHandler);
-});
+  if (board && !board._handlerAttached) {
+    board.addEventListener('click', _pipeActionHandler);
+    board._handlerAttached = true;
+  }
+}
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
