@@ -2510,10 +2510,36 @@ function renderCandidateDetail(cd) {
             '<div class="detail-section-label" style="margin-bottom:0;">AI Summary</div>' +
             '<span style="font-size:9px;font-weight:700;color:var(--text4);background:rgba(255,255,255,.07);padding:1px 6px;border-radius:4px;">AI</span>' +
           '</div>' +
-          (cd.aiSummary.summary ? '<div style="font-size:12px;color:var(--text3);line-height:1.6;margin-bottom:8px;">' + escHtml(cd.aiSummary.summary) + '</div>' : '') +
+          (cd.aiSummary.summary ? '<div style="font-size:12px;color:var(--text3);line-height:1.6;margin-bottom:10px;">' + escHtml(cd.aiSummary.summary) + '</div>' : '') +
           (cd.aiSummary.keySkills && cd.aiSummary.keySkills.length
-            ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;">' +
-                cd.aiSummary.keySkills.slice(0,6).map(function(s) { return '<span style="font-size:10px;background:rgba(124,106,247,.12);color:var(--accent2);padding:2px 8px;border-radius:99px;">' + escHtml(s) + '</span>'; }).join('') +
+            ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;">' +
+                cd.aiSummary.keySkills.slice(0,8).map(function(s) { return '<span style="font-size:10px;background:rgba(124,106,247,.12);color:var(--accent2);padding:2px 8px;border-radius:99px;">' + escHtml(s) + '</span>'; }).join('') +
+              '</div>'
+            : '') +
+          // Experience blocks
+          (cd.experience && cd.experience.length
+            ? '<div style="margin-bottom:8px;"><div style="font-size:9px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Experience</div>' +
+                cd.experience.slice(0,3).map(function(ex) {
+                  var header = [ex.role, ex.company].filter(Boolean).join(' · ');
+                  return '<div style="margin-bottom:8px;">' +
+                    (header ? '<div style="font-size:11px;font-weight:700;color:var(--text);">' + escHtml(header) + '</div>' : '') +
+                    (ex.dates ? '<div style="font-size:10px;color:var(--text4);margin-top:1px;">' + escHtml(ex.dates) + '</div>' : '') +
+                    (ex.bullets && ex.bullets.length ? '<ul style="margin:4px 0 0 14px;padding:0;">' +
+                      ex.bullets.slice(0,3).map(function(b){ return '<li style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:2px;">' + escHtml(b) + '</li>'; }).join('') +
+                    '</ul>' : '') +
+                  '</div>';
+                }).join('') +
+              '</div>'
+            : '') +
+          // Education
+          (cd.education && cd.education.length
+            ? '<div><div style="font-size:9px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Education</div>' +
+                cd.education.slice(0,2).map(function(ed) {
+                  var line = [ed.degree, ed.institution].filter(Boolean).join(', ');
+                  return '<div style="font-size:11px;color:var(--text);margin-bottom:4px;">' + escHtml(line) +
+                    (ed.year ? '<span style="font-size:10px;color:var(--text4);margin-left:6px;">' + escHtml(ed.year) + '</span>' : '') +
+                  '</div>';
+                }).join('') +
               '</div>'
             : '') +
         '</div>'
@@ -2706,6 +2732,7 @@ function submitCandForm(e) {
       interviewCount: _initStatus === 'Interview' ? 1 : 0,
     };
     candidates.unshift(newCand);
+    window._lastSavedCandId = String(newCand.id);
     saveCandidates();
     try { generateAITasks(); } catch(e) {}
     closeCandModal();
@@ -4023,12 +4050,30 @@ function analyzeResume(text) {
     if (!window._pendingResumeAnalysis) return;
     var rv = ((document.getElementById('cf-resume')||{}).value||'').trim();
     if (!rv) { window._pendingResumeAnalysis = null; return; }
+    // Use _lastSavedCandId for new cands; editingCandidateId for edits
     var eid    = window.editingCandidateId;
-    var target = eid
-      ? candidates.find(function(x){return String(x.id)===String(eid);})
-      : candidates[0];
-    if (target) { target.aiSummary = window._pendingResumeAnalysis; saveCandidates(); }
+    var candId = eid ? String(eid) : (window._lastSavedCandId || '');
+    var target = candId
+      ? candidates.find(function(x){ return String(x.id) === candId; })
+      : null;
+    if (target) {
+      target.aiSummary = window._pendingResumeAnalysis;
+      // Save structured fields from full parse if available
+      if (window._lastFullParse) {
+        var fp = window._lastFullParse;
+        if (fp.email    && !target.email)    target.email    = fp.email;
+        if (fp.phone    && !target.phone)    target.phone    = fp.phone;
+        if (fp.location && !target.location) target.location = fp.location;
+        if (fp.skills   && fp.skills.length) target.skills   = fp.skills;
+        if (fp.experience && fp.experience.length) target.experience = fp.experience;
+        if (fp.education  && fp.education.length)  target.education  = fp.education;
+        window._lastFullParse = null;
+      }
+      saveCandidates();
+      try { renderCandidateDetail(target); } catch(err) {}
+    }
     window._pendingResumeAnalysis = null;
+    window._lastSavedCandId = null;
   };
 })();
 
@@ -4308,183 +4353,422 @@ function cleanStressTest() {
 // RESUME UPLOAD & PARSE FLOW
 // ═══════════════════════════════════════════════════════════
 
-var _parsedResume = null; // stores last parse result
+// ═══════════════════════════════════════════════════════════════════════════
+// RESUME UPLOAD + PARSE + REVIEW + SAVE  — v2 (section-aware)
+// ═══════════════════════════════════════════════════════════════════════════
 
-// ── File drop / select entry points ─────────────────────────
+var _parsedResume = null;
+
+// ── File-drop / file-select entry points ─────────────────────────────────
 function handleResumeFileDrop(e) {
   var files = e.dataTransfer && e.dataTransfer.files;
   if (files && files[0]) processResumeFile(files[0]);
 }
-
 function handleResumeFileSelect(e) {
   var files = e.target && e.target.files;
   if (files && files[0]) processResumeFile(files[0]);
 }
 
 function processResumeFile(file) {
-  var allowed = ['application/pdf','application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'text/plain'];
-  var ext = file.name.split('.').pop().toLowerCase();
-  if (!allowed.includes(file.type) && !['pdf','doc','docx','txt'].includes(ext)) {
-    showParseStrip('&#10007; Unsupported file type. Use PDF, DOCX, or TXT.', 'error');
-    return;
+  var ext = (file.name.split('.').pop() || '').toLowerCase();
+  if (!['pdf','doc','docx','txt'].includes(ext)) {
+    showParseStrip('\u2717 Unsupported type. Use PDF, DOCX, or TXT.', 'error'); return;
   }
-  // Update upload zone label
   var lbl = document.getElementById('cf-upload-label');
   var sub = document.getElementById('cf-upload-sub');
   if (lbl) lbl.textContent = file.name;
-  if (sub) sub.textContent = (file.size / 1024).toFixed(0) + ' KB';
-
-  showParseStrip('&#8987; Reading file…', 'loading');
+  if (sub) sub.textContent = (file.size/1024).toFixed(0) + ' KB';
+  showParseStrip('\u29d6 Reading\u2026', 'loading');
 
   var reader = new FileReader();
-  reader.onload = function(ev) {
-    var raw = ev.target.result;
-    var text = '';
-    if (ext === 'pdf') {
-      text = extractTextFromPDF(raw, file.name);
-    } else if (ext === 'docx') {
-      text = extractTextFromDOCX(raw, file.name);
-    } else {
-      text = raw; // plain text
-    }
-    if (!text || text.trim().length < 20) {
-      showParseStrip('&#10007; Could not extract text. Paste resume text below instead.', 'error');
-      return;
-    }
-    runResumeParse(text);
-  };
   reader.onerror = function() {
-    showParseStrip('&#10007; File read failed. Paste resume text below instead.', 'error');
+    showParseStrip('\u2717 File read failed. Paste resume below.', 'error');
   };
   if (ext === 'txt') {
+    reader.onload = function(ev) { runResumeParse(ev.target.result || ''); };
     reader.readAsText(file);
   } else {
+    reader.onload = function(ev) {
+      var raw  = ev.target.result || '';
+      var text = ext === 'pdf' ? extractTextFromPDF(raw) : extractTextFromDOCX(raw);
+      if (!text || text.trim().length < 30) {
+        showParseStrip('\u2717 Could not extract text. Paste resume below.', 'error');
+        return;
+      }
+      runResumeParse(text);
+    };
     reader.readAsBinaryString(file);
   }
 }
 
-// ── PDF text extraction (no external library — regex on binary) ──
-function extractTextFromPDF(binary, filename) {
-  // Extract readable strings from raw PDF binary
+// ── PDF text extraction ───────────────────────────────────────────────────
+// Targets the actual content stream text operators (Tj, TJ, ')
+function extractTextFromPDF(bin) {
   try {
-    var text = '';
-    // PDF text is in BT...ET blocks or plain parenthesized strings
-    var matches = binary.match(/\(([^\\)]{2,200})\)/g) || [];
-    var chunks = [];
-    matches.forEach(function(m) {
-      var s = m.slice(1, -1);
-      // Filter out binary/control characters
-      var clean = s.replace(/[\x00-\x09\x0b-\x1f\x7f-\xff]/g, ' ').trim();
-      if (clean.length > 2) chunks.push(clean);
-    });
-    text = chunks.join(' ').replace(/\s{2,}/g, ' ').trim();
-    if (text.length < 50) {
-      // Fallback: look for stream text
-      var streams = binary.match(/stream([\s\S]*?)endstream/g) || [];
-      streams.forEach(function(s) {
-        var readable = s.replace(/[\x00-\x08\x0b-\x1f\x80-\xff]/g, ' ');
-        var words = readable.match(/[A-Za-z][A-Za-z0-9 .,@-]{3,}/g) || [];
-        text += ' ' + words.join(' ');
+    var out = [];
+    // Decode content streams
+    var streams = bin.match(/stream([\s\S]*?)endstream/g) || [];
+    streams.forEach(function(stream) {
+      // Remove binary noise — keep printable ASCII + newlines
+      var s = stream.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x80-\xff]/g, ' ');
+      // Tj operator: (text)Tj  or (text) Tj
+      var tjM = s.match(/\(([^)]{0,300})\)\s*Tj/g) || [];
+      tjM.forEach(function(m) {
+        var t = m.replace(/\)\s*Tj$/,'').replace(/^\(/,'');
+        // Unescape PDF string escapes
+        t = t.replace(/\\n/g,'\n').replace(/\\r/g,' ').replace(/\\t/g,' ')
+              .replace(/\\\d{3}/g,'').replace(/\\(.)/g,'$1');
+        if (t.trim()) out.push(t);
       });
+      // TJ operator: [(text) offset (text)]TJ — grab strings
+      var tjAM = s.match(/\[([^\]]{0,500})\]\s*TJ/g) || [];
+      tjAM.forEach(function(m) {
+        var strs = m.match(/\(([^)]{0,200})\)/g) || [];
+        var line = strs.map(function(x){ return x.slice(1,-1); }).join('');
+        line = line.replace(/\\n/g,'\n').replace(/\\(.)/g,'$1');
+        if (line.trim()) out.push(line);
+      });
+    });
+    var result = out.join('\n').replace(/[ \t]{3,}/g,'  ').replace(/\n{3,}/g,'\n\n').trim();
+    // Fallback if we got nothing useful
+    if (result.length < 40) {
+      var fb = bin.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x80-\xff]/g,' ')
+                  .replace(/\s{3,}/g,' ');
+      result = (fb.match(/[A-Za-z][A-Za-z0-9 .,'@+-]{4,80}/g) || []).join('\n').slice(0,5000);
     }
-    return text.trim();
+    return result;
   } catch(e) { return ''; }
 }
 
-// ── DOCX text extraction (unzip XML inline) ──────────────────
-function extractTextFromDOCX(binary, filename) {
-  // DOCX is a zip. Extract w:t text elements from word/document.xml
+// ── DOCX text extraction ──────────────────────────────────────────────────
+function extractTextFromDOCX(bin) {
   try {
-    // Find the XML content between PK headers
-    var xmlMatch = binary.match(/word\/document\.xml[^]*?<w:body[^]*?<\/w:body>/);
-    if (xmlMatch) {
-      var xml = xmlMatch[0];
-      var texts = xml.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) || [];
-      return texts.map(function(t) {
-        return t.replace(/<[^>]+>/g,'');
-      }).join(' ').replace(/\s+/g,' ').trim();
+    // DOCX = ZIP. Locate the PK-compressed document.xml segment
+    var xmlStart = bin.indexOf('word/document.xml');
+    if (xmlStart < 0) xmlStart = bin.indexOf('document.xml');
+    var xmlChunk = '';
+    if (xmlStart >= 0) {
+      // The XML content follows the local file header; grab up to 500KB
+      xmlChunk = bin.slice(xmlStart, xmlStart + 500000);
+    } else {
+      xmlChunk = bin;
     }
-    // Fallback: grab any readable text
-    var readable = binary.replace(/[\x00-\x08\x0b-\x1f\x80-\xff]/g,' ');
-    return (readable.match(/[A-Za-z][A-Za-z0-9 .,@-]{4,}/g)||[]).join(' ').slice(0,3000);
+    // Decode any readable XML (may be uncompressed in small files)
+    var clean = xmlChunk.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x80-\xff]/g,' ');
+    // Extract <w:t> elements
+    var texts = clean.match(/<w:t[^>]*>([^<]{0,300})<\/w:t>/g) || [];
+    if (texts.length) {
+      var joined = texts.map(function(t){ return t.replace(/<[^>]+>/g,''); }).join(' ');
+      // Add paragraph breaks at <w:p> boundaries
+      var paras = clean.split(/<w:p[ >]/);
+      var result = paras.map(function(p) {
+        var t2 = p.match(/<w:t[^>]*>([^<]{0,300})<\/w:t>/g) || [];
+        return t2.map(function(x){ return x.replace(/<[^>]+>/g,''); }).join('');
+      }).filter(Boolean).join('\n');
+      return result.replace(/\n{3,}/g,'\n\n').trim() || joined;
+    }
+    // Fallback: grab readable strings
+    return (clean.match(/[A-Za-z][A-Za-z0-9 .,'@\-+]{4,100}/g)||[]).join('\n').slice(0,5000);
   } catch(e) { return ''; }
 }
 
-// ── Parse extracted text → structured candidate fields ────────
-function parseResumeFields(text) {
-  var lines = text.split(/\n|\r|<br>/).map(function(l){return l.trim();}).filter(Boolean);
-  var result = { name:'', title:'', company:'', email:'', phone:'', skills:[], summary:'' };
+// ── Section-aware resume parser ───────────────────────────────────────────
+function parseResumeText(rawText) {
+  // Normalise line endings, collapse excessive blank lines
+  var text  = rawText.replace(/\r\n/g,'\n').replace(/\r/g,'\n').replace(/\n{4,}/g,'\n\n\n');
+  var lines = text.split('\n');
 
-  // Name: first non-empty line that looks like a person name (no @, no digits, < 5 words)
-  for (var i = 0; i < Math.min(lines.length, 8); i++) {
-    var l = lines[i];
-    if (l.length > 2 && l.length < 60 && !/[@\/\\|<>{}]/.test(l) && !/^\d/.test(l)) {
-      var wordCount = l.split(/\s+/).length;
-      if (wordCount >= 2 && wordCount <= 5 && /[A-Z]/.test(l)) {
-        result.name = l; break;
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function isSectionHeading(line) {
+    var l = line.trim();
+    if (!l || l.length > 60) return false;
+    var headings = [
+      'experience','work experience','professional experience','employment history',
+      'career history','work history',
+      'education','academic background',
+      'skills','technical skills','core competencies','key skills','competencies',
+      'summary','professional summary','profile','career summary','objective',
+      'certifications','certificates','awards','publications','projects',
+      'languages','interests','references','contact','about'
+    ];
+    var low = l.toLowerCase().replace(/[^a-z\s]/g,'').trim();
+    return headings.some(function(h){ return low === h || low.startsWith(h+' '); }) ||
+           /^[A-Z][A-Z\s]{4,40}$/.test(l); // ALL-CAPS short line
+  }
+
+  function getSectionKey(line) {
+    var low = line.trim().toLowerCase().replace(/[^a-z\s]/g,'').trim();
+    if (/experience|employment|career|work history/.test(low)) return 'experience';
+    if (/education|academic/.test(low))                        return 'education';
+    if (/skill|competenc|expertise|technical/.test(low))       return 'skills';
+    if (/summary|profile|objective|about/.test(low))           return 'summary';
+    if (/certif/.test(low))                                    return 'certifications';
+    if (/project/.test(low))                                   return 'projects';
+    return 'other';
+  }
+
+  // ── Split into sections ───────────────────────────────────────────────────
+  var sections   = {};   // key → [line, ...]
+  var headerLines= [];   // lines before first section heading
+  var curKey     = null;
+
+  lines.forEach(function(line) {
+    if (isSectionHeading(line)) {
+      curKey = getSectionKey(line);
+      if (!sections[curKey]) sections[curKey] = [];
+    } else if (curKey) {
+      sections[curKey].push(line);
+    } else {
+      headerLines.push(line);
+    }
+  });
+
+  // ── Extract NAME ─────────────────────────────────────────────────────────
+  var name = '';
+  var nonEmptyHeader = headerLines.map(function(l){ return l.trim(); }).filter(Boolean);
+  for (var i = 0; i < Math.min(nonEmptyHeader.length, 6); i++) {
+    var l = nonEmptyHeader[i];
+    // Skip lines with @, /, numbers at start, URLs, > 5 words
+    if (/[@\/\\|<>{}:\d]/.test(l.slice(0,3))) continue;
+    if (/^https?:|linkedin|github/i.test(l)) continue;
+    if (l.length < 4 || l.length > 55) continue;
+    var words = l.split(/\s+/).filter(Boolean);
+    if (words.length >= 2 && words.length <= 5) {
+      // Verify it looks like a name: each word starts with capital letter
+      var looksLikeName = words.every(function(w){ return /^[A-Z]/.test(w); });
+      if (looksLikeName) { name = l; break; }
+    }
+  }
+
+  // ── Extract EMAIL & PHONE ─────────────────────────────────────────────────
+  var emailM = text.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+  var email  = emailM ? emailM[0] : '';
+
+  var phoneM = text.match(/(\+?1[\s.\-]?)?\(?(\d{3})\)?[\s.\-]?(\d{3})[\s.\-]?(\d{4})/);
+  var phone  = phoneM ? phoneM[0].trim() : '';
+
+  // ── Extract LOCATION ─────────────────────────────────────────────────────
+  var location = '';
+  // City, State  or  City, ST  or  City, ST XXXXX
+  var locM = text.match(/([A-Z][a-z]{2,20}(?:\s[A-Z][a-z]{2,20})?)(?:,\s*)([A-Z]{2}|\w{3,15})(?:\s+\d{5})?/);
+  if (locM && !email.includes(locM[0])) location = locM[0];
+
+  // ── Extract SUMMARY ───────────────────────────────────────────────────────
+  var summary = '';
+  if (sections.summary && sections.summary.length) {
+    summary = sections.summary
+      .map(function(l){ return l.trim(); }).filter(Boolean)
+      .join(' ').replace(/\s{2,}/g,' ').slice(0,400);
+  }
+  if (!summary) {
+    // Use first substantial line from header area
+    for (var i = 0; i < nonEmptyHeader.length; i++) {
+      var l = nonEmptyHeader[i];
+      if (l.length > 50 && l !== name && !email.includes(l) && !phone.includes(l)) {
+        summary = l.slice(0,300); break;
       }
     }
   }
 
-  // Email
-  var emailM = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-  if (emailM) result.email = emailM[0];
+  // ── Extract TITLE ─────────────────────────────────────────────────────────
+  var title = '';
+  var titleKW = ['engineer','manager','director','analyst','specialist','lead','coordinator',
+    'consultant','developer','designer','recruiter','officer','vp','president','associate',
+    'senior','principal','staff','architect','scientist','researcher','technician','advisor'];
+  // Check lines immediately after name in header
+  for (var i = 0; i < Math.min(nonEmptyHeader.length, 8); i++) {
+    var l = nonEmptyHeader[i];
+    if (l === name || l === email || l === phone || l.length > 80) continue;
+    var ll = l.toLowerCase();
+    if (titleKW.some(function(kw){ return ll.includes(kw); })) { title = l; break; }
+  }
+  // Fallback: first experience block's first role line
+  if (!title && sections.experience && sections.experience.length) {
+    var expLines = sections.experience.map(function(l){ return l.trim(); }).filter(Boolean);
+    for (var i = 0; i < Math.min(expLines.length, 10); i++) {
+      var ll = expLines[i].toLowerCase();
+      if (titleKW.some(function(kw){ return ll.includes(kw); }) && expLines[i].length < 80) {
+        title = expLines[i]; break;
+      }
+    }
+  }
 
-  // Phone
-  var phoneM = text.match(/(\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/);
-  if (phoneM) result.phone = phoneM[0].trim();
+  // ── Extract COMPANY ───────────────────────────────────────────────────────
+  var company = '';
+  if (sections.experience && sections.experience.length) {
+    var expLines = sections.experience.map(function(l){ return l.trim(); }).filter(Boolean);
+    // Company name is typically a short bold line or line after title in first exp block
+    for (var i = 0; i < Math.min(expLines.length, 12); i++) {
+      var l = expLines[i];
+      if (!l || l.length < 2 || l.length > 60) continue;
+      // Skip lines that look like dates or bullet points
+      if (/^\d{4}|^[•\-*\u2022]/.test(l)) continue;
+      if (/^\d{1,2}\/\d{4}/.test(l)) continue;
+      // Must start with capital, not be the title we already found
+      if (/^[A-Z]/.test(l) && l !== title && !titleKW.some(function(kw){ return l.toLowerCase().includes(kw); })) {
+        company = l; break;
+      }
+    }
+  }
+  // Fallback: 'at Company' pattern
+  if (!company) {
+    var atM = text.match(/\bat\s+([A-Z][A-Za-z0-9&\s.,-]{2,50}?)(?=[\n,|]|$)/m);
+    if (atM) company = atM[1].trim();
+  }
 
-  // Title: line after name that looks like a job title
-  var titleKeywords = ['engineer','manager','director','analyst','specialist','lead',
-    'coordinator','consultant','developer','designer','recruiter','officer','vp','president',
-    'associate','senior','principal','staff','architect'];
+  // ── Extract SKILLS ────────────────────────────────────────────────────────
+  var skillsFromSection = [];
+  if (sections.skills && sections.skills.length) {
+    var skillText = sections.skills.join(' ');
+    // Split on common delimiters
+    skillsFromSection = skillText.split(/[,|•\n\r\/]/)
+      .map(function(s){ return s.trim().replace(/^[-*\u2022\s]+/,'').trim(); })
+      .filter(function(s){ return s.length > 1 && s.length < 50; })
+      .slice(0,20);
+  }
+  // Keyword scan as supplement
+  var keywordList = ['FDA','ISO 13485','ISO 9001','GMP','GCP','GLP','SolidWorks','AutoCAD',
+    'CAD','PCB','FPGA','Python','SQL','R','MATLAB','PMP','PMI','Agile','Scrum','Kanban',
+    'JIRA','Confluence','DHF','FMEA','CAPA','V&V','IQ/OQ/PQ','Systems Engineering',
+    'Embedded Systems','Medical Device','Life Sciences','Program Management','Six Sigma',
+    'Lean','Cross-functional','Stakeholder Management','Budget Management','P&L',
+    'Java','JavaScript','TypeScript','React','Angular','Node.js','AWS','Azure','GCP',
+    'Docker','Kubernetes','CI/CD','Excel','Tableau','Power BI','Salesforce','SAP'];
   var lowerText = text.toLowerCase();
-  for (var i = 1; i < Math.min(lines.length, 12); i++) {
-    var l = lines[i].toLowerCase();
-    if (titleKeywords.some(function(kw){return l.indexOf(kw)>=0;}) && lines[i].length < 80) {
-      result.title = lines[i]; break;
+  var kwSkills  = keywordList.filter(function(sk){
+    return lowerText.includes(sk.toLowerCase());
+  });
+  // Merge: section skills first, then keywords (deduplicate)
+  var allSkills = skillsFromSection.slice();
+  kwSkills.forEach(function(k) {
+    if (!allSkills.some(function(s){ return s.toLowerCase() === k.toLowerCase(); })) {
+      allSkills.push(k);
     }
+  });
+  var skills = allSkills.slice(0,15);
+
+  // ── Parse EXPERIENCE blocks ───────────────────────────────────────────────
+  var experience = [];
+  if (sections.experience && sections.experience.length) {
+    var expLines = sections.experience;
+    var currentRole = null;
+    expLines.forEach(function(line) {
+      var l = line.trim();
+      if (!l) {
+        if (currentRole) { experience.push(currentRole); currentRole = null; }
+        return;
+      }
+      // Date line: contains year range pattern
+      var isDate = /\b(19|20)\d{2}\b/.test(l) &&
+                   (/[-–—to]/.test(l) || /present|current/i.test(l));
+      // Bullet point
+      var isBullet = /^[•\-*\u2022\u2013]/.test(l) || /^\d+\.\s/.test(l);
+
+      if (!currentRole) {
+        // Start a new role block
+        currentRole = { role: '', company: '', dates: '', bullets: [] };
+      }
+      if (isDate && !currentRole.dates) {
+        currentRole.dates = l;
+      } else if (isBullet) {
+        currentRole.bullets.push(l.replace(/^[•\-*\u2022\u2013]\s*/,'').trim());
+      } else if (!currentRole.role && l.length < 80) {
+        currentRole.role = l;
+      } else if (!currentRole.company && l.length < 60 && /^[A-Z]/.test(l)) {
+        currentRole.company = l;
+      } else if (currentRole.bullets.length === 0 && l.length < 80 && /^[A-Z]/.test(l)) {
+        // Second short title-like line → probably company
+        if (!currentRole.company) currentRole.company = l;
+      }
+    });
+    if (currentRole && (currentRole.role || currentRole.company)) experience.push(currentRole);
+    // Cap to 5 most recent
+    experience = experience.slice(0, 5);
   }
 
-  // Company: look for 'at [Company]' or line after title
-  var atMatch = text.match(/\bat\s+([A-Z][A-Za-z0-9&\s,.-]{2,50}?)(?:\s*[|\n\r,]|$)/);
-  if (atMatch) result.company = atMatch[1].trim();
-
-  // Skills
-  var skillPatterns = ['FDA','ISO 13485','GMP','SolidWorks','CAD','PCB','FPGA','Python',
-    'SQL','PMP','Agile','Scrum','JIRA','DHF','FMEA','Systems Engineering','Embedded',
-    'Medical Device','Life Sciences','Program Management','Six Sigma','Cross-functional',
-    'Java','JavaScript','React','AWS','Azure','Excel','PowerPoint','Salesforce'];
-  result.skills = skillPatterns.filter(function(sk){
-    return lowerText.indexOf(sk.toLowerCase()) >= 0;
-  }).slice(0,8);
-
-  // Summary: first substantial paragraph
-  for (var i = 0; i < Math.min(lines.length, 20); i++) {
-    if (lines[i].length > 60 && lines[i].length < 500) {
-      result.summary = lines[i]; break;
-    }
+  // ── Parse EDUCATION blocks ────────────────────────────────────────────────
+  var education = [];
+  if (sections.education && sections.education.length) {
+    var eduText = sections.education
+      .map(function(l){ return l.trim(); }).filter(Boolean)
+      .join('\n');
+    // Simple: grab lines that look like degree/institution pairs
+    var eduLines = sections.education.map(function(l){ return l.trim(); }).filter(Boolean);
+    var curEdu = null;
+    eduLines.forEach(function(line) {
+      if (!line) return;
+      var isDegree = /\b(b\.?s\.?|b\.?a\.?|m\.?s\.?|m\.?b\.?a\.?|ph\.?d|bachelor|master|doctor|associate|degree|diploma)\b/i.test(line);
+      var isDate   = /\b(19|20)\d{2}\b/.test(line);
+      if (isDegree && line.length < 100) {
+        if (curEdu) education.push(curEdu);
+        curEdu = { degree: line, institution: '', year: '' };
+      } else if (curEdu) {
+        if (isDate && !curEdu.year) curEdu.year = line.match(/\b(19|20)\d{2}\b/)[0];
+        else if (!curEdu.institution && /^[A-Z]/.test(line) && line.length < 80) curEdu.institution = line;
+      } else {
+        // Institution first (before degree line)
+        if (/^[A-Z]/.test(line) && line.length < 80) {
+          curEdu = { degree: '', institution: line, year: '' };
+        }
+      }
+    });
+    if (curEdu) education.push(curEdu);
+    education = education.slice(0, 4);
   }
-  if (!result.summary) result.summary = text.slice(0,200).replace(/\s+/g,' ').trim();
 
-  return result;
+  // ── Build aiSummary compatible object ─────────────────────────────────────
+  var aiSummary = {
+    summary:    summary,
+    keySkills:  skills.slice(0,8),
+    highlights: []
+  };
+  var ymM = text.match(/(\d+)\+?\s*years?/i);
+  if (ymM) aiSummary.highlights.push(ymM[1] + '+ years experience');
+  if (skills.length) aiSummary.highlights.push(skills.length + ' skills detected');
+
+  return {
+    name:        name,
+    email:       email,
+    phone:       phone,
+    location:    location,
+    title:       title,
+    company:     company,
+    skills:      skills,
+    summary:     summary,
+    experience:  experience,
+    education:   education,
+    resumeText:  rawText.slice(0, 8000),
+    aiSummary:   aiSummary
+  };
 }
 
-// ── Run parse and show review strip ──────────────────────────
+// ── Run parse and show review ─────────────────────────────────────────────
 function runResumeParse(text) {
-  var parsed = parseResumeFields(text);
-  var summary = buildResumeSummary(text);
-  _parsedResume = { fields: parsed, summary: summary, rawText: text };
+  var parsed    = parseResumeText(text);
+  _parsedResume = parsed;
 
-  // Build preview
+  // Populate cf-resume textarea with cleaned text
+  var ta = document.getElementById('cf-resume');
+  if (ta) ta.value = text.slice(0, 5000);
+
+  // Set pending AI summary for the patchSubmitCand IIFE
+  window._pendingResumeAnalysis = parsed.aiSummary;
+  window._lastFullParse = parsed;
+
+  // Build preview lines
   var lines = [];
-  if (parsed.name)    lines.push('&#128100; <strong>Name:</strong> ' + escHtml(parsed.name));
-  if (parsed.title)   lines.push('&#128188; <strong>Title:</strong> ' + escHtml(parsed.title));
-  if (parsed.company) lines.push('&#127970; <strong>Employer:</strong> ' + escHtml(parsed.company));
-  if (parsed.email)   lines.push('&#128231; <strong>Email:</strong> ' + escHtml(parsed.email));
-  if (parsed.skills.length) lines.push('&#10024; <strong>Skills:</strong> ' + parsed.skills.map(escHtml).join(', '));
+  if (parsed.name)     lines.push('<strong>\u{1F464} Name:</strong> '    + escHtml(parsed.name));
+  if (parsed.title)    lines.push('<strong>\u{1F4BC} Title:</strong> '   + escHtml(parsed.title));
+  if (parsed.company)  lines.push('<strong>\u{1F3E2} Employer:</strong> '+ escHtml(parsed.company));
+  if (parsed.email)    lines.push('<strong>\u{1F4E7} Email:</strong> '   + escHtml(parsed.email));
+  if (parsed.phone)    lines.push('<strong>\u{1F4DE} Phone:</strong> '   + escHtml(parsed.phone));
+  if (parsed.location) lines.push('<strong>\u{1F4CD} Location:</strong> '+ escHtml(parsed.location));
+  if (parsed.skills.length)
+    lines.push('<strong>\u2728 Skills:</strong> ' + parsed.skills.slice(0,8).map(escHtml).join(', '));
+  if (parsed.experience.length)
+    lines.push('<strong>\u{1F4CB} Experience blocks:</strong> ' + parsed.experience.length + ' detected');
+  if (parsed.education.length)
+    lines.push('<strong>\u{1F393} Education:</strong> ' + parsed.education.length + ' detected');
 
   var preview = document.getElementById('cf-parse-preview');
   if (preview) {
@@ -4492,47 +4776,67 @@ function runResumeParse(text) {
     preview.style.display = lines.length ? 'block' : 'none';
   }
 
-  // Also populate cf-resume textarea with raw text
-  var ta = document.getElementById('cf-resume');
-  if (ta) ta.value = text.slice(0, 4000);
-
-  // Store for AI summary
-  window._pendingResumeAnalysis = summary;
-
-  var hasFields = parsed.name || parsed.title || parsed.company;
+  var confident = !!(parsed.name || parsed.title || parsed.company);
   showParseStrip(
-    hasFields ? '&#10003; Resume parsed \u2014 review and apply below' : '&#9888; Parsed but names unclear \u2014 review below',
-    hasFields ? 'ok' : 'warn'
+    confident
+      ? '\u2713 Parsed — review fields below, then click Apply'
+      : '\u26a0 Partial parse — review below and fill in missing fields',
+    confident ? 'ok' : 'warn'
   );
   var applyBtn = document.getElementById('cf-parse-apply-btn');
   if (applyBtn) applyBtn.style.display = 'inline-block';
 
-  // Expand More Details so user sees the filled fields
+  // Expand "More Details" so recruiter can see / verify fields
   var more = document.getElementById('cf-more');
   if (more && more.style.display !== 'flex') toggleCandMore();
 }
 
-// ── Apply parsed fields to form ───────────────────────────────
+// ── Apply parsed fields to form (only fills empty fields) ────────────────
 function applyResumeParseResults() {
   if (!_parsedResume) return;
-  var f = _parsedResume.fields;
-  var set = function(id, val) {
+  var p = _parsedResume;
+
+  function setIfEmpty(id, val) {
+    if (!val) return;
     var el = document.getElementById(id);
-    if (el && val && !el.value) el.value = val;
-  };
-  set('cf-name',    f.name);
-  set('cf-title',   f.title);
-  set('cf-company', f.company);
-  // Highlight applied fields briefly
-  ['cf-name','cf-title','cf-company'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (el && el.value) {
-      el.style.borderColor = 'rgba(20,184,166,.6)';
-      setTimeout(function(){ el.style.borderColor = ''; }, 1800);
+    if (el && !el.value.trim()) {
+      el.value = val;
+      el.style.transition = 'border-color .2s';
+      el.style.borderColor = 'rgba(20,184,166,.7)';
+      setTimeout(function(){ el.style.borderColor = ''; }, 2000);
     }
-  });
-  // Hide the strip
+  }
+
+  setIfEmpty('cf-name',    p.name);
+  setIfEmpty('cf-title',   p.title);
+  setIfEmpty('cf-company', p.company);
+
+  // Build structured notes from experience + education
+  var notesParts = [];
+  if (p.summary) notesParts.push(p.summary);
+  if (p.experience.length) {
+    notesParts.push('Experience:');
+    p.experience.slice(0,3).forEach(function(ex) {
+      var role = [ex.role, ex.company, ex.dates].filter(Boolean).join(' | ');
+      if (role) notesParts.push('  ' + role);
+      if (ex.bullets.length) notesParts.push('  ' + ex.bullets.slice(0,2).join('; '));
+    });
+  }
+  if (p.education.length) {
+    notesParts.push('Education:');
+    p.education.slice(0,2).forEach(function(ed) {
+      var line = [ed.degree, ed.institution, ed.year].filter(Boolean).join(', ');
+      if (line) notesParts.push('  ' + line);
+    });
+  }
+  if (p.email || p.phone || p.location) {
+    var contact = [p.email, p.phone, p.location].filter(Boolean).join('  |  ');
+    notesParts.push('Contact: ' + contact);
+  }
+  setIfEmpty('cf-notes', notesParts.join('\n').trim());
+
   dismissResumeParse();
+
   // Focus name if still empty
   var nm = document.getElementById('cf-name');
   if (nm && !nm.value) nm.focus();
@@ -4544,27 +4848,26 @@ function dismissResumeParse() {
   _parsedResume = null;
 }
 
-// ── Utility: show the parse status strip ─────────────────────
 function showParseStrip(msg, type) {
   var strip  = document.getElementById('cf-parse-strip');
   var status = document.getElementById('cf-parse-status');
   if (!strip || !status) return;
   status.innerHTML = msg;
-  var colors = { ok:'rgba(20,184,166,.08)', error:'rgba(239,68,68,.08)', warn:'rgba(245,158,11,.08)', loading:'rgba(255,255,255,.04)' };
-  var borders = { ok:'rgba(20,184,166,.25)', error:'rgba(239,68,68,.25)', warn:'rgba(245,158,11,.25)', loading:'rgba(255,255,255,.1)' };
-  strip.style.background   = colors[type]  || colors.loading;
-  strip.style.borderColor  = borders[type] || borders.loading;
+  var bg  = { ok:'rgba(20,184,166,.09)', error:'rgba(239,68,68,.09)', warn:'rgba(245,158,11,.09)', loading:'rgba(255,255,255,.04)' };
+  var bdr = { ok:'rgba(20,184,166,.3)',  error:'rgba(239,68,68,.3)',  warn:'rgba(245,158,11,.3)',  loading:'rgba(255,255,255,.12)' };
+  strip.style.background  = bg[type]  || bg.loading;
+  strip.style.borderColor = bdr[type] || bdr.loading;
   strip.style.display = 'block';
 }
 
-// Reset upload zone when modal closes
-var _origCloseCandModal = window.closeCandModal;
-(function() {
-  var origClose = window.closeCandModal;
-  if (typeof origClose !== 'function') return;
+// ── Reset upload zone on modal close ─────────────────────────────────────
+(function patchCloseForUpload() {
+  var orig = window.closeCandModal;
+  if (typeof orig !== 'function') { setTimeout(patchCloseForUpload, 60); return; }
   window.closeCandModal = function() {
-    origClose();
+    orig();
     _parsedResume = null;
+    window._pendingResumeAnalysis = null;
     var lbl = document.getElementById('cf-upload-label');
     var sub = document.getElementById('cf-upload-sub');
     var inp = document.getElementById('cf-resume-file');
@@ -4575,6 +4878,7 @@ var _origCloseCandModal = window.closeCandModal;
     if (strip) strip.style.display = 'none';
   };
 })();
+
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
