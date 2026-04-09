@@ -1785,7 +1785,6 @@ function renderDashboard() {
           '<div style="font-size:12px;font-weight:700;color:var(--text);width:20px;text-align:right;">' + n + '</div>' +
         '</div>';
       }).join('');
-  board.scrollLeft = _pipeScroll;
     }
   }
 
@@ -2103,6 +2102,14 @@ function submitJobForm(e) {
   var title = (document.getElementById('jf-title').value || '').trim();
   var errEl = document.getElementById('job-form-error');
 
+  var companyId = (document.getElementById('jf-company') || {}).value || '';
+  if (!companyId) {
+    errEl.textContent = 'Company is required.';
+    errEl.style.display = 'block';
+    var cSel = document.getElementById('jf-company');
+    if (cSel) cSel.focus();
+    return;
+  }
   if (!title) {
     errEl.textContent = 'Job title is required.';
     errEl.style.display = 'block';
@@ -2150,7 +2157,7 @@ function submitJobForm(e) {
     // New job
     var newJob = {
       id:         uid(),
-      companyId:  document.getElementById("jf-company") ? document.getElementById("jf-company").value : "",
+      companyId:  companyId,
       title:      title,
       dept:       document.getElementById('jf-dept').value.trim(),
       location:   document.getElementById('jf-location').value.trim(),
@@ -2179,7 +2186,7 @@ function submitJobForm(e) {
     setTimeout(function() {
       openAddCandidateModal();
       setTimeout(function() {
-        populateCandJobDropdown(null);
+        populateCandJobDropdown(newJob.id);
         var jobSel = document.getElementById('cf-job');
         if (jobSel) jobSel.value = String(newJob.id);
         var nm = document.getElementById('cf-name');
@@ -2546,10 +2553,15 @@ function renderCandidateDetail(cd) {
 
 // ── Add / Edit modal ──────────────────────────────────────────
 function openAddCandidateModal() {
+  if (!jobs.filter(function(j) { return j.status !== 'Closed'; }).length) {
+    alert('Create a job first before adding candidates.');
+    nav('jobs');
+    return;
+  }
   editingCandidateId = null;
   var form = document.getElementById('cand-form');
   if (form) form.reset();
-  populateCandJobDropdown(null);
+  populateCandJobDropdown(selectedJobId || null);
   var errEl = document.getElementById('cand-form-error');
   if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
   var titleEl = document.getElementById('cand-modal-title');
@@ -2586,7 +2598,7 @@ function populateCandJobDropdown(selectedJobId) {
   if (!sel) return;
   sel.innerHTML = '<option value="">— No job assigned —</option>' +
     jobs.map(function(j) {
-      var selected = j.id == selectedJobId ? ' selected' : '';
+      var selected = String(j.id) === String(selectedJobId) ? ' selected' : '';
       return '<option value="' + j.id + '"' + selected + '>' + escHtml(j.title) + (j.location ? ' · ' + escHtml(j.location) : '') + '</option>';
     }).join('');
 }
@@ -4065,7 +4077,10 @@ function submitCompanyForm(e) {
   renderCompaniesView();
   addActivityItem('Company added: '+name);
   saveActivityBoard();
+  try { renderPipeline(); } catch(e) {}
+  if (state && state.currentView === 'dashboard') { try { renderDashboard(); } catch(e) {} }
   // Auto-flow: open Add Job immediately, pre-filled
+  populateCompanyDropdown(co.id);
   openAddJob();
   setTimeout(function() {
     populateCompanyDropdown(co.id);
@@ -4160,6 +4175,9 @@ function declineOffer(candId) {
 function _pipeActionHandler(e) {
   var btn = e.target.closest('.pipe-action-btn');
   if (!btn) return;
+  var cid    = btn.dataset.cid;
+  var action = btn.dataset.action;
+  if (!cid || !action) return;
   e.stopPropagation();
   var cid    = btn.dataset.cid;
   var action = btn.dataset.action;
@@ -4189,6 +4207,11 @@ function toggleCandMore() {
   el.style.display = open ? 'none' : 'flex';
   if (arr) arr.textContent = open ? '\u25be' : '\u25b4';
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+  var board = document.getElementById('pipe-board');
+  if (board) board.addEventListener('click', _pipeActionHandler);
+});
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
