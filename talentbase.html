@@ -1353,7 +1353,7 @@ input:focus, textarea:focus, select:focus {
           <div class="empty-state">
             <div class="empty-state-icon">📝</div>
             <div class="empty-state-title">Offer Builder</div>
-            <div class="empty-state-sub">Coming in Phase 2 — migrate from TalentBase v1.</div>
+            <div class="empty-state-sub">Not available in this version.</div>
           </div>
         </div>
       </section>
@@ -1368,7 +1368,7 @@ input:focus, textarea:focus, select:focus {
           <div class="empty-state">
             <div class="empty-state-icon">📚</div>
             <div class="empty-state-title">Templates</div>
-            <div class="empty-state-sub">Coming in Phase 2 — migrate from TalentBase v1.</div>
+            <div class="empty-state-sub">Not available in this version.</div>
           </div>
         </div>
       </section>
@@ -1383,7 +1383,7 @@ input:focus, textarea:focus, select:focus {
           <div class="empty-state">
             <div class="empty-state-icon">🔍</div>
             <div class="empty-state-title">Happy Hunting</div>
-            <div class="empty-state-sub">Coming in Phase 2 — migrate from TalentBase v1.</div>
+            <div class="empty-state-sub">Not available in this version.</div>
           </div>
         </div>
       </section>
@@ -1636,10 +1636,6 @@ function nav(viewId) {
   if (viewId === 'offer')        renderOffer();
   if (viewId === 'templates')    renderTemplates();
   if (viewId === 'happyhunting') renderHappyHunting();
-}
-
-function topbarSecondaryAction() {
-  if (state.currentView === 'candidates') alert('Upload Resume — Phase 2');
 }
 
 // Wire nav clicks
@@ -2549,7 +2545,7 @@ function renderCandidateDetail(cd) {
       ? '<div class="cand-detail-section">' +
           '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
             '<div class="detail-section-label" style="margin-bottom:0;">Resume / Background</div>' +
-            '<button onclick="showMessageModal(' + cd.id + ')" style="padding:3px 10px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">✨ AI Parse</button>' +
+            '<button onclick="openEditCandidate(' + cd.id + ')" style="padding:3px 10px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">&#9998; Edit / Re-upload</button>' +
           '</div>' +
           '<div style="max-height:180px;overflow-y:auto;font-size:12px;line-height:1.7;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;white-space:pre-wrap;">' +
             escHtml(cd.resume) +
@@ -2767,8 +2763,33 @@ function topbarPrimaryAction() {
   if (state.currentView === 'candidates') openAddCandidateModal();
 }
 function topbarSecondaryAction() {
-  // Upload Resume — Phase 4
-  if (state.currentView === 'candidates') alert('Resume upload coming in Phase 4');
+  if (state.currentView === 'candidates') {
+    openResumeUploadFlow();
+    return;
+  }
+}
+
+// Opens Add Candidate modal in upload-first mode:
+// resets all parse state, opens modal, expands upload zone, focuses Browse button
+function openResumeUploadFlow() {
+  // Ensure we're on the candidates view
+  if (state.currentView !== 'candidates') nav('candidates');
+  // Reset any leftover upload/parse state from a prior session
+  if (typeof _resetUploadState === 'function') _resetUploadState(false);
+  if (typeof _resetUploadZone  === 'function') _resetUploadZone();
+  // Open the candidate modal (jobs guard is inside openAddCandidateModal)
+  openAddCandidateModal();
+  // After modal opens: expand More Details and focus the Browse/file input
+  setTimeout(function() {
+    // Expand 'More Details' section so resume textarea is visible
+    var more = document.getElementById('cf-more');
+    if (more && more.style.display !== 'flex') {
+      if (typeof toggleCandMore === 'function') toggleCandMore();
+    }
+    // Focus the file input trigger so user can immediately pick a file
+    var fileBtn = document.querySelector('#cf-upload-zone button');
+    if (fileBtn) fileBtn.focus();
+  }, 120);
 }
 
 // ── Helper: navigate to a specific job ──────────────────────
