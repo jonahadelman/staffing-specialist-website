@@ -1,10 +1,1 @@
-{
-  "routes": [
-    { "src": "/hero-banner.png", "dest": "/hero-banner.png" },
-    { "src": "/jonah_banner.png", "dest": "/jonah_banner.png" },
-    { "src": "/HappyHunting.html", "dest": "/HappyHunting.html" },
-    { "src": "/talentbase.html", "dest": "/talentbase.html" },
-    { "src": "/TalentBase_TheStaffingSpecialist.html", "dest": "/TalentBase_TheStaffingSpecialist.html" },
-    { "src": "/(.*)", "dest": "/index.html" }
-  ]
-}
+ {}
