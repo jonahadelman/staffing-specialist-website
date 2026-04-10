@@ -1156,6 +1156,17 @@ input:focus, textarea:focus, select:focus {
             </div>
             <div class="card" id="dash-top-submit" style="padding:4px 16px 8px;"><div style="font-size:12px;color:var(--text4);padding:12px 0;">Loading...</div></div>
           </div>
+
+          <!-- AI Tasks panel -->
+          <div style="margin-top:20px;">
+            <div class="section-header">
+              <div class="section-title">AI Tasks</div>
+              <div class="section-sub">Today's candidate experience actions</div>
+            </div>
+            <div class="card" id="dash-ai-tasks" style="padding:4px 16px 8px;">
+              <div style="font-size:12px;color:var(--text4);padding:12px 0;">Loading...</div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1762,6 +1773,8 @@ function renderDashboard() {
 
   renderActivityBoard();
   renderTopToSubmit();
+  renderAITasks();
+  initAITasksHandler();
 
   var psEl = document.getElementById('pipeline-stages');
   if (psEl) {
@@ -3211,125 +3224,269 @@ function renderAIInsights() {
 
 
 // ═══════════════════════════════════════════════════════════
-// AI TASK QUEUE SYSTEM
+// AI TASK SYSTEM — v2 (experience-score driven)
 // ═══════════════════════════════════════════════════════════
 
 var AI_MODE_KEY = 'tb2_ai_mode';
-var aiTasks     = [];
 var aiMode      = localStorage.getItem(AI_MODE_KEY) || 'assist';
+var aiTasks     = [];  // legacy compat — kept so old callers don't throw
 
-// ── Generate task queue from current candidate state ─────────────────────────
-function generateAITasks() {
-  aiTasks = [];
-  candidates.forEach(function(cd) {
-    if (['Hired','Rejected'].includes(cd.status)) return;
+// In-memory snooze map — cleared on page reload (intentional: fresh session)
+var snoozedTasks = {};  // key: String(candidateId) → timestamp
 
-    var action = getNextBestAction(cd);
-    var score  = calculateExperienceScore(cd);
-
-    if (action === 'Follow up') {
-      aiTasks.push({
-        type:        'follow_up',
-        candidateId: cd.id,
-        candName:    cd.name,
-        priority:    score < 50 ? 'high' : 'medium',
-        message:     'Candidate idle — send a follow-up',
-        score:       score,
-      });
-    }
-
-    if (action === 'Contact candidate') {
-      aiTasks.push({
-        type:        'first_contact',
-        candidateId: cd.id,
-        candName:    cd.name,
-        priority:    'high',
-        message:     'No first contact made yet',
-        score:       score,
-      });
-    }
-
-    if (cd.status === 'Offer') {
-      aiTasks.push({
-        type:        'close',
-        candidateId: cd.id,
-        candName:    cd.name,
-        priority:    'high',
-        message:     'Offer stage — close or decline',
-        score:       score,
-      });
-    }
-  });
-
-  // Sort: high → medium → low, then lowest score first
-  var pOrder = { high: 0, medium: 1, low: 2 };
-  aiTasks.sort(function(a, b) {
-    var pd = (pOrder[a.priority] || 1) - (pOrder[b.priority] || 1);
-    if (pd !== 0) return pd;
-    return a.score - b.score;
-  });
+// ── Normalize raw getNextBestAction() output to canonical intent labels ───────
+function normalizeAITaskAction(raw) {
+  if (!raw) return 'Monitor';
+  var s = String(raw);
+  // Submission follow-up bucket (check before generic Follow up)
+  if (s.indexOf('Follow up on submission') >= 0) return 'Follow up on submission';
+  if (s.indexOf('Risk of losing deal')    >= 0) return 'Follow up on submission';
+  if (s.indexOf('URGENT')                >= 0 && s.indexOf('Follow') >= 0) return 'Follow up on submission';
+  if (s.indexOf('CRITICAL')              >= 0 && s.indexOf('submission') >= 0) return 'Follow up on submission';
+  // Other canonical buckets
+  if (s.indexOf('Contact candidate')      >= 0) return 'Contact candidate';
+  if (s.indexOf('Schedule next interview')>= 0) return 'Schedule next interview';
+  if (s.indexOf('Close candidate')        >= 0) return 'Close candidate';
+  // Await client response → treat as submission follow-up (non-zero action needed)
+  if (s.indexOf('Await client response')  >= 0) return 'Follow up on submission';
+  // Generic follow-up
+  if (s.indexOf('Follow up')              >= 0) return 'Follow up';
+  if (s === 'Monitor') return 'Monitor';
+  return 'Monitor';
 }
 
-// ── Render AI Task Queue on dashboard ────────────────────────────────────────
+// ── Data layer: build ranked task list from current candidate state ───────────
+function getAITasks() {
+  var active = candidates.filter(function(cd) {
+    return !['Hired','Rejected'].includes(cd.status);
+  });
+
+  var tasks = [];
+  active.forEach(function(cd) {
+    // Skip snoozed
+    if (snoozedTasks[String(cd.id)]) return;
+
+    var score     = calculateExperienceScore(cd);
+    var riskLevel = getRiskLevel(score);
+    var rawAction = getNextBestAction(cd);
+    var nextAction= normalizeAITaskAction(rawAction);
+
+    // Filter out monitor-only candidates
+    if (nextAction === 'Monitor') return;
+
+    var reasons  = getAlertReasons(cd) || [];
+    var idleDays = getDaysSince(cd.lastActivityAt || cd.createdAt);
+    var job      = jobs.find(function(j) { return String(j.id) === String(cd.jobId); });
+
+    tasks.push({
+      candidateId: String(cd.id),
+      name:        cd.name        || 'Unknown',
+      title:       cd.title       || '',
+      company:     cd.company     || '',
+      jobTitle:    job ? job.title : '',
+      stage:       cd.status      || '',
+      riskLevel:   riskLevel,
+      score:       score,
+      nextAction:  nextAction,
+      reasons:     reasons,
+      idleDays:    idleDays,
+    });
+  });
+
+  // Sort: critical > warning > healthy, then idleDays desc, then score asc
+  var riskRank = { critical: 0, warning: 1, healthy: 2 };
+  tasks.sort(function(a, b) {
+    var rd = (riskRank[a.riskLevel] || 2) - (riskRank[b.riskLevel] || 2);
+    if (rd !== 0) return rd;
+    var id = b.idleDays - a.idleDays;
+    if (id !== 0) return id;
+    return a.score - b.score;
+  });
+
+  return tasks.slice(0, 8);
+}
+
+// ── Render: single authoritative implementation ───────────────────────────────
 function renderAITasks() {
-  generateAITasks();
+  var container = document.getElementById('dash-ai-tasks');
+  if (!container) return;
 
-  var el = document.getElementById('dash-ai-tasks');
-  if (!el) return;
+  var tasks = getAITasks();
 
-  // Smart nudge banner
-  var nudgeEl   = document.getElementById('dash-ai-nudge');
-  var highCount = aiTasks.filter(function(t) { return t.priority === 'high'; }).length;
-  if (nudgeEl) {
-    if (highCount > 3) {
-      nudgeEl.style.display = '';
-      nudgeEl.textContent   = '🚨 You have ' + highCount + ' urgent hiring actions';
-    } else {
-      nudgeEl.style.display = 'none';
-    }
-  }
-
-  if (!aiTasks.length) {
-    el.innerHTML =
-      '<div class="empty-state" style="padding:20px 0;">' +
-        '<div class="empty-state-icon" style="font-size:18px;">✓</div>' +
-        '<div class="empty-state-title">No queued actions</div>' +
-        '<div class="empty-state-sub">All candidates are on track.</div>' +
+  if (!tasks.length) {
+    container.innerHTML =
+      '<div style="font-size:12px;color:var(--text4);padding:12px 0;">' +
+        'No urgent candidate experience tasks. All active candidates look healthy.' +
       '</div>';
     return;
   }
 
-  // In Auto mode surface top 3 with accent
-  var display = aiMode === 'auto' ? aiTasks.slice(0, 3) : aiTasks.slice(0, 8);
+  // Action label → icon map
+  var actionIcons = {
+    'Contact candidate':       '&#128222;',
+    'Follow up on submission': '&#9200;',
+    'Follow up':               '&#9203;',
+    'Schedule next interview': '&#128197;',
+    'Close candidate':         '&#127919;',
+  };
 
-  var pColors = { high: '#f87171', medium: '#fbbf24', low: '#94a3b8' };
-  var pLabels = { high: 'HIGH',    medium: 'MED',     low: 'LOW'    };
-  var tLabels = { follow_up: 'Follow up', first_contact: 'First contact', close: 'Close offer' };
-  var tIcons  = { follow_up: '⏱',         first_contact: '📞',            close: '🎯'          };
+  container.innerHTML = tasks.map(function(t) {
+    var riskColor = t.riskLevel === 'critical' ? 'var(--red)'
+                  : t.riskLevel === 'warning'  ? 'var(--amber)'
+                  : 'var(--green)';
+    var riskLabel = t.riskLevel === 'critical' ? 'Critical'
+                  : t.riskLevel === 'warning'  ? 'At Risk'
+                  : 'Healthy';
+    var reason = (t.reasons && t.reasons.length)
+      ? t.reasons[0]
+      : ('Idle for ' + t.idleDays + ' day' + (t.idleDays === 1 ? '' : 's'));
+    var icon = actionIcons[t.nextAction] || '&#8226;';
+    var jobLine = t.jobTitle ? (' &middot; ' + escHtml(t.jobTitle)) : '';
 
-  el.innerHTML = display.map(function(task) {
-    var pc  = pColors[task.priority] || '#94a3b8';
-    var pl  = pLabels[task.priority] || '';
-    var tl  = tLabels[task.type]     || task.type;
-    var ti  = tIcons[task.type]      || '•';
-    var isAuto = aiMode === 'auto' && task.priority === 'high';
-    var bg  = isAuto ? 'rgba(59,130,246,.06)' : 'rgba(255,255,255,.02)';
+    return (
+      '<div class="ai-task-row" data-cid="' + escHtml(t.candidateId) + '" ' +
+        'style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);">' +
 
-    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:' + bg + ';border-radius:9px;margin-bottom:6px;">' +
-      '<span style="font-size:16px;flex-shrink:0;">' + ti + '</span>' +
-      '<div style="flex:1;min-width:0;">' +
-        '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(task.candName) + '</div>' +
-        '<div style="font-size:11px;color:var(--text4);">' + tl + ' — ' + escHtml(task.message) + '</div>' +
-      '</div>' +
-      '<span style="font-size:9px;font-weight:800;color:' + pc + ';background:' + pc.replace(')', ',.12)').replace('rgb', 'rgba') + ';padding:2px 7px;border-radius:99px;flex-shrink:0;">' + pl + '</span>' +
-      '<button onclick="showMessageModal(' + task.candidateId + ')" class="btn btn-ghost btn-sm" style="font-size:10px;padding:4px 9px;flex-shrink:0;">Take Action</button>' +
-    '</div>';
-  }).join('') +
-  (aiTasks.length > display.length
-    ? '<div style="font-size:11px;color:var(--text4);text-align:center;padding:6px 0;">' + (aiTasks.length - display.length) + ' more tasks — ' +
-        '<button onclick="gotoCandidates()" style="background:none;border:none;color:var(--accent2);font-size:11px;cursor:pointer;font-family:inherit;">View all</button></div>'
-    : '');
+        '<div style="font-size:16px;flex-shrink:0;padding-top:1px;">' + icon + '</div>' +
+
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">' +
+            '<button type="button" class="ai-task-cand" data-cid="' + escHtml(t.candidateId) + '" ' +
+              'style="font-size:13px;font-weight:700;color:var(--text);background:none;border:none;padding:0;cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:rgba(255,255,255,.15);">' +
+              escHtml(t.name) +
+            '</button>' +
+            (t.title
+              ? '<span style="font-size:11px;color:var(--text4);">&middot; ' + escHtml(t.title) + '</span>'
+              : '') +
+          '</div>' +
+          '<div style="font-size:11px;color:var(--text4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
+            escHtml(reason) + jobLine +
+          '</div>' +
+        '</div>' +
+
+        '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">' +
+          '<div style="display:flex;align-items:center;gap:5px;">' +
+            '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;' +
+              'background:rgba(20,184,166,.12);color:#2dd4bf;">' +
+              escHtml(t.nextAction) +
+            '</span>' +
+            '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;' +
+              'border:1px solid ' + riskColor + ';color:' + riskColor + ';">' +
+              riskLabel +
+            '</span>' +
+          '</div>' +
+          '<div style="display:flex;gap:5px;">' +
+            '<button type="button" class="btn btn-primary btn-sm ai-task-do" ' +
+              'data-cid="' + escHtml(t.candidateId) + '" ' +
+              'style="font-size:10px;padding:3px 9px;">Do action</button>' +
+            '<button type="button" class="btn btn-ghost btn-sm ai-task-snooze" ' +
+              'data-cid="' + escHtml(t.candidateId) + '" ' +
+              'style="font-size:10px;padding:3px 6px;" title="Snooze for this session">&#128276;</button>' +
+          '</div>' +
+        '</div>' +
+
+      '</div>'
+    );
+  }).join('');
 }
+
+// ── Click handler wired via event delegation ──────────────────────────────────
+function handleAITasksClick(e) {
+  var doBtn     = e.target.closest('.ai-task-do');
+  var snoozeBtn = e.target.closest('.ai-task-snooze');
+  var candLink  = e.target.closest('.ai-task-cand');
+
+  // Candidate name click — go to candidate detail
+  if (candLink) {
+    var cid = candLink.dataset.cid;
+    if (!cid) return;
+    selectedCandidateId = cid;
+    nav('candidates');
+    setTimeout(function() {
+      renderCandidates();
+      var cd = candidates.find(function(x) { return String(x.id) === String(cid); });
+      if (cd) renderCandidateDetail(cd);
+    }, 80);
+    return;
+  }
+
+  // Do action — execute the contextual action for this candidate
+  if (doBtn) {
+    var cid = doBtn.dataset.cid;
+    if (!cid) return;
+    var cd = candidates.find(function(x) { return String(x.id) === String(cid); });
+    if (!cd) return;
+    var norm = normalizeAITaskAction(getNextBestAction(cd));
+
+    if (norm === 'Contact candidate' ||
+        norm === 'Follow up' ||
+        norm === 'Follow up on submission' ||
+        norm === 'Schedule next interview') {
+      // Navigate to candidate then open message modal
+      selectedCandidateId = cid;
+      nav('candidates');
+      setTimeout(function() {
+        renderCandidates();
+        var updated = candidates.find(function(x) { return String(x.id) === String(cid); });
+        if (updated) renderCandidateDetail(updated);
+        showMessageModal(cid);
+      }, 80);
+    } else if (norm === 'Close candidate') {
+      // Navigate to candidate detail to accept/decline offer
+      selectedCandidateId = cid;
+      nav('candidates');
+      setTimeout(function() {
+        renderCandidates();
+        var updated = candidates.find(function(x) { return String(x.id) === String(cid); });
+        if (updated) renderCandidateDetail(updated);
+      }, 80);
+    }
+
+    // Auto-snooze after acting (avoids it reappearing immediately)
+    snoozedTasks[String(cid)] = Date.now();
+    renderAITasks();
+    return;
+  }
+
+  // Snooze — remove from panel for this session
+  if (snoozeBtn) {
+    var cid = snoozeBtn.dataset.cid;
+    if (!cid) return;
+    snoozedTasks[String(cid)] = Date.now();
+    renderAITasks();
+    return;
+  }
+}
+
+// ── Attach handler once (idempotent) ─────────────────────────────────────────
+function initAITasksHandler() {
+  var container = document.getElementById('dash-ai-tasks');
+  if (container && !container.aiHandlerAttached) {
+    container.addEventListener('click', handleAITasksClick);
+    container.aiHandlerAttached = true;
+  }
+}
+
+// ── Legacy shim: generateAITasks() still called from submitCandForm etc. ─────
+// Keep aiTasks array populated for any legacy callers; uses new data layer
+function generateAITasks() {
+  // Populate legacy aiTasks array from new getAITasks() so old references work
+  try {
+    aiTasks = getAITasks().map(function(t) {
+      return {
+        type:        t.nextAction === 'Contact candidate' ? 'first_contact'
+                   : t.nextAction === 'Close candidate'   ? 'close' : 'follow_up',
+        candidateId: t.candidateId,
+        candName:    t.name,
+        priority:    t.riskLevel === 'critical' ? 'high'
+                   : t.riskLevel === 'warning'  ? 'medium' : 'low',
+        message:     t.reasons[0] || ('Idle ' + t.idleDays + 'd'),
+        score:       t.score,
+      };
+    });
+  } catch(e) { aiTasks = []; }
+}
+
 
 // ── AI Mode toggle ────────────────────────────────────────────────────────────
 function updateAIMode(mode) {
