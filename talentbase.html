@@ -3119,14 +3119,19 @@ function renderHiringRisks() {
 function getNextBestAction(cd) {
   var now      = Date.now();
   var daysIdle = ((cd.lastActivityAt || cd.createdAt) ? (now - (cd.lastActivityAt || cd.createdAt)) / 86400000 : 0);
+  // 1. No first contact yet — always highest priority
   if (!cd.firstContactAt)                         return 'Contact candidate';
+  // 2. Offer stage — needs close decision before anything else
+  if (cd.status === 'Offer')                      return 'Close candidate';
+  // 3. Submitted — urgency tiers based on days idle
   if (cd.status === 'Submitted' && daysIdle > 7)  return '🚨 CRITICAL: Risk of losing deal';
   if (cd.status === 'Submitted' && daysIdle > 5)  return '⚠️ URGENT: Follow up on submission';
   if (cd.status === 'Submitted' && daysIdle > 2)  return 'Follow up on submission';
   if (cd.status === 'Submitted')                  return 'Await client response';
-  if (daysIdle > 2)                               return 'Follow up';
+  // 4. Interview stage — schedule next step (takes priority over generic idle)
   if (cd.status === 'Interview')                  return 'Schedule next interview';
-  if (cd.status === 'Offer')                      return 'Close candidate';
+  // 5. Generic idle — any other stage sitting for >2 days
+  if (daysIdle > 2)                               return 'Follow up';
   return 'Monitor';
 }
 
@@ -3191,7 +3196,8 @@ function showMessageModal(candId) {
       '<textarea id="msg-text" style="width:100%;height:200px;padding:12px;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-size:12px;font-family:inherit;resize:vertical;outline:none;line-height:1.6;">' + escHtml(msg) + '</textarea>' +
       '<div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;">' +
         '<button onclick="closeMsgModal()" class="btn btn-ghost">Close</button>' +
-        '<button onclick="copyMsgText(this)" class="btn btn-primary">Copy</button>' +
+        '<button onclick="copyMsgText(this)" class="btn btn-ghost">Copy</button>' +
+        '<button onclick="markMessageSent(' + escHtml(String(cd.id)) + ')" class="btn btn-primary">&#10003; Mark Sent</button>' +
       '</div>' +
     '</div>';
 
@@ -3222,6 +3228,95 @@ function renderAIInsights() {
   }).join('');
 }
 
+
+// ═══════════════════════════════════════════════════════════
+// AI TASK ACTION HELPERS — closed-loop state mutations
+// ═══════════════════════════════════════════════════════════
+
+// Single entry point for all AI task state refreshes
+function refreshAllTaskDependentViews() {
+  try { renderAITasks(); }     catch(e) {}
+  try { renderPipeline(); }    catch(e) {}
+  try { renderCandidates(); }  catch(e) {}
+  if (state && state.currentView === 'dashboard') {
+    try { renderDashboard(); } catch(e) {}
+  }
+}
+
+// Mark as contacted — sets firstContactAt + bumps lastActivityAt
+function markCandidateContacted(candId) {
+  var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
+  if (!cd) return;
+  var now = Date.now();
+  cd.firstContactAt  = cd.firstContactAt || now;
+  cd.lastActivityAt  = now;
+  saveCandidates();
+  addActivityItem('Contacted ' + cd.name);
+  saveActivityBoard();
+  delete snoozedTasks[String(candId)];
+  refreshAllTaskDependentViews();
+}
+
+// Mark follow-up done — bumps lastActivityAt, resets idle clock
+function markCandidateFollowedUp(candId) {
+  var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
+  if (!cd) return;
+  cd.lastActivityAt = Date.now();
+  saveCandidates();
+  addActivityItem('Followed up with ' + cd.name);
+  saveActivityBoard();
+  delete snoozedTasks[String(candId)];
+  refreshAllTaskDependentViews();
+}
+
+// Mark submission follow-up done — stamps the most recent submission + bumps idle clock
+function markSubmissionFollowedUp(candId) {
+  var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
+  if (!cd) return;
+  cd.lastActivityAt = Date.now();
+  if (Array.isArray(cd.submissions) && cd.submissions.length) {
+    var last = cd.submissions[cd.submissions.length - 1];
+    if (last.status === 'sent') last.status = 'followed_up';
+    last.followedUpAt = Date.now();
+  }
+  saveCandidates();
+  addActivityItem('Followed up on submission for ' + cd.name);
+  saveActivityBoard();
+  delete snoozedTasks[String(candId)];
+  refreshAllTaskDependentViews();
+}
+
+// Mark interview advanced — bumps interview count + lastActivityAt
+function markInterviewAdvanced(candId) {
+  var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
+  if (!cd) return;
+  cd.lastActivityAt  = Date.now();
+  cd.firstContactAt  = cd.firstContactAt || Date.now();
+  cd.interviewCount  = (cd.interviewCount || 0) + 1;
+  saveCandidates();
+  addActivityItem('Interview scheduled/advanced for ' + cd.name + ' (interview ' + cd.interviewCount + ')');
+  saveActivityBoard();
+  delete snoozedTasks[String(candId)];
+  refreshAllTaskDependentViews();
+}
+
+// markMessageSent — called from message modal Mark Sent button
+// Dispatches to the right helper based on current candidate state
+function markMessageSent(candId) {
+  var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
+  if (!cd) { closeMsgModal(); return; }
+  closeMsgModal();
+  var norm = normalizeAITaskAction(getNextBestAction(cd));
+  if (norm === 'Contact candidate') {
+    markCandidateContacted(candId);
+  } else if (norm === 'Follow up on submission') {
+    markSubmissionFollowedUp(candId);
+  } else if (norm === 'Schedule next interview') {
+    markInterviewAdvanced(candId);
+  } else {
+    markCandidateFollowedUp(candId);
+  }
+}
 
 // ═══════════════════════════════════════════════════════════
 // AI TASK SYSTEM — v2 (experience-score driven)
@@ -3410,7 +3505,7 @@ function handleAITasksClick(e) {
     return;
   }
 
-  // Do action — execute the contextual action for this candidate
+  // Do action — execute real state mutation for this candidate
   if (doBtn) {
     var cid = doBtn.dataset.cid;
     if (!cid) return;
@@ -3422,7 +3517,7 @@ function handleAITasksClick(e) {
         norm === 'Follow up' ||
         norm === 'Follow up on submission' ||
         norm === 'Schedule next interview') {
-      // Navigate to candidate then open message modal
+      // Open message modal; Mark Sent will update state when recruiter confirms
       selectedCandidateId = cid;
       nav('candidates');
       setTimeout(function() {
@@ -3431,18 +3526,32 @@ function handleAITasksClick(e) {
         if (updated) renderCandidateDetail(updated);
         showMessageModal(cid);
       }, 80);
-    } else if (norm === 'Close candidate') {
-      // Navigate to candidate detail to accept/decline offer
-      selectedCandidateId = cid;
-      nav('candidates');
-      setTimeout(function() {
-        renderCandidates();
-        var updated = candidates.find(function(x) { return String(x.id) === String(cid); });
-        if (updated) renderCandidateDetail(updated);
-      }, 80);
+      // Do NOT snooze here — state update happens in markMessageSent
+      return;
     }
 
-    // Auto-snooze after acting (avoids it reappearing immediately)
+    if (norm === 'Close candidate') {
+      // Open submit modal for final placement, or go to detail for offer decision
+      if (cd.status === 'Offer') {
+        // Show offer accept/decline in context — navigate to candidate detail
+        selectedCandidateId = cid;
+        nav('candidates');
+        setTimeout(function() {
+          renderCandidates();
+          var updated = candidates.find(function(x) { return String(x.id) === String(cid); });
+          if (updated) renderCandidateDetail(updated);
+        }, 80);
+      } else {
+        // Offer stage not yet reached — open submit modal
+        openSubmitModal(cid);
+      }
+      // Snooze only — real removal happens when acceptOffer/declineOffer changes status
+      snoozedTasks[String(cid)] = Date.now();
+      renderAITasks();
+      return;
+    }
+
+    // Fallback — snooze for unhandled actions
     snoozedTasks[String(cid)] = Date.now();
     renderAITasks();
     return;
@@ -4027,6 +4136,7 @@ function submitCandidateAction() {
   try { renderCandidateDetail(cd); }  catch(e) {}
   try { renderCandidates(); }          catch(e) {}
   try { renderPipeline(); }            catch(e) {}
+  try { renderAITasks(); }             catch(e) {}
   if (state && state.currentView === 'dashboard') { try { renderDashboard(); } catch(e) {} }
   } catch(err) { console.error('[TalentBase] submitCandidateAction error:', err); }
 }
@@ -4415,8 +4525,11 @@ function acceptOffer(candId) {
   cd.status='Hired'; cd.lastActivityAt=Date.now();
   saveCandidates();
   addActivityItem('Offer accepted — Hired: '+cd.name); saveActivityBoard();
+  delete snoozedTasks[String(candId)];
   try{renderCandidateDetail(cd);}catch(e){}
+  try{renderCandidates();}catch(e){}
   try{renderPipeline();}catch(e){}
+  try{renderAITasks();}catch(e){}
   try{renderDashboard();}catch(e){}
 }
 function declineOffer(candId) {
@@ -4425,8 +4538,11 @@ function declineOffer(candId) {
   cd.status='Rejected'; cd.lastActivityAt=Date.now();
   saveCandidates();
   addActivityItem('Offer declined — Rejected: '+cd.name); saveActivityBoard();
+  delete snoozedTasks[String(candId)];
   try{renderCandidateDetail(cd);}catch(e){}
+  try{renderCandidates();}catch(e){}
   try{renderPipeline();}catch(e){}
+  try{renderAITasks();}catch(e){}
   try{renderDashboard();}catch(e){}
 }
 
