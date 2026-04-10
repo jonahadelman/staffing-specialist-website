@@ -2436,7 +2436,7 @@ function renderCandidateDetail(cd) {
         ? '<button data-cid="' + cd.id + '" onclick="acceptOffer(this.dataset.cid)" style="padding:6px 14px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;">&#10003; Accept Offer</button>' +
           '<button data-cid="' + cd.id + '" onclick="declineOffer(this.dataset.cid)" style="padding:6px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:var(--red);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">&#10005; Decline</button>'
         : '<button onclick="openSubmitModal(' + cd.id + ')" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;box-shadow:0 4px 18px rgba(20,184,166,.55);font-weight:800;">Submit Candidate</button>') +
-      '<button onclick="showMessageModal(' + cd.id + ')" class="btn btn-ghost btn-sm" style="font-size:11px;opacity:.75;">Generate Message</button>' +
+      '<button onclick="performCandidateAction(' + cd.id + ',\'message\')" class="btn btn-ghost btn-sm" style="font-size:11px;opacity:.75;">Generate Message</button>' +
     '</div>' +
 
     // ── Stats ──────────────────────────────────────────────────────────
@@ -2925,7 +2925,7 @@ function renderPipeline() {
               '>' +
                 (isLast ? '✓ Hired' : 'Advance →') +
               '</button>' +
-              '<button class="pipe-msg-btn" onclick="showMessageModal(' + cd.id + ')">✉</button>' +
+              '<button class="pipe-msg-btn" onclick="performCandidateAction(' + cd.id + ',\'message\')">✉</button>' +
             '</div>' +
           '</div>';
         }).join('')
@@ -3243,6 +3243,59 @@ function refreshAllTaskDependentViews() {
   }
 }
 
+// ── Unified action dispatcher ─────────────────────────────────────────────────
+// Every recruiter action surface (pipeline, candidate detail, AI tasks) routes
+// through here.  actionType values:
+//   'contact'         — first outreach
+//   'followup'        — generic follow-up on any stage
+//   'submission-followup' — follow-up on a submitted candidate
+//   'schedule-interview'  — advance interview count
+//   'close'           — accept offer / hire
+//   'message'         — open message modal (stamps pendingContactAt first)
+function performCandidateAction(cid, actionType) {
+  var cd = candidates.find(function(x) { return String(x.id) === String(cid); });
+  if (!cd) return;
+
+  if (actionType === 'contact') {
+    markCandidateContacted(cid);
+    showMessageModal(cid);
+    return;
+  }
+
+  if (actionType === 'followup') {
+    markCandidateFollowedUp(cid);
+    showMessageModal(cid);
+    return;
+  }
+
+  if (actionType === 'submission-followup') {
+    markSubmissionFollowedUp(cid);
+    return;
+  }
+
+  if (actionType === 'schedule-interview') {
+    markInterviewAdvanced(cid);
+    showMessageModal(cid);
+    return;
+  }
+
+  if (actionType === 'close') {
+    acceptOffer(cid);
+    return;
+  }
+
+  if (actionType === 'message') {
+    // Stamp pendingContactAt so AI task panel suppresses this candidate
+    // for 30 min even if recruiter closes without clicking Mark Sent
+    cd.pendingContactAt = Date.now();
+    saveCandidates();
+    delete snoozedTasks[String(cid)];
+    try { renderAITasks(); } catch(e) {}
+    showMessageModal(cid);
+    return;
+  }
+}
+
 // Mark as contacted — sets firstContactAt + bumps lastActivityAt
 function markCandidateContacted(candId) {
   var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
@@ -3518,7 +3571,7 @@ function handleAITasksClick(e) {
     return;
   }
 
-  // Do action — execute real state mutation for this candidate
+  // Do action button
   if (doBtn) {
     var cid = doBtn.dataset.cid;
     if (!cid) return;
@@ -3526,13 +3579,11 @@ function handleAITasksClick(e) {
     if (!cd) return;
     var norm = normalizeAITaskAction(getNextBestAction(cd));
 
+    // All message-based actions: stamp pendingContactAt, nav to detail, open modal
     if (norm === 'Contact candidate' ||
         norm === 'Follow up' ||
         norm === 'Follow up on submission' ||
         norm === 'Schedule next interview') {
-      // Stamp pendingContactAt so task is suppressed while modal is open,
-      // even if recruiter closes modal without clicking Mark Sent.
-      // markMessageSent will bump lastActivityAt which also clears this naturally.
       cd.pendingContactAt = Date.now();
       saveCandidates();
       selectedCandidateId = cid;
@@ -3543,16 +3594,13 @@ function handleAITasksClick(e) {
         if (updated) renderCandidateDetail(updated);
         showMessageModal(cid);
       }, 80);
-      // Refresh tasks immediately so pendingContactAt suppression takes effect
       try { renderAITasks(); } catch(err) {}
       return;
     }
 
     if (norm === 'Close candidate') {
       if (cd.status === 'Offer') {
-        // Navigate to offer decision — do NOT snooze.
-        // acceptOffer/declineOffer change status to Hired/Rejected which
-        // removes this candidate from tasks naturally.
+        // Navigate to offer decision — acceptOffer/declineOffer control removal
         selectedCandidateId = cid;
         nav('candidates');
         setTimeout(function() {
@@ -3561,9 +3609,7 @@ function handleAITasksClick(e) {
           if (updated) renderCandidateDetail(updated);
         }, 80);
       } else {
-        // Candidate not yet at Offer stage — open submit modal.
-        // submitCandidateAction() will move status to Submitted which
-        // removes the Close task. No snooze needed.
+        // submitCandidateAction() will move status to Submitted — no snooze needed
         openSubmitModal(cid);
       }
       return;
@@ -3575,7 +3621,7 @@ function handleAITasksClick(e) {
     return;
   }
 
-  // Snooze — remove from panel for this session
+  // Snooze button
   if (snoozeBtn) {
     var cid = snoozeBtn.dataset.cid;
     if (!cid) return;
@@ -4572,22 +4618,9 @@ function _pipeActionHandler(e) {
   var action = btn.dataset.action;
   if (!cid || !action) return;
   e.stopPropagation();
-  console.log('[TalentBase] PIPE ACTION:', action, cid);
-  if (action === 'submit')  { openSubmitModal(cid); }
-  if (action === 'followup') {
-    var cd = candidates.find(function(x){ return String(x.id)===String(cid); });
-    if (cd) {
-      cd.lastActivityAt = Date.now();
-      saveCandidates();
-      addActivityItem('Followed up on submission: ' + cd.name);
-      saveActivityBoard();
-      // Refresh card in-place without full re-render
-      try { renderPipeline(); } catch(e) {}
-    }
-  }
-  if (action === 'close') {
-    acceptOffer(cid);
-  }
+  if (action === 'submit')   { openSubmitModal(cid); }
+  if (action === 'followup') { performCandidateAction(cid, 'submission-followup'); }
+  if (action === 'close')    { performCandidateAction(cid, 'close'); }
 }
 
 // toggleCandMore — show/hide optional candidate fields
