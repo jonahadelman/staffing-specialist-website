@@ -3250,6 +3250,7 @@ function markCandidateContacted(candId) {
   var now = Date.now();
   cd.firstContactAt  = cd.firstContactAt || now;
   cd.lastActivityAt  = now;
+  delete cd.pendingContactAt;
   saveCandidates();
   addActivityItem('Contacted ' + cd.name);
   saveActivityBoard();
@@ -3262,6 +3263,7 @@ function markCandidateFollowedUp(candId) {
   var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
   if (!cd) return;
   cd.lastActivityAt = Date.now();
+  delete cd.pendingContactAt;
   saveCandidates();
   addActivityItem('Followed up with ' + cd.name);
   saveActivityBoard();
@@ -3274,6 +3276,7 @@ function markSubmissionFollowedUp(candId) {
   var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
   if (!cd) return;
   cd.lastActivityAt = Date.now();
+  delete cd.pendingContactAt;
   if (Array.isArray(cd.submissions) && cd.submissions.length) {
     var last = cd.submissions[cd.submissions.length - 1];
     if (last.status === 'sent') last.status = 'followed_up';
@@ -3293,6 +3296,7 @@ function markInterviewAdvanced(candId) {
   cd.lastActivityAt  = Date.now();
   cd.firstContactAt  = cd.firstContactAt || Date.now();
   cd.interviewCount  = (cd.interviewCount || 0) + 1;
+  delete cd.pendingContactAt;
   saveCandidates();
   addActivityItem('Interview scheduled/advanced for ' + cd.name + ' (interview ' + cd.interviewCount + ')');
   saveActivityBoard();
@@ -3306,6 +3310,8 @@ function markMessageSent(candId) {
   var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
   if (!cd) { closeMsgModal(); return; }
   closeMsgModal();
+  // Clear the pending stamp — real state update about to happen
+  delete cd.pendingContactAt;
   var norm = normalizeAITaskAction(getNextBestAction(cd));
   if (norm === 'Contact candidate') {
     markCandidateContacted(candId);
@@ -3368,6 +3374,13 @@ function getAITasks() {
 
     // Filter out monitor-only candidates
     if (nextAction === 'Monitor') return;
+
+    // Suppress freshly-submitted candidates still awaiting client response — no action needed yet
+    if (rawAction === 'Await client response') return;
+
+    // Suppress if recruiter recently opened message modal but has not confirmed sent yet
+    // pendingContactAt is cleared when markMessageSent fires (30-min window)
+    if (cd.pendingContactAt && (Date.now() - cd.pendingContactAt) < 30 * 60 * 1000) return;
 
     var reasons  = getAlertReasons(cd) || [];
     var idleDays = getDaysSince(cd.lastActivityAt || cd.createdAt);
@@ -3517,7 +3530,11 @@ function handleAITasksClick(e) {
         norm === 'Follow up' ||
         norm === 'Follow up on submission' ||
         norm === 'Schedule next interview') {
-      // Open message modal; Mark Sent will update state when recruiter confirms
+      // Stamp pendingContactAt so task is suppressed while modal is open,
+      // even if recruiter closes modal without clicking Mark Sent.
+      // markMessageSent will bump lastActivityAt which also clears this naturally.
+      cd.pendingContactAt = Date.now();
+      saveCandidates();
       selectedCandidateId = cid;
       nav('candidates');
       setTimeout(function() {
@@ -3526,14 +3543,16 @@ function handleAITasksClick(e) {
         if (updated) renderCandidateDetail(updated);
         showMessageModal(cid);
       }, 80);
-      // Do NOT snooze here — state update happens in markMessageSent
+      // Refresh tasks immediately so pendingContactAt suppression takes effect
+      try { renderAITasks(); } catch(err) {}
       return;
     }
 
     if (norm === 'Close candidate') {
-      // Open submit modal for final placement, or go to detail for offer decision
       if (cd.status === 'Offer') {
-        // Show offer accept/decline in context — navigate to candidate detail
+        // Navigate to offer decision — do NOT snooze.
+        // acceptOffer/declineOffer change status to Hired/Rejected which
+        // removes this candidate from tasks naturally.
         selectedCandidateId = cid;
         nav('candidates');
         setTimeout(function() {
@@ -3542,16 +3561,15 @@ function handleAITasksClick(e) {
           if (updated) renderCandidateDetail(updated);
         }, 80);
       } else {
-        // Offer stage not yet reached — open submit modal
+        // Candidate not yet at Offer stage — open submit modal.
+        // submitCandidateAction() will move status to Submitted which
+        // removes the Close task. No snooze needed.
         openSubmitModal(cid);
       }
-      // Snooze only — real removal happens when acceptOffer/declineOffer changes status
-      snoozedTasks[String(cid)] = Date.now();
-      renderAITasks();
       return;
     }
 
-    // Fallback — snooze for unhandled actions
+    // Fallback — snooze for truly unhandled actions only
     snoozedTasks[String(cid)] = Date.now();
     renderAITasks();
     return;
