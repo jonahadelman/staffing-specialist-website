@@ -2391,8 +2391,9 @@ function renderCandidateDetail(cd) {
 
   var job   = jobs.find(function(j) { return String(j.id) === String(cd.jobId); });
   var sc    = candStatusClass(cd.status);
-  var nba   = getNextBestAction(cd);
-  var score = calculateExperienceScore(cd);
+  var _appForScore = getPrimaryApplication(String(cd.id));
+  var nba   = _appForScore ? getNextBestAction(_appForScore) : 'Monitor';
+  var score = _appForScore ? calculateExperienceScore(_appForScore) : 0;
   var risk  = getRiskLevel(score);
   var riskColor = { critical:'var(--red)', warning:'var(--amber)', healthy:'var(--green)' }[risk];
 
@@ -2493,12 +2494,15 @@ function renderCandidateDetail(cd) {
           '</div></div>'
       : '') +
 
-    // ── Submissions
-    (cd.submissions && cd.submissions.length
-      ? '<div class="cand-detail-section">' +
-          '<div class="detail-section-label" style="margin-bottom:8px;">Submissions (' + cd.submissions.length + ')</div>' +
-          cd.submissions.slice().reverse().map(function(sub, ri) {
-            var realIdx = cd.submissions.length - 1 - ri;
+    // ── Submissions (read from application — source of truth)
+    (function() {
+      var _subApp = getPrimaryApplication(String(cd.id));
+      var _subs   = _subApp && Array.isArray(_subApp.submissions) ? _subApp.submissions : [];
+      if (!_subs.length) return '';
+      return '<div class="cand-detail-section">' +
+          '<div class="detail-section-label" style="margin-bottom:8px;">Submissions (' + _subs.length + ')</div>' +
+          _subs.slice().reverse().map(function(sub, ri) {
+            var realIdx = _subs.length - 1 - ri;
             var dt  = sub.timestamp ? new Date(sub.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
             var st  = sub.status || 'sent';
             var stColor = { sent:'var(--text4)', viewed:'var(--accent2)', interview:'var(--amber)', rejected:'var(--red)', hired:'var(--green)' }[st] || 'var(--text4)';
@@ -2524,8 +2528,8 @@ function renderCandidateDetail(cd) {
               '</div>' +
             '</div>';
           }).join('') +
-        '</div>'
-      : '') +
+        '</div>';
+    })() +
 
     // ── Resume ────────────────────────────────────────────────────────
     // AI Summary
@@ -2945,12 +2949,12 @@ function renderPipeline() {
       (jobName ? ' on ' + jobName : ' across all jobs');
   }
 
-  // Score cache keyed by candidateId
+  // Score cache keyed by applicationId
   var _scoreCache = {};
-  var cachedScore = function(cd) {
-    if (!cd) return 0;
-    var k = String(cd.id);
-    if (_scoreCache[k] === undefined) _scoreCache[k] = calculateExperienceScore(cd);
+  var cachedScore = function(app) {
+    if (!app) return 0;
+    var k = String(app.id);
+    if (_scoreCache[k] === undefined) _scoreCache[k] = calculateExperienceScore(app);
     return _scoreCache[k];
   };
 
@@ -2959,10 +2963,8 @@ function renderPipeline() {
 
     // Sort by CX score asc (worst first = most urgent), then by idle time
     stageApps.sort(function(a, b) {
-      var cdA = candidates.find(function(x) { return String(x.id) === String(a.candidateId); });
-      var cdB = candidates.find(function(x) { return String(x.id) === String(b.candidateId); });
-      var sa  = cachedScore(cdA);
-      var sb  = cachedScore(cdB);
+      var sa  = cachedScore(a);
+      var sb  = cachedScore(b);
       if (sa !== sb) return sa - sb;
       return (a.lastActivityAt || a.createdAt || 0) - (b.lastActivityAt || b.createdAt || 0);
     });
@@ -2977,9 +2979,8 @@ function renderPipeline() {
           if (!cd) return ''; // orphan application — skip
 
           var stageColor = PIPE_STAGE_COLORS[stage] || 'var(--text4)';
-          // getNextBestAction still reads from cd for now (compatibility bridge)
-          var nba      = getNextBestAction(cd);
-          var cxScore  = cachedScore(cd);
+          var nba      = getNextBestAction(app);
+          var cxScore  = cachedScore(app);
           var cxRisk   = getRiskLevel(cxScore);
           var idleDays = getDaysSince(app.lastActivityAt || app.createdAt);
           var isPulse  = app.status === 'Submitted' && idleDays > 5;
@@ -2999,8 +3000,8 @@ function renderPipeline() {
                 : app.status === 'Offer'
                   ? '<button data-cid="' + cd.id + '" data-action="close" class="pipe-action-btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);">Close</button>'
                   : '') +
-            (cd.submissions && cd.submissions.length
-              ? '<div style="font-size:9px;color:var(--teal);font-weight:700;margin-bottom:6px;">Submitted to ' + cd.submissions.length + ' compan' + (cd.submissions.length===1?'y':'ies') + '</div>'
+            (app.submissions && app.submissions.length
+              ? '<div style="font-size:9px;color:var(--teal);font-weight:700;margin-bottom:6px;">Submitted to ' + app.submissions.length + ' compan' + (app.submissions.length===1?'y':'ies') + '</div>'
               : '') +
             '<div class="pipe-card-bottom">' +
               '<button class="pipe-advance-btn"' +
@@ -3008,7 +3009,7 @@ function renderPipeline() {
               '>' +
                 (isLast ? '✓ Hired' : 'Advance →') +
               '</button>' +
-              '<button class="pipe-msg-btn" data-cid="' + escHtml(String(cd.id)) + '" onclick="performCandidateAction(this.dataset.cid,\'message\')">✉</button>' +
+              '<button class="pipe-msg-btn" data-cid="' + escHtml(String(cd.id)) + '" onclick="showMessageModal(this.dataset.cid)">✉</button>' +
             '</div>' +
           '</div>';
         }).filter(Boolean).join('')
@@ -3157,7 +3158,8 @@ function getAlerts() {
       return cd.status !== 'Hired' && cd.status !== 'Rejected';
     })
     .map(function(cd) {
-      return { cd: cd, score: calculateExperienceScore(cd), reasons: getAlertReasons(cd) };
+      var _rApp = getPrimaryApplication(String(cd.id));
+      return { cd: cd, score: _rApp ? calculateExperienceScore(_rApp) : 0, reasons: _rApp ? getAlertReasons(_rApp) : [] };
     })
     .filter(function(item) { return item.score < 75; })
     .sort(function(a, b) { return a.score - b.score; });
@@ -3232,13 +3234,14 @@ function getNextBestAction(app) {
 function generateMessage(cd) {
   var firstName = (cd.name || 'there').split(' ')[0];
   var role      = cd.title || 'the role';
+  var _msgApp   = getPrimaryApplication(String(cd.id));
   var action    = {
     'Contact candidate':      'I wanted to reach out about an exciting opportunity that aligns well with your background.',
     'Follow up':              'I wanted to follow up on our recent conversation and see if you have any questions.',
     'Schedule next interview':'I would love to schedule the next step in our process at your convenience.',
     'Close candidate':        'We are very excited about your candidacy and wanted to discuss the offer in more detail.',
     'Monitor':                'I wanted to touch base and keep you updated on where things stand.',
-  }[getNextBestAction(cd)] || 'I wanted to reach out regarding your candidacy.';
+  }[_msgApp ? getNextBestAction(_msgApp) : 'Monitor'] || 'I wanted to reach out regarding your candidacy.';
 
   return 'Hi ' + firstName + ',\n\n' +
     action + '\n\n' +
@@ -3248,13 +3251,13 @@ function generateMessage(cd) {
 }
 
 function getAIInsights() {
-  var active = candidates.filter(function(cd) { return !['Hired','Rejected'].includes(cd.status); });
+  var activeApps = applications.filter(function(app) { return !['Hired','Rejected'].includes(app.status); });
   return {
-    followUps: active.filter(function(cd) { return getNextBestAction(cd) === 'Follow up'; }).length,
-    toContact: active.filter(function(cd) { return getNextBestAction(cd) === 'Contact candidate'; }).length,
-    offers:    candidates.filter(function(cd) { return cd.status === 'Offer'; }).length,
-    stalled:   active.filter(function(cd) { return calculateExperienceScore(cd) < 60; }).length,
-    interviews:active.filter(function(cd) { return cd.status === 'Interview'; }).length,
+    followUps:  activeApps.filter(function(app) { return getNextBestAction(app) === 'Follow up'; }).length,
+    toContact:  activeApps.filter(function(app) { return getNextBestAction(app) === 'Contact candidate'; }).length,
+    offers:     applications.filter(function(app) { return app.status === 'Offer'; }).length,
+    stalled:    activeApps.filter(function(app) { return calculateExperienceScore(app) < 60; }).length,
+    interviews: activeApps.filter(function(app) { return app.status === 'Interview'; }).length,
   };
 }
 
@@ -3365,14 +3368,21 @@ function markCandidateFollowedUp(candId) {
 
 // Mark submission follow-up done — stamps the most recent submission + bumps idle clock
 function markSubmissionFollowedUp(candId) {
-  var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
+  var cd  = candidates.find(function(x) { return String(x.id) === String(candId); });
   if (!cd) return;
-  cd.lastActivityAt = Date.now();
-  if (Array.isArray(cd.submissions) && cd.submissions.length) {
-    var last = cd.submissions[cd.submissions.length - 1];
-    if (last.status === 'sent') last.status = 'followed_up';
-    last.followedUpAt = Date.now();
+  var now = Date.now();
+  var _fuApp = getPrimaryApplication(String(candId));
+  if (_fuApp) {
+    _fuApp.lastActivityAt = now;
+    _fuApp.updatedAt      = now;
+    if (Array.isArray(_fuApp.submissions) && _fuApp.submissions.length) {
+      var last = _fuApp.submissions[_fuApp.submissions.length - 1];
+      if (last.status === 'sent') last.status = 'followed_up';
+      last.followedUpAt = now;
+    }
+    saveApplications();
   }
+  cd.lastActivityAt = now;
   saveCandidates();
   addActivityItem('Followed up on submission for ' + cd.name);
   saveActivityBoard();
@@ -3382,11 +3392,20 @@ function markSubmissionFollowedUp(candId) {
 
 // Mark interview advanced — bumps interview count + lastActivityAt
 function markInterviewAdvanced(candId) {
-  var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
+  var cd  = candidates.find(function(x) { return String(x.id) === String(candId); });
   if (!cd) return;
-  cd.lastActivityAt  = Date.now();
-  cd.firstContactAt  = cd.firstContactAt || Date.now();
-  cd.interviewCount  = (cd.interviewCount || 0) + 1;
+  var now    = Date.now();
+  var _iaApp = getPrimaryApplication(String(candId));
+  if (_iaApp) {
+    _iaApp.lastActivityAt  = now;
+    _iaApp.firstContactAt  = _iaApp.firstContactAt || now;
+    _iaApp.interviewCount  = (_iaApp.interviewCount || 0) + 1;
+    _iaApp.updatedAt       = now;
+    saveApplications();
+  }
+  cd.lastActivityAt = now;
+  cd.firstContactAt = cd.firstContactAt || now;
+  cd.interviewCount = _iaApp ? _iaApp.interviewCount : (cd.interviewCount || 0) + 1;
   saveCandidates();
   addActivityItem('Interview scheduled/advanced for ' + cd.name + ' (interview ' + cd.interviewCount + ')');
   saveActivityBoard();
@@ -3400,7 +3419,8 @@ function markMessageSent(candId) {
   var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
   if (!cd) { closeMsgModal(); return; }
   closeMsgModal();
-  var norm = normalizeAITaskAction(getNextBestAction(cd));
+  var app  = getPrimaryApplication(String(candId));
+  var norm = normalizeAITaskAction(app ? getNextBestAction(app) : 'Follow up');
   if (norm === 'Contact candidate') {
     markCandidateContacted(candId);
   } else if (norm === 'Follow up on submission') {
@@ -3604,15 +3624,14 @@ function handleAITasksClick(e) {
   if (doBtn) {
     var cid = doBtn.dataset.cid;
     if (!cid) return;
-    var cd = candidates.find(function(x) { return String(x.id) === String(cid); });
-    if (!cd) return;
-    var norm = normalizeAITaskAction(getNextBestAction(cd));
+    var app = getPrimaryApplication(String(cid));
+    if (!app) return;
+    var norm = normalizeAITaskAction(getNextBestAction(app));
 
     if (norm === 'Contact candidate' ||
         norm === 'Follow up' ||
         norm === 'Follow up on submission' ||
         norm === 'Schedule next interview') {
-      // Open message modal; Mark Sent will update state when recruiter confirms
       selectedCandidateId = cid;
       nav('candidates');
       setTimeout(function() {
@@ -3621,14 +3640,11 @@ function handleAITasksClick(e) {
         if (updated) renderCandidateDetail(updated);
         showMessageModal(cid);
       }, 80);
-      // Do NOT snooze here — state update happens in markMessageSent
       return;
     }
 
     if (norm === 'Close candidate') {
-      // Open submit modal for final placement, or go to detail for offer decision
-      if (cd.status === 'Offer') {
-        // Show offer accept/decline in context — navigate to candidate detail
+      if (app.status === 'Offer') {
         selectedCandidateId = cid;
         nav('candidates');
         setTimeout(function() {
@@ -3637,16 +3653,13 @@ function handleAITasksClick(e) {
           if (updated) renderCandidateDetail(updated);
         }, 80);
       } else {
-        // Offer stage not yet reached — open submit modal
         openSubmitModal(cid);
       }
-      // Snooze only — real removal happens when acceptOffer/declineOffer changes status
       snoozedTasks[String(cid)] = Date.now();
       renderAITasks();
       return;
     }
 
-    // Fallback — snooze for unhandled actions
     snoozedTasks[String(cid)] = Date.now();
     renderAITasks();
     return;
@@ -4243,8 +4256,6 @@ function submitCandidateAction() {
   cd.status         = deriveCandidateStatus(String(cd.id));
   cd.lastActivityAt = now;
   if (!cd.firstContactAt) cd.firstContactAt = now;
-  // Mirror submissions to cd for backward-compat with renderCandidateDetail
-  if (_app) cd.submissions = _app.submissions;
   saveCandidates();
 
   addActivityItem('Submitted ' + cd.name + ' to ' + company);
@@ -4299,7 +4310,7 @@ function updateSubmissionStatus(candId, idx, newStatus) {
   if (cd) {
     cd.status         = deriveCandidateStatus(String(candId));
     cd.lastActivityAt = now;
-    cd.submissions    = app.submissions; // mirror for renderCandidateDetail
+
     if (newStatus === 'interview') {
       cd.interviewCount = app.interviewCount;
       if (!cd.firstContactAt) cd.firstContactAt = app.firstContactAt;
@@ -4323,9 +4334,13 @@ function updateSubmissionStatus(candId, idx, newStatus) {
 function renderTopToSubmit() {
   var el = document.getElementById("dash-top-submit");
   if (!el) return;
-  var ready = candidates
-    .filter(function(cd) { return cd.status === "Interview"; })
-    .map(function(cd) { return { cd:cd, score:calculateExperienceScore(cd) }; })
+  var ready = applications
+    .filter(function(app) { return app.status === "Interview"; })
+    .map(function(app) {
+      var _cd = candidates.find(function(x) { return String(x.id) === String(app.candidateId); });
+      return { cd:_cd, app:app, score: calculateExperienceScore(app) };
+    })
+    .filter(function(item) { return !!item.cd; })
     .sort(function(a,b) { return b.score-a.score; })
     .slice(0,3);
   if (!ready.length) {
