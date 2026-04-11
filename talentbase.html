@@ -2318,14 +2318,19 @@ function renderCandidates() {
   var filtered = candidates.filter(function(cd) {
     var text = (cd.name + ' ' + cd.title + ' ' + cd.company).toLowerCase();
     if (q && !text.includes(q)) return false;
-    if (filter && cd.status !== filter) return false;
+    if (filter) {
+      var _fApp = getPrimaryApplication(String(cd.id));
+      if (!_fApp || _fApp.status !== filter) return false;
+    }
     return true;
   });
 
   // Sort: active stages first, then by createdAt desc
   var stageOrder = { New:0, Screening:1, Interview:2, Offer:3, Hired:4 };
   filtered.sort(function(a, b) {
-    var so = (stageOrder[a.status] || 0) - (stageOrder[b.status] || 0);
+    var _aApp = getPrimaryApplication(String(a.id));
+    var _bApp = getPrimaryApplication(String(b.id));
+    var so = (stageOrder[_aApp ? _aApp.status : 'New'] || 0) - (stageOrder[_bApp ? _bApp.status : 'New'] || 0);
     if (so !== 0) return so;
     return (b.createdAt || 0) - (a.createdAt || 0);
   });
@@ -2349,7 +2354,9 @@ function renderCandidates() {
     var sel     = cd.id === selectedCandidateId;
     var job     = jobs.find(function(j) { return j.id === cd.jobId; });
     var jobName = job ? job.title : null;
-    var sc      = candStatusClass(cd.status);
+    var _cApp   = getPrimaryApplication(String(cd.id));
+    var _cStatus = _cApp ? _cApp.status : 'New';
+    var sc      = candStatusClass(_cStatus);
 
     return '<div class="cand-card' + (sel ? ' selected' : '') + '" ' +
         'data-cand-id="' + cd.id + '" onclick="selectCandidate(this.dataset.candId)">' +
@@ -2360,7 +2367,7 @@ function renderCandidates() {
         (cd.company ? escHtml(cd.company) : '') +
       '</div>' +
       (jobName ? '<div class="cand-card-job">📋 ' + escHtml(jobName) + '</div>' : '') +
-      '<div style="margin-top:6px;"><span class="job-status-badge ' + sc + '">' + escHtml(cd.status) + '</span></div>' +
+      '<div style="margin-top:6px;"><span class="job-status-badge ' + sc + '">' + escHtml(_cStatus) + '</span></div>' +
     '</div>';
   }).join('');
 
@@ -2390,8 +2397,9 @@ function renderCandidateDetail(cd) {
   }
 
   var job   = jobs.find(function(j) { return String(j.id) === String(cd.jobId); });
-  var sc    = candStatusClass(cd.status);
   var _appForScore = getPrimaryApplication(String(cd.id));
+  var _appStatus   = _appForScore ? _appForScore.status : 'New';
+  var sc    = candStatusClass(_appStatus);
   var nba   = _appForScore ? getNextBestAction(_appForScore) : 'Monitor';
   var score = _appForScore ? calculateExperienceScore(_appForScore) : 0;
   var risk  = getRiskLevel(score);
@@ -2402,9 +2410,9 @@ function renderCandidateDetail(cd) {
   if (cd.title && cd.company)           summary = cd.title + ' from ' + cd.company + '.';
   else if (cd.title)                    summary = cd.title + '.';
   else if (cd.company)                  summary = 'From ' + cd.company + '.';
-  if      (cd.status === 'Interview')   summary += ' Actively interviewing.';
-  else if (cd.status === 'Offer')       summary += ' Offer extended — needs close.';
-  else if (cd.status === 'Hired')       summary += ' Successfully placed.';
+  if      (_appStatus === 'Interview')   summary += ' Actively interviewing.';
+  else if (_appStatus === 'Offer')       summary += ' Offer extended — needs close.';
+  else if (_appStatus === 'Hired')       summary += ' Successfully placed.';
   else if (nba === 'Follow up')         summary += ' Needs follow-up.';
   else if (nba === 'Contact candidate') summary += ' Not yet contacted.';
 
@@ -2423,14 +2431,14 @@ function renderCandidateDetail(cd) {
     '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px;">' +
       '<div>' +
         '<div class="cand-detail-name">' + escHtml(cd.name) + '</div>' +
-        (cd.status === 'Interview' && score >= 70
+        (_appStatus === 'Interview' && score >= 70
           ? '<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.35);border-radius:99px;padding:2px 10px;margin-top:4px;">' +
               '<span style="font-size:11px;">🔥</span>' +
               '<span style="font-size:10px;font-weight:800;color:var(--amber);letter-spacing:.05em;">READY TO SUBMIT</span>' +
             '</div>'
           : '') +
         '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;">' +
-          '<span class="job-status-badge ' + sc + '" style="font-size:11px;padding:2px 9px;">' + escHtml(cd.status) + '</span>' +
+          '<span class="job-status-badge ' + sc + '" style="font-size:11px;padding:2px 9px;">' + escHtml(_appStatus) + '</span>' +
           (cd.title   ? '<span style="font-size:12px;color:var(--text3);">' + escHtml(cd.title)   + '</span>' : '') +
           (cd.company ? '<span style="font-size:12px;color:var(--text4);">@ ' + escHtml(cd.company) + '</span>' : '') +
         '</div>' +
@@ -2450,7 +2458,7 @@ function renderCandidateDetail(cd) {
         '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">Next Action</div>' +
         '<div style="font-size:13px;font-weight:700;color:var(--accent2);">→ ' + escHtml(nba) + '</div>' +
       '</div>' +
-      (cd.status === 'Offer'
+      (_appStatus === 'Offer'
         ? '<button data-cid="' + cd.id + '" onclick="acceptOffer(this.dataset.cid)" style="padding:6px 14px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;">&#10003; Accept Offer</button>' +
           '<button data-cid="' + cd.id + '" onclick="declineOffer(this.dataset.cid)" style="padding:6px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:var(--red);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">&#10005; Decline</button>'
         : '<button onclick="openSubmitModal(' + cd.id + ')" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;box-shadow:0 4px 18px rgba(20,184,166,.55);font-weight:800;">Submit Candidate</button>') +
@@ -2675,7 +2683,8 @@ function openEditCandidate(id) {
   document.getElementById('cf-name').value    = cd.name    || '';
   document.getElementById('cf-title').value   = cd.title   || '';
   document.getElementById('cf-company').value = cd.company || '';
-  document.getElementById('cf-status').value  = cd.status  || 'New';
+  var _editApp = getPrimaryApplication(String(cd.id));
+  document.getElementById('cf-status').value  = _editApp ? (_editApp.status || 'New') : 'New';
   document.getElementById('cf-notes').value   = cd.notes    || '';
   document.getElementById('cf-resume').value  = cd.resume   || '';
   populateCandJobDropdown(cd.jobId);
