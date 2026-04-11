@@ -3057,15 +3057,6 @@ function moveCandidate(id) {
   }
   saveApplications();
 
-  // Derive candidate status from application(s)
-  var cd = candidates.find(function(x) { return String(x.id) === sid; });
-  if (cd) {
-    cd.status         = deriveCandidateStatus(sid);
-    cd.lastActivityAt = now;
-    if (!cd.firstContactAt && app.firstContactAt) cd.firstContactAt = app.firstContactAt;
-    saveCandidates();
-  }
-
   try { renderPipeline(); }   catch(e) { console.error('renderPipeline', e); }
   try { renderCandidates(); } catch(e) { console.error('renderCandidates', e); }
   if (state.currentView === 'dashboard') { try { renderDashboard(); } catch(e) {} }
@@ -3295,9 +3286,6 @@ function markCandidateContacted(candId) {
     delete _cApp.pendingContactAt;
     saveApplications();
   }
-  cd.firstContactAt = cd.firstContactAt || now;
-  cd.lastActivityAt = now;
-  saveCandidates();
   addActivityItem('Contacted ' + cd.name);
   saveActivityBoard();
   delete snoozedTasks[String(candId)];
@@ -3315,8 +3303,6 @@ function markCandidateFollowedUp(candId) {
     _fApp.updatedAt      = now;
     saveApplications();
   }
-  cd.lastActivityAt = now;
-  saveCandidates();
   addActivityItem('Followed up with ' + cd.name);
   saveActivityBoard();
   delete snoozedTasks[String(candId)];
@@ -3339,8 +3325,6 @@ function markSubmissionFollowedUp(candId) {
     }
     saveApplications();
   }
-  cd.lastActivityAt = now;
-  saveCandidates();
   addActivityItem('Followed up on submission for ' + cd.name);
   saveActivityBoard();
   delete snoozedTasks[String(candId)];
@@ -3360,10 +3344,6 @@ function markInterviewAdvanced(candId) {
     _iaApp.updatedAt       = now;
     saveApplications();
   }
-  cd.lastActivityAt = now;
-  cd.firstContactAt = cd.firstContactAt || now;
-  cd.interviewCount = _iaApp ? _iaApp.interviewCount : (cd.interviewCount || 0) + 1;
-  saveCandidates();
   addActivityItem('Interview scheduled/advanced for ' + cd.name + ' (interview ' + (_iaApp ? _iaApp.interviewCount : 0) + ')');
   saveActivityBoard();
   delete snoozedTasks[String(candId)];
@@ -4213,12 +4193,6 @@ function submitCandidateAction() {
     saveApplications();
   }
 
-  // Keep candidate in sync (display cache only)
-  cd.status         = deriveCandidateStatus(String(cd.id));
-  cd.lastActivityAt = now;
-  if (!cd.firstContactAt) cd.firstContactAt = now;
-  saveCandidates();
-
   addActivityItem('Submitted ' + cd.name + ' to ' + company);
   saveActivityBoard();
   closeSubmitModal();
@@ -4266,18 +4240,6 @@ function updateSubmissionStatus(candId, idx, newStatus) {
     app.stage  = 'Hired';
   }
   saveApplications();
-
-  // Keep candidate in sync
-  if (cd) {
-    cd.status         = deriveCandidateStatus(String(candId));
-    cd.lastActivityAt = now;
-
-    if (newStatus === 'interview') {
-      cd.interviewCount = app.interviewCount;
-      if (!cd.firstContactAt) cd.firstContactAt = app.firstContactAt;
-    }
-    saveCandidates();
-  }
 
   var company  = app.submissions[idx].company || 'company';
   var labelMap = { viewed:'Viewed by', interview:'Interview scheduled at', hired:'Hired at', rejected:'Rejected by' };
@@ -4566,18 +4528,6 @@ function getPrimaryApplication(candidateId) {
 }
 
 // ── Sync application status back to candidate (compatibility bridge) ──────────
-// Called after any status mutation on an application so cd.status stays current.
-function syncApplicationToCandidate(appId) {
-  var app = applications.find(function(a) { return String(a.id) === String(appId); });
-  if (!app) return;
-  var cd = candidates.find(function(x) { return String(x.id) === String(app.candidateId); });
-  if (!cd) return;
-  // Derive the highest status across all apps for this candidate
-  cd.status         = deriveCandidateStatus(app.candidateId);
-  cd.lastActivityAt = app.lastActivityAt;
-  if (app.firstContactAt && !cd.firstContactAt) cd.firstContactAt = app.firstContactAt;
-  saveCandidates();
-}
 
 function populateCompanyDropdown(selectedId) {
   var sel = document.getElementById('jf-company');
@@ -4694,7 +4644,6 @@ function acceptOffer(candId) {
   var app=getPrimaryApplication(String(candId));
   if(app){app.status='Hired';app.stage='Hired';app.lastActivityAt=now;app.updatedAt=now;saveApplications();}
   var cd=candidates.find(function(x){return String(x.id)===String(candId);});
-  if(cd){cd.status=deriveCandidateStatus(String(candId));cd.lastActivityAt=now;saveCandidates();}
   addActivityItem('Offer accepted — Hired: '+(cd?cd.name:candId)); saveActivityBoard();
   delete snoozedTasks[String(candId)];
   if(cd){try{renderCandidateDetail(cd);}catch(e){}}
@@ -4708,7 +4657,6 @@ function declineOffer(candId) {
   var app=getPrimaryApplication(String(candId));
   if(app){app.status='Rejected';app.stage='Rejected';app.lastActivityAt=now;app.updatedAt=now;saveApplications();}
   var cd=candidates.find(function(x){return String(x.id)===String(candId);});
-  if(cd){cd.status=deriveCandidateStatus(String(candId));cd.lastActivityAt=now;saveCandidates();}
   addActivityItem('Offer declined — Rejected: '+(cd?cd.name:candId)); saveActivityBoard();
   delete snoozedTasks[String(candId)];
   if(cd){try{renderCandidateDetail(cd);}catch(e){}}
@@ -4735,12 +4683,8 @@ function _pipeActionHandler(e) {
       _pApp.lastActivityAt = now;
       _pApp.updatedAt      = now;
       saveApplications();
-    }
-    var cd = candidates.find(function(x){ return String(x.id)===String(cid); });
-    if (cd) {
-      cd.lastActivityAt = now;
-      saveCandidates();
-      addActivityItem('Followed up on submission: ' + cd.name);
+      var _pCd = candidates.find(function(x){ return String(x.id)===String(cid); });
+      addActivityItem('Followed up on submission: ' + (_pCd ? _pCd.name : cid));
       saveActivityBoard();
       try { renderPipeline(); } catch(e) {}
     }
