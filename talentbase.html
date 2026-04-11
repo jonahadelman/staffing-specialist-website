@@ -1752,8 +1752,8 @@ function renderDashboard() {
 
   var openJobs   = jobs.filter(function(j) { return (j.status === 'Active' || j.status === 'Approved' || j.status === 'Open'); });
   var filledJobs = jobs.filter(function(j) { return j.status === 'Filled'; });
-  var hiredCands = candidates.filter(function(cd) { return cd.status === 'Hired'; });
-  var offerCands = candidates.filter(function(cd) { return cd.status === 'Offer'; });
+  var hiredCands = applications.filter(function(app) { return app.status === 'Hired'; });
+  var offerCands = applications.filter(function(app) { return app.status === 'Offer'; });
   var daysArr    = openJobs.map(function(j) { return j.createdAt ? (Date.now() - j.createdAt) / 86400000 : 0; });
   var avgDays    = daysArr.length ? Math.round(daysArr.reduce(function(s,d){return s+d;},0)/daysArr.length) : 0;
   var daysColor  = avgDays > 60 ? 'var(--red)' : avgDays > 30 ? 'var(--amber)' : 'var(--green)';
@@ -1780,12 +1780,12 @@ function renderDashboard() {
   if (psEl) {
     var stages = ['New','Screening','Interview','Offer','Hired'];
     var stageColors = { New:'var(--accent)', Screening:'var(--accent2)', Interview:'var(--amber)', Submitted:'var(--teal)', Offer:'var(--purple)', Hired:'var(--green)' };
-    var total = candidates.length || 1;
-    if (!candidates.length) {
+    var total = applications.length || 1;
+    if (!applications.length) {
       psEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">No candidates yet</div></div>';
     } else {
       psEl.innerHTML = stages.map(function(s) {
-        var n   = candidates.filter(function(cd) { return cd.status === s; }).length;
+        var n   = applications.filter(function(app) { return app.status === s; }).length;
         var pct = Math.round((n / total) * 100);
         var col = stageColors[s] || 'var(--text4)';
         return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">' +
@@ -2408,13 +2408,14 @@ function renderCandidateDetail(cd) {
   else if (nba === 'Follow up')         summary += ' Needs follow-up.';
   else if (nba === 'Contact candidate') summary += ' Not yet contacted.';
 
-  // Timeline events
+  // Timeline events — read from application (source of truth)
+  var _tlApp = _appForScore;
   var tevs = [];
-  if (cd.createdAt)      tevs.push({ ts:cd.createdAt,      label:'Added to pipeline', icon:'➕', color:'var(--text4)' });
-  if (cd.firstContactAt) tevs.push({ ts:cd.firstContactAt, label:'First contact',     icon:'📞', color:'var(--accent2)' });
-  if (cd.interviewCount) tevs.push({ ts:cd.lastActivityAt||cd.createdAt, label:(cd.interviewCount)+' interview'+(cd.interviewCount>1?'s':'')+' completed', icon:'📅', color:'var(--amber)' });
-  if (cd.status==='Offer') tevs.push({ ts:cd.lastActivityAt, label:'Offer extended', icon:'🎉', color:'var(--purple)' });
-  if (cd.status==='Hired') tevs.push({ ts:cd.lastActivityAt, label:'Hired', icon:'✅', color:'var(--green)' });
+  if (cd.createdAt)                                   tevs.push({ ts:cd.createdAt, label:'Added to pipeline', icon:'➕', color:'var(--text4)' });
+  if (_tlApp && _tlApp.firstContactAt)                tevs.push({ ts:_tlApp.firstContactAt, label:'First contact', icon:'📞', color:'var(--accent2)' });
+  if (_tlApp && _tlApp.interviewCount)                tevs.push({ ts:_tlApp.lastActivityAt||cd.createdAt, label:(_tlApp.interviewCount)+' interview'+(_tlApp.interviewCount>1?'s':'')+' completed', icon:'📅', color:'var(--amber)' });
+  if (_tlApp && _tlApp.status==='Offer')              tevs.push({ ts:_tlApp.lastActivityAt, label:'Offer extended', icon:'🎉', color:'var(--purple)' });
+  if (_tlApp && _tlApp.status==='Hired')              tevs.push({ ts:_tlApp.lastActivityAt, label:'Hired', icon:'✅', color:'var(--green)' });
   tevs.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
 
   panel.innerHTML =
@@ -2463,11 +2464,11 @@ function renderCandidateDetail(cd) {
         '<div style="font-size:10px;color:var(--text4);margin-top:2px;">CX Score</div>' +
       '</div>' +
       '<div style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;text-align:center;">' +
-        '<div style="font-size:18px;font-weight:800;color:var(--text);">' + (cd.interviewCount||0) + '</div>' +
+        '<div style="font-size:18px;font-weight:800;color:var(--text);">' + (_appForScore ? (_appForScore.interviewCount||0) : 0) + '</div>' +
         '<div style="font-size:10px;color:var(--text4);margin-top:2px;">Interviews</div>' +
       '</div>' +
       '<div style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;text-align:center;">' +
-        '<div style="font-size:18px;font-weight:800;color:var(--text);">' + getDaysSince(cd.lastActivityAt||cd.createdAt) + 'd</div>' +
+        '<div style="font-size:18px;font-weight:800;color:var(--text);">' + getDaysSince((_appForScore ? _appForScore.lastActivityAt : null)||cd.createdAt) + 'd</div>' +
         '<div style="font-size:10px;color:var(--text4);margin-top:2px;">Last Active</div>' +
       '</div>' +
     '</div>' +
@@ -3082,19 +3083,19 @@ function getDaysSince(ts) {
 }
 
 function calculateExperienceMetrics() {
-  var active = candidates.filter(function(cd) { return cd.status !== 'Hired'; });
-  var contacted = candidates.filter(function(cd) { return cd.firstContactAt && cd.createdAt; });
+  var active    = applications.filter(function(app) { return app.status !== 'Hired'; });
+  var contacted = applications.filter(function(app) { return app.firstContactAt && app.createdAt; });
   var avgContact = contacted.length
-    ? Math.round(contacted.reduce(function(s, cd) {
-        return s + (cd.firstContactAt - cd.createdAt) / 86400000;
+    ? Math.round(contacted.reduce(function(s, app) {
+        return s + (app.firstContactAt - app.createdAt) / 86400000;
       }, 0) / contacted.length * 10) / 10
     : null;
-  var stale = active.filter(function(cd) {
-    return getDaysSince(cd.lastActivityAt || cd.createdAt) >= 2;
+  var stale = active.filter(function(app) {
+    return getDaysSince(app.lastActivityAt || app.createdAt) >= 2;
   });
-  var hired = candidates.filter(function(cd) { return cd.status === 'Hired' && cd.interviewCount; });
+  var hired = applications.filter(function(app) { return app.status === 'Hired' && app.interviewCount; });
   var avgInterviews = hired.length
-    ? Math.round(hired.reduce(function(s, cd) { return s + cd.interviewCount; }, 0) / hired.length * 10) / 10
+    ? Math.round(hired.reduce(function(s, app) { return s + app.interviewCount; }, 0) / hired.length * 10) / 10
     : null;
   return { avgContactDays: avgContact, staleCount: stale.length, avgInterviews: avgInterviews };
 }
@@ -3153,15 +3154,15 @@ function getAlertReasons(app) {
 }
 
 function getAlerts() {
-  return candidates
-    .filter(function(cd) {
-      return cd.status !== 'Hired' && cd.status !== 'Rejected';
+  return applications
+    .filter(function(app) {
+      return app.status !== 'Hired' && app.status !== 'Rejected';
     })
-    .map(function(cd) {
-      var _rApp = getPrimaryApplication(String(cd.id));
-      return { cd: cd, score: _rApp ? calculateExperienceScore(_rApp) : 0, reasons: _rApp ? getAlertReasons(_rApp) : [] };
+    .map(function(app) {
+      var cd = candidates.find(function(x) { return String(x.id) === String(app.candidateId); });
+      return { cd: cd, score: calculateExperienceScore(app), reasons: getAlertReasons(app) };
     })
-    .filter(function(item) { return item.score < 75; })
+    .filter(function(item) { return item.cd && item.score < 75; })
     .sort(function(a, b) { return a.score - b.score; });
 }
 
@@ -3342,11 +3343,19 @@ function refreshAllTaskDependentViews() {
 
 // Mark as contacted — sets firstContactAt + bumps lastActivityAt
 function markCandidateContacted(candId) {
-  var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
+  var cd    = candidates.find(function(x) { return String(x.id) === String(candId); });
   if (!cd) return;
-  var now = Date.now();
-  cd.firstContactAt  = cd.firstContactAt || now;
-  cd.lastActivityAt  = now;
+  var now   = Date.now();
+  var _cApp = getPrimaryApplication(String(candId));
+  if (_cApp) {
+    _cApp.firstContactAt = _cApp.firstContactAt || now;
+    _cApp.lastActivityAt = now;
+    _cApp.updatedAt      = now;
+    delete _cApp.pendingContactAt;
+    saveApplications();
+  }
+  cd.firstContactAt = cd.firstContactAt || now;
+  cd.lastActivityAt = now;
   saveCandidates();
   addActivityItem('Contacted ' + cd.name);
   saveActivityBoard();
@@ -3356,9 +3365,16 @@ function markCandidateContacted(candId) {
 
 // Mark follow-up done — bumps lastActivityAt, resets idle clock
 function markCandidateFollowedUp(candId) {
-  var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
+  var cd    = candidates.find(function(x) { return String(x.id) === String(candId); });
   if (!cd) return;
-  cd.lastActivityAt = Date.now();
+  var now   = Date.now();
+  var _fApp = getPrimaryApplication(String(candId));
+  if (_fApp) {
+    _fApp.lastActivityAt = now;
+    _fApp.updatedAt      = now;
+    saveApplications();
+  }
+  cd.lastActivityAt = now;
   saveCandidates();
   addActivityItem('Followed up with ' + cd.name);
   saveActivityBoard();
@@ -3970,9 +3986,9 @@ function renderAnalytics() {
   var stages      = ['New','Screening','Interview','Offer','Hired'];
   var stageColors = { New:'var(--accent)', Screening:'var(--accent2)', Interview:'var(--amber)', Submitted:'var(--teal)', Offer:'var(--purple)', Hired:'var(--green)' };
   var openJobs    = jobs.filter(function(j) { return (j.status === 'Active' || j.status === 'Approved' || j.status === 'Open'); });
-  var hiredCands  = candidates.filter(function(cd) { return cd.status === 'Hired'; });
-  var offerCands  = candidates.filter(function(cd) { return cd.status === 'Offer'; });
-  var activeCands = candidates.filter(function(cd) { return !['Hired','Rejected'].includes(cd.status); });
+  var hiredCands  = applications.filter(function(app) { return app.status === 'Hired'; });
+  var offerCands  = applications.filter(function(app) { return app.status === 'Offer'; });
+  var activeCands = applications.filter(function(app) { return !['Hired','Rejected'].includes(app.status); });
   var daysArr     = openJobs.map(function(j) { return j.createdAt ? (Date.now()-j.createdAt)/86400000 : 0; });
   var avgDays     = daysArr.length ? Math.round(daysArr.reduce(function(s,d){return s+d;},0)/daysArr.length) : 0;
 
@@ -3999,7 +4015,7 @@ function renderAnalytics() {
     if (!candidates.length) {
       funnelEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">No candidate data yet</div></div>';
     } else {
-      var counts = stages.map(function(s) { return candidates.filter(function(cd){ return cd.status===s; }).length; });
+      var counts = stages.map(function(s) { return applications.filter(function(app){ return app.status===s; }).length; });
       var maxN   = Math.max.apply(null, counts) || 1;
       funnelEl.innerHTML = stages.map(function(s, i) {
         var n   = counts[i];
@@ -4025,9 +4041,9 @@ function renderAnalytics() {
       tsEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">No data yet</div></div>';
     } else {
       tsEl.innerHTML = stages.slice(0,-1).map(function(s) {
-        var grp = candidates.filter(function(cd){ return cd.status===s && cd.lastActivityAt; });
+        var grp = applications.filter(function(app){ return app.status===s && app.lastActivityAt; });
         var avg = grp.length
-          ? Math.round(grp.reduce(function(sum,cd){ return sum+getDaysSince(cd.lastActivityAt); },0)/grp.length)
+          ? Math.round(grp.reduce(function(sum,app){ return sum+getDaysSince(app.lastActivityAt); },0)/grp.length)
           : null;
         var col = avg > 7 ? 'var(--red)' : avg > 3 ? 'var(--amber)' : 'var(--green)';
         return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
@@ -4042,13 +4058,15 @@ function renderAnalytics() {
   var ofEl = document.getElementById('an-offers');
   if (ofEl) {
     var rows = [];
-    offerCands.forEach(function(cd) {
-      var job = jobs.find(function(j){ return String(j.id)===String(cd.jobId); });
-      rows.push({ name:cd.name, role:job?job.title:'', status:'Offer', color:'var(--purple)' });
+    offerCands.forEach(function(app) {
+      var cd  = candidates.find(function(x){ return String(x.id)===String(app.candidateId); });
+      var job = jobs.find(function(j){ return String(j.id)===String(app.jobId); });
+      if (cd) rows.push({ name:cd.name, role:job?job.title:'', status:'Offer', color:'var(--purple)' });
     });
-    hiredCands.slice(0,3).forEach(function(cd) {
-      var job = jobs.find(function(j){ return String(j.id)===String(cd.jobId); });
-      rows.push({ name:cd.name, role:job?job.title:'', status:'Hired', color:'var(--green)' });
+    hiredCands.slice(0,3).forEach(function(app) {
+      var cd  = candidates.find(function(x){ return String(x.id)===String(app.candidateId); });
+      var job = jobs.find(function(j){ return String(j.id)===String(app.jobId); });
+      if (cd) rows.push({ name:cd.name, role:job?job.title:'', status:'Hired', color:'var(--green)' });
     });
     if (!rows.length) {
       ofEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">No offers or hires yet</div></div>';
@@ -4109,22 +4127,24 @@ function renderOffer() {
   var sc = document.querySelector('#v-offer .view-scroll');
   if (!sc) return;
   while (sc.children.length > 1) sc.removeChild(sc.lastChild);
-  var offerCands = candidates.filter(function(cd) { return cd.status === 'Offer'; });
+  var offerApps = applications.filter(function(app) { return app.status === 'Offer'; });
   var div = document.createElement('div');
-  if (!offerCands.length) {
+  if (!offerApps.length) {
     div.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#128221;</div><div class="empty-state-title">No candidates at Offer stage</div><div class="empty-state-sub">Advance candidates to Offer in the Pipeline to draft messages here.</div></div>';
   } else {
     div.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;max-width:640px;">' +
-      offerCands.map(function(cd) {
-        var job = jobs.find(function(j){ return String(j.id)===String(cd.jobId); });
+      offerApps.map(function(app) {
+        var cd  = candidates.find(function(x){ return String(x.id)===String(app.candidateId); });
+        var job = jobs.find(function(j){ return String(j.id)===String(app.jobId); });
+        if (!cd) return '';
         return '<div class="card" style="display:flex;align-items:center;gap:14px;">' +
           '<div style="flex:1;min-width:0;">' +
             '<div style="font-size:14px;font-weight:700;color:var(--text);">' + escHtml(cd.name) + '</div>' +
             '<div style="font-size:11px;color:var(--text4);">' + (job ? escHtml(job.title) : 'No job linked') + '</div>' +
           '</div>' +
-          '<button onclick="showMessageModal(' + cd.id + ')" class="btn btn-primary btn-sm">Draft Offer Message</button>' +
+          '<button onclick="showMessageModal(' + escHtml(String(cd.id)) + ')" class="btn btn-primary btn-sm">Draft Offer Message</button>' +
         '</div>';
-      }).join('') +
+      }).filter(Boolean).join('') +
     '</div>';
   }
   sc.appendChild(div);
