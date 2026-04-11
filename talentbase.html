@@ -3167,46 +3167,9 @@ function getAlerts() {
 }
 
 // ── Render alert panel on dashboard ──────────────────────────────────────────
-function gotoCandidates() { nav('candidates'); }
 
 function gotoRiskView() { nav('pipeline'); }
 
-function renderHiringRisks() {
-  var el = document.getElementById('dash-hiring-risks');
-  if (!el) return;
-
-  var alerts = getAlerts();
-  if (!alerts.length) {
-    el.innerHTML =
-      '<div class="empty-state" style="padding:24px 0;">' +
-        '<div class="empty-state-icon" style="font-size:20px;">✓</div>' +
-        '<div class="empty-state-title">No hiring risks</div>' +
-        '<div class="empty-state-sub">All active candidates look healthy.</div>' +
-      '</div>';
-    return;
-  }
-
-  el.innerHTML = alerts.slice(0, 8).map(function(item) {
-    var cd   = item.cd;
-    var risk = getRiskLevel(item.score);
-    var riskColor = { critical: 'var(--red)', warning: 'var(--amber)', healthy: 'var(--green)' }[risk];
-    var riskLabel = { critical: '🚨 Critical', warning: '⚠️ At Risk', healthy: '✓ Healthy' }[risk];
-
-    return '<div style="display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.05);">' +
-      '<div style="flex:1;min-width:0;">' +
-        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">' +
-          '<span style="font-size:13px;font-weight:600;color:var(--text);">' + escHtml(cd.name) + '</span>' +
-          '<span style="font-size:10px;font-weight:700;color:' + riskColor + ';">' + riskLabel + '</span>' +
-        '</div>' +
-        '<div style="font-size:11px;color:var(--text4);">' + escHtml(item.reasons[0] || '') + '</div>' +
-      '</div>' +
-      '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
-        '<span style="font-size:12px;font-weight:800;color:' + riskColor + ';">' + item.score + '</span>' +
-        '<button onclick="gotoRiskView()" class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px;">View</button>' +
-      '</div>' +
-    '</div>';
-  }).join('');
-}
 
 
 // ═══════════════════════════════════════════════════════════
@@ -3303,28 +3266,6 @@ function showMessageModal(candId) {
   modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
 }
 
-function renderAIInsights() {
-  var el = document.getElementById('dash-ai-insights');
-  if (!el) return;
-  var ins = getAIInsights();
-  var items = [];
-  if (ins.toContact > 0) items.push({ icon:'📞', text: ins.toContact + ' candidate' + (ins.toContact>1?'s':'') + ' need' + (ins.toContact>1?'':'s') + ' first contact' });
-  if (ins.followUps > 0) items.push({ icon:'⏱',  text: ins.followUps + ' candidate' + (ins.followUps>1?'s':'') + ' need follow-up today' });
-  if (ins.offers > 0)    items.push({ icon:'🎯',  text: ins.offers + ' candidate' + (ins.offers>1?'s are':' is') + ' ready to close' });
-  if (ins.stalled > 0)   items.push({ icon:'⚠️', text: ins.stalled + ' candidate' + (ins.stalled>1?'s are':' is') + ' stalling (score < 60)' });
-  if (ins.interviews > 0)items.push({ icon:'📅',  text: ins.interviews + ' candidate' + (ins.interviews>1?'s':'') + ' in active interview stage' });
-
-  if (!items.length) {
-    el.innerHTML = '<div style="font-size:12px;color:var(--text4);padding:12px 0;">Pipeline is healthy — no immediate actions needed.</div>';
-    return;
-  }
-  el.innerHTML = items.map(function(it) {
-    return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);last-child:border-none;">' +
-      '<span style="font-size:15px;flex-shrink:0;">' + it.icon + '</span>' +
-      '<span style="font-size:12px;color:var(--text2);">' + escHtml(it.text) + '</span>' +
-    '</div>';
-  }).join('');
-}
 
 
 // ═══════════════════════════════════════════════════════════
