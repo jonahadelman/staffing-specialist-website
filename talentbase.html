@@ -3364,7 +3364,7 @@ function markInterviewAdvanced(candId) {
   cd.firstContactAt = cd.firstContactAt || now;
   cd.interviewCount = _iaApp ? _iaApp.interviewCount : (cd.interviewCount || 0) + 1;
   saveCandidates();
-  addActivityItem('Interview scheduled/advanced for ' + cd.name + ' (interview ' + cd.interviewCount + ')');
+  addActivityItem('Interview scheduled/advanced for ' + cd.name + ' (interview ' + (_iaApp ? _iaApp.interviewCount : 0) + ')');
   saveActivityBoard();
   delete snoozedTasks[String(candId)];
   refreshAllTaskDependentViews();
@@ -4729,13 +4729,19 @@ function _pipeActionHandler(e) {
   console.log('[TalentBase] PIPE ACTION:', action, cid);
   if (action === 'submit')  { openSubmitModal(cid); }
   if (action === 'followup') {
+    var now  = Date.now();
+    var _pApp = getPrimaryApplication(String(cid));
+    if (_pApp) {
+      _pApp.lastActivityAt = now;
+      _pApp.updatedAt      = now;
+      saveApplications();
+    }
     var cd = candidates.find(function(x){ return String(x.id)===String(cid); });
     if (cd) {
-      cd.lastActivityAt = Date.now();
+      cd.lastActivityAt = now;
       saveCandidates();
       addActivityItem('Followed up on submission: ' + cd.name);
       saveActivityBoard();
-      // Refresh card in-place without full re-render
       try { renderPipeline(); } catch(e) {}
     }
   }
