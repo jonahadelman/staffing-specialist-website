@@ -963,7 +963,6 @@ function cwOpen(){
   var k=localStorage.getItem('cw_key'); var keyInput=document.getElementById('cw-key'); if(k && keyInput) keyInput.value=k;
 }
 window.cwOpen = cwOpen;
-window.cwOpen = cwOpen;
 
 function cwClose(){
   var overlay = document.getElementById('cw-overlay');
@@ -978,7 +977,6 @@ function cwClose(){
   var txt=document.getElementById('cw-btn-txt');
   if(txt) txt.textContent=_cwMode==='candidate'?'Know Your Worth':'Analyze Market Pay';
 }
-window.cwClose = cwClose;
 window.cwClose = cwClose;
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -1039,29 +1037,6 @@ async function cwRun(){
     document.getElementById('cw-btn-txt').textContent=_cwMode==='candidate'?'Know Your Worth':'Analyze Market Pay';
     res.innerHTML='<div style="color:#ff6b6b;font-size:13px;padding:8px;">Analysis failed: '+esc(e.message)+'</div>';
   }
-}
-
-// Bind the floating bubble
-var bubble = document.getElementById("cw-bubble");
-if (bubble) { bubble.addEventListener("click", function() { if (typeof window.cwOpen === "function") window.cwOpen(); }); }
-
-// Bind all cwOpen trigger links
-document.querySelectorAll('[data-cw-trigger]').forEach(function(el) {
-  el.addEventListener("click", function(e) { e.preventDefault(); if (typeof window.cwOpen === "function") window.cwOpen(); });
-});
-
-// Bind cwRun, cwMode, cwTab buttons inside the overlay via delegation
-var overlay = document.getElementById('cw-overlay');
-if (overlay) {
-  overlay.addEventListener('click', function(e) {
-    var t = e.target.closest('[data-cw-action]');
-    if (!t) return;
-    var action = t.dataset.cwAction;
-    if (action === 'close') { window.cwClose(); }
-    else if (action === 'run') { cwRun(); }
-    else if (action.startsWith('mode:')) { cwMode(action.split(':')[1]); }
-    else if (action.startsWith('tab:')) { cwTab(action.split(':')[1]); }
-  });
 }
 
 }); // end DOMContentLoaded
