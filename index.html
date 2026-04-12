@@ -263,7 +263,7 @@
     <a href="#talentbase" onclick="closeMobNav()">TalentBase</a>
     <a href="#testimonials" onclick="closeMobNav()">Testimonials</a>
     <a href="#founder" onclick="closeMobNav()">Founder</a>
-    <a href="javascript:void(0)" onclick="closeMobNav();cwOpen();" style="color:#1aada3;font-weight:700;">💰 Comp Intel</a>
+    <a href="javascript:void(0)" onclick="closeMobNav();" style="color:#1aada3;font-weight:700;">💰 Comp Intel</a>
     <a href="#contact" class="btn mob-cta" onclick="closeMobNav()">Get Talent Now</a>
   </div>
 
@@ -296,7 +296,7 @@
           <!-- TB-LINK-1: header tool button — removed public access 2026-04 -->
           <a href="#contact" onclick="tbAccessModal(event)" style="padding:5px 14px;border-radius:7px;border:1px solid rgba(140,120,255,.55);background:rgba(124,106,247,.2);font-size:11px;font-weight:700;color:#ccc0ff;white-space:nowrap;text-decoration:none;">&#9889; TalentBase ATS</a>
           <a href="#telephone" style="padding:5px 14px;border-radius:7px;border:1px solid rgba(26,173,163,.45);background:rgba(26,173,163,.14);font-size:11px;font-weight:700;color:#1aada3;white-space:nowrap;text-decoration:none;">&#128225; Job Amplifier</a>
-          <a href="javascript:void(0)" onclick="cwOpen()" style="padding:5px 14px;border-radius:7px;border:1px solid rgba(26,173,163,.4);background:rgba(26,173,163,.12);font-size:11px;font-weight:700;color:#1aada3;white-space:nowrap;text-decoration:none;">&#128176; Comp Intel</a>
+          <a href="javascript:void(0)" style="padding:5px 14px;border-radius:7px;border:1px solid rgba(26,173,163,.4);background:rgba(26,173,163,.12);font-size:11px;font-weight:700;color:#1aada3;white-space:nowrap;text-decoration:none;">&#128176; Comp Intel</a>
         </div>
       </nav>
     </div>
@@ -470,7 +470,7 @@
             <div style="font-size:11px;font-weight:700;color:#c9a84c;text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;">💰 Compensation Intelligence</div>
             <div style="font-size:22px;font-weight:900;color:#e8f0ff;margin-bottom:10px;">Know The Market Before<br>You Compete In It</div>
             <p style="font-size:14px;color:#c9d6e8;line-height:1.6;">Paste any resume or job description. Get instant market analysis — floor, target, ceiling salary. Know Your Worth. Know What The Market Pays. Like Kelly Blue Book for talent.</p>
-            <a href="javascript:void(0)" onclick="cwOpen()" style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-size:13px;font-weight:700;color:#c9a84c;">Try Free →</a>
+            <a href="javascript:void(0)" style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-size:13px;font-weight:700;color:#c9a84c;">Try Free →</a>
           </div>
         </div>
       </div>
@@ -837,16 +837,28 @@
     }
   });
 
-  document.addEventListener("DOMContentLoaded", function() {
-    var bubble = document.getElementById("cw-bubble");
-    if (bubble) { bubble.addEventListener("click", function() { safeCall(window.cwOpen); }); }
-    document.querySelectorAll('[onclick*="cwOpen"]').forEach(function(el) {
-      el.removeAttribute("onclick");
-      el.addEventListener("click", function(e) { e.preventDefault(); safeCall(window.cwOpen); });
-    });
-  });
-
   </script>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       TALENTBASE ACCESS MODAL
+       UI-level containment only. Real protection must be enforced
+       at the hosting/server level (Vercel auth, redirect rules,
+       or moving talentbase.html behind authentication).
+       ══════════════════════════════════════════════════════════ -->
+  <div id="tb-access-modal" onclick="if(event.target===this)tbAccessModalClose()" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(5,8,18,.92);align-items:center;justify-content:center;padding:24px;">
+    <div style="background:#0f1628;border:1px solid rgba(124,106,247,.3);border-radius:24px;width:100%;max-width:460px;padding:40px 36px;text-align:center;box-shadow:0 40px 80px rgba(0,0,0,.6);position:relative;">
+      <button onclick="tbAccessModalClose()" style="position:absolute;top:16px;right:18px;background:rgba(255,255,255,.07);border:none;color:#aabbd0;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;">✕</button>
+      <div style="width:52px;height:52px;border-radius:50%;background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.35);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 18px;">⚡</div>
+      <div style="font-size:11px;font-weight:700;color:#a89dff;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;">TalentBase</div>
+      <h3 style="font-size:24px;font-weight:900;color:#e8f0ff;margin:0 0 12px;letter-spacing:-.3px;">Invite-Only Access</h3>
+      <p style="font-size:15px;color:#c9d6ff;line-height:1.7;margin:0 0 24px;">TalentBase is currently in private beta. Access is by invitation only.<br><span style="color:#a89dff;font-weight:600;">Contact Jonah to request access.</span></p>
+      <a href="#contact" onclick="tbAccessModalClose()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(124,106,247,.2);border:1px solid rgba(124,106,247,.4);color:#c4b8ff;padding:13px 28px;border-radius:999px;font-weight:700;font-size:14px;text-decoration:none;transition:all .18s ease;">Contact Jonah →</a>
+    </div>
+  </div>
+
+<script>window.addEventListener("load", function() { if (!window.cwOpen) { console.error("cwOpen failed to initialize"); } else { console.log("Comp Widget Ready"); } });</script>
+
 
 <!-- COMP WIDGET -->
 <style>
@@ -908,42 +920,48 @@
   </div>
 </button>
 
-<div id="cw-overlay" onclick="if(event.target===this)cwClose()">
+<div id="cw-overlay" onclick="if(event.target===this&&window.cwClose)window.cwClose()">
   <div id="cw-box">
-    <div class="cw-hd"><div><div class="cw-hd-title">💰 Compensation Intelligence</div><div class="cw-hd-sub">The Staffing Specialist · Real market data</div></div><button class="cw-x" onclick="cwClose()">✕</button></div>
+    <div class="cw-hd"><div><div class="cw-hd-title">💰 Compensation Intelligence</div><div class="cw-hd-sub">The Staffing Specialist · Real market data</div></div><button class="cw-x" onclick="if(window.cwClose)window.cwClose()">✕</button></div>
     <div class="cw-modes">
-      <div class="cw-m on" id="cwm-candidate" onclick="cwMode('candidate')"><div class="cw-m-icon">🙋</div><div class="cw-m-title">Know Your Worth</div><div class="cw-m-desc">Paste your resume — see what the market pays for your experience today.</div></div>
-      <div class="cw-m" id="cwm-company" onclick="cwMode('company')"><div class="cw-m-icon">🏢</div><div class="cw-m-title">What The Market Pays</div><div class="cw-m-desc">Paste a job description — see what companies are actually paying right now.</div></div>
+      <div class="cw-m on" id="cwm-candidate" onclick="if(window.cwMode)window.cwMode('candidate')"><div class="cw-m-icon">🙋</div><div class="cw-m-title">Know Your Worth</div><div class="cw-m-desc">Paste your resume — see what the market pays for your experience today.</div></div>
+      <div class="cw-m" id="cwm-company" onclick="if(window.cwMode)window.cwMode('company')"><div class="cw-m-icon">🏢</div><div class="cw-m-title">What The Market Pays</div><div class="cw-m-desc">Paste a job description — see what companies are actually paying right now.</div></div>
     </div>
     <div class="cw-body">
       <div style="display:flex;gap:6px;margin-bottom:10px;">
-        <button id="cw-tab-paste" onclick="cwTab('paste')" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(26,173,163,.3);background:rgba(26,173,163,.03);color:#1aada3;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">✏️ Paste Text</button>
-        <button id="cw-tab-upload" onclick="cwTab('upload')" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#d0dded;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">📄 Upload File</button>
+        <button id="cw-tab-paste" onclick="if(window.cwTab)window.cwTab('paste')" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(26,173,163,.3);background:rgba(26,173,163,.03);color:#1aada3;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">✏️ Paste Text</button>
+        <button id="cw-tab-upload" onclick="if(window.cwTab)window.cwTab('upload')" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#d0dded;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">📄 Upload File</button>
       </div>
       <div id="cw-panel-paste"><textarea class="cw-ta" id="cw-ta" placeholder="Paste your resume or LinkedIn profile here...&#10;&#10;Include your title, years of experience, location, and key skills for the most accurate result."></textarea></div>
       <div id="cw-panel-upload" style="display:none;">
-        <div id="cw-dropzone" onclick="document.getElementById('cw-file').click()" ondragover="event.preventDefault();this.style.borderColor='#1aada3';" ondragleave="this.style.borderColor='rgba(255,255,255,.1)';" ondrop="event.preventDefault();this.style.borderColor='rgba(255,255,255,.1)';cwHandleFile(event.dataTransfer.files[0]);" style="border:2px dashed rgba(255,255,255,.1);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:border-color .2s;">
+        <div id="cw-dropzone" onclick="document.getElementById('cw-file').click()" ondragover="event.preventDefault();this.style.borderColor='#1aada3';" ondragleave="this.style.borderColor='rgba(255,255,255,.1)';" ondrop="event.preventDefault();this.style.borderColor='rgba(255,255,255,.1)';if(window.cwHandleFile)window.cwHandleFile(event.dataTransfer.files[0]);" style="border:2px dashed rgba(255,255,255,.1);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:border-color .2s;">
           <div style="font-size:28px;margin-bottom:8px;">📄</div>
           <div style="font-size:13px;font-weight:700;color:#e8f0ff;margin-bottom:4px;">Drop your resume here</div>
           <div style="font-size:11px;color:#9aaabf;">or click to browse · PDF or TXT</div>
           <div id="cw-file-name" style="margin-top:10px;font-size:12px;color:#1aada3;display:none;"></div>
         </div>
-        <input type="file" id="cw-file" accept=".pdf,.txt,.doc,.docx" style="display:none;" onchange="cwHandleFile(this.files[0])"/>
+        <input type="file" id="cw-file" accept=".pdf,.txt,.doc,.docx" style="display:none;" onchange="if(window.cwHandleFile)window.cwHandleFile(this.files[0])"/>
       </div>
       <input class="cw-key" id="cw-key" type="password" placeholder="Anthropic API key (sk-ant-...)" style="margin-top:10px;"/>
       <div class="cw-keylbl">Free key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> · Saved in your browser after first use</div>
-      <button class="cw-btn" id="cw-btn" onclick="cwRun()"><span>⚡</span><span id="cw-btn-txt">Analyze Market Value</span></button>
+      <button class="cw-btn" id="cw-btn" onclick="if(window.cwRun)window.cwRun()"><span>⚡</span><span id="cw-btn-txt">Analyze Market Value</span></button>
     </div>
     <div class="cw-result" id="cw-result"></div>
   </div>
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", function() {
+
 var _cwMode='candidate',_cwTab='paste',_cwFileText='';
+
 function cwTab(t){_cwTab=t;_cwFileText='';document.getElementById('cw-panel-paste').style.display=t==='paste'?'':'none';document.getElementById('cw-panel-upload').style.display=t==='upload'?'':'none';var pb=document.getElementById('cw-tab-paste'),ub=document.getElementById('cw-tab-upload');pb.style.background=t==='paste'?'rgba(26,173,163,.03)':'rgba(255,255,255,.03)';pb.style.borderColor=t==='paste'?'rgba(26,173,163,.3)':'rgba(255,255,255,.08)';pb.style.color=t==='paste'?'#1aada3':'#7a87a5';ub.style.background=t==='upload'?'rgba(26,173,163,.03)':'rgba(255,255,255,.03)';ub.style.borderColor=t==='upload'?'rgba(26,173,163,.3)':'rgba(255,255,255,.08)';ub.style.color=t==='upload'?'#1aada3':'#7a87a5';}
+
 function cwHandleFile(file){if(!file)return;var nameEl=document.getElementById('cw-file-name');nameEl.textContent='📎 '+file.name+' — reading...';nameEl.style.display='block';var reader=new FileReader();reader.onload=function(e){if(file.name.toLowerCase().endsWith('.pdf')){_cwFileText='__PDF__'+e.target.result.split(',')[1];nameEl.textContent='✓ '+file.name+' ready to analyze';}else{_cwFileText=e.target.result;nameEl.textContent='✓ '+file.name+' ready to analyze';}};if(file.name.toLowerCase().endsWith('.pdf')){reader.readAsDataURL(file);}else{reader.readAsText(file);}}
+
 function cwOpen(){
-  closeAllModals();
+  if (typeof tbAccessModalClose === "function") { try { tbAccessModalClose(); } catch(e) {} }
+  if (typeof closeMobNav === "function") { try { closeMobNav(); } catch(e) {} }
   var overlay = document.getElementById('cw-overlay');
   if (!overlay) { console.error("cw-overlay missing"); return; }
   overlay.classList.add('on');
@@ -951,43 +969,45 @@ function cwOpen(){
   var k=localStorage.getItem('cw_key'); var keyInput=document.getElementById('cw-key'); if(k && keyInput) keyInput.value=k;
 }
 window.cwOpen = cwOpen;
+
 function cwClose(){
   var overlay = document.getElementById('cw-overlay');
   if (!overlay) return;
   overlay.classList.remove('on');
-  document.body.style.overflow='';
-  // Reset result panel so stale data doesn't show on reopen
+  var tbModal = document.getElementById('tb-access-modal');
+  if (!tbModal || tbModal.style.display !== 'flex') { document.body.style.overflow=''; }
   var res=document.getElementById('cw-result');
   if(res){ res.classList.remove('on'); res.innerHTML=''; }
-  // Re-enable button in case modal closed mid-analysis
   var btn=document.getElementById('cw-btn');
   if(btn){ btn.disabled=false; }
   var txt=document.getElementById('cw-btn-txt');
   if(txt) txt.textContent=_cwMode==='candidate'?'Know Your Worth':'Analyze Market Pay';
 }
 window.cwClose = cwClose;
+
+window.cwMode = function(m){ cwMode(m); };
+window.cwTab = function(t){ cwTab(t); };
+window.cwRun = function(){ cwRun(); };
+window.cwHandleFile = function(f){ cwHandleFile(f); };
+
 function cwMode(m){_cwMode=m;document.getElementById('cwm-candidate').classList.toggle('on',m==='candidate');document.getElementById('cwm-company').classList.toggle('on',m==='company');var ta=document.getElementById('cw-ta');document.getElementById('cw-btn-txt').textContent=m==='candidate'?'Know Your Worth':'Analyze Market Pay';ta.placeholder=m==='candidate'?'Paste your resume or LinkedIn profile here...\n\nInclude your title, years of experience, location, and key skills for the most accurate result.':'Paste the full job description here...\n\nInclude title, responsibilities, requirements, and location for the most accurate market analysis.';ta.value='';document.getElementById('cw-result').classList.remove('on');}
+
 async function cwRun(){
-  // Re-entry guard: bail if already running
   var btn=document.getElementById('cw-btn');
   if(btn && btn.disabled) return;
-
   var txt=_cwTab==='upload'?_cwFileText:document.getElementById('cw-ta').value.trim();
   if(_cwTab==='upload'&&!txt){alert('Please upload a file first.');return;}
   var keyEl=document.getElementById('cw-key'),key=keyEl.value.trim()||localStorage.getItem('cw_key')||'';
   if(!txt){alert('Please paste your resume or job description first.');return;}
   if(!key){alert('Please enter your Anthropic API key.');keyEl.focus();return;}
   if(key.startsWith('sk-'))localStorage.setItem('cw_key',key);
-
-  // Sanitize AI output before innerHTML insertion
   var esc=function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
-
   var res=document.getElementById('cw-result');
   btn.disabled=true;document.getElementById('cw-btn-txt').textContent='Analyzing...';res.classList.add('on');
   res.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:8px;font-size:13px;color:#aabbd0;"><div class="cw-spin"></div>Analyzing market data...</div>';
-  var prompt=_cwMode==='candidate'?'You are a compensation expert. Analyze this candidate background and return ONLY valid JSON (no markdown, no explanation):\n{"role":"title","location":"city or National","low":70000,"mid":90000,"high":115000,"trend":"Up","demand":"High","note":"one sentence competitive position","insights":["insight1","insight2","insight3"]}\n\nCANDIDATE:\n'+txt:'You are a compensation expert. Analyze this job description and return ONLY valid JSON (no markdown, no explanation):\n{"role":"title","location":"city or National","low":70000,"mid":90000,"high":115000,"trend":"Up","demand":"High","note":"one sentence on hiring market","insights":["insight1","insight2","insight3"]}\n\nJOB DESCRIPTION:\n'+txt;
+  var apiPrompt=_cwMode==='candidate'?'You are a compensation expert. Analyze this candidate background and return ONLY valid JSON (no markdown, no explanation):\n{"role":"title","location":"city or National","low":70000,"mid":90000,"high":115000,"trend":"Up","demand":"High","note":"one sentence competitive position","insights":["insight1","insight2","insight3"]}\n\nCANDIDATE:\n'+txt:'You are a compensation expert. Analyze this job description and return ONLY valid JSON (no markdown, no explanation):\n{"role":"title","location":"city or National","low":70000,"mid":90000,"high":115000,"trend":"Up","demand":"High","note":"one sentence on hiring market","insights":["insight1","insight2","insight3"]}\n\nJOB DESCRIPTION:\n'+txt;
   try{
-    var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,messages:[{role:'user',content:txt.startsWith('__PDF__')?[{type:'document',source:{type:'base64',media_type:'application/pdf',data:txt.replace('__PDF__','')}},{type:'text',text:prompt.split('\n\n').slice(0,-1).join('\n\n')}]:prompt}]})});
+    var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,messages:[{role:'user',content:txt.startsWith('__PDF__')?[{type:'document',source:{type:'base64',media_type:'application/pdf',data:txt.replace('__PDF__','')}},{type:'text',text:apiPrompt.split('\n\n').slice(0,-1).join('\n\n')}]:apiPrompt}]})});
     var d=await r.json();
     if(d.error)throw new Error(d.error.message);
     var raw=(d.content||[]).map(function(b){return b.text||'';}).join('');
@@ -1010,7 +1030,7 @@ async function cwRun(){
       '</div>'+
       '<div class="cw-note">'+esc(j.note)+'</div>'+
       (j.insights||[]).map(function(ins){return'<div class="cw-insight"><div class="cw-idot"></div><span>'+esc(ins)+'</span></div>';}).join('')+
-      '<a class="cw-cta" href="#contact" onclick="cwClose()">Talk to Jonah About This Role →</a>'+
+      '<a class="cw-cta" href="#contact" onclick="if(window.cwClose)window.cwClose()">Talk to Jonah About This Role →</a>'+
       '<div class="cw-disc">AI estimate based on current market data. Contact Jonah for a precise assessment.</div>';
   }catch(e){
     btn.disabled=false;
@@ -1018,27 +1038,37 @@ async function cwRun(){
     res.innerHTML='<div style="color:#ff6b6b;font-size:13px;padding:8px;">Analysis failed: '+esc(e.message)+'</div>';
   }
 }
-// Bubble bound via DOMContentLoaded in main script
+
+// Bind the floating bubble
+var bubble = document.getElementById("cw-bubble");
+if (bubble) { bubble.addEventListener("click", function() { if (typeof window.cwOpen === "function") window.cwOpen(); }); }
+
+// Bind all cwOpen trigger links
+document.querySelectorAll('[data-cw-trigger]').forEach(function(el) {
+  el.addEventListener("click", function(e) { e.preventDefault(); if (typeof window.cwOpen === "function") window.cwOpen(); });
+});
+
+// Bind cwRun, cwMode, cwTab buttons inside the overlay via delegation
+var overlay = document.getElementById('cw-overlay');
+if (overlay) {
+  overlay.addEventListener('click', function(e) {
+    var t = e.target.closest('[data-cw-action]');
+    if (!t) return;
+    var action = t.dataset.cwAction;
+    if (action === 'close') { window.cwClose(); }
+    else if (action === 'run') { cwRun(); }
+    else if (action.startsWith('mode:')) { cwMode(action.split(':')[1]); }
+    else if (action.startsWith('tab:')) { cwTab(action.split(':')[1]); }
+  });
+}
+
+}); // end DOMContentLoaded
+
+window.addEventListener("load", function() {
+  if (!window.cwOpen) { console.error("Comp Widget failed to initialize"); }
+  else { console.log("Comp Widget Ready"); }
+});
 </script>
-
-  <!-- ══════════════════════════════════════════════════════════
-       TALENTBASE ACCESS MODAL
-       UI-level containment only. Real protection must be enforced
-       at the hosting/server level (Vercel auth, redirect rules,
-       or moving talentbase.html behind authentication).
-       ══════════════════════════════════════════════════════════ -->
-  <div id="tb-access-modal" onclick="if(event.target===this)tbAccessModalClose()" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(5,8,18,.92);align-items:center;justify-content:center;padding:24px;">
-    <div style="background:#0f1628;border:1px solid rgba(124,106,247,.3);border-radius:24px;width:100%;max-width:460px;padding:40px 36px;text-align:center;box-shadow:0 40px 80px rgba(0,0,0,.6);position:relative;">
-      <button onclick="tbAccessModalClose()" style="position:absolute;top:16px;right:18px;background:rgba(255,255,255,.07);border:none;color:#aabbd0;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;">✕</button>
-      <div style="width:52px;height:52px;border-radius:50%;background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.35);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 18px;">⚡</div>
-      <div style="font-size:11px;font-weight:700;color:#a89dff;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;">TalentBase</div>
-      <h3 style="font-size:24px;font-weight:900;color:#e8f0ff;margin:0 0 12px;letter-spacing:-.3px;">Invite-Only Access</h3>
-      <p style="font-size:15px;color:#c9d6ff;line-height:1.7;margin:0 0 24px;">TalentBase is currently in private beta. Access is by invitation only.<br><span style="color:#a89dff;font-weight:600;">Contact Jonah to request access.</span></p>
-      <a href="#contact" onclick="tbAccessModalClose()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(124,106,247,.2);border:1px solid rgba(124,106,247,.4);color:#c4b8ff;padding:13px 28px;border-radius:999px;font-weight:700;font-size:14px;text-decoration:none;transition:all .18s ease;">Contact Jonah →</a>
-    </div>
-  </div>
-
-<script>window.addEventListener("load", function() { if (!window.cwOpen) { console.error("cwOpen failed to initialize"); } else { console.log("Comp Widget Ready"); } });</script>
 
 </body>
 </html>
