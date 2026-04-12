@@ -781,7 +781,7 @@
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     window.onerror = function(message, source, lineno, colno, error) { console.error("Global Error:", message); };
 
-    function closeAllModals() { try { cwClose(); } catch(e) {} try { tbAccessModalClose(); } catch(e) {} try { closeMobNav(); } catch(e) {} }
+    function closeAllModals() { if (typeof cwClose === "function") { try { cwClose(); } catch(e) {} } if (typeof tbAccessModalClose === "function") { try { tbAccessModalClose(); } catch(e) {} } if (typeof closeMobNav === "function") { try { closeMobNav(); } catch(e) {} } }
 
     const io = new IntersectionObserver((entries) => {
       entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add("in"); });
@@ -830,10 +830,12 @@
   }
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-      tbAccessModalClose();
       cwClose();
+      tbAccessModalClose();
     }
   });
+
+  document.addEventListener("DOMContentLoaded", function() { var btn = document.getElementById("cw-bubble"); if (btn) { btn.addEventListener("click", function() { cwOpen(); }); } });
 
   </script>
 
@@ -888,7 +890,7 @@
 @keyframes cwspin{to{transform:rotate(360deg);}}
 </style>
 
-<button id="cw-bubble" onclick="cwOpen()">
+<button id="cw-bubble">
   <span style="font-size:18px;">💰</span>
   <div style="display:flex;flex-direction:column;align-items:flex-start;gap:1px;">
     <span style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.7;">Free Tool</span>
@@ -933,13 +935,16 @@ function cwTab(t){_cwTab=t;_cwFileText='';document.getElementById('cw-panel-past
 function cwHandleFile(file){if(!file)return;var nameEl=document.getElementById('cw-file-name');nameEl.textContent='📎 '+file.name+' — reading...';nameEl.style.display='block';var reader=new FileReader();reader.onload=function(e){if(file.name.toLowerCase().endsWith('.pdf')){_cwFileText='__PDF__'+e.target.result.split(',')[1];nameEl.textContent='✓ '+file.name+' ready to analyze';}else{_cwFileText=e.target.result;nameEl.textContent='✓ '+file.name+' ready to analyze';}};if(file.name.toLowerCase().endsWith('.pdf')){reader.readAsDataURL(file);}else{reader.readAsText(file);}}
 function cwOpen(){
   closeAllModals();
-  document.getElementById('cw-overlay').classList.add('on');
+  var overlay = document.getElementById('cw-overlay');
+  if (!overlay) { console.error("Comp Widget not found in DOM"); return; }
+  overlay.classList.add('on');
   document.body.style.overflow='hidden';
-  var k=localStorage.getItem('cw_key');
-  if(k) document.getElementById('cw-key').value=k;
+  var k=localStorage.getItem('cw_key'); var keyInput=document.getElementById('cw-key'); if(k && keyInput) keyInput.value=k;
 }
 function cwClose(){
-  document.getElementById('cw-overlay').classList.remove('on');
+  var overlay = document.getElementById('cw-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('on');
   document.body.style.overflow='';
   // Reset result panel so stale data doesn't show on reopen
   var res=document.getElementById('cw-result');
