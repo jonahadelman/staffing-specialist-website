@@ -13,234 +13,137 @@
   <style>
     /* ── DESIGN TOKENS ──────────────────────────────── */
     :root {
-      --bg:      #0f1724;
-      --card:    #151b2f;
-      --card2:   #1b2238;
-      --muted:   #a7b4c8;
-      --text:    #eef4ff;
-      --primary: #635bff;
+      --bg:        #0f1724;
+      --card:      #161e2e;
+      --card2:     #1b2440;
+      --muted:     #a7b4c8;
+      --text:      #eef4ff;
+      --primary:   #635bff;
       --primary-h: #7a73ff;
-      --teal:    #00d4ff;
-      --aqua:    #60c8e8;
-      --border:  rgba(255,255,255,.06);
-      --shadow:  0 10px 40px rgba(0,0,0,.45);
-      --radius:  16px;
+      --teal:      #00d4ff;
+      --gold:      #c9a84c;
+      --border:    rgba(255,255,255,.07);
+      --shadow:    0 12px 40px rgba(0,0,0,.5);
+      --radius:    16px;
     }
-
-    /* ── RESET + BASE ───────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     html, body { height: 100%; }
     body {
       margin: 0;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
       background:
-        radial-gradient(1200px 600px at 20% -10%, rgba(99,91,255,.07), transparent 60%),
-        radial-gradient(800px 400px at 90% 10%, rgba(0,212,255,.05), transparent 60%),
+        radial-gradient(1200px 600px at 15% -5%, rgba(99,91,255,.08), transparent 55%),
+        radial-gradient(900px 500px at 90% 15%, rgba(0,212,255,.05), transparent 55%),
         var(--bg);
       color: var(--text);
-      line-height: 1.5;
+      line-height: 1.6;
+      font-size: 16px;
     }
     a { color: var(--teal); text-decoration: none; }
     a:hover { opacity: .85; }
-
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-
-    /* ── HEADER ─────────────────────────────────────── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 28px; }
     header {
-      position: relative;
-      top: 0;
-      z-index: 50;
-      background: rgba(15,23,36,.88);
+      position: relative; top: 0; z-index: 50;
+      background: rgba(15,23,36,.92);
       border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     }
-    .nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; }
+    .nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; }
     .brand { display: flex; align-items: center; gap: 14px; }
     .logo { width: 42px; height: 42px; filter: drop-shadow(0 6px 18px rgba(99,91,255,.25)); }
     .brand h1 {
-      font-size: 21px;
-      margin: 0;
-      font-weight: 800;
-      letter-spacing: -.3px;
+      font-size: 21px; margin: 0; font-weight: 800; letter-spacing: -.3px;
       background: linear-gradient(90deg, #ffffff 60%, var(--primary-h));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+      -webkit-background-clip: text; background-clip: text; color: transparent;
     }
     .nav a {
-      margin-left: 2px;
-      font-size: 12px;
-      font-weight: 700;
-      color: #ffffff;
-      transition: all .18s ease;
-      text-decoration: none;
-      padding: 7px 13px;
-      border-radius: 8px;
-      letter-spacing: .02em;
-      border: 1px solid rgba(255,255,255,.09);
-      background: rgba(255,255,255,.04);
+      margin-left: 2px; font-size: 12px; font-weight: 700; color: #d4dfee;
+      transition: all .18s ease; text-decoration: none; padding: 7px 13px;
+      border-radius: 8px; letter-spacing: .02em;
+      border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.04);
     }
     .nav a:hover {
-      color: #c4b8ff !important;
-      background: rgba(99,91,255,.1) !important;
-      border-color: rgba(99,91,255,.3) !important;
-      opacity: 1;
-      transform: translateY(-1px);
+      color: #c4b8ff !important; background: rgba(99,91,255,.1) !important;
+      border-color: rgba(99,91,255,.3) !important; opacity: 1; transform: translateY(-1px);
     }
-
-    /* ── BUTTONS ────────────────────────────────────── */
     .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(255,255,255,.07);
-      color: var(--text);
-      padding: 12px 24px;
-      border-radius: 999px;
-      font-weight: 700;
-      border: 1px solid rgba(255,255,255,.13);
-      cursor: pointer;
-      font-size: 14px;
-      transition: all .18s ease;
+      display: inline-flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,.08); color: var(--text);
+      padding: 13px 26px; border-radius: 999px; font-weight: 700;
+      border: 1px solid rgba(255,255,255,.14); cursor: pointer;
+      font-size: 15px; transition: all .18s ease;
     }
-    .btn:hover { background: rgba(255,255,255,.11); border-color: rgba(255,255,255,.2); transform: translateY(-1px); }
-    .btn.secondary { background: rgba(255,255,255,.04); color: #c9d6e8; border: 1px solid rgba(255,255,255,.12); }
+    .btn:hover { background: rgba(255,255,255,.13); border-color: rgba(255,255,255,.22); transform: translateY(-1px); }
+    .btn.secondary { background: rgba(255,255,255,.05); color: #d0dae8; border: 1px solid rgba(255,255,255,.12); }
     .btn.btn-black {
-      color: #fff !important;
-      background: var(--primary) !important;
-      border: none !important;
-      font-weight: 800 !important;
-      letter-spacing: .01em;
-      box-shadow: 0 6px 20px rgba(99,91,255,.35);
+      color: #fff !important; background: var(--primary) !important;
+      border: none !important; font-weight: 800 !important; letter-spacing: .01em;
+      box-shadow: 0 6px 20px rgba(99,91,255,.38);
     }
-    header .btn.btn-black:hover { background: var(--primary-h) !important; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(99,91,255,.5); opacity: 1; }
-
-    /* ── HERO ───────────────────────────────────────── */
-    .hero { padding: 86px 0 48px; position: relative; overflow: hidden; }
-    .hero-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 36px; align-items: center; }
-    .kicker { color: var(--teal); font-weight: 800; letter-spacing: .18em; text-transform: uppercase; font-size: 12px; }
+    header .btn.btn-black:hover {
+      background: var(--primary-h) !important; transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(99,91,255,.55); opacity: 1;
+    }
+    .hero { padding: 80px 0 52px; position: relative; overflow: hidden; }
+    .hero-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 40px; align-items: start; }
+    .kicker {
+      display: inline-block; color: var(--teal); font-weight: 800;
+      letter-spacing: .18em; text-transform: uppercase; font-size: 11px; margin-bottom: 6px;
+    }
     .hero h2 { font-size: 46px; line-height: 1.05; margin: .4rem 0 1rem; font-weight: 900; }
     .hero p { font-size: 18px; color: #c9d6ff; max-width: 680px; }
-
-    /* Hero copy styles */
-    .hero-brand { font-size: 13px; font-weight: 800; color: #a89dff; letter-spacing: .2em; text-transform: uppercase; margin-bottom: 6px; }
-    .hero-headline { font-size: 52px; line-height: 1.0; font-weight: 900; margin: .2rem 0 .5rem; color: #eef4ff; letter-spacing: -.5px; }
+    .hero-brand { font-size: 12px; font-weight: 800; color: #a89dff; letter-spacing: .2em; text-transform: uppercase; margin-bottom: 6px; }
+    .hero-headline { font-size: 50px; line-height: 1.02; font-weight: 900; margin: .2rem 0 .6rem; color: #eef4ff; letter-spacing: -.6px; }
     .hero-headline-accent { color: #ffffff; display: block; }
-    .hero-position { font-size: 17px; color: #c9d6ff; font-weight: 500; margin: 0 0 6px; }
-    .hero-quote { font-size: 13px; color: #7a87a5; font-style: italic; font-weight: 400; margin: 0 0 16px; }
-
-    /* Stat bar */
-    .statbar { display: flex; gap: 18px; flex-wrap: wrap; margin: 26px 0; justify-content: center; }
+    .hero-position { font-size: 18px; color: #c9d6ff; font-weight: 500; margin: 0 0 6px; }
+    .hero-quote { font-size: 13px; color: #9aaabb; font-style: italic; font-weight: 400; margin: 0 0 16px; }
+    .statbar { display: flex; gap: 14px; flex-wrap: wrap; margin: 24px 0; justify-content: center; }
     .stat {
       background: linear-gradient(180deg, var(--card), var(--card2));
-      border: 1px solid var(--border);
-      padding: 16px 24px;
-      border-radius: 14px;
-      text-align: center;
+      border: 1px solid rgba(255,255,255,.09);
+      padding: 14px 22px; border-radius: 14px; text-align: center;
       box-shadow: 0 6px 20px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.04);
       transition: transform .18s ease;
     }
     .stat:hover { transform: translateY(-2px); }
-    .stat strong { font-size: 20px; }
-
-    /* ── CARDS ──────────────────────────────────────── */
+    .stat strong { font-size: 20px; display: block; }
     .card {
       background: linear-gradient(180deg, var(--card), var(--card2));
-      border: 1px solid var(--border);
+      border: 1px solid rgba(255,255,255,.08);
       border-radius: var(--radius);
-      box-shadow: 0 8px 32px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.03);
+      box-shadow: 0 8px 32px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04);
       transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
     }
-    .card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.1); box-shadow: 0 14px 40px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.05); }
-
-    section { padding: 72px 0; }
+    .card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.13); box-shadow: 0 16px 44px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06); }
+    section { padding: 80px 0; }
     .grid { display: grid; gap: 20px; }
     .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
     .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
-    h3 { font-size: 28px; margin: 0 0 16px; }
-    h4 { font-size: 16px; font-weight: 700; color: #ffffff; margin: 0 0 12px; letter-spacing: .01em; }
-    .muted { color: var(--muted); }
-    .icn {
-      width: 44px; height: 44px;
-      border-radius: 12px;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, rgba(99,91,255,.1), rgba(0,212,255,.06));
-      border: 1px solid rgba(99,91,255,.2);
-    }
-    .quote { font-size: 15px; color: #e4edf7; line-height: 1.8; font-weight: 400; }
+    h3 { font-size: 30px; margin: 0 0 16px; font-weight: 800; letter-spacing: -.3px; }
+    h4 { font-size: 16px; font-weight: 700; color: #ffffff; margin: 0 0 10px; letter-spacing: .01em; }
+    .muted { color: var(--muted); font-size: 15px; line-height: 1.65; }
+    .icn { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: linear-gradient(135deg, rgba(99,91,255,.12), rgba(0,212,255,.06)); border: 1px solid rgba(99,91,255,.2); margin-bottom: 14px; }
+    .quote { font-size: 15px; color: #dde8f4; line-height: 1.8; font-weight: 400; }
     .quote footer { margin-top: 10px; color: #a7b4c8; font-size: 12px; font-weight: 400; }
-
-    /* ── TALENTBASE SECTION ─────────────────────────── */
     .talentbase-band {
       position: relative;
-      background:
-        radial-gradient(900px 350px at 80% 50%, rgba(99,91,255,.06), transparent 60%),
-        radial-gradient(600px 250px at 10% 80%, rgba(0,212,255,.04), transparent 60%),
-        linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.01));
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      padding: 80px 0;
+      background: radial-gradient(900px 350px at 80% 50%, rgba(99,91,255,.07), transparent 60%), radial-gradient(600px 250px at 10% 80%, rgba(0,212,255,.04), transparent 60%), linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.008));
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 88px 0;
     }
-    .talentbase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
-    .talentbase-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(99,91,255,.15);
-      border: 1px solid rgba(99,91,255,.3);
-      padding: 5px 14px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: #a89dff;
-      margin-bottom: 16px;
-    }
-    .talentbase-headline { font-size: 36px; font-weight: 900; line-height: 1.1; margin: 0 0 16px; }
-    .talentbase-sub { font-size: 17px; color: #c9d6ff; margin-bottom: 24px; line-height: 1.7; }
-    .talentbase-features { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
-    .tb-feature { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: #c9d6ff; }
-    .tb-check {
-      width: 18px; height: 18px;
-      border-radius: 6px;
-      background: rgba(99,91,255,.15);
-      border: 1px solid rgba(99,91,255,.3);
-      display: grid;
-      place-items: center;
-      flex-shrink: 0;
-      margin-top: 2px;
-      font-size: 10px;
-      color: #a89dff;
-    }
-    .tb-launch-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      background: rgba(99,91,255,.18);
-      color: #c4b8ff;
-      padding: 14px 24px;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 15px;
-      border: 1px solid rgba(99,91,255,.35);
-      cursor: pointer;
-      text-decoration: none;
-      transition: all .2s ease;
-    }
+    .talentbase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+    .talentbase-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: rgba(99,91,255,.15); border: 1px solid rgba(99,91,255,.3); padding: 5px 14px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #a89dff; margin-bottom: 16px; }
+    .talentbase-headline { font-size: 36px; font-weight: 900; line-height: 1.1; margin: 0 0 18px; }
+    .talentbase-sub { font-size: 17px; color: #c9d6ff; margin-bottom: 26px; line-height: 1.75; }
+    .talentbase-features { display: flex; flex-direction: column; gap: 11px; margin-bottom: 28px; }
+    .tb-feature { display: flex; align-items: flex-start; gap: 11px; font-size: 14px; color: #c9d6ff; line-height: 1.55; }
+    .tb-check { width: 18px; height: 18px; border-radius: 6px; background: rgba(99,91,255,.15); border: 1px solid rgba(99,91,255,.3); display: grid; place-items: center; flex-shrink: 0; margin-top: 2px; font-size: 10px; color: #a89dff; }
+    .tb-launch-btn { display: inline-flex; align-items: center; gap: 12px; background: rgba(99,91,255,.18); color: #c4b8ff; padding: 14px 26px; border-radius: 999px; font-weight: 700; font-size: 15px; border: 1px solid rgba(99,91,255,.35); cursor: pointer; text-decoration: none; transition: all .2s ease; }
     .tb-launch-btn:hover { background: rgba(99,91,255,.28); border-color: rgba(99,91,255,.55); transform: translateY(-1px); }
     .tb-launch-btn svg { width: 16px; height: 16px; }
-    .tb-note { font-size: 12px; color: var(--muted); margin-top: 10px; }
-    .talentbase-mockup {
-      background: linear-gradient(180deg, rgba(99,91,255,.06), rgba(99,91,255,.02));
-      border: 1px solid rgba(99,91,255,.2);
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 12px 48px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
-    }
-    .tb-mock-bar { background: rgba(99,91,255,.05); border-bottom: 1px solid rgba(99,91,255,.18); padding: 10px 16px; display: flex; align-items: center; gap: 8px; }
+    .tb-note { font-size: 13px; color: var(--muted); margin-top: 10px; line-height: 1.6; }
+    .talentbase-mockup { background: linear-gradient(180deg, rgba(99,91,255,.07), rgba(99,91,255,.02)); border: 1px solid rgba(99,91,255,.22); border-radius: 20px; overflow: hidden; box-shadow: 0 16px 52px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04); }
+    .tb-mock-bar { background: rgba(99,91,255,.06); border-bottom: 1px solid rgba(99,91,255,.18); padding: 10px 16px; display: flex; align-items: center; gap: 8px; }
     .tb-mock-dot { width: 8px; height: 8px; border-radius: 50%; }
     .tb-mock-title { font-size: 12px; color: #a89dff; font-weight: 600; margin-left: 4px; }
     .tb-mock-body { padding: 16px; }
@@ -250,94 +153,41 @@
     .tb-mock-stat-val { font-size: 18px; font-weight: 700; letter-spacing: -1px; }
     .tb-mock-row { display: flex; align-items: center; gap: 8px; padding: 7px 8px; background: rgba(255,255,255,.03); border-radius: 8px; margin-bottom: 5px; }
     .tb-mock-av { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
-    .tb-mock-name { font-size: 11px; font-weight: 500; flex: 1; }
-    .tb-mock-badge { font-size: 11px; padding: 2px 6px; border-radius: 8px; white-space: nowrap; }
+    .tb-mock-name { font-size: 11px; font-weight: 600; flex: 1; color: #dde8f4; }
+    .tb-mock-badge { font-size: 11px; padding: 2px 7px; border-radius: 8px; white-space: nowrap; font-weight: 600; }
     .tb-mock-score { font-size: 11px; font-weight: 700; font-family: monospace; margin-left: 4px; }
-
-    /* ── FOUNDER SECTION ────────────────────────────── */
     .founder-band {
       position: relative;
-      background:
-        radial-gradient(600px 220px at 10% 10%, rgba(0,212,255,.04), transparent 60%),
-        radial-gradient(700px 260px at 90% 40%, rgba(99,91,255,.04), transparent 65%),
-        linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.01));
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      padding: 80px 0;
+      background: radial-gradient(600px 220px at 10% 10%, rgba(0,212,255,.04), transparent 60%), radial-gradient(700px 260px at 90% 40%, rgba(99,91,255,.04), transparent 65%), linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.008));
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 88px 0;
     }
-    .founder-wrap { display: grid; grid-template-columns: 1.2fr .8fr; gap: 32px; align-items: center; }
-    .founder-eyebrow { color: var(--teal); font-weight: 800; letter-spacing: .18em; text-transform: uppercase; font-size: 12px; }
+    .founder-wrap { display: grid; grid-template-columns: 1.2fr .8fr; gap: 36px; align-items: center; }
+    .founder-eyebrow { color: var(--teal); font-weight: 800; letter-spacing: .18em; text-transform: uppercase; font-size: 11px; }
     .founder-title { font-size: 34px; line-height: 1.15; margin: .35rem 0 1rem; font-weight: 900; }
-    .founder-sub { color: #c9d6ff; font-size: 18px; margin: 0 0 16px; }
-    .founder-card {
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.03);
-      padding: 22px;
-    }
+    .founder-sub { color: #c9d6ff; font-size: 18px; margin: 0 0 16px; line-height: 1.65; }
+    .founder-card { background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); border: 1px solid rgba(255,255,255,.09); border-radius: var(--radius); box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.03); padding: 24px; }
     .founder-badges { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 14px 0 4px; text-align: center; }
-    .badge {
-      border: 1px solid rgba(99,91,255,.2);
-      background: rgba(99,91,255,.08);
-      padding: 8px 14px;
-      border-radius: 999px;
-      font-size: 12px;
-      color: #c4b8ff;
-      transition: all .15s ease;
-    }
-    .badge:hover { border-color: rgba(99,91,255,.35); background: rgba(99,91,255,.14); }
-    .founder-cta { display: inline-flex; align-items: center; gap: 10px; background: transparent; border: 1px solid rgba(255,255,255,.18); padding: 12px 16px; border-radius: 999px; font-weight: 700; }
+    .badge { border: 1px solid rgba(99,91,255,.22); background: rgba(99,91,255,.09); padding: 8px 14px; border-radius: 999px; font-size: 13px; color: #c4b8ff; transition: all .15s ease; }
+    .badge:hover { border-color: rgba(99,91,255,.38); background: rgba(99,91,255,.15); }
+    .founder-cta { display: inline-flex; align-items: center; gap: 10px; background: transparent; border: 1px solid rgba(255,255,255,.18); padding: 12px 20px; border-radius: 999px; font-weight: 700; font-size: 15px; }
     .founder-cta:hover { opacity: .9; }
     .founder-side { text-align: center; }
-    .founder-avatar {
-      width: 120px; height: 120px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,.15);
-      display: inline-grid;
-      place-items: center;
-      background: linear-gradient(135deg, rgba(99,91,255,.08), rgba(0,212,255,.06));
-      margin-bottom: 14px;
-      box-shadow: 0 12px 40px rgba(0,0,0,.4), 0 0 0 4px rgba(99,91,255,.12);
-      overflow: hidden;
-    }
+    .founder-avatar { width: 120px; height: 120px; border-radius: 50%; border: 1px solid rgba(255,255,255,.15); display: inline-grid; place-items: center; background: linear-gradient(135deg, rgba(99,91,255,.1), rgba(0,212,255,.07)); margin-bottom: 14px; box-shadow: 0 14px 44px rgba(0,0,0,.45), 0 0 0 4px rgba(99,91,255,.14); overflow: hidden; }
     .founder-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-    .founder-quote { font-size: 16px; color: #c9d6ff; margin-top: 8px; }
-
-    /* ── FORMS ──────────────────────────────────────── */
+    .founder-quote { font-size: 16px; color: #c9d6ff; margin-top: 8px; line-height: 1.65; }
     form { display: grid; gap: 12px; }
-    input, select, textarea {
-      background: var(--card);
-      border: 1px solid rgba(255,255,255,.09);
-      border-radius: 12px;
-      padding: 14px;
-      color: var(--text);
-      outline: none;
-      font-family: inherit;
-      font-size: 14px;
-      transition: border-color .15s, box-shadow .15s;
-    }
-    input:focus, select:focus, textarea:focus {
-      border-color: rgba(99,91,255,.5);
-      box-shadow: 0 0 0 3px rgba(99,91,255,.12);
-    }
-    input::placeholder, textarea::placeholder { color: #7f8db2; }
+    input, select, textarea { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 13px 15px; color: var(--text); outline: none; font-family: inherit; font-size: 15px; transition: border-color .15s, box-shadow .15s; }
+    input:focus, select:focus, textarea:focus { border-color: rgba(99,91,255,.5); box-shadow: 0 0 0 3px rgba(99,91,255,.12); }
+    input::placeholder, textarea::placeholder { color: #7a8fa8; }
     textarea { min-height: 120px; resize: vertical; }
-
-    /* ── FOOTER ─────────────────────────────────────── */
-    .footer { padding: 32px 0; border-top: 1px solid var(--border); color: #b9c6ff; }
-
-    /* ── ANIMATIONS ─────────────────────────────────── */
+    .footer { padding: 36px 0; border-top: 1px solid var(--border); color: #b9c6ff; font-size: 14px; }
     [data-animate] { opacity: 0; transform: translateY(16px); transition: all .7s ease; }
     [data-animate].in { opacity: 1; transform: none; }
-
     @keyframes pulseGlow {
       0%   { box-shadow: 0 6px 30px rgba(99,91,255,.4); }
-      50%  { box-shadow: 0 8px 44px rgba(99,91,255,.7); }
+      50%  { box-shadow: 0 8px 44px rgba(99,91,255,.72); }
       100% { box-shadow: 0 6px 30px rgba(99,91,255,.4); }
     }
-
-    /* ── MOBILE NAV ─────────────────────────────────── */
     .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; background: none; border: none; }
     .hamburger span { display: block; width: 22px; height: 2px; background: var(--text); border-radius: 2px; transition: all .3s; }
     .mob-nav { display: none; position: fixed; inset: 0; background: rgba(15,23,36,.98); z-index: 200; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
@@ -346,13 +196,11 @@
     .mob-nav a:hover { color: var(--teal); }
     .mob-nav .mob-cta { margin-top: 16px; }
     .mob-close { position: absolute; top: 20px; right: 24px; font-size: 28px; color: var(--muted); cursor: pointer; background: none; border: none; }
-
-    /* ── RESPONSIVE ─────────────────────────────────── */
     @media (max-width: 900px) {
       .hero-grid { grid-template-columns: 1fr; }
       .grid.cols-3 { grid-template-columns: 1fr; }
       .grid.cols-2 { grid-template-columns: 1fr; }
-      .hero-headline { font-size: 38px; }
+      .hero-headline { font-size: 40px; }
       .talentbase-grid { grid-template-columns: 1fr; }
       .founder-title { font-size: 28px; }
       .founder-wrap { grid-template-columns: 1fr; }
@@ -365,18 +213,18 @@
       .brand h1 { font-size: 16px; }
       .hero { padding: 32px 0 24px; }
       .hero-grid { grid-template-columns: 1fr; gap: 24px; }
-      .hero-headline { font-size: 28px; line-height: 1.05; }
+      .hero-headline { font-size: 30px; line-height: 1.05; }
       .hero-brand { font-size: 10px; }
-      .hero-position { font-size: 14px; }
+      .hero-position { font-size: 15px; }
       .statbar { gap: 10px; }
-      .statbar .stat { padding: 10px 12px; flex: 1 1 calc(50% - 10px); min-width: 0; }
-      .statbar .stat strong { font-size: 16px; }
+      .statbar .stat { padding: 10px 14px; flex: 1 1 calc(50% - 10px); min-width: 0; }
+      .statbar .stat strong { font-size: 17px; }
       .hero-cta-row { flex-direction: column; align-items: stretch; gap: 10px; }
       .hero-cta-row a { text-align: center; justify-content: center; }
       .hero-preview-box { max-width: 100%; }
-      section { padding: 40px 0; }
-      .talentbase-band { padding: 48px 0; }
-      .founder-band { padding: 48px 0; }
+      section { padding: 48px 0; }
+      .talentbase-band { padding: 52px 0; }
+      .founder-band { padding: 52px 0; }
       .grid.cols-3 { grid-template-columns: 1fr; }
       .grid.cols-2 { grid-template-columns: 1fr; }
       .grid-2col { grid-template-columns: 1fr; }
@@ -385,8 +233,8 @@
       .grid-proof-stats { grid-template-columns: 1fr 1fr; }
       #happyhunting .grid-2col { gap: 24px; }
       #happyhunting h2 { font-size: 26px; }
-      .talentbase-grid { grid-template-columns: 1fr; gap: 24px; }
-      .talentbase-headline { font-size: 26px; }
+      .talentbase-grid { grid-template-columns: 1fr; gap: 28px; }
+      .talentbase-headline { font-size: 28px; }
       .talentbase-mockup { display: none; }
       .telephone-flow { display: flex; flex-direction: column; gap: 16px; }
       .telephone-arrow { display: none; }
@@ -397,10 +245,10 @@
       #founder-story h3 { font-size: 20px; }
       .hero-banner-wrap { max-height: 220px; min-height: 140px; }
       .hero-banner-img { object-position: center 20%; }
-      .btn { padding: 10px 16px; font-size: 13px; }
+      .btn { padding: 10px 18px; font-size: 14px; }
       .footer .container { flex-direction: column; gap: 8px; text-align: center; }
       #cw-bubble { bottom: 14px; right: 14px; padding: 10px 14px; }
-      h3 { font-size: 22px; }
+      h3 { font-size: 24px; }
     }
   </style>
 </head>
@@ -506,24 +354,24 @@
           <div class="hero-cta-row" style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:24px;">
             <!-- TB-LINK-2: hero Watch Live Demo — removed public access 2026-04 -->
             <a href="#contact" onclick="tbAccessModal(event)"
-               style="display:inline-block;padding:16px 34px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border-radius:12px;font-size:16px;font-weight:900;text-decoration:none;box-shadow:0 6px 30px rgba(59,130,246,.5);transition:transform .15s;animation:pulseGlow 2.5s infinite;"
+               style="display:inline-block;padding:16px 34px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border-radius:12px;font-size:16px;font-weight:900;text-decoration:none;box-shadow:0 6px 30px rgba(59,130,246,.5);transition:transform .15s;animation:pulseGlow 2.5s infinite;border-radius:12px;"
                onmouseover="this.style.transform='translateY(-2px)'"
                onmouseout="this.style.transform='translateY(0px)'">
               ▶ Watch Live Demo
             </a>
             <a href="#contact" class="btn" style="font-size:15px;padding:14px 28px;">Get Access →</a>
-            <a href="#proof" class="btn secondary">See The Proof</a>
+            <a href="#proof" class="btn secondary" style="font-size:15px;">See The Proof</a>
           </div>
           <p style="margin-top:12px;font-size:13px;color:#c9d6e8;text-align:center;">What most firms hide, we show — live.</p>
           <div class="hero-preview-box" style="margin-top:28px;padding:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;max-width:520px;margin-left:auto;margin-right:auto;text-align:left;">
-            <div style="font-size:11px;color:#7eb8d4;text-transform:uppercase;font-weight:700;margin-bottom:6px;">Live System Preview</div>
-            <div style="font-size:14px;color:#c9d6ff;line-height:1.8;">
+            <div style="font-size:11px;color:#7eb8d4;text-transform:uppercase;font-weight:700;letter-spacing:.1em;margin-bottom:6px;">Live System Preview</div>
+            <div style="font-size:15px;color:#c9d6ff;line-height:1.8;">
               • 7 candidates in pipeline<br>
               • 2 need follow-up today<br>
               • 1 offer ready to send
             </div>
           </div>
-          <p style="margin-top:10px;font-size:12px;color:#7a87a5;text-align:center;">Takes 60 seconds &nbsp;·&nbsp; No login required &nbsp;·&nbsp; Real system, not a demo video</p>
+          <p style="margin-top:10px;font-size:13px;color:#9aaabb;text-align:center;">Takes 60 seconds &nbsp;·&nbsp; No login required &nbsp;·&nbsp; Real system, not a demo video</p>
         </div>
         <div class="card" style="padding:22px">
           <h3 style="margin-top:0">Immediate Hiring Needs?</h3>
@@ -533,7 +381,7 @@
             <input name="email" placeholder="Work email" type="email" required />
             <input name="company" placeholder="Company" />
             <textarea name="roles" placeholder="Roles to fill &amp; target start dates" required></textarea>
-            <button class="btn" type="submit" style="background:rgba(255,255,255,.1);color:#e8f0ff;border:1px solid rgba(255,255,255,.2);width:100%;">Request Proposal</button>
+            <button class="btn" type="submit" style="background:var(--primary);color:#fff;border:none;width:100%;font-weight:700;box-shadow:0 4px 16px rgba(99,91,255,.3);">Request Proposal</button>
             <div id="form-msg" class="muted" style="margin-top:8px"></div>
           </form>
         </div>
@@ -551,22 +399,22 @@
           <div style="background:rgba(5,8,20,.8);padding:36px 28px;text-align:center;">
             <div style="font-size:52px;font-weight:900;color:#e8f0ff;letter-spacing:-3px;line-height:1;margin-bottom:10px;">1,500+</div>
             <div style="font-size:14px;color:#e8f0ff;font-weight:700;margin-bottom:4px;">Hires Delivered</div>
-            <div style="font-size:12px;color:#9aaabf;">7 years embedded at a global medical diagnostics company</div>
+            <div style="font-size:13px;color:#aabbd0;">7 years embedded at a global medical diagnostics company</div>
           </div>
           <div style="background:rgba(5,8,20,.8);padding:36px 28px;text-align:center;">
             <div style="font-size:52px;font-weight:900;color:#e8f0ff;letter-spacing:-3px;line-height:1;margin-bottom:10px;">$10M+</div>
             <div style="font-size:14px;color:#e8f0ff;font-weight:700;margin-bottom:4px;">Saved vs. Agencies</div>
-            <div style="font-size:12px;color:#9aaabf;">Real dollars back in the business</div>
+            <div style="font-size:13px;color:#aabbd0;">Real dollars back in the business</div>
           </div>
           <div style="background:rgba(5,8,20,.8);padding:36px 28px;text-align:center;">
             <div style="font-size:52px;font-weight:900;color:#e8f0ff;letter-spacing:-3px;line-height:1;margin-bottom:10px;">200</div>
             <div style="font-size:14px;color:#e8f0ff;font-weight:700;margin-bottom:4px;">Roles · 1 Year · Team of 4</div>
-            <div style="font-size:12px;color:#9aaabf;">Not luck. Not volume. System.</div>
+            <div style="font-size:13px;color:#aabbd0;">Not luck. Not volume. System.</div>
           </div>
           <div style="background:rgba(5,8,20,.8);padding:36px 28px;text-align:center;">
             <div style="font-size:52px;font-weight:900;color:#e8f0ff;letter-spacing:-3px;line-height:1;margin-bottom:10px;">92%</div>
             <div style="font-size:14px;color:#e8f0ff;font-weight:700;margin-bottom:4px;">Offer Acceptance Rate</div>
-            <div style="font-size:12px;color:#9aaabf;">Because we close, not just present</div>
+            <div style="font-size:13px;color:#aabbd0;">Because we close, not just present</div>
           </div>
         </div>
 
@@ -585,7 +433,7 @@
             <div style="font-size:13px;font-weight:800;color:#e8f0ff;text-transform:uppercase;letter-spacing:.1em;margin-bottom:20px;">💣 My Favorite Validation</div>
             <p style="font-size:16px;color:#c9d6ff;line-height:1.8;margin-bottom:16px;font-style:italic;">"When a company hires another firm... and they come back with candidates I already spoke to 6 months ago."</p>
             <p style="font-size:13px;color:#aabbd0;">That happens more than you think. I remember everything — wins, losses, misses. It all fuels me.</p>
-            <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.06);font-size:12px;color:#9aaabf;font-weight:600;font-style:italic;">— Jonah Adelman, The Staffing Specialist</div>
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.06);font-size:13px;color:#aabbd0;font-weight:600;font-style:italic;">— Jonah Adelman, The Staffing Specialist</div>
           </div>
         </div>
       </div>
@@ -660,7 +508,7 @@
     <section id="results">
       <div class="container">
         <h3 style='font-size:32px;font-weight:900;color:#ffffff;'>What They're Saying</h3>
-        <p style="color:#d0dae8;margin-bottom:8px;font-size:16px;">Unsolicited. Unfiltered. Real.</p>
+        <p style="color:#c9d6ff;margin-bottom:10px;font-size:16px;">Unsolicited. Unfiltered. Real.</p>
         <div class="grid-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0 20px;">
           <div class="card" style="padding:22px;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.07);"><div style="font-size:11px;color:#ffffff;text-transform:uppercase;letter-spacing:.12em;font-weight:800;margin-bottom:10px;">Jack &amp; Suzy Welch</div><div class="quote" style="font-size:22px;font-weight:800;color:#ffffff;">&ldquo;Recruitment Perfected.&rdquo;</div><div style="margin-top:8px;font-size:12px;color:var(--muted);">Jack &amp; Suzy Welch &mdash; Legendary Business Leaders</div></div>
           <div class="card" style="padding:22px;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.07);"><div style="font-size:11px;color:#ffffff;text-transform:uppercase;letter-spacing:.12em;font-weight:800;margin-bottom:10px;">Glassdoor Review &mdash; Director of Benefits Candidate</div><div class="quote" style="font-size:15px;">&ldquo;The lead recruiter Jonah was so passionate about his company when he recruited me that I had to at least check it out&hellip; when my son finishes his MBA, Jonah will be getting his resume. Thank you for such a great experience!&rdquo;</div><div style="margin-top:8px;font-size:12px;color:var(--muted);">Director of Benefits Candidate &mdash; Glassdoor</div></div>
@@ -673,26 +521,26 @@
         </div>
         <div id="testimonials"></div>
         <div class="grid cols-3" style="margin-top:8px;">
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Vice President of Finance</div><div class="quote">&ldquo;You said you&rsquo;ll impress me, and you really did. Thanks!&rdquo;</div></div>
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Vice President &amp; General Counsel</div><div class="quote">&ldquo;A quick note to thank you for all your extraordinary efforts here on the recruiting front. To say that you&rsquo;ve been an immense help to us here in Legal would be an understatement. Ed and I are both very grateful.&rdquo;</div></div>
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Senior Director of Service &amp; Support</div><div class="quote">&ldquo;I look forward to seeing the great work of you and your army of talented staff. Bar is high&hellip; I can&rsquo;t thank you enough. What you have done is well recognized.&rdquo;</div></div>
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">R&amp;D Manager</div><div class="quote">&ldquo;One thing I have really enjoyed about moving into this role is the close collaboration with you. Our team is and will continue to be, all the better for your insights and partnership.&rdquo;</div></div>
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Director, WW Communications</div><div class="quote">&ldquo;Two happy dances in two weeks! WOW! Congratulations Jonah and THANK YOU, THANK YOU, for ALL your very hard work!&rdquo;</div></div>
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Senior Director of Hardware Engineering</div><div class="quote">&ldquo;Thank you for all your support this year helping to build the HWE team. Love your positivity &mdash; you are a pleasure to work with!&rdquo;</div></div>
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Human Resources Business Partner</div><div class="quote">&ldquo;The best Recruiter I have ever worked with!&rdquo;</div></div>
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Principal Engineer</div><div class="quote">&ldquo;Started here this week and just wanted to reach out one more time and thank you for finding me a few months ago! Awesome people &amp; projects here.&rdquo;</div></div>
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Candidate — Unsolicited Feedback</div><div class="quote">&ldquo;Regardless of outcome, this was a great candidate experience so far. Quick, informative, &amp; responsive. The process was obviously designed!&rdquo;</div></div>
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Director, R&amp;D Reagents</div><div class="quote">&ldquo;You and I are 100% on the same page which is great and really rewarding from the collaboration standpoint.&rdquo;</div></div>
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Senior Buyer</div><div class="quote">&ldquo;I cannot thank you enough for all the effort you have placed in getting this done. I am extremely excited to be joining you!&rdquo;</div></div>
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Senior Program Manager</div><div class="quote">&ldquo;We interviewed the candidate, and all liked him, and I would like to make him an offer. Great job, Jonah! You need to get him!&rdquo;</div></div>
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Vice President of Marketing</div><div class="quote">&ldquo;You should be proud of what you do! You earned my respect long ago when we first started collaborating. But over the past few weeks, that respect has grown even more. You&rsquo;ve shown your true colors through the way you&rsquo;ve supported and uplifted me during this time of change, and I truly appreciate it.&rdquo;</div></div>
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Senior Director of Service, North America</div><div class="quote">&ldquo;You are THE best recruiter! We are lucky to have you and very thankful for all of the efforts you put in to supporting us!&rdquo;</div></div>
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Vice President, Quality &amp; Regulatory Affairs</div><div class="quote">&ldquo;I am grateful for your passion and enthusiasm to help us grow the team into a killer squad. Keep on keeping on.&rdquo;</div></div>
-          <div class="card" style="padding:22px;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.07);"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Chief Executive Officer</div><div class="quote">&ldquo;I appreciate all your comments and suggestions very much. I don&rsquo;t know if my career is impressive, but you can be sure I try to bring my best every day and make the people close to me feel listened, supported and empowered. Everybody has to feel that what they do is very important.&rdquo;</div></div>
-          <div class="card" style="padding:22px;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.07);"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Follow-up &mdash; Chief Executive Officer</div><div class="quote">&ldquo;It was a nice surprise to hear from you. I remember those meetings and that period fondly &mdash; your insights, ideas, and support for those important projects were very helpful. Thank you for that.&rdquo;</div></div>
-          <div class="card" style="padding:22px;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.07);"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Handwritten Note &mdash; Vice President of Human Resources</div><div class="quote">&ldquo;You have been such an incredible part of our success in hiring talented people here at our company the past several years. I am confident you will continue to be a valued member of the HR team and the company family.&rdquo;</div></div>
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Manager, Customer Education Marketing</div><div class="quote">&ldquo;You never stop recruiting, you&rsquo;re truly the best. We&rsquo;re incredibly fortunate to have someone like you who genuinely cares about finding and placing the right person.&rdquo;</div></div>
-          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#b8c8d8;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Vice President of Human Resources</div><div class="quote">&ldquo;It&rsquo;s been a great pleasure having you as part of the HR team the past several years. Time has flown by. I know you will continue to be successful here or wherever your adventures may take you.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Vice President of Finance</div><div class="quote">&ldquo;You said you&rsquo;ll impress me, and you really did. Thanks!&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Vice President &amp; General Counsel</div><div class="quote">&ldquo;A quick note to thank you for all your extraordinary efforts here on the recruiting front. To say that you&rsquo;ve been an immense help to us here in Legal would be an understatement. Ed and I are both very grateful.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Senior Director of Service &amp; Support</div><div class="quote">&ldquo;I look forward to seeing the great work of you and your army of talented staff. Bar is high&hellip; I can&rsquo;t thank you enough. What you have done is well recognized.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">R&amp;D Manager</div><div class="quote">&ldquo;One thing I have really enjoyed about moving into this role is the close collaboration with you. Our team is and will continue to be, all the better for your insights and partnership.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Director, WW Communications</div><div class="quote">&ldquo;Two happy dances in two weeks! WOW! Congratulations Jonah and THANK YOU, THANK YOU, for ALL your very hard work!&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Senior Director of Hardware Engineering</div><div class="quote">&ldquo;Thank you for all your support this year helping to build the HWE team. Love your positivity &mdash; you are a pleasure to work with!&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Human Resources Business Partner</div><div class="quote">&ldquo;The best Recruiter I have ever worked with!&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Principal Engineer</div><div class="quote">&ldquo;Started here this week and just wanted to reach out one more time and thank you for finding me a few months ago! Awesome people &amp; projects here.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Candidate — Unsolicited Feedback</div><div class="quote">&ldquo;Regardless of outcome, this was a great candidate experience so far. Quick, informative, &amp; responsive. The process was obviously designed!&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Director, R&amp;D Reagents</div><div class="quote">&ldquo;You and I are 100% on the same page which is great and really rewarding from the collaboration standpoint.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Senior Buyer</div><div class="quote">&ldquo;I cannot thank you enough for all the effort you have placed in getting this done. I am extremely excited to be joining you!&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Senior Program Manager</div><div class="quote">&ldquo;We interviewed the candidate, and all liked him, and I would like to make him an offer. Great job, Jonah! You need to get him!&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Vice President of Marketing</div><div class="quote">&ldquo;You should be proud of what you do! You earned my respect long ago when we first started collaborating. But over the past few weeks, that respect has grown even more. You&rsquo;ve shown your true colors through the way you&rsquo;ve supported and uplifted me during this time of change, and I truly appreciate it.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Senior Director of Service, North America</div><div class="quote">&ldquo;You are THE best recruiter! We are lucky to have you and very thankful for all of the efforts you put in to supporting us!&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Vice President, Quality &amp; Regulatory Affairs</div><div class="quote">&ldquo;I am grateful for your passion and enthusiasm to help us grow the team into a killer squad. Keep on keeping on.&rdquo;</div></div>
+          <div class="card" style="padding:22px;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.07);"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Chief Executive Officer</div><div class="quote">&ldquo;I appreciate all your comments and suggestions very much. I don&rsquo;t know if my career is impressive, but you can be sure I try to bring my best every day and make the people close to me feel listened, supported and empowered. Everybody has to feel that what they do is very important.&rdquo;</div></div>
+          <div class="card" style="padding:22px;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.07);"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Follow-up &mdash; Chief Executive Officer</div><div class="quote">&ldquo;It was a nice surprise to hear from you. I remember those meetings and that period fondly &mdash; your insights, ideas, and support for those important projects were very helpful. Thank you for that.&rdquo;</div></div>
+          <div class="card" style="padding:22px;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.07);"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Handwritten Note &mdash; Vice President of Human Resources</div><div class="quote">&ldquo;You have been such an incredible part of our success in hiring talented people here at our company the past several years. I am confident you will continue to be a valued member of the HR team and the company family.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Manager, Customer Education Marketing</div><div class="quote">&ldquo;You never stop recruiting, you&rsquo;re truly the best. We&rsquo;re incredibly fortunate to have someone like you who genuinely cares about finding and placing the right person.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:12px;color:#c4d0e4;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Vice President of Human Resources</div><div class="quote">&ldquo;It&rsquo;s been a great pleasure having you as part of the HR team the past several years. Time has flown by. I know you will continue to be successful here or wherever your adventures may take you.&rdquo;</div></div>
         </div>
       </div>
     </section>
@@ -922,7 +770,6 @@
         </div>
       </div>
     </section>
-  </main>
 
   <footer class="footer">
     <div class="container" style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap">
@@ -932,38 +779,46 @@
   </footer>
 
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    window.onerror = function(message, source, lineno, colno, error) { console.error("Global Error:", message); };
+
+    function closeAllModals() { try { cwClose(); } catch(e) {} try { tbAccessModalClose(); } catch(e) {} try { closeMobNav(); } catch(e) {} }
+
     const io = new IntersectionObserver((entries) => {
       entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add("in"); });
     }, { threshold: 0.12 });
     document.querySelectorAll("[data-animate], section .card, .stat").forEach((el) => io.observe(el));
 
     async function submitFormspree(form, msgEl) {
+      var btn = form.querySelector('button[type="submit"]');
+      if (btn) { btn.disabled = true; btn.style.opacity = '.6'; }
       msgEl.textContent = "Submitting…";
       try {
         const res = await fetch(form.action, { method: "POST", headers: { Accept: "application/json" }, body: new FormData(form) });
         if (res.ok) { msgEl.textContent = "✅ Thanks — we'll be in touch within 24 hours."; form.reset(); }
-        else { const data = await res.json().catch(() => ({})); msgEl.textContent = data?.errors?.[0]?.message || "⚠️ Something went wrong. Try again."; }
-      } catch { msgEl.textContent = "🚫 Network error. Please try again."; }
+        else { const data = await res.json().catch(() => ({})); msgEl.textContent = data?.errors?.[0]?.message || "⚠️ Something went wrong. Try again."; if (btn) { btn.disabled = false; btn.style.opacity = ''; } }
+      } catch { msgEl.textContent = "🚫 Network error. Please try again."; if (btn) { btn.disabled = false; btn.style.opacity = ''; } }
     }
 
     const quick = document.getElementById("quickform");
     const quickMsg = document.getElementById("form-msg");
-    if (quick) quick.addEventListener("submit", (e) => { e.preventDefault(); quick.action = "https://formspree.io/f/meopyzlk"; submitFormspree(quick, quickMsg); });
+    if (quick) quick.addEventListener("submit", (e) => { e.preventDefault(); if (quick.dataset.submitting) return; quick.dataset.submitting = "true"; quick.action = "https://formspree.io/f/meopyzlk"; submitFormspree(quick, quickMsg).then(() => { quick.dataset.submitting = ""; }).catch(() => { quick.dataset.submitting = ""; }); });
 
     const contact = document.getElementById("contactform");
     const contactMsg = document.getElementById("contact-msg");
-    if (contact) contact.addEventListener("submit", (e) => { e.preventDefault(); contact.action = "https://formspree.io/f/meopyzlk"; submitFormspree(contact, contactMsg); });
+    if (contact) contact.addEventListener("submit", (e) => { e.preventDefault(); if (contact.dataset.submitting) return; contact.dataset.submitting = "true"; contact.action = "https://formspree.io/f/meopyzlk"; submitFormspree(contact, contactMsg).then(() => { contact.dataset.submitting = ""; }).catch(() => { contact.dataset.submitting = ""; }); });
 
     document.getElementById("y").textContent = new Date().getFullYear();
 
     function openMobNav(){ document.getElementById('mob-nav').classList.add('open'); document.body.style.overflow='hidden'; }
     function closeMobNav(){ document.getElementById('mob-nav').classList.remove('open'); document.body.style.overflow=''; }
+    window.addEventListener('resize', function(){ if(window.innerWidth > 768 && document.getElementById('mob-nav').classList.contains('open')){ closeMobNav(); } });
 
   // ── TalentBase access modal ──────────────────────────────────
   // UI-level only. Does not protect talentbase.html if accessed directly.
   // Server-level protection (Vercel auth / .htaccess) required for real security.
   function tbAccessModal(e) {
     if (e) e.preventDefault();
+    closeAllModals();
     var m = document.getElementById('tb-access-modal');
     m.style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -974,7 +829,10 @@
     document.body.style.overflow = '';
   }
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') tbAccessModalClose();
+    if (e.key === 'Escape') {
+      tbAccessModalClose();
+      cwClose();
+    }
   });
 
   </script>
@@ -1073,10 +931,77 @@
 var _cwMode='candidate',_cwTab='paste',_cwFileText='';
 function cwTab(t){_cwTab=t;_cwFileText='';document.getElementById('cw-panel-paste').style.display=t==='paste'?'':'none';document.getElementById('cw-panel-upload').style.display=t==='upload'?'':'none';var pb=document.getElementById('cw-tab-paste'),ub=document.getElementById('cw-tab-upload');pb.style.background=t==='paste'?'rgba(26,173,163,.03)':'rgba(255,255,255,.03)';pb.style.borderColor=t==='paste'?'rgba(26,173,163,.3)':'rgba(255,255,255,.08)';pb.style.color=t==='paste'?'#1aada3':'#7a87a5';ub.style.background=t==='upload'?'rgba(26,173,163,.03)':'rgba(255,255,255,.03)';ub.style.borderColor=t==='upload'?'rgba(26,173,163,.3)':'rgba(255,255,255,.08)';ub.style.color=t==='upload'?'#1aada3':'#7a87a5';}
 function cwHandleFile(file){if(!file)return;var nameEl=document.getElementById('cw-file-name');nameEl.textContent='📎 '+file.name+' — reading...';nameEl.style.display='block';var reader=new FileReader();reader.onload=function(e){if(file.name.toLowerCase().endsWith('.pdf')){_cwFileText='__PDF__'+e.target.result.split(',')[1];nameEl.textContent='✓ '+file.name+' ready to analyze';}else{_cwFileText=e.target.result;nameEl.textContent='✓ '+file.name+' ready to analyze';}};if(file.name.toLowerCase().endsWith('.pdf')){reader.readAsDataURL(file);}else{reader.readAsText(file);}}
-function cwOpen(){document.getElementById('cw-overlay').classList.add('on');document.body.style.overflow='hidden';var k=localStorage.getItem('cw_key');if(k)document.getElementById('cw-key').value=k;}
-function cwClose(){document.getElementById('cw-overlay').classList.remove('on');document.body.style.overflow='';}
+function cwOpen(){
+  closeAllModals();
+  document.getElementById('cw-overlay').classList.add('on');
+  document.body.style.overflow='hidden';
+  var k=localStorage.getItem('cw_key');
+  if(k) document.getElementById('cw-key').value=k;
+}
+function cwClose(){
+  document.getElementById('cw-overlay').classList.remove('on');
+  document.body.style.overflow='';
+  // Reset result panel so stale data doesn't show on reopen
+  var res=document.getElementById('cw-result');
+  if(res){ res.classList.remove('on'); res.innerHTML=''; }
+  // Re-enable button in case modal closed mid-analysis
+  var btn=document.getElementById('cw-btn');
+  if(btn){ btn.disabled=false; }
+  var txt=document.getElementById('cw-btn-txt');
+  if(txt) txt.textContent=_cwMode==='candidate'?'Know Your Worth':'Analyze Market Pay';
+}
 function cwMode(m){_cwMode=m;document.getElementById('cwm-candidate').classList.toggle('on',m==='candidate');document.getElementById('cwm-company').classList.toggle('on',m==='company');var ta=document.getElementById('cw-ta');document.getElementById('cw-btn-txt').textContent=m==='candidate'?'Know Your Worth':'Analyze Market Pay';ta.placeholder=m==='candidate'?'Paste your resume or LinkedIn profile here...\n\nInclude your title, years of experience, location, and key skills for the most accurate result.':'Paste the full job description here...\n\nInclude title, responsibilities, requirements, and location for the most accurate market analysis.';ta.value='';document.getElementById('cw-result').classList.remove('on');}
-async function cwRun(){var txt=_cwTab==='upload'?_cwFileText:document.getElementById('cw-ta').value.trim();if(_cwTab==='upload'&&!txt){alert('Please upload a file first.');return;}var keyEl=document.getElementById('cw-key'),key=keyEl.value.trim()||localStorage.getItem('cw_key')||'';if(!txt){alert('Please paste your resume or job description first.');return;}if(!key){alert('Please enter your Anthropic API key.');keyEl.focus();return;}if(key.startsWith('sk-'))localStorage.setItem('cw_key',key);var btn=document.getElementById('cw-btn'),res=document.getElementById('cw-result');btn.disabled=true;document.getElementById('cw-btn-txt').textContent='Analyzing...';res.classList.add('on');res.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:8px;font-size:13px;color:#aabbd0;"><div class="cw-spin"></div>Analyzing market data...</div>';var prompt=_cwMode==='candidate'?'You are a compensation expert. Analyze this candidate background and return ONLY valid JSON (no markdown, no explanation):\n{"role":"title","location":"city or National","low":70000,"mid":90000,"high":115000,"trend":"Up","demand":"High","note":"one sentence competitive position","insights":["insight1","insight2","insight3"]}\n\nCANDIDATE:\n'+txt:'You are a compensation expert. Analyze this job description and return ONLY valid JSON (no markdown, no explanation):\n{"role":"title","location":"city or National","low":70000,"mid":90000,"high":115000,"trend":"Up","demand":"High","note":"one sentence on hiring market","insights":["insight1","insight2","insight3"]}\n\nJOB DESCRIPTION:\n'+txt;try{var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,messages:[{role:'user',content:txt.startsWith('__PDF__')?[{type:'document',source:{type:'base64',media_type:'application/pdf',data:txt.replace('__PDF__','')}},{type:'text',text:prompt.split('\n\n').slice(0,-1).join('\n\n')}]:prompt}]})});var d=await r.json();if(d.error)throw new Error(d.error.message);var raw=(d.content||[]).map(function(b){return b.text||'';}).join('');var j=JSON.parse(raw.replace(/```json|```/g,'').trim());var fmt=function(n){return'$'+Math.round(n/1000)+'K';};var tc=j.trend==='Up'?'#22d47a':j.trend==='Down'?'#ff6b6b':'#f5a623';var dc=j.demand==='High'?'#22d47a':j.demand==='Low'?'#ff6b6b':'#f5a623';res.innerHTML='<div class="cw-rlbl">'+(_cwMode==='candidate'?'🙋 Your Market Value':'🏢 Market Pay Analysis')+' — '+(j.role||'')+'</div>'+'<div class="cw-salary">'+fmt(j.mid)+'</div>'+'<div class="cw-salary-lbl">'+(_cwMode==='candidate'?'Your market value target · ':'Midpoint market rate · ')+(j.location||'National')+'</div>'+'<div class="cw-bars">'+'<div class="cw-bar-wrap"><div class="cw-bval" style="color:#5a7a6a;">'+fmt(j.low)+'</div><div class="cw-bar" style="height:36px;background:rgba(26,173,163,.2);"></div><div class="cw-blbl">Floor</div></div>'+'<div class="cw-bar-wrap"><div class="cw-bval" style="color:#1aada3;">'+fmt(j.mid)+'</div><div class="cw-bar" style="height:52px;background:rgba(26,173,163,.65);"></div><div class="cw-blbl">Target</div></div>'+'<div class="cw-bar-wrap"><div class="cw-bval" style="color:#5ab8d4;">'+fmt(j.high)+'</div><div class="cw-bar" style="height:42px;background:rgba(24,227,255,.35);"></div><div class="cw-blbl">Ceiling</div></div>'+'</div>'+'<div class="cw-pills">'+'<div class="cw-pill"><div class="cw-pill-v" style="color:'+tc+';">'+(j.trend==='Up'?'↑ ':'')+j.trend+'</div><div class="cw-pill-l">Market Trend</div></div>'+'<div class="cw-pill"><div class="cw-pill-v" style="color:'+dc+';">'+j.demand+'</div><div class="cw-pill-l">Talent Demand</div></div>'+'</div>'+'<div class="cw-note">'+(j.note||'')+'</div>'+(j.insights||[]).map(function(i){return'<div class="cw-insight"><div class="cw-idot"></div><span>'+i+'</span></div>';}).join('')+'<a class="cw-cta" href="#contact" onclick="cwClose()">Talk to Jonah About This Role →</a>'+'<div class="cw-disc">AI estimate based on current market data. Contact Jonah for a precise assessment.</div>';}catch(e){btn.disabled=false;document.getElementById('cw-btn-txt').textContent=_cwMode==='candidate'?'Know Your Worth':'Analyze Market Pay';res.innerHTML='<div style="color:#ff6b6b;font-size:13px;padding:8px;">Analysis failed: '+e.message+'</div>';}}
+async function cwRun(){
+  // Re-entry guard: bail if already running
+  var btn=document.getElementById('cw-btn');
+  if(btn && btn.disabled) return;
+
+  var txt=_cwTab==='upload'?_cwFileText:document.getElementById('cw-ta').value.trim();
+  if(_cwTab==='upload'&&!txt){alert('Please upload a file first.');return;}
+  var keyEl=document.getElementById('cw-key'),key=keyEl.value.trim()||localStorage.getItem('cw_key')||'';
+  if(!txt){alert('Please paste your resume or job description first.');return;}
+  if(!key){alert('Please enter your Anthropic API key.');keyEl.focus();return;}
+  if(key.startsWith('sk-'))localStorage.setItem('cw_key',key);
+
+  // Sanitize AI output before innerHTML insertion
+  var esc=function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+
+  var res=document.getElementById('cw-result');
+  btn.disabled=true;document.getElementById('cw-btn-txt').textContent='Analyzing...';res.classList.add('on');
+  res.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:8px;font-size:13px;color:#aabbd0;"><div class="cw-spin"></div>Analyzing market data...</div>';
+  var prompt=_cwMode==='candidate'?'You are a compensation expert. Analyze this candidate background and return ONLY valid JSON (no markdown, no explanation):\n{"role":"title","location":"city or National","low":70000,"mid":90000,"high":115000,"trend":"Up","demand":"High","note":"one sentence competitive position","insights":["insight1","insight2","insight3"]}\n\nCANDIDATE:\n'+txt:'You are a compensation expert. Analyze this job description and return ONLY valid JSON (no markdown, no explanation):\n{"role":"title","location":"city or National","low":70000,"mid":90000,"high":115000,"trend":"Up","demand":"High","note":"one sentence on hiring market","insights":["insight1","insight2","insight3"]}\n\nJOB DESCRIPTION:\n'+txt;
+  try{
+    var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,messages:[{role:'user',content:txt.startsWith('__PDF__')?[{type:'document',source:{type:'base64',media_type:'application/pdf',data:txt.replace('__PDF__','')}},{type:'text',text:prompt.split('\n\n').slice(0,-1).join('\n\n')}]:prompt}]})});
+    var d=await r.json();
+    if(d.error)throw new Error(d.error.message);
+    var raw=(d.content||[]).map(function(b){return b.text||'';}).join('');
+    var j=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    var fmt=function(n){return'$'+Math.round(n/1000)+'K';};
+    var tc=j.trend==='Up'?'#22d47a':j.trend==='Down'?'#ff6b6b':'#f5a623';
+    var dc=j.demand==='High'?'#22d47a':j.demand==='Low'?'#ff6b6b':'#f5a623';
+    res.innerHTML=
+      '<div class="cw-rlbl">'+(_cwMode==='candidate'?'🙋 Your Market Value':'🏢 Market Pay Analysis')+' — '+esc(j.role)+'</div>'+
+      '<div class="cw-salary">'+fmt(j.mid)+'</div>'+
+      '<div class="cw-salary-lbl">'+(_cwMode==='candidate'?'Your market value target · ':'Midpoint market rate · ')+esc(j.location||'National')+'</div>'+
+      '<div class="cw-bars">'+
+        '<div class="cw-bar-wrap"><div class="cw-bval" style="color:#7aa8c8;">'+fmt(j.low)+'</div><div class="cw-bar" style="height:36px;background:rgba(26,173,163,.2);"></div><div class="cw-blbl">Floor</div></div>'+
+        '<div class="cw-bar-wrap"><div class="cw-bval" style="color:#1aada3;">'+fmt(j.mid)+'</div><div class="cw-bar" style="height:52px;background:rgba(26,173,163,.65);"></div><div class="cw-blbl">Target</div></div>'+
+        '<div class="cw-bar-wrap"><div class="cw-bval" style="color:#5ab8d4;">'+fmt(j.high)+'</div><div class="cw-bar" style="height:42px;background:rgba(24,227,255,.35);"></div><div class="cw-blbl">Ceiling</div></div>'+
+      '</div>'+
+      '<div class="cw-pills">'+
+        '<div class="cw-pill"><div class="cw-pill-v" style="color:'+tc+';">'+(j.trend==='Up'?'↑ ':'')+esc(j.trend)+'</div><div class="cw-pill-l">Market Trend</div></div>'+
+        '<div class="cw-pill"><div class="cw-pill-v" style="color:'+dc+';">'+esc(j.demand)+'</div><div class="cw-pill-l">Talent Demand</div></div>'+
+      '</div>'+
+      '<div class="cw-note">'+esc(j.note)+'</div>'+
+      (j.insights||[]).map(function(ins){return'<div class="cw-insight"><div class="cw-idot"></div><span>'+esc(ins)+'</span></div>';}).join('')+
+      '<a class="cw-cta" href="#contact" onclick="cwClose()">Talk to Jonah About This Role →</a>'+
+      '<div class="cw-disc">AI estimate based on current market data. Contact Jonah for a precise assessment.</div>';
+  }catch(e){
+    btn.disabled=false;
+    document.getElementById('cw-btn-txt').textContent=_cwMode==='candidate'?'Know Your Worth':'Analyze Market Pay';
+    res.innerHTML='<div style="color:#ff6b6b;font-size:13px;padding:8px;">Analysis failed: '+esc(e.message)+'</div>';
+  }
+}
 </script>
 
   <!-- ══════════════════════════════════════════════════════════
@@ -1092,4 +1017,9 @@ async function cwRun(){var txt=_cwTab==='upload'?_cwFileText:document.getElement
       <div style="font-size:11px;font-weight:700;color:#a89dff;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;">TalentBase</div>
       <h3 style="font-size:24px;font-weight:900;color:#e8f0ff;margin:0 0 12px;letter-spacing:-.3px;">Invite-Only Access</h3>
       <p style="font-size:15px;color:#c9d6ff;line-height:1.7;margin:0 0 24px;">TalentBase is currently in private beta. Access is by invitation only.<br><span style="color:#a89dff;font-weight:600;">Contact Jonah to request access.</span></p>
-      <a href="#contact" onclick="tbAccessModalClose()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(124,106,247,.2);border:1px solid rgba(124,106,247,.4);color:#c4b8ff;padding:13px 28px;border-radius:999px;font-weigh
+      <a href="#contact" onclick="tbAccessModalClose()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(124,106,247,.2);border:1px solid rgba(124,106,247,.4);color:#c4b8ff;padding:13px 28px;border-radius:999px;font-weight:700;font-size:14px;text-decoration:none;transition:all .18s ease;">Contact Jonah →</a>
+    </div>
+  </div>
+
+</body>
+</html>
