@@ -4491,10 +4491,8 @@ function renderTopToSubmit() {
 
 var showAllTasks = false;
 function toggleTasksView() {
-  showAllTasks = !showAllTasks;
-  var btn = document.getElementById('tasks-toggle-btn');
-  if (btn) btn.textContent = showAllTasks ? 'Show Less' : 'View All';
-  renderActivityBoard();
+  // Disabled for Top 3 system — renderActivityBoard no longer owns #needs-action-list
+  console.log('[TalentBase] toggleTasksView disabled');
 }
 
 // === INPUT INTELLIGENCE LAYER ===
