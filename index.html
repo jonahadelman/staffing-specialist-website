@@ -794,7 +794,7 @@
       msgEl.textContent = "Submitting…";
       try {
         const res = await fetch(form.action, { method: "POST", headers: { Accept: "application/json" }, body: new FormData(form) });
-        if (res.ok) { msgEl.textContent = "✅ Thanks — we'll be in touch within 24 hours."; form.reset(); }
+        if (res.ok) { msgEl.textContent = "✅ Thanks — we'll be in touch within 24 hours."; form.reset(); if (btn) { btn.disabled = false; btn.style.opacity = ''; } }
         else { const data = await res.json().catch(() => ({})); msgEl.textContent = data?.errors?.[0]?.message || "⚠️ Something went wrong. Try again."; if (btn) { btn.disabled = false; btn.style.opacity = ''; } }
       } catch { msgEl.textContent = "🚫 Network error. Please try again."; if (btn) { btn.disabled = false; btn.style.opacity = ''; } }
     }
@@ -820,11 +820,13 @@
     if (e) e.preventDefault();
     closeAllModals();
     var m = document.getElementById('tb-access-modal');
+    if (!m) return;
     m.style.display = 'flex';
     document.body.style.overflow = 'hidden';
   }
   function tbAccessModalClose() {
     var m = document.getElementById('tb-access-modal');
+    if (!m) return;
     m.style.display = 'none';
     document.body.style.overflow = '';
   }
@@ -1155,13 +1157,6 @@
   }
 
   // ── ESC key handler ────────────────────────────────────────────────────────
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      cwClose();
-      if (typeof tbAccessModalClose === 'function') { try { tbAccessModalClose(); } catch(ex){} }
-    }
-  });
-
   // ── Expose to global scope for inline onclicks ─────────────────────────────
   window.cwOpen        = cwOpen;
   window.cwClose       = cwClose;
