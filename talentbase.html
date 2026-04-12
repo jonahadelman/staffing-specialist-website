@@ -3826,7 +3826,15 @@ function addActivityItem(text) {
   if (!text || !text.trim()) return;
   activityBoard.push({ id: uid(), text: text.trim(), completed: false, createdAt: Date.now() });
   saveActivityBoard();
-  renderActivityBoard();
+  // Update badge count only — do NOT call renderActivityBoard() here.
+  // renderActivityBoard() owns #needs-action-list which is now controlled by
+  // renderTopActions() on the dashboard. Calling it here would overwrite the
+  // Top 3 Next Actions panel every time any action logs an activity.
+  var count = document.getElementById('needs-action-count');
+  if (count) {
+    var pending = activityBoard.filter(function(t){ return !t.completed; }).length;
+    count.textContent = pending ? pending + ' action' + (pending > 1 ? 's' : '') + ' needed' : '';
+  }
 }
 
 // ── Command Center: Top 3 Next Actions for dashboard ─────────────────────────
@@ -3878,6 +3886,11 @@ function executeTaskAction(cid) {
 }
 
 function renderActivityBoard() {
+  // SAFETY GUARD: never overwrite #needs-action-list while on dashboard.
+  // The dashboard uses renderTopActions() for that element.
+  // renderActivityBoard() is only valid when explicitly opened outside the dashboard.
+  if (state && state.currentView === 'dashboard') return;
+
   var el    = document.getElementById('needs-action-list');
   var count = document.getElementById('needs-action-count');
   if (!el) return;
