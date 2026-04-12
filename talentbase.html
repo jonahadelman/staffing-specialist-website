@@ -2942,6 +2942,16 @@ var PIPE_STAGE_COLORS = {
   'Hired':      'var(--purple)',
 };
 
+// One canonical action per stage — drives pipeline card button
+var PIPE_STAGE_ACTION = {
+  'New':       { label:'Contact',   action:'contact',  style:'background:linear-gradient(135deg,var(--accent),#2563eb);' },
+  'Screening': { label:'Advance',   action:'advance',  style:'background:linear-gradient(135deg,var(--accent2),#3b82f6);' },
+  'Interview': { label:'Submit',    action:'submit',   style:'background:linear-gradient(135deg,var(--teal),#0d9488);' },
+  'Submitted': { label:'Follow Up', action:'followup', style:'background:linear-gradient(135deg,var(--amber),#d97706);' },
+  'Offer':     { label:'Close',     action:'close',    style:'background:linear-gradient(135deg,#22c55e,#16a34a);' },
+  'Hired':     null,
+};
+
 // ── Populate job filter dropdown ──────────────────────────────
 function populatePipeJobFilter() {
   var sel = document.getElementById('pipe-job-filter');
@@ -3023,30 +3033,22 @@ function renderPipeline() {
           var isPulse    = app.status === 'Submitted' && idleDays > 5;
           var cardExtra  = isPulse ? ' pipe-card-pulse' : '';
           var subs       = Array.isArray(app.submissions) ? app.submissions : (Array.isArray(cd.submissions) ? cd.submissions : []);
+          // Single action per stage from PIPE_STAGE_ACTION map
+          var _stageAct  = PIPE_STAGE_ACTION[app.status];
+          var actionBtn  = _stageAct
+            ? '<div style="font-size:9px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Next Action</div>' +
+              '<button data-cid="' + escHtml(String(cd.id)) + '" data-action="' + _stageAct.action + '" class="pipe-action-btn" style="' + _stageAct.style + '">' + _stageAct.label + '</button>'
+            : '';
           return '<div class="pipe-card risk-' + cxRisk + cardExtra + '" style="--pipe-accent:' + stageColor + ';">' +
             '<div class="pipe-card-name">' + escHtml(cd.name) + '</div>' +
             '<div class="pipe-card-role">' + escHtml(cd.title || '') + '</div>' +
             (cd.company ? '<div class="pipe-card-mid">' + escHtml(cd.company) + '</div>' : '') +
-            '<div style="font-size:10px;color:var(--accent2);font-weight:600;margin:6px 0 6px;">' +
-              '-> ' + escHtml(nba) +
-            '</div>' +
-            (app.status === 'Interview'
-              ? '<button data-cid="' + escHtml(String(cd.id)) + '" data-action="submit" class="pipe-action-btn" style="background:linear-gradient(135deg,var(--teal),#0d9488);">Submit</button>'
-              : app.status === 'Submitted'
-                ? '<button data-cid="' + escHtml(String(cd.id)) + '" data-action="followup" class="pipe-action-btn" style="background:linear-gradient(135deg,var(--amber),#d97706);">Follow Up</button>'
-                : app.status === 'Offer'
-                  ? '<button data-cid="' + escHtml(String(cd.id)) + '" data-action="close" class="pipe-action-btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);">Close</button>'
-                  : '') +
+            actionBtn +
             (subs.length
               ? '<div style="font-size:9px;color:var(--teal);font-weight:700;margin-bottom:6px;">Submitted to ' + subs.length + ' compan' + (subs.length===1?'y':'ies') + '</div>'
               : '') +
             '<div class="pipe-card-bottom">' +
-              '<button class="pipe-advance-btn"' +
-                (isLast ? ' disabled' : ' data-cid="' + escHtml(String(cd.id)) + '" onclick="moveCandidate(this.dataset.cid)"') +
-              '>' +
-                (isLast ? '✓ Hired' : 'Advance →') +
-              '</button>' +
-              '<button class="pipe-msg-btn" data-cid="' + escHtml(String(cd.id)) + '" onclick="showMessageModal(this.dataset.cid)">✉</button>' +
+              '<button class="pipe-msg-btn" data-cid="' + escHtml(String(cd.id)) + '" onclick="showMessageModal(this.dataset.cid)" title="Generate message">✉</button>' +
             '</div>' +
           '</div>';
         }).filter(Boolean).join('')
@@ -4774,23 +4776,44 @@ function _pipeActionHandler(e) {
   var action = btn.dataset.action;
   if (!cid || !action) return;
   e.stopPropagation();
+
+  var cd = candidates.find(function(x){ return String(x.id) === String(cid); });
+  if (!cd) return;
+
   console.log('[TalentBase] PIPE ACTION:', action, cid);
-  if (action === 'submit')  { openSubmitModal(cid); }
-  if (action === 'followup') {
-    var _pfCd = candidates.find(function(x){ return String(x.id)===String(cid); });
-    if (_pfCd) {
-      var _pfNow = Date.now();
-      var _pfApp = getPrimaryApplication(String(cid));
-      if (_pfApp) { _pfApp.lastActivityAt = _pfNow; _pfApp.updatedAt = _pfNow; saveApplications(); }
-      _pfCd.lastActivityAt = _pfNow;
-      saveCandidates();
-      addActivityItem('Followed up on submission: ' + _pfCd.name);
-      saveActivityBoard();
-      try { renderPipeline(); } catch(e) {}
-    }
+
+  if (action === 'contact') {
+    showMessageModal(cid);
+    addActivityItem('✔ Action completed: ' + cd.name + ' — Contact');
+    saveActivityBoard();
   }
+
+  if (action === 'advance') {
+    moveCandidate(cid);
+    addActivityItem('✔ Action completed: ' + cd.name + ' — Advance');
+    saveActivityBoard();
+  }
+
+  if (action === 'submit') {
+    openSubmitModal(cid);
+    addActivityItem('✔ Action completed: ' + cd.name + ' — Submit');
+    saveActivityBoard();
+  }
+
+  if (action === 'followup') {
+    var _pfNow = Date.now();
+    var _pfApp = getPrimaryApplication(String(cid));
+    if (_pfApp) { _pfApp.lastActivityAt = _pfNow; _pfApp.updatedAt = _pfNow; saveApplications(); }
+    addActivityItem('✔ Action completed: ' + cd.name + ' — Follow Up');
+    saveActivityBoard();
+    try { renderPipeline(); } catch(e) {}
+    try { renderAITasks(); }  catch(e) {}
+  }
+
   if (action === 'close') {
     acceptOffer(cid);
+    addActivityItem('✔ Action completed: ' + cd.name + ' — Close');
+    saveActivityBoard();
   }
 }
 
