@@ -3833,85 +3833,48 @@ function addActivityItem(text) {
 function renderTopActions(tasks) {
   var el = document.getElementById('needs-action-list');
   if (!el) return;
-
-  if (!tasks || !tasks.length) {
+  if (!tasks.length) {
     el.innerHTML =
-      '<div style="font-size:12px;color:var(--green);padding:14px 4px;display:flex;align-items:center;gap:8px;">' +
-        '<span style="font-size:16px;">✓</span>' +
-        '<span>All candidates are moving — no urgent actions right now.</span>' +
+      '<div style="padding:16px 14px;color:var(--text4);font-size:12px;text-align:center;">' +
+      'All candidates are moving — no urgent actions' +
       '</div>';
     return;
   }
-
-  var riskColor = function(lvl) {
-    return lvl === 'critical' ? 'var(--red)' : lvl === 'warning' ? 'var(--amber)' : 'var(--green)';
-  };
-
   el.innerHTML = tasks.map(function(t, i) {
-    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid rgba(255,255,255,.05);">' +
-      '<div style="font-size:16px;font-weight:800;color:var(--accent2);width:20px;flex-shrink:0;">' + (i + 1) + '</div>' +
-      '<div style="flex:1;min-width:0;">' +
-        '<div style="font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(t.name) + '</div>' +
-        '<div style="font-size:11px;color:var(--text4);margin-top:2px;">' +
-          '<span style="color:' + riskColor(t.riskLevel) + ';font-weight:700;">' + escHtml(t.nextAction) + '</span>' +
-          (t.jobTitle ? '<span style="color:var(--text4);"> · ' + escHtml(t.jobTitle) + '</span>' : '') +
+    return '' +
+      '<div style="display:flex;align-items:center;gap:12px;padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.05);">' +
+        '<div style="font-size:16px;font-weight:800;color:var(--accent2);width:20px;">' + (i+1) + '</div>' +
+        '<div style="flex:1;">' +
+          '<div style="font-size:13px;font-weight:700;color:var(--text);">' + t.name + '</div>' +
+          '<div style="font-size:11px;color:var(--text4);">' + t.nextAction + '</div>' +
         '</div>' +
-      '</div>' +
-      '<button data-task-cid="' + escHtml(t.candidateId) + '" onclick="executeTaskAction(this.dataset.taskCid)" ' +
-        'style="flex-shrink:0;padding:6px 14px;background:linear-gradient(135deg,var(--teal),#0d9488);border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;">' +
-        'Do It' +
-      '</button>' +
-    '</div>';
+        '<button onclick="executeTaskAction(\'' + t.candidateId + '\')" ' +
+          'style="padding:6px 12px;background:linear-gradient(135deg,var(--teal),#0d9488);border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">' +
+          'Do It' +
+        '</button>' +
+      '</div>';
   }).join('');
 }
 
 // ── Bridge: execute a task action from the dashboard ─────────────────────────
 function executeTaskAction(cid) {
-  var app = getPrimaryApplication(String(cid));
+  var app = getPrimaryApplication(cid);
   if (!app) return;
-  var stageAct = PIPE_STAGE_ACTION[app.status];
-  if (!stageAct) return;
-
-  var cd = candidates.find(function(x){ return String(x.id) === String(cid); });
-  if (!cd) return;
-
-  var action = stageAct.action;
-  var now    = Date.now();
-
-  console.log('[TASK ACTION]', action, cid);
-
-  if (action === 'contact') {
-    showMessageModal(cid);
-    addActivityItem('Contact initiated: ' + cd.name);
-  } else if (action === 'advance') {
-    moveCandidate(cid);
-    addActivityItem('Advanced stage: ' + cd.name);
-  } else if (action === 'submit') {
-    openSubmitModal(cid);
-    addActivityItem('Submission started: ' + cd.name);
-  } else if (action === 'followup') {
-    app.lastActivityAt = now;
-    app.updatedAt      = now;
-    if (Array.isArray(app.submissions) && app.submissions.length) {
-      var last = app.submissions[app.submissions.length - 1];
-      last.followedUpAt = now;
-      if (last.status === 'sent') last.status = 'followed_up';
-    }
-    saveApplications();
-    addActivityItem('Followed up: ' + cd.name);
-  } else if (action === 'close') {
-    acceptOffer(cid);
-    addActivityItem('Offer closed: ' + cd.name);
-  }
-
-  saveActivityBoard();
-
-  // Refresh dashboard top actions + all dependent views
-  try { var t2 = getAITasks(); renderTopActions(t2.slice(0,3)); } catch(err) {}
-  try { renderAITasks();    } catch(err) {}
-  try { renderPipeline();   } catch(err) {}
-  try { renderCandidates(); } catch(err) {}
-  try { renderDashboard();  } catch(err) {}
+  var action = PIPE_STAGE_ACTION[app.status];
+  if (!action) return;
+  _pipeActionHandler({
+    target: {
+      closest: function() {
+        return {
+          dataset: {
+            cid:    cid,
+            action: action.action
+          }
+        };
+      }
+    },
+    stopPropagation: function() {}
+  });
 }
 
 function renderActivityBoard() {
