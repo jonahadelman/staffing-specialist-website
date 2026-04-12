@@ -4768,53 +4768,69 @@ function declineOffer(candId) {
   try{renderDashboard();}catch(e){}
 }
 
-// Pipe-board action handler — no extra modals, no nav jumps
+// Pipe-board action handler — single dispatch, application-driven
 function _pipeActionHandler(e) {
   var btn = e.target.closest('.pipe-action-btn');
   if (!btn) return;
+
   var cid    = btn.dataset.cid;
   var action = btn.dataset.action;
   if (!cid || !action) return;
   e.stopPropagation();
 
-  var cd = candidates.find(function(x){ return String(x.id) === String(cid); });
-  if (!cd) return;
+  var cd  = candidates.find(function(x){ return String(x.id) === String(cid); });
+  var app = getPrimaryApplication(String(cid));
+  if (!cd || !app) return;
 
-  console.log('[TalentBase] PIPE ACTION:', action, cid);
+  var now = Date.now();
+  console.log('[PIPE ACTION]', action, cid);
 
+  // CONTACT — open message modal; Mark Sent will update application state
   if (action === 'contact') {
     showMessageModal(cid);
-    addActivityItem('✔ Action completed: ' + cd.name + ' — Contact');
-    saveActivityBoard();
+    addActivityItem('Contact initiated: ' + cd.name);
   }
 
-  if (action === 'advance') {
+  // ADVANCE — move to next pipeline stage (writes to application)
+  else if (action === 'advance') {
     moveCandidate(cid);
-    addActivityItem('✔ Action completed: ' + cd.name + ' — Advance');
-    saveActivityBoard();
+    addActivityItem('Advanced stage: ' + cd.name);
   }
 
-  if (action === 'submit') {
+  // SUBMIT — open submission modal (writes to application on confirm)
+  else if (action === 'submit') {
     openSubmitModal(cid);
-    addActivityItem('✔ Action completed: ' + cd.name + ' — Submit');
-    saveActivityBoard();
+    addActivityItem('Submission started: ' + cd.name);
   }
 
-  if (action === 'followup') {
-    var _pfNow = Date.now();
-    var _pfApp = getPrimaryApplication(String(cid));
-    if (_pfApp) { _pfApp.lastActivityAt = _pfNow; _pfApp.updatedAt = _pfNow; saveApplications(); }
-    addActivityItem('✔ Action completed: ' + cd.name + ' — Follow Up');
-    saveActivityBoard();
-    try { renderPipeline(); } catch(e) {}
-    try { renderAITasks(); }  catch(e) {}
+  // FOLLOW UP — stamp last submission + bump lastActivityAt on application
+  else if (action === 'followup') {
+    app.lastActivityAt = now;
+    app.updatedAt      = now;
+    if (Array.isArray(app.submissions) && app.submissions.length) {
+      var last = app.submissions[app.submissions.length - 1];
+      last.followedUpAt = now;
+      if (last.status === 'sent') {
+        last.status = 'followed_up';
+      }
+    }
+    saveApplications();
+    addActivityItem('Followed up: ' + cd.name);
   }
 
-  if (action === 'close') {
+  // CLOSE — accept offer, move to Hired
+  else if (action === 'close') {
     acceptOffer(cid);
-    addActivityItem('✔ Action completed: ' + cd.name + ' — Close');
-    saveActivityBoard();
+    addActivityItem('Offer closed: ' + cd.name);
   }
+
+  saveActivityBoard();
+
+  // Re-render all affected views
+  try { renderPipeline();   } catch(err) {}
+  try { renderCandidates(); } catch(err) {}
+  try { renderAITasks();    } catch(err) {}
+  try { renderDashboard();  } catch(err) {}
 }
 
 // toggleCandMore — show/hide optional candidate fields
