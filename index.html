@@ -263,7 +263,7 @@
     <a href="#talentbase" onclick="closeMobNav()">TalentBase</a>
     <a href="#testimonials" onclick="closeMobNav()">Testimonials</a>
     <a href="#founder" onclick="closeMobNav()">Founder</a>
-    <a href="javascript:void(0)" onclick="closeMobNav();" data-cw-trigger="true" style="color:#1aada3;font-weight:700;">💰 Comp Intel</a>
+    <a href="javascript:void(0)" onclick="closeMobNav();cwOpen();" style="color:#1aada3;font-weight:700;">💰 Comp Intel</a>
     <a href="#contact" class="btn mob-cta" onclick="closeMobNav()">Get Talent Now</a>
   </div>
 
@@ -296,7 +296,7 @@
           <!-- TB-LINK-1: header tool button — removed public access 2026-04 -->
           <a href="#contact" onclick="tbAccessModal(event)" style="padding:5px 14px;border-radius:7px;border:1px solid rgba(140,120,255,.55);background:rgba(124,106,247,.2);font-size:11px;font-weight:700;color:#ccc0ff;white-space:nowrap;text-decoration:none;">&#9889; TalentBase ATS</a>
           <a href="#telephone" style="padding:5px 14px;border-radius:7px;border:1px solid rgba(26,173,163,.45);background:rgba(26,173,163,.14);font-size:11px;font-weight:700;color:#1aada3;white-space:nowrap;text-decoration:none;">&#128225; Job Amplifier</a>
-          <a href="javascript:void(0)" data-cw-trigger="true" style="padding:5px 14px;border-radius:7px;border:1px solid rgba(26,173,163,.4);background:rgba(26,173,163,.12);font-size:11px;font-weight:700;color:#1aada3;white-space:nowrap;text-decoration:none;">&#128176; Comp Intel</a>
+          <a href="javascript:void(0)" onclick="cwOpen()" style="padding:5px 14px;border-radius:7px;border:1px solid rgba(26,173,163,.4);background:rgba(26,173,163,.12);font-size:11px;font-weight:700;color:#1aada3;white-space:nowrap;text-decoration:none;">&#128176; Comp Intel</a>
         </div>
       </nav>
     </div>
@@ -470,7 +470,7 @@
             <div style="font-size:11px;font-weight:700;color:#c9a84c;text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;">💰 Compensation Intelligence</div>
             <div style="font-size:22px;font-weight:900;color:#e8f0ff;margin-bottom:10px;">Know The Market Before<br>You Compete In It</div>
             <p style="font-size:14px;color:#c9d6e8;line-height:1.6;">Paste any resume or job description. Get instant market analysis — floor, target, ceiling salary. Know Your Worth. Know What The Market Pays. Like Kelly Blue Book for talent.</p>
-            <a href="javascript:void(0)" data-cw-trigger="true" style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-size:13px;font-weight:700;color:#c9a84c;">Try Free →</a>
+            <a href="javascript:void(0)" onclick="cwOpen()" style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-size:13px;font-weight:700;color:#c9a84c;">Try Free →</a>
           </div>
         </div>
       </div>
@@ -911,7 +911,7 @@
 @keyframes cwspin{to{transform:rotate(360deg);}}
 </style>
 
-<button id="cw-bubble">
+<button id="cw-bubble" onclick="cwOpen()">
   <span style="font-size:18px;">💰</span>
   <div style="display:flex;flex-direction:column;align-items:flex-start;gap:1px;">
     <span style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.7;">Free Tool</span>
@@ -951,14 +951,8 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-
-var _cwMode='candidate',_cwTab='paste',_cwFileText='';
-
-function cwTab(t){_cwTab=t;_cwFileText='';document.getElementById('cw-panel-paste').style.display=t==='paste'?'':'none';document.getElementById('cw-panel-upload').style.display=t==='upload'?'':'none';var pb=document.getElementById('cw-tab-paste'),ub=document.getElementById('cw-tab-upload');pb.style.background=t==='paste'?'rgba(26,173,163,.03)':'rgba(255,255,255,.03)';pb.style.borderColor=t==='paste'?'rgba(26,173,163,.3)':'rgba(255,255,255,.08)';pb.style.color=t==='paste'?'#1aada3':'#7a87a5';ub.style.background=t==='upload'?'rgba(26,173,163,.03)':'rgba(255,255,255,.03)';ub.style.borderColor=t==='upload'?'rgba(26,173,163,.3)':'rgba(255,255,255,.08)';ub.style.color=t==='upload'?'#1aada3':'#7a87a5';}
-
-function cwHandleFile(file){if(!file)return;var nameEl=document.getElementById('cw-file-name');nameEl.textContent='📎 '+file.name+' — reading...';nameEl.style.display='block';var reader=new FileReader();reader.onload=function(e){if(file.name.toLowerCase().endsWith('.pdf')){_cwFileText='__PDF__'+e.target.result.split(',')[1];nameEl.textContent='✓ '+file.name+' ready to analyze';}else{_cwFileText=e.target.result;nameEl.textContent='✓ '+file.name+' ready to analyze';}};if(file.name.toLowerCase().endsWith('.pdf')){reader.readAsDataURL(file);}else{reader.readAsText(file);}}
-
+// cwOpen and cwClose hoisted to module level — available immediately on script parse
+// No DOMContentLoaded dependency for opening/closing the overlay
 function cwOpen(){
   if (typeof tbAccessModalClose === "function") { try { tbAccessModalClose(); } catch(e) {} }
   if (typeof closeMobNav === "function") { try { closeMobNav(); } catch(e) {} }
@@ -968,6 +962,7 @@ function cwOpen(){
   document.body.style.overflow='hidden';
   var k=localStorage.getItem('cw_key'); var keyInput=document.getElementById('cw-key'); if(k && keyInput) keyInput.value=k;
 }
+window.cwOpen = cwOpen;
 window.cwOpen = cwOpen;
 
 function cwClose(){
@@ -984,11 +979,18 @@ function cwClose(){
   if(txt) txt.textContent=_cwMode==='candidate'?'Know Your Worth':'Analyze Market Pay';
 }
 window.cwClose = cwClose;
+window.cwClose = cwClose;
 
-window.cwMode = function(m){ cwMode(m); };
-window.cwTab = function(t){ cwTab(t); };
-window.cwRun = function(){ cwRun(); };
-window.cwHandleFile = function(f){ cwHandleFile(f); };
+document.addEventListener("DOMContentLoaded", function() {
+
+var _cwMode='candidate',_cwTab='paste',_cwFileText='';
+
+function cwTab(t){_cwTab=t;_cwFileText='';document.getElementById('cw-panel-paste').style.display=t==='paste'?'':'none';document.getElementById('cw-panel-upload').style.display=t==='upload'?'':'none';var pb=document.getElementById('cw-tab-paste'),ub=document.getElementById('cw-tab-upload');pb.style.background=t==='paste'?'rgba(26,173,163,.03)':'rgba(255,255,255,.03)';pb.style.borderColor=t==='paste'?'rgba(26,173,163,.3)':'rgba(255,255,255,.08)';pb.style.color=t==='paste'?'#1aada3':'#7a87a5';ub.style.background=t==='upload'?'rgba(26,173,163,.03)':'rgba(255,255,255,.03)';ub.style.borderColor=t==='upload'?'rgba(26,173,163,.3)':'rgba(255,255,255,.08)';ub.style.color=t==='upload'?'#1aada3':'#7a87a5';}
+
+function cwHandleFile(file){if(!file)return;var nameEl=document.getElementById('cw-file-name');nameEl.textContent='📎 '+file.name+' — reading...';nameEl.style.display='block';var reader=new FileReader();reader.onload=function(e){if(file.name.toLowerCase().endsWith('.pdf')){_cwFileText='__PDF__'+e.target.result.split(',')[1];nameEl.textContent='✓ '+file.name+' ready to analyze';}else{_cwFileText=e.target.result;nameEl.textContent='✓ '+file.name+' ready to analyze';}};if(file.name.toLowerCase().endsWith('.pdf')){reader.readAsDataURL(file);}else{reader.readAsText(file);}}
+
+
+
 
 function cwMode(m){_cwMode=m;document.getElementById('cwm-candidate').classList.toggle('on',m==='candidate');document.getElementById('cwm-company').classList.toggle('on',m==='company');var ta=document.getElementById('cw-ta');document.getElementById('cw-btn-txt').textContent=m==='candidate'?'Know Your Worth':'Analyze Market Pay';ta.placeholder=m==='candidate'?'Paste your resume or LinkedIn profile here...\n\nInclude your title, years of experience, location, and key skills for the most accurate result.':'Paste the full job description here...\n\nInclude title, responsibilities, requirements, and location for the most accurate market analysis.';ta.value='';document.getElementById('cw-result').classList.remove('on');}
 
