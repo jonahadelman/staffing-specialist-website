@@ -828,14 +828,23 @@
     m.style.display = 'none';
     document.body.style.overflow = '';
   }
+    function safeCall(fn) { try { if (typeof fn === "function") fn(); } catch (e) { console.error("Safe call error:", e); } }
+
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-      cwClose();
-      tbAccessModalClose();
+      safeCall(window.cwClose);
+      safeCall(window.tbAccessModalClose);
     }
   });
 
-  document.addEventListener("DOMContentLoaded", function() { var btn = document.getElementById("cw-bubble"); if (btn) { btn.addEventListener("click", function() { cwOpen(); }); } });
+  document.addEventListener("DOMContentLoaded", function() {
+    var bubble = document.getElementById("cw-bubble");
+    if (bubble) { bubble.addEventListener("click", function() { safeCall(window.cwOpen); }); }
+    document.querySelectorAll('[onclick*="cwOpen"]').forEach(function(el) {
+      el.removeAttribute("onclick");
+      el.addEventListener("click", function(e) { e.preventDefault(); safeCall(window.cwOpen); });
+    });
+  });
 
   </script>
 
@@ -936,11 +945,12 @@ function cwHandleFile(file){if(!file)return;var nameEl=document.getElementById('
 function cwOpen(){
   closeAllModals();
   var overlay = document.getElementById('cw-overlay');
-  if (!overlay) { console.error("Comp Widget not found in DOM"); return; }
+  if (!overlay) { console.error("cw-overlay missing"); return; }
   overlay.classList.add('on');
   document.body.style.overflow='hidden';
   var k=localStorage.getItem('cw_key'); var keyInput=document.getElementById('cw-key'); if(k && keyInput) keyInput.value=k;
 }
+window.cwOpen = cwOpen;
 function cwClose(){
   var overlay = document.getElementById('cw-overlay');
   if (!overlay) return;
@@ -955,6 +965,7 @@ function cwClose(){
   var txt=document.getElementById('cw-btn-txt');
   if(txt) txt.textContent=_cwMode==='candidate'?'Know Your Worth':'Analyze Market Pay';
 }
+window.cwClose = cwClose;
 function cwMode(m){_cwMode=m;document.getElementById('cwm-candidate').classList.toggle('on',m==='candidate');document.getElementById('cwm-company').classList.toggle('on',m==='company');var ta=document.getElementById('cw-ta');document.getElementById('cw-btn-txt').textContent=m==='candidate'?'Know Your Worth':'Analyze Market Pay';ta.placeholder=m==='candidate'?'Paste your resume or LinkedIn profile here...\n\nInclude your title, years of experience, location, and key skills for the most accurate result.':'Paste the full job description here...\n\nInclude title, responsibilities, requirements, and location for the most accurate market analysis.';ta.value='';document.getElementById('cw-result').classList.remove('on');}
 async function cwRun(){
   // Re-entry guard: bail if already running
@@ -1007,6 +1018,7 @@ async function cwRun(){
     res.innerHTML='<div style="color:#ff6b6b;font-size:13px;padding:8px;">Analysis failed: '+esc(e.message)+'</div>';
   }
 }
+// Bubble bound via DOMContentLoaded in main script
 </script>
 
   <!-- ══════════════════════════════════════════════════════════
@@ -1025,6 +1037,8 @@ async function cwRun(){
       <a href="#contact" onclick="tbAccessModalClose()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(124,106,247,.2);border:1px solid rgba(124,106,247,.4);color:#c4b8ff;padding:13px 28px;border-radius:999px;font-weight:700;font-size:14px;text-decoration:none;transition:all .18s ease;">Contact Jonah →</a>
     </div>
   </div>
+
+<script>window.addEventListener("load", function() { if (!window.cwOpen) { console.error("cwOpen failed to initialize"); } else { console.log("Comp Widget Ready"); } });</script>
 
 </body>
 </html>
