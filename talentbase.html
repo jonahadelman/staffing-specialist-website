@@ -454,20 +454,21 @@ html, body {
 
 /* Job detail */
 .job-detail-title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
   letter-spacing: -.4px;
-  color: var(--text);
+  color: #ffffff;
   margin-bottom: 6px;
 }
 .job-detail-meta {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 12px;
-  color: var(--text4);
+  font-size: 13px;
+  color: var(--text2);
   margin-bottom: 20px;
   flex-wrap: wrap;
+  line-height: 1.5;
 }
 .job-detail-meta span { display: flex; align-items: center; gap: 4px; }
 .detail-section-label {
@@ -476,17 +477,18 @@ html, body {
   text-transform: uppercase;
   letter-spacing: .09em;
   color: var(--text4);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .detail-notes {
-  font-size: 13px;
-  color: var(--text3);
-  line-height: 1.6;
+  font-size: 14px;
+  color: #eef4ff;
+  line-height: 1.7;
   white-space: pre-wrap;
-  background: var(--bg4);
+  background: #1b2238;
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 12px 14px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
 }
 
 /* Modal input focus */
@@ -499,12 +501,12 @@ html, body {
 
 /* ── CANDIDATES SYSTEM ──────────────────────────── */
 .cand-card {
-  padding: 11px 12px;
-  border-radius: var(--radius);
+  padding: 14px 14px;
+  border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--bg3);
   cursor: pointer;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
   transition: background .12s ease, border-color .12s ease;
 }
 .cand-card:hover  { background: var(--bg4); border-color: rgba(255,255,255,.1); }
@@ -512,9 +514,9 @@ html, body {
   background: rgba(99,91,255,.1);
   border-color: rgba(99,91,255,.35);
 }
-.cand-card-name  { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
-.cand-card-meta  { font-size: 11px; color: var(--text4); display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
-.cand-card-job   { font-size: 10px; color: var(--accent2); margin-top: 4px; }
+.cand-card-name  { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.cand-card-meta  { font-size: 11px; color: var(--text4); display: flex; gap: 5px; align-items: center; flex-wrap: wrap; margin-top: 2px; line-height: 1.4; }
+.cand-card-job   { font-size: 10px; color: var(--accent2); margin-top: 6px; }
 
 /* Status badge colours */
 .status-new        { background: rgba(148,163,184,.1);  color: #94a3b8; }
@@ -527,7 +529,7 @@ html, body {
 /* Candidate detail */
 .cand-detail-name    { font-size: 22px; font-weight: 800; letter-spacing: -.4px; color: var(--text); margin-bottom: 6px; }
 .cand-detail-meta    { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text4); margin-bottom: 22px; flex-wrap: wrap; }
-.cand-detail-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+.cand-detail-section { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--border); }
 
 /* Form focus */
 #cand-form input:focus,
@@ -1945,21 +1947,22 @@ function renderJobDetail(j) {
       '<div class="job-detail-title">' + escHtml(j.title) + '</div>' +
       (j.companyId ? '<div style="font-size:12px;color:var(--text4);margin-top:2px;">' + escHtml(getCompanyName(j.companyId)) + '</div>' : '') +
       '<div style="display:flex;gap:8px;flex-shrink:0;">' +
-        '<button class="btn btn-ghost btn-sm" data-jid="' + escHtml(String(j.id)) + '" onclick="openEditJob(this.dataset.jid)">Edit</button>' +
+        '<button class="btn btn-ghost btn-sm" data-jid="' + escHtml(String(j.id)) + '" onclick="openEditJob(this.dataset.jid)" style="border:1px solid rgba(255,255,255,.2);">Edit</button>' +
         (j.approvalStatus !== 'approved'
           ? '<button class="btn btn-sm" data-jid="' + escHtml(String(j.id)) + '" onclick="markJobApproved(this.dataset.jid)" '
               + 'style="background:rgba(34,197,94,.1);color:#22c55e;border:1px solid rgba(34,197,94,.3);">Mark as Approved</button>'
           : '') +
         '<button class="btn btn-sm" data-jid="' + escHtml(String(j.id)) + '" onclick="deleteJob(this.dataset.jid)" ' +
-          'style="background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);">Delete</button>' +
+          'style="background:rgba(239,68,68,.15);color:#ffffff;border:1px solid rgba(239,68,68,.35);">Delete</button>' +
       '</div>' +
     '</div>' +
 
     '<div class="job-detail-meta">' +
-      '<span class="job-status-badge ' + statusClass + '" style="font-size:11px;padding:2px 9px;">' + escHtml(j.status) + '</span>' +
-      (j.priority ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:' +
-        ({Critical:'rgba(239,68,68,.15)',High:'rgba(245,158,11,.15)',Medium:'rgba(59,130,246,.15)',Low:'rgba(148,163,184,.1)'}[j.priority]||'rgba(255,255,255,.07)') +
-        ';color:' + ({Critical:'var(--red)',High:'var(--amber)',Medium:'var(--accent2)',Low:'var(--text4)'}[j.priority]||'var(--text4)') +
+      '<span class="job-status-badge ' + statusClass + '" style="font-size:11px;font-weight:700;padding:3px 10px;">' + escHtml(j.status) + '</span>' +
+      (j.priority ? '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;background:' +
+        ({Critical:'rgba(239,68,68,.2)',High:'rgba(245,158,11,.2)',Medium:'rgba(59,130,246,.2)',Low:'rgba(148,163,184,.15)'}[j.priority]||'rgba(255,255,255,.07)') +
+        ';color:' + ({Critical:'#ff6b6b',High:'#fbbf24',Medium:'#60a5fa',Low:'var(--text3)'}[j.priority]||'var(--text3)') +
+        ';border:1px solid ' + ({Critical:'rgba(239,68,68,.4)',High:'rgba(245,158,11,.4)',Medium:'rgba(59,130,246,.4)',Low:'rgba(148,163,184,.25)'}[j.priority]||'rgba(255,255,255,.1)') +
         ';">' + escHtml(j.priority) + ' Priority</span>' : '') +
       (j.dept ? '<span>📁 ' + escHtml(j.dept) + '</span>' : '') +
       (j.location ? '<span>📍 ' + escHtml(j.location) + (j.locationType ? ' · ' + escHtml(j.locationType) : '') + '</span>' : '') +
@@ -1968,12 +1971,6 @@ function renderJobDetail(j) {
       (j.openings && j.openings > 1 ? '<span>🔢 ' + j.openings + ' openings</span>' : '') +
       (j.targetStart ? '<span>🎯 Start: ' + new Date(j.targetStart).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + '</span>' : '') +
       '<span>Added ' + created + (age > 0 ? ' · ' + age + 'd ago' : '') + '</span>' +
-      (j.approvalStatus === 'approved'
-        ? '<span style="font-size:10px;font-weight:700;background:rgba(34,197,94,.15);color:#22c55e;padding:2px 9px;border-radius:99px;border:1px solid rgba(34,197,94,.3);">✓ Approved</span>'
-        : '<span style="font-size:10px;font-weight:700;background:rgba(245,158,11,.12);color:#f59e0b;padding:2px 9px;border-radius:99px;border:1px solid rgba(245,158,11,.25);">Approval: Pending</span>') +
-      (j.title && j.notes && (j.salaryMin || j.salaryMax)
-        ? '<span style="font-size:10px;font-weight:700;background:rgba(34,197,94,.12);color:#22c55e;padding:2px 9px;border-radius:99px;border:1px solid rgba(34,197,94,.25);">&#10003; Ready to Recruit</span>'
-        : '<span style="font-size:10px;font-weight:700;background:rgba(245,158,11,.1);color:#f59e0b;padding:2px 9px;border-radius:99px;border:1px solid rgba(245,158,11,.2);">Needs Info</span>') +
     '</div>' +
 
     '<div style="border-top:1px solid var(--border);padding-top:20px;">' +
@@ -2591,7 +2588,7 @@ function renderCandidateDetail(cd) {
             '<div class="detail-section-label" style="margin-bottom:0;">Resume / Background</div>' +
             '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="openEditCandidate(this.dataset.cid)" style="padding:3px 10px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">&#9998; Edit / Re-upload</button>' +
           '</div>' +
-          '<div style="max-height:180px;overflow-y:auto;font-size:12px;line-height:1.7;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;white-space:pre-wrap;">' +
+          '<div style="max-height:180px;overflow-y:auto;font-size:12px;line-height:1.7;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px 16px;white-space:pre-wrap;">' +
             escHtml(cd.resume) +
           '</div>' +
         '</div>'
