@@ -5457,6 +5457,8 @@ function runResumeParse(text) {
 
   var more = document.getElementById('cf-more');
   if (more && more.style.display !== 'flex') toggleCandMore();
+
+  if (confident) applyResumeParseResults();
 }
 
 // ── Apply: fill form fields (empty-guard), then clear parse state ─────────────
