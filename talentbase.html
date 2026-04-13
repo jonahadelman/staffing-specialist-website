@@ -1219,6 +1219,7 @@ input:focus, select:focus, textarea:focus {
                 <option value="Offer">Offer</option>
                 <option value="Hired">Hired</option>
               </select>
+              <label style="display:inline-flex;align-items:center;gap:5px;padding:6px 10px;background:rgba(124,106,247,.1);border:1px solid rgba(124,106,247,.3);border-radius:8px;color:var(--accent2);font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;" title="Import candidates from CSV">⬆ CSV<input id="import-candidates" type="file" accept=".csv" style="display:none;"/></label>
             </div>
             <div id="cands-list" style="flex:1;overflow-y:auto;padding:8px;"></div>
           </div>
@@ -4604,6 +4605,8 @@ function analyzeResume(text) {
 document.addEventListener('DOMContentLoaded', function() {
   var t = document.getElementById('jf-title');
   if (t) t.addEventListener('blur', suggestSalary);
+  var imp = document.getElementById('import-candidates');
+  if (imp) imp.addEventListener('change', handleCandidateImport);
 });
 
 function markJobApproved(id) {
@@ -5571,6 +5574,68 @@ var _origOpenAddCandidateModal = window.openAddCandidateModal;
   };
 })();
 
+
+// ── Candidate CSV Import ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  var importInput = document.getElementById('import-candidates');
+  if (importInput) importInput.addEventListener('change', handleCandidateImport);
+});
+
+function handleCandidateImport(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var name = file.name.toLowerCase();
+  if (name.endsWith('.csv')) {
+    readCSV(file);
+  } else if (name.endsWith('.xlsx')) {
+    alert('Convert Excel to CSV for now');
+  } else {
+    alert('Unsupported file');
+  }
+  // Reset so same file can be re-imported
+  e.target.value = '';
+}
+
+function readCSV(file) {
+  var reader = new FileReader();
+  reader.onload = function(evt) {
+    var text = evt.target.result;
+    var rows = text.split('\n');
+    var now = Date.now();
+    var added = 0;
+    rows.slice(1).forEach(function(row) {
+      if (!row.trim()) return;
+      var cols = row.split(',');
+      if (!cols[0] || !cols[0].trim()) return;
+      var newCand = {
+        id:             String(uid()),
+        name:           cols[0].trim(),
+        title:          cols[1] ? cols[1].trim() : '',
+        company:        cols[2] ? cols[2].trim() : '',
+        resume:         cols[3] ? cols[3].trim().slice(0, 2000) : '',
+        status:         'New',
+        jobId:          null,
+        notes:          '',
+        skills:         [],
+        workspaceId:    state.currentWorkspace,
+        createdAt:      now,
+        lastActivityAt: now,
+        firstContactAt: null,
+        interviewCount: 0,
+      };
+      candidates.push(newCand);
+      added++;
+    });
+    if (added > 0) {
+      saveCandidates();
+      renderCandidates();
+      renderDashboard();
+    }
+    alert(added > 0 ? 'Import complete — ' + added + ' candidate' + (added !== 1 ? 's' : '') + ' added.' : 'No valid rows found in file.');
+  };
+  reader.onerror = function() { alert('Could not read file.'); };
+  reader.readAsText(file);
+}
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
