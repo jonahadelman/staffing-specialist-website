@@ -1522,6 +1522,7 @@ var USERS = [
 ];
 
 var TOPBAR_CONFIG = {
+  companies:   { title: 'Companies', sub: 'Client accounts',  primary: '+ Add Company', secondary: null },
   dashboard:   { title: '', sub: '', primary: null, secondary: null },
   jobs:        { title: 'Jobs',          sub: 'Open requisitions', primary: '+ New Job',       secondary: null },
   candidates:  { title: 'Candidates',    sub: 'Talent pool',      primary: '+ Add Candidate', secondary: 'Upload Resume' },
@@ -2834,6 +2835,7 @@ function deleteCandidate(id) {
 function topbarPrimaryAction() {
   if (state.currentView === 'jobs')       openAddJob();
   if (state.currentView === 'candidates') openAddCandidateModal();
+  if (state.currentView === 'companies')  openAddCompany();
 }
 function topbarSecondaryAction() {
   if (state.currentView === 'candidates') {
@@ -4304,12 +4306,12 @@ function openSubmitModal(candId) {
   document.getElementById('sf-hm').value      = (job && job.hiringManager) ? job.hiringManager : '';
   document.getElementById('sf-comp').value    = '';
   document.getElementById('sf-notes').value   = '';
-  document.getElementById('submit-modal-backdrop').style.display = 'flex';
+  var _smb=document.getElementById('submit-modal-backdrop'); if(_smb) _smb.style.display = 'flex';
   setTimeout(function() { document.getElementById('sf-company').focus(); }, 60);
 }
 
 function closeSubmitModal() {
-  document.getElementById('submit-modal-backdrop').style.display = 'none';
+  var _smb2=document.getElementById('submit-modal-backdrop'); if(_smb2) _smb2.style.display = 'none';
   submittingCandId = null;
 }
 
@@ -4658,11 +4660,11 @@ function openAddCompany() {
   if (f) f.reset();
   var err = document.getElementById('co-form-error');
   if (err) { err.style.display='none'; err.textContent=''; }
-  document.getElementById('company-modal-backdrop').style.display='flex';
+  var _cmb=document.getElementById('company-modal-backdrop'); if(_cmb) _cmb.style.display='flex';
   setTimeout(function(){ var n=document.getElementById('co-name'); if(n)n.focus(); },50);
 }
 function closeCompanyModal() {
-  document.getElementById('company-modal-backdrop').style.display='none';
+  var _cmb2=document.getElementById('company-modal-backdrop'); if(_cmb2) _cmb2.style.display='none';
 }
 function submitCompanyForm(e) {
   e.preventDefault();
