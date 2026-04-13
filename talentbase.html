@@ -4720,7 +4720,7 @@ function renderCompaniesView() {
           '<div style="font-size:14px;font-weight:700;color:var(--text);">' + escHtml(co.name) + '</div>' +
           '<div style="font-size:11px;color:var(--text4);margin-top:3px;">' + jc + ' job' + (jc !== 1 ? 's' : '') + ' · ' + cc + ' candidate' + (cc !== 1 ? 's' : '') + '</div>' +
         '</div>' +
-        '<button class="co-addjob-btn btn btn-sm" data-coid="' + escHtml(String(co.id)) + '" style="background:rgba(124,106,247,.1);border:1px solid rgba(124,106,247,.3);color:var(--accent2);font-size:11px;flex-shrink:0;">+ Add Job</button>' +
+        '<button class="co-addjob-btn btn btn-sm" data-coid="' + escHtml(String(co.id)) + '" style="background:rgba(124,106,247,.18);border:1px solid rgba(124,106,247,.6);color:var(--accent2);font-size:11px;font-weight:700;padding:5px 12px;flex-shrink:0;">+ Add Job for This Company</button>' +
       '</div>';
     }).join('');
   }
