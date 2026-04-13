@@ -4747,6 +4747,9 @@ function openAddJobForCompany(coId) {
     populateCompanyDropdown(coId);
     var sel = document.getElementById('jf-company');
     if (sel) sel.value = String(coId);
+    var titleEl = document.getElementById('job-modal-title');
+    var coName = getCompanyName(coId);
+    if (titleEl && coName) titleEl.textContent = 'Add Job — ' + coName;
   }, 80);
 }
 
