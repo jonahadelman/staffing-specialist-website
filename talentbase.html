@@ -2713,9 +2713,8 @@ function submitCandForm(e) {
   var errEl  = document.getElementById('cand-form-error');
 
   if (!name) {
-    errEl.textContent = 'Full name is required.';
-    errEl.style.display = 'block';
-    document.getElementById('cf-name').focus();
+    if (errEl) { errEl.textContent = 'Full name is required.'; errEl.style.display = 'block'; }
+    var _cfn = document.getElementById('cf-name'); if (_cfn) _cfn.focus();
     return;
   }
 
@@ -4300,12 +4299,16 @@ function openSubmitModal(candId) {
   if (titleEl) titleEl.textContent = 'Submit ' + cd.name;
   if (subEl)   subEl.textContent   = job ? 'Role: ' + job.title : '';
   if (errEl)   { errEl.textContent = ''; errEl.style.display = 'none'; }
-  document.getElementById('sf-company').value = '';
-  document.getElementById('sf-hm').value      = (job && job.hiringManager) ? job.hiringManager : '';
-  document.getElementById('sf-comp').value    = '';
-  document.getElementById('sf-notes').value   = '';
+  var sfCo = document.getElementById('sf-company');
+  var sfHm = document.getElementById('sf-hm');
+  var sfCp = document.getElementById('sf-comp');
+  var sfNt = document.getElementById('sf-notes');
+  if (sfCo) sfCo.value = '';
+  if (sfHm) sfHm.value = (job && job.hiringManager) ? job.hiringManager : '';
+  if (sfCp) sfCp.value = '';
+  if (sfNt) sfNt.value = '';
   var _smb=document.getElementById('submit-modal-backdrop'); if(_smb) _smb.style.display = 'flex';
-  setTimeout(function() { document.getElementById('sf-company').focus(); }, 60);
+  setTimeout(function() { var _sfc=document.getElementById('sf-company'); if(_sfc) _sfc.focus(); }, 60);
 }
 
 function closeSubmitModal() {
@@ -4319,9 +4322,8 @@ function submitCandidateAction() {
   var company = (document.getElementById('sf-company').value || '').trim();
   var errEl   = document.getElementById('submit-form-error');
   if (!company) {
-    errEl.textContent = 'Company name is required.';
-    errEl.style.display = 'block';
-    document.getElementById('sf-company').focus();
+    if (errEl) { errEl.textContent = 'Company name is required.'; errEl.style.display = 'block'; }
+    var _sfc2 = document.getElementById('sf-company'); if (_sfc2) _sfc2.focus();
     return;
   }
   var cd = candidates.find(function(x) { return String(x.id) === String(submittingCandId); });
@@ -4701,10 +4703,7 @@ function renderCompaniesView() {
   var jobCount  = function(coId) { return jobs.filter(function(j) { return String(j.companyId) === String(coId); }).length; };
   var candCount = function(coId) { return candidates.filter(function(cd) { return jobs.some(function(j) { return String(j.companyId) === String(coId) && String(j.id) === String(cd.jobId); }); }).length; };
 
-  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">' +
-    '<div style="font-size:18px;font-weight:800;color:var(--text);">Companies</div>' +
-    '<button onclick="openAddCompany()" class="btn btn-primary btn-sm">+ Add Company</button>' +
-    '</div>';
+  var html = '';
 
   if (!companies.length) {
     html += '<div class="empty-state"><div class="empty-state-icon">&#127970;</div>' +
