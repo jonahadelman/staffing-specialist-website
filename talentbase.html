@@ -2761,6 +2761,7 @@ function submitCandForm(e) {
     saveCandidates();
     closeCandModal();
     renderCandidates();
+    try { renderPipeline(); } catch(e) {}
     if (state && state.currentView === 'dashboard') renderDashboard();
     var updated = candidates.find(function(x) { return x.id == editingCandidateId; });
     if (updated) renderCandidateDetail(updated);
