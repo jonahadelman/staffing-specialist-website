@@ -1271,6 +1271,17 @@ input:focus, textarea:focus, select:focus {
                 <option value="Hired">Hired</option>
               </select>
             </div>
+            <div style="padding:6px 14px 8px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;gap:6px;">
+              <input id="filter-skill" type="text" placeholder="Skill..."
+                oninput="renderCandidates()"
+                style="flex:1;padding:5px 9px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:11px;font-family:inherit;outline:none;"/>
+              <input id="filter-company" type="text" placeholder="Company..."
+                oninput="renderCandidates()"
+                style="flex:1;padding:5px 9px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:11px;font-family:inherit;outline:none;"/>
+              <input id="filter-title" type="text" placeholder="Title..."
+                oninput="renderCandidates()"
+                style="flex:1;padding:5px 9px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:11px;font-family:inherit;outline:none;"/>
+            </div>
             <div id="cands-list" style="flex:1;overflow-y:auto;padding:8px;"></div>
           </div>
 
@@ -2296,8 +2307,11 @@ function renderCandidates() {
   var container = document.getElementById('cands-list');
   if (!container) return;
 
-  var q      = ((document.getElementById('cands-search')        || {}).value || '').trim().toLowerCase();
-  var filter = ((document.getElementById('cands-filter-status') || {}).value || '');
+  var q             = ((document.getElementById('cands-search')        || {}).value || '').trim().toLowerCase();
+  var filter        = ((document.getElementById('cands-filter-status') || {}).value || '');
+  var skillFilter   = ((document.getElementById('filter-skill')        || {}).value || '').trim().toLowerCase();
+  var companyFilter = ((document.getElementById('filter-company')      || {}).value || '').trim().toLowerCase();
+  var titleFilter   = ((document.getElementById('filter-title')        || {}).value || '').trim().toLowerCase();
 
   var scored = candidates.map(function(cd) {
     var matchScore = 0;
@@ -2320,7 +2334,10 @@ function renderCandidates() {
 
   var filtered = scored.filter(function(cd) {
     if (q && cd._matchScore === 0) return false;
-    if (filter && cd.status !== filter) return false;
+    if (filter        && cd.status !== filter) return false;
+    if (skillFilter   && !(cd.skills  || '').toString().toLowerCase().includes(skillFilter))   return false;
+    if (companyFilter && !(cd.company || '').toString().toLowerCase().includes(companyFilter)) return false;
+    if (titleFilter   && !(cd.title   || '').toString().toLowerCase().includes(titleFilter))   return false;
     return true;
   });
 
