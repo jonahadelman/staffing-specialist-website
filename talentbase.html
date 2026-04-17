@@ -1270,6 +1270,7 @@ input:focus, textarea:focus, select:focus {
                 <option value="Offer">Offer</option>
                 <option value="Hired">Hired</option>
               </select>
+              <button onclick="openBulkImport()" title="Import multiple resumes" style="padding:7px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text3);font-size:11px;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;">&#8679; Import</button>
             </div>
             <div style="padding:6px 14px 8px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;gap:6px;">
               <input id="filter-skill" type="text" placeholder="Skill..."
@@ -5363,6 +5364,68 @@ var _origOpenAddCandidateModal = window.openAddCandidateModal;
 
 
 document.addEventListener('DOMContentLoaded', init);
+
+// ── Bulk Resume Import ────────────────────────────────────────────────────────
+function openBulkImport() {
+  document.getElementById('bulk-import-backdrop').style.display = 'flex';
+}
+function closeBulkImport() {
+  document.getElementById('bulk-import-backdrop').style.display = 'none';
+  document.getElementById('bulk-paste').value = '';
+  document.getElementById('bulk-import-status').textContent = '';
+}
+function processBulkPaste() {
+  var raw     = (document.getElementById('bulk-paste').value || '').trim();
+  if (!raw) return;
+  var resumes = raw.split(/(?:\n{3,}|={5,}|-{5,})/);
+  var created = 0;
+  resumes.forEach(function(text) {
+    text = text.trim();
+    if (text.length < 50) return;
+    var parsed = parseResumeText(text);
+    if (!parsed.name) return;
+    var newCand = {
+      id:             uid(),
+      name:           parsed.name,
+      title:          parsed.title   || '',
+      company:        parsed.company || '',
+      location:       parsed.location|| '',
+      skills:         Array.isArray(parsed.skills) ? parsed.skills.join(', ') : (parsed.skills || ''),
+      notes:          parsed.summary || '',
+      resume:         text,
+      status:         'New',
+      createdAt:      Date.now(),
+      lastActivityAt: Date.now()
+    };
+    candidates.unshift(newCand);
+    created++;
+  });
+  saveCandidates();
+  renderCandidates();
+  document.getElementById('bulk-import-status').textContent = 'Imported ' + created + ' candidate' + (created !== 1 ? 's' : '');
+  if (created > 0) document.getElementById('bulk-paste').value = '';
+}
 </script>
+
+<!-- Bulk Resume Import Modal -->
+<div id="bulk-import-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;width:620px;max-width:94vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);">Import Resumes</div>
+        <div style="font-size:11px;color:var(--text4);margin-top:2px;">Paste multiple resumes — separate each with 3+ blank lines or a row of dashes</div>
+      </div>
+      <button onclick="closeBulkImport()" style="background:none;border:none;color:var(--text4);font-size:20px;cursor:pointer;padding:0 4px;line-height:1;">&times;</button>
+    </div>
+    <div style="padding:18px 22px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;">
+      <textarea id="bulk-paste" placeholder="Paste resume text here...&#10;&#10;Separate each resume with 3 blank lines or -----" style="width:100%;height:320px;padding:12px;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-size:12px;font-family:inherit;resize:vertical;outline:none;box-sizing:border-box;line-height:1.5;"></textarea>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button onclick="processBulkPaste()" style="padding:9px 22px;background:var(--primary);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">Import Candidates</button>
+        <button onclick="closeBulkImport()" style="padding:9px 16px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text3);font-size:13px;font-family:inherit;cursor:pointer;">Cancel</button>
+        <span id="bulk-import-status" style="font-size:12px;color:var(--primary);font-weight:600;"></span>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
