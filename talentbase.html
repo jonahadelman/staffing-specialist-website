@@ -3080,6 +3080,28 @@ function renderPipeline() {
 }
 
 // ── Move candidate to next stage ──────────────────────────────
+// ── Canonical stage mutation helper ─────────────────────────
+// All application stage changes flow through this function.
+// Preserves existing behavior exactly: stamps firstContactAt on contact
+// stages, bumps interviewCount on Interview, always calls saveApplications().
+function setApplicationStage(app, stageName) {
+  if (!app) return;
+  if (!PIPE_STAGES.includes(stageName) && stageName !== 'Rejected') return;
+  var now = Date.now();
+  app.status         = stageName;
+  app.stage          = stageName;
+  app.updatedAt      = now;
+  app.lastActivityAt = now;
+  if (!app.firstContactAt &&
+      ['Screening','Interview','Submitted','Offer','Hired'].includes(stageName)) {
+    app.firstContactAt = now;
+  }
+  if (stageName === 'Interview') {
+    app.interviewCount = (app.interviewCount || 0) + 1;
+  }
+  saveApplications();
+}
+
 function moveCandidate(id) {
   var sid = String(id);
   var cd  = candidates.find(function(x) { return String(x.id) === sid; });
@@ -3092,20 +3114,9 @@ function moveCandidate(id) {
 
   if (idx < PIPE_STAGES.length - 1) {
     var nextStage = PIPE_STAGES[idx + 1];
-    var now       = Date.now();
 
     if (app) {
-      app.status         = nextStage;
-      app.stage          = nextStage;
-      app.lastActivityAt = now;
-      app.updatedAt      = now;
-      if (!app.firstContactAt && ['Screening','Interview','Offer','Hired'].includes(nextStage)) {
-        app.firstContactAt = now;
-      }
-      if (nextStage === 'Interview') {
-        app.interviewCount = (app.interviewCount || 0) + 1;
-      }
-      saveApplications();
+      setApplicationStage(app, nextStage);
     }
 
     try { renderPipeline(); }   catch(e) { console.error('renderPipeline', e); }
@@ -4407,12 +4418,7 @@ function submitCandidateAction() {
   if (_sApp) {
     if (!Array.isArray(_sApp.submissions)) _sApp.submissions = [];
     _sApp.submissions.push(newSub);
-    _sApp.status         = 'Submitted';
-    _sApp.stage          = 'Submitted';
-    _sApp.lastActivityAt = now;
-    _sApp.updatedAt      = now;
-    if (!_sApp.firstContactAt) _sApp.firstContactAt = now;
-    saveApplications();
+    setApplicationStage(_sApp, 'Submitted');
   }
 
   addActivityItem('Submitted ' + cd.name + ' to ' + company);
@@ -4449,16 +4455,16 @@ function updateSubmissionStatus(candId, idx, newStatus) {
   var _ussApp = getPrimaryApplication(String(candId));
   if (_ussApp && Array.isArray(_ussApp.submissions) && _ussApp.submissions[idx]) {
     _ussApp.submissions[idx].status = newStatus;
-    _ussApp.lastActivityAt = now;
-    _ussApp.updatedAt = now;
     if (newStatus === 'interview') {
-      _ussApp.status = 'Interview'; _ussApp.stage = 'Interview';
-      _ussApp.interviewCount = (_ussApp.interviewCount || 0) + 1;
-      _ussApp.firstContactAt = _ussApp.firstContactAt || now;
+      setApplicationStage(_ussApp, 'Interview');
     } else if (newStatus === 'hired') {
-      _ussApp.status = 'Hired'; _ussApp.stage = 'Hired';
+      setApplicationStage(_ussApp, 'Hired');
+    } else {
+      // No stage change — just bump activity timestamps
+      _ussApp.lastActivityAt = now;
+      _ussApp.updatedAt      = now;
+      saveApplications();
     }
-    saveApplications();
   }
 
   // Log to activity board — read company from application submission
@@ -4817,9 +4823,8 @@ function openAddJobForCompany(coId) {
 function acceptOffer(candId) {
   var cd=candidates.find(function(x){return String(x.id)===String(candId);});
   if(!cd) return;
-  var now=Date.now();
   var _aoApp=getPrimaryApplication(String(candId));
-  if(_aoApp){_aoApp.status='Hired';_aoApp.stage='Hired';_aoApp.lastActivityAt=now;_aoApp.updatedAt=now;saveApplications();}
+  if(_aoApp){ setApplicationStage(_aoApp, 'Hired'); }
   addActivityItem('Offer accepted — Hired: '+cd.name); saveActivityBoard();
   delete snoozedTasks[String(candId)];
   try{renderCandidateDetail(cd);}catch(e){}
