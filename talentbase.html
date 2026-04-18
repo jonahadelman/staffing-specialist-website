@@ -10,39 +10,47 @@
 <style>
 /* ── RESET ──────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse at 20% 20%, rgba(59,130,246,.07), transparent 45%), radial-gradient(ellipse at 80% 80%, rgba(20,184,166,.05), transparent 45%), var(--bg); }
+html { scroll-behavior: smooth; }
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 600px at 20% -10%, rgba(99,91,255,.08), transparent 60%),
+    radial-gradient(800px 400px at 90% 20%, rgba(0,212,255,.05), transparent 60%),
+    var(--bg);
+}
 
 /* ── DESIGN TOKENS ──────────────────────────────── */
 :root {
-  /* Backgrounds */
-  --bg:       #080c12;
-  --bg2:      #0f1520;
-  --bg3:      #161e2e;
-  --bg4:      #1c2740;
+  /* ─ Backgrounds ─ */
+  --bg:       #0f1724;
+  --bg2:      #121a2b;   /* sidebar / surface */
+  --bg3:      #151b2f;   /* surface */
+  --bg4:      #1b2238;   /* surface-2 / raised */
 
-  /* Borders */
-  --border:   rgba(255,255,255,.07);
+  /* ─ Borders ─ */
+  --border:   rgba(255,255,255,.06);
   --border2:  rgba(255,255,255,.11);
 
-  /* Text */
-  --text:     #f1f5f9;
-  --text2:    #c8d8e8;
-  --text3:    #8fa3b8;
-  --text4:    #546070;
+  /* ─ Text ─ */
+  --text:     #eef4ff;
+  --text2:    #c4d0e8;
+  --text3:    #a7b4c8;
+  --text4:    #7a8fa8;
 
-  /* Accent */
-  --accent:   #3b82f6;
-  --accent2:  #60a5fa;
+  /* ─ Brand / Accent ─ */
+  --accent:   #635bff;   /* primary indigo */
+  --accent2:  #7a73ff;   /* primary hover */
+  --teal:     #00d4ff;   /* highlight cyan */
   --green:    #22c55e;
   --amber:    #f59e0b;
   --red:      #ef4444;
-  --teal:     #14b8a6;
   --purple:   #a78bf5;
 
-  /* Sizes */
+  /* ─ Sizes ─ */
   --sidebar-w: 200px;
   --topbar-h:  42px;
-  --radius:    10px;
+  --radius:    12px;
   --radius-lg: 14px;
 
   font-family: 'DM Sans', system-ui, sans-serif;
@@ -50,7 +58,7 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   color: var(--text);
   background: var(--bg);
 
-  /* Spacing scale */
+  /* ─ Spacing ─ */
   --space-xs: 6px; --space-sm: 10px; --space-md: 16px;
   --space-lg: 24px; --space-xl: 32px;
 }
@@ -87,15 +95,16 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
 #sidebar-logo-mark {
   width: 28px;
   height: 28px;
-  background: linear-gradient(135deg, var(--accent), var(--teal));
+  background: linear-gradient(135deg, var(--accent), #4f46e5);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99,91,255,.4);
 }
 #sidebar-logo-mark svg { width: 14px; height: 14px; }
-#sidebar-logo-text { font-size: 14px; font-weight: 800; letter-spacing: -.3px; }
+#sidebar-logo-text { font-size: 14px; font-weight: 800; letter-spacing: -.3px; color: var(--text); }
 #sidebar-logo-sub  { font-size: 9px; color: var(--text4); margin-top: 1px; }
 
 /* User picker */
@@ -122,7 +131,7 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
 #sidebar-nav {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 0 8px;
+  padding: 8px 0;
 }
 #sidebar-nav::-webkit-scrollbar { width: 3px; }
 #sidebar-nav::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
@@ -130,7 +139,7 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
 .nav-section-label {
   font-size: 9px;
   font-weight: 700;
-  color: rgba(84,96,112,.7);
+  color: rgba(90,106,128,.7);
   text-transform: uppercase;
   letter-spacing: .1em;
   padding: 6px 16px 3px;
@@ -143,12 +152,12 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   gap: 9px;
   padding: 7px 12px;
   margin: 1px 8px;
-  border-radius: 7px;
+  border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
   color: var(--text3);
   cursor: pointer;
-  transition: background .12s, color .12s;
+  transition: background .12s ease, color .12s ease;
   user-select: none;
   border: none;
   background: none;
@@ -160,15 +169,16 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   width: 15px;
   height: 15px;
   flex-shrink: 0;
-  opacity: .7;
+  opacity: .6;
+  transition: opacity .12s ease;
 }
 .nav-item:hover {
   background: rgba(255,255,255,.05);
   color: var(--text2);
 }
-.nav-item:hover svg { opacity: .9; }
+.nav-item:hover svg { opacity: .85; }
 .nav-item.active {
-  background: rgba(59,130,246,.14);
+  background: rgba(99,91,255,.15);
   color: var(--accent2);
   font-weight: 600;
 }
@@ -178,7 +188,7 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   margin-left: auto;
   font-size: 10px;
   font-weight: 700;
-  background: rgba(59,130,246,.2);
+  background: rgba(99,91,255,.2);
   color: var(--accent2);
   padding: 1px 6px;
   border-radius: 99px;
@@ -225,9 +235,9 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   justify-content: space-between;
   padding: 0 28px;
   border-bottom: 1px solid var(--border);
-  background: rgba(15,21,32,.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(15,23,36,.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   flex-shrink: 0;
   gap: 16px;
 }
@@ -241,35 +251,43 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
+  padding: 7px 16px;
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: all .12s ease;
+  transition: all .15s ease;
   white-space: nowrap;
 }
 .btn:active { transform: scale(.96); }
 .btn svg { width: 13px; height: 13px; flex-shrink: 0; }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--teal), #0d9488);
+  background: var(--accent);
   color: #fff;
-  border-color: #0d9488;
-  box-shadow: none;
+  border: none;
+  box-shadow: 0 6px 20px rgba(99,91,255,.35);
 }
-.btn-primary:hover { box-shadow: 0 6px 24px rgba(20,184,166,.6); transform: translateY(-1px); }
+.btn-primary:hover {
+  background: var(--accent2);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(99,91,255,.5);
+}
 
 .btn-ghost {
-  background: rgba(255,255,255,.05);
-  color: var(--text2);
-  border-color: var(--border2);
+  background: transparent;
+  color: var(--text3);
+  border: 1px solid var(--border);
 }
-.btn-ghost:hover { background: rgba(255,255,255,.09); color: var(--text); }
+.btn-ghost:hover {
+  border-color: rgba(255,255,255,.2);
+  color: var(--text);
+  background: rgba(255,255,255,.04);
+}
 
-.btn-sm { padding: 5px 11px; font-size: 12px; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
 
 /* ── VIEWS ──────────────────────────────────────── */
 #view-container {
@@ -290,24 +308,27 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 28px 32px 48px;
+  padding: 36px 40px 56px;
   scroll-behavior: smooth;
 }
 .view-scroll::-webkit-scrollbar { width: 4px; }
-.view-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+.view-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 99px; }
 
 /* ── CARDS / TILES ──────────────────────────────── */
 .card {
-  background: var(--bg2);
+  background: var(--bg3);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius);
   padding: 20px 22px;
-  box-shadow: 0 4px 20px rgba(0,0,0,.35);
-  transition: transform .15s ease, box-shadow .15s ease;
+  box-shadow:
+    0 8px 32px rgba(0,0,0,.5),
+    inset 0 1px 0 rgba(255,255,255,.03);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(0,0,0,.55);
+  border-color: rgba(255,255,255,.1);
+  box-shadow: 0 14px 40px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
 }
 
 .kpi-grid {
@@ -317,22 +338,22 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   margin-bottom: 22px;
 }
 .kpi-card {
-  background: var(--bg2);
+  background: linear-gradient(180deg, var(--bg3), var(--bg4));
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 18px 20px;
+  border-radius: var(--radius);
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  box-shadow: 0 4px 16px rgba(0,0,0,.3);
+  box-shadow: 0 6px 20px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.03);
   transition: transform .15s ease, box-shadow .15s ease;
 }
 .kpi-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  box-shadow: 0 10px 30px rgba(0,0,0,.55);
 }
 .kpi-label { font-size: 10px; font-weight: 700; color: var(--text4); text-transform: uppercase; letter-spacing: .08em; }
-.kpi-value { font-size: 30px; font-weight: 800; letter-spacing: -1px; line-height: 1.1; }
+.kpi-value { font-size: 34px; font-weight: 800; letter-spacing: -1px; line-height: 1.1; }
 .kpi-sub   { font-size: 11px; color: var(--text4); }
 
 /* ── SECTION HEADER ─────────────────────────────── */
@@ -343,13 +364,13 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   margin-bottom: 12px;
 }
 .section-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text);
 }
 .section-sub {
   font-size: 11px;
-  color: var(--text4);
+  color: var(--text3);
 }
 
 /* ── EMPTY STATE ────────────────────────────────── */
@@ -363,43 +384,41 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   color: var(--text4);
   gap: 10px;
 }
-.empty-state-icon { font-size: 36px; }
+.empty-state-icon  { font-size: 36px; }
 .empty-state-title { font-size: 15px; font-weight: 700; color: var(--text3); }
-.empty-state-sub { font-size: 12px; max-width: 280px; }
+.empty-state-sub   { font-size: 12px; max-width: 280px; }
 
 /* ── PAGE TITLES PER VIEW ───────────────────────── */
-.page-header {
-  margin-bottom: 24px;
-}
+.page-header { margin-bottom: 24px; }
 .page-title {
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 800;
   letter-spacing: -.5px;
   color: var(--text);
 }
 .page-sub {
   font-size: 12px;
-  color: var(--text4);
+  color: var(--text3);
   margin-top: 3px;
 }
 
 /* ── JOBS SYSTEM ────────────────────────────────── */
 .job-card {
   padding: 11px 12px;
-  border-radius: 9px;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
-  background: var(--bg2);
+  background: var(--bg3);
   cursor: pointer;
   margin-bottom: 6px;
-  transition: background .1s, border-color .1s;
+  transition: background .12s ease, border-color .12s ease;
 }
 .job-card:hover {
-  background: var(--bg3);
-  border-color: var(--border2);
+  background: var(--bg4);
+  border-color: rgba(255,255,255,.1);
 }
 .job-card.selected {
-  background: rgba(59,130,246,.1);
-  border-color: rgba(59,130,246,.35);
+  background: rgba(99,91,255,.1);
+  border-color: rgba(99,91,255,.35);
 }
 .job-card-title {
   font-size: 13px;
@@ -426,29 +445,30 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   display: inline-block;
 }
 .status-active   { background: rgba(34,197,94,.12);  color: #22c55e; }
-.status-approved { background: rgba(59,130,246,.12); color: #60a5fa; }
+.status-approved { background: rgba(99,91,255,.15);  color: #a89dff; }
 .status-draft    { background: rgba(245,158,11,.12); color: #f59e0b; }
 .status-open     { background: rgba(34,197,94,.12);  color: #22c55e; }
 .status-on-hold  { background: rgba(245,158,11,.12); color: #f59e0b; }
-.status-filled   { background: rgba(59,130,246,.12); color: #60a5fa; }
-.status-closed   { background: rgba(100,96,112,.15); color: #8fa3b8; }
+.status-filled   { background: rgba(99,91,255,.15);  color: #a89dff; }
+.status-closed   { background: rgba(90,106,128,.15); color: #8fa3b8; }
 
 /* Job detail */
 .job-detail-title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
   letter-spacing: -.4px;
-  color: var(--text);
+  color: #ffffff;
   margin-bottom: 6px;
 }
 .job-detail-meta {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 12px;
-  color: var(--text4);
+  font-size: 13px;
+  color: var(--text2);
   margin-bottom: 20px;
   flex-wrap: wrap;
+  line-height: 1.5;
 }
 .job-detail-meta span { display: flex; align-items: center; gap: 4px; }
 .detail-section-label {
@@ -457,65 +477,66 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   text-transform: uppercase;
   letter-spacing: .09em;
   color: var(--text4);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .detail-notes {
-  font-size: 13px;
-  color: var(--text3);
-  line-height: 1.6;
+  font-size: 14px;
+  color: #eef4ff;
+  line-height: 1.7;
   white-space: pre-wrap;
-  background: var(--bg3);
+  background: #1b2238;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px 14px;
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
 }
 
 /* Modal input focus */
 #job-form input:focus,
 #job-form select:focus,
 #job-form textarea:focus {
-  border-color: rgba(59,130,246,.5);
-  box-shadow: 0 0 0 2px rgba(59,130,246,.12);
+  border-color: rgba(99,91,255,.5);
+  box-shadow: 0 0 0 3px rgba(99,91,255,.12);
 }
 
 /* ── CANDIDATES SYSTEM ──────────────────────────── */
 .cand-card {
-  padding: 11px 12px;
-  border-radius: 9px;
-  border: 1px solid #243044;
-  background: #131c2e;
+  padding: 14px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
   cursor: pointer;
-  margin-bottom: 6px;
-  transition: background .15s, border-color .15s;
+  margin-bottom: 10px;
+  transition: background .12s ease, border-color .12s ease;
 }
-.cand-card:hover  { background: #182236; border-color: #2e3f5c; }
+.cand-card:hover  { background: var(--bg4); border-color: rgba(255,255,255,.1); }
 .cand-card.selected {
-  background: rgba(59,130,246,.18);
-  border: 1px solid #3b82f6;
+  background: rgba(99,91,255,.1);
+  border-color: rgba(99,91,255,.35);
 }
-.cand-card-name  { font-size: 13px; font-weight: 600; color: #f1f5f9; margin-bottom: 3px; }
-.cand-card-meta  { font-size: 11px; color: #7a90a8; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
-.cand-card-job   { font-size: 10px; color: var(--accent2); margin-top: 4px; }
+.cand-card-name  { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.cand-card-meta  { font-size: 11px; color: var(--text4); display: flex; gap: 5px; align-items: center; flex-wrap: wrap; margin-top: 2px; line-height: 1.4; }
+.cand-card-job   { font-size: 10px; color: var(--accent2); margin-top: 6px; }
 
-/* Status badge colours (shared with jobs via .status-*) */
-.status-new        { background: rgba(148,163,184,.12); color: #94a3b8; }
-.status-screening  { background: rgba(96,165,250,.12);  color: #60a5fa; }
+/* Status badge colours */
+.status-new        { background: rgba(148,163,184,.1);  color: #94a3b8; }
+.status-screening  { background: rgba(99,91,255,.15);   color: #a89dff; }
 .status-interview  { background: rgba(245,158,11,.12);  color: #f59e0b; }
 .status-offer      { background: rgba(34,197,94,.12);   color: #22c55e; }
 .status-hired      { background: rgba(167,139,245,.12); color: #a78bf5; }
-.status-submitted   { background: rgba(20,184,166,.12); color: #2dd4bf; }
+.status-submitted  { background: rgba(0,212,255,.1);    color: #00d4ff; }
 
 /* Candidate detail */
-.cand-detail-name  { font-size: 22px; font-weight: 800; letter-spacing: -.4px; color: var(--text); margin-bottom: 6px; }
-.cand-detail-meta  { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text4); margin-bottom: 22px; flex-wrap: wrap; }
-.cand-detail-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+.cand-detail-name    { font-size: 22px; font-weight: 800; letter-spacing: -.4px; color: var(--text); margin-bottom: 6px; }
+.cand-detail-meta    { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text4); margin-bottom: 22px; flex-wrap: wrap; }
+.cand-detail-section { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--border); }
 
 /* Form focus */
 #cand-form input:focus,
 #cand-form select:focus,
 #cand-form textarea:focus {
-  border-color: rgba(59,130,246,.5);
-  box-shadow: 0 0 0 2px rgba(59,130,246,.12);
+  border-color: rgba(99,91,255,.5);
+  box-shadow: 0 0 0 3px rgba(99,91,255,.12);
 }
 
 /* ── PIPELINE ───────────────────────────────────── */
@@ -527,36 +548,39 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   display: flex;
   flex-direction: column;
   background: var(--bg2);
-  border: 1px solid rgba(255,255,255,.07);
+  border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
   max-height: 100%;
+  transition: border-color .18s ease;
 }
+.pipe-col:hover { border-color: rgba(255,255,255,.12); }
 .pipe-col[data-stage="Submitted"] {
-  border-color: rgba(20,184,166,.4);
-  box-shadow: 0 0 16px rgba(20,184,166,.1);
-  background: rgba(20,184,166,.03);
+  border-color: rgba(0,212,255,.3);
+  box-shadow: 0 0 20px rgba(0,212,255,.08);
+  background: rgba(0,212,255,.025);
 }
 .pipe-card-pulse {
   animation: sub-pulse 2.4s ease-in-out infinite;
 }
 @keyframes sub-pulse {
-  0%,100% { box-shadow: 0 0 0 0 rgba(20,184,166,0); }
-  50%      { box-shadow: 0 0 12px 3px rgba(20,184,166,.3); }
+  0%,100% { box-shadow: 0 0 0 0 rgba(0,212,255,0); }
+  50%      { box-shadow: 0 0 14px 4px rgba(0,212,255,.2); }
 }
 
-/* Sticky header inside column */
+/* Column header */
 .pipe-col-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 13px 14px 12px;
-  border-bottom: 1px solid rgba(255,255,255,.06);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   position: sticky;
   top: 0;
   background: var(--bg2);
   z-index: 2;
+  opacity: .9;
 }
 .pipe-col-label {
   display: flex;
@@ -579,7 +603,7 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   font-size: 11px;
   font-weight: 700;
   color: var(--text4);
-  background: rgba(255,255,255,.08);
+  background: rgba(255,255,255,.07);
   padding: 2px 8px;
   border-radius: 99px;
   min-width: 24px;
@@ -597,10 +621,7 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   min-height: 100px;
 }
 .pipe-col-body::-webkit-scrollbar { width: 3px; }
-.pipe-col-body::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,.1);
-  border-radius: 99px;
-}
+.pipe-col-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 99px; }
 
 /* Empty column */
 .pipe-empty {
@@ -608,24 +629,24 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   text-align: center;
   font-size: 11px;
   color: var(--text4);
-  border: 1px dashed rgba(255,255,255,.07);
+  border: 1px dashed rgba(255,255,255,.06);
   border-radius: 10px;
   letter-spacing: .01em;
 }
 
-/* ── Card ── */
+/* ── Pipeline Card ── */
 .pipe-card {
-  background: var(--bg3);
-  border: 1px solid rgba(255,255,255,.07);
+  background: var(--bg4);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 13px 13px 10px;
+  padding: 14px 13px 11px;
   position: relative;
-  transition: transform .15s ease, border-color .15s, box-shadow .15s;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
   cursor: default;
   overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,.35);
 }
 .pipe-card::before {
-  /* Stage accent strip — top edge */
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
@@ -634,14 +655,14 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   border-radius: 12px 12px 0 0;
 }
 .pipe-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(255,255,255,.18);
+  transform: translateY(-3px);
+  border-color: rgba(255,255,255,.14);
   box-shadow: 0 14px 36px rgba(0,0,0,.6);
 }
 
-/* Card top: name + title */
-.pipe-card-top    { margin-bottom: 9px; }
-.pipe-card-name   {
+/* Card typography */
+.pipe-card-top  { margin-bottom: 9px; }
+.pipe-card-name {
   font-size: 14px;
   font-weight: 700;
   color: var(--text);
@@ -651,16 +672,14 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.pipe-card-role   {
+.pipe-card-role {
   font-size: 11px;
   color: var(--text4);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* Card mid: company */
-.pipe-card-mid    {
+.pipe-card-mid {
   font-size: 11px;
   color: var(--text3);
   margin-bottom: 10px;
@@ -668,8 +687,6 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* Card bottom: badge left, button right */
 .pipe-card-bottom {
   display: flex;
   align-items: center;
@@ -696,13 +713,13 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   min-width: 0;
 }
 
-/* Advance button */
+/* Advance button (legacy — kept for compat) */
 .pipe-advance-btn {
   flex-shrink: 0;
   padding: 5px 11px;
-  background: rgba(255,255,255,.06);
+  background: rgba(255,255,255,.05);
   border: 1px solid rgba(255,255,255,.1);
-  border-radius: 7px;
+  border-radius: 8px;
   color: var(--text3);
   font-size: 10px;
   font-weight: 700;
@@ -712,13 +729,11 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   transition: background .12s, color .12s, border-color .12s;
 }
 .pipe-advance-btn:hover {
-  background: rgba(255,255,255,.13);
+  background: rgba(255,255,255,.11);
   border-color: rgba(255,255,255,.18);
   color: var(--text);
 }
-.pipe-advance-btn:active {
-  transform: scale(0.96);
-}
+.pipe-advance-btn:active { transform: scale(0.96); }
 .pipe-advance-btn:disabled {
   opacity: .28;
   cursor: not-allowed;
@@ -727,63 +742,48 @@ html, body { height: 100%; overflow: hidden; background: radial-gradient(ellipse
   color: var(--green);
 }
 
-/* ═══ POLISH PASS ═══════════════════════════════════════════ */
-
-/* space tokens merged into :root above */
-.section-title { font-size: 14px; font-weight: 700; color: var(--text2); }
-.muted { color: var(--text4); font-size: 12px; }
-
-.card {
-  border: 1px solid rgba(255,255,255,.06) !important;
-  box-shadow: 0 6px 18px rgba(0,0,0,.35);
-  transition: transform .2s ease, box-shadow .2s ease;
+/* Msg button */
+.pipe-msg-btn {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  padding: 0;
+  background: rgba(99,91,255,.12);
+  border: 1px solid rgba(99,91,255,.25);
+  border-radius: 7px;
+  color: var(--accent2);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,.5); }
+.pipe-msg-btn:hover { background: rgba(99,91,255,.22); }
 
-.kpi-card {
-  transition: transform .15s ease, box-shadow .15s ease;
+/* Pipeline action button — contextual primary action per stage */
+.pipe-action-btn {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 6px 0;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: .04em;
+  transition: opacity .12s ease, transform .12s ease, box-shadow .12s ease;
+  display: block;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
 }
-.kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.4); }
+.pipe-action-btn:hover  { opacity: .9; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,.35); }
+.pipe-action-btn:active { transform: scale(.97); }
 
-.pipe-col { transition: border-color .15s ease; }
-.pipe-col:hover { border-color: rgba(255,255,255,.15) !important; }
-.pipe-card:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 12px 28px rgba(0,0,0,.5) !important;
-}
-
-.btn-primary {
-  box-shadow: 0 4px 18px rgba(59,130,246,.4) !important;
-  transition: transform .15s ease, box-shadow .15s ease !important;
-}
-.btn-primary:hover {
-  transform: translateY(-1px) !important;
-  box-shadow: 0 6px 24px rgba(59,130,246,.6) !important;
-}
-.btn-ghost { transition: background .12s ease, color .12s ease; }
-.nav-item  { transition: background .12s ease, color .12s ease; }
-
-#topbar {
-  background: rgba(15,21,32,.88) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.18); }
-
-input:focus, select:focus, textarea:focus {
-  border-color: rgba(59,130,246,.5) !important;
-  box-shadow: 0 0 0 2px rgba(59,130,246,.12) !important;
-  outline: none;
-}
-
-/* ── CANDIDATE EXPERIENCE (CX) ──────────────────── */
+/* ── EXPERIENCE RISK CLASSES ─────────────────────── */
 .pipe-card.stale {
-  border-color: rgba(239,68,68,.45) !important;
-  box-shadow: 0 0 12px rgba(239,68,68,.2) !important;
+  border-color: rgba(239,68,68,.4) !important;
+  box-shadow: 0 0 14px rgba(239,68,68,.15) !important;
 }
 .cx-chips {
   display: flex;
@@ -796,100 +796,51 @@ input:focus, select:focus, textarea:focus {
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 99px;
-  background: rgba(255,255,255,.07);
+  background: rgba(255,255,255,.06);
   color: var(--text4);
   letter-spacing: .03em;
   white-space: nowrap;
 }
 .cx-chip.cx-stale {
-  background: rgba(239,68,68,.12);
+  background: rgba(239,68,68,.1);
   color: #f87171;
 }
-
-/* ── EXPERIENCE RISK CLASSES ───────────────────────── */
 .pipe-card.risk-critical {
-  border-color: rgba(239,68,68,.55) !important;
-  box-shadow: 0 0 14px rgba(239,68,68,.2) !important;
+  border-color: rgba(239,68,68,.5) !important;
+  box-shadow: 0 0 16px rgba(239,68,68,.18) !important;
 }
 .pipe-card.risk-warning {
-  border-color: rgba(245,158,11,.45) !important;
-  box-shadow: 0 0 10px rgba(245,158,11,.12) !important;
+  border-color: rgba(245,158,11,.4) !important;
+  box-shadow: 0 0 12px rgba(245,158,11,.1) !important;
 }
 .pipe-card.risk-healthy {
-  border-color: rgba(34,197,94,.25) !important;
+  border-color: rgba(34,197,94,.2) !important;
 }
 
-/* Msg button on pipeline card */
-.pipe-msg-btn {
-  flex-shrink: 0;
-  width: 28px; height: 28px;
-  padding: 0;
-  background: rgba(59,130,246,.1);
-  border: 1px solid rgba(59,130,246,.2);
-  border-radius: 6px;
-  color: var(--accent2);
-  font-size: 13px;
-  cursor: pointer;
-  transition: background .12s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* ── NEEDS ACTION PANEL ──────────────────────────── */
+#needs-action-list {
+  background: var(--bg3);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
 }
-.pipe-msg-btn:hover { background: rgba(59,130,246,.2); }
 
-/* ── Visual upgrade: premium micro-polish ─────── */
-html { scroll-behavior: smooth; }
+/* ── UTILITY ─────────────────────────────────────── */
+.muted { color: var(--text4); font-size: 12px; }
+.job-list-item { transition: background .1s ease; }
+.cand-detail-section { border-bottom: 1px solid rgba(255,255,255,.04); }
 
-/* Input focus glow — Stripe-style */
-input:focus, textarea:focus, select:focus {
-  border-color: rgba(20,184,166,.5) !important;
-  box-shadow: 0 0 0 3px rgba(20,184,166,.12) !important;
+/* ── GLOBAL FORM FOCUS ───────────────────────────── */
+input:focus, select:focus, textarea:focus {
+  border-color: rgba(99,91,255,.5) !important;
+  box-shadow: 0 0 0 3px rgba(99,91,255,.12) !important;
   outline: none;
 }
 
-/* Nav item hover — subtle lift */
-.nav-item {
-  transition: background .1s ease, color .1s ease;
-}
-
-/* Pipeline column header — softer weight */
-.pipe-col-header {
-  opacity: .85;
-}
-
-/* Section headers — refined spacing */
-.section-header {
-  margin-bottom: 10px;
-}
-
-/* Job list item — smoother hover */
-.job-list-item {
-  transition: background .1s ease;
-}
-
-/* Soften section dividers */
-.cand-detail-section {
-  border-bottom: 1px solid rgba(255,255,255,.05);
-}
-
-/* pipe-action-btn — contextual card primary action */
-.pipe-action-btn {
-  width: 100%;
-  margin-bottom: 8px;
-  padding: 5px 0;
-  border: none;
-  border-radius: 7px;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 800;
-  font-family: inherit;
-  cursor: pointer;
-  letter-spacing: .03em;
-  transition: opacity .1s ease, transform .1s ease;
-  display: block;
-}
-.pipe-action-btn:hover  { opacity: .9; transform: translateY(-1px); }
-.pipe-action-btn:active { transform: scale(.97); }
+/* ── SCROLLBARS ──────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.15); }
 </style>
 </head>
 
@@ -1270,18 +1221,7 @@ input:focus, textarea:focus, select:focus {
                 <option value="Offer">Offer</option>
                 <option value="Hired">Hired</option>
               </select>
-              <button onclick="openBulkImport()" title="Import multiple resumes" style="padding:7px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text3);font-size:11px;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;">&#8679; Import</button>
-            </div>
-            <div style="padding:6px 14px 8px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;gap:6px;">
-              <input id="filter-skill" type="text" placeholder="Skill..."
-                oninput="renderCandidates()"
-                style="flex:1;padding:5px 9px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:11px;font-family:inherit;outline:none;"/>
-              <input id="filter-company" type="text" placeholder="Company..."
-                oninput="renderCandidates()"
-                style="flex:1;padding:5px 9px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:11px;font-family:inherit;outline:none;"/>
-              <input id="filter-title" type="text" placeholder="Title..."
-                oninput="renderCandidates()"
-                style="flex:1;padding:5px 9px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:11px;font-family:inherit;outline:none;"/>
+              <label style="display:inline-flex;align-items:center;gap:5px;padding:6px 10px;background:rgba(124,106,247,.1);border:1px solid rgba(124,106,247,.3);border-radius:8px;color:var(--accent2);font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;" title="Import candidates from CSV">⬆ CSV<input id="import-candidates" type="file" accept=".csv" style="display:none;"/></label>
             </div>
             <div id="cands-list" style="flex:1;overflow-y:auto;padding:8px;"></div>
           </div>
@@ -1585,6 +1525,7 @@ var USERS = [
 ];
 
 var TOPBAR_CONFIG = {
+  companies:   { title: 'Companies', sub: 'Client accounts',  primary: '+ Add Company', secondary: null },
   dashboard:   { title: '', sub: '', primary: null, secondary: null },
   jobs:        { title: 'Jobs',          sub: 'Open requisitions', primary: '+ New Job',       secondary: null },
   candidates:  { title: 'Candidates',    sub: 'Talent pool',      primary: '+ Add Candidate', secondary: 'Upload Resume' },
@@ -1764,8 +1705,12 @@ function renderDashboard() {
 
   var openJobs   = jobs.filter(function(j) { return (j.status === 'Active' || j.status === 'Approved' || j.status === 'Open'); });
   var filledJobs = jobs.filter(function(j) { return j.status === 'Filled'; });
-  var hiredCands = candidates.filter(function(cd) { return cd.status === 'Hired'; });
-  var offerCands = candidates.filter(function(cd) { return cd.status === 'Offer'; });
+  var hiredCands = applications.length
+    ? applications.filter(function(a) { return a.status === 'Hired'; })
+    : candidates.filter(function(cd) { return cd.status === 'Hired'; });
+  var offerCands = applications.length
+    ? applications.filter(function(a) { return a.status === 'Offer'; })
+    : candidates.filter(function(cd) { return cd.status === 'Offer'; });
   var daysArr    = openJobs.map(function(j) { return j.createdAt ? (Date.now() - j.createdAt) / 86400000 : 0; });
   var avgDays    = daysArr.length ? Math.round(daysArr.reduce(function(s,d){return s+d;},0)/daysArr.length) : 0;
   var daysColor  = avgDays > 60 ? 'var(--red)' : avgDays > 30 ? 'var(--amber)' : 'var(--green)';
@@ -1783,7 +1728,9 @@ function renderDashboard() {
   if (elDY)  { elDY.textContent = avgDays ? avgDays + 'd' : '—'; elDY.style.color = daysColor; }
   if (elDYS) elDYS.textContent = openJobs.length ? openJobs.length + ' open req' + (openJobs.length !== 1 ? 's' : '') : 'No open reqs';
 
-  renderActivityBoard();
+  var tasks    = getAITasks();
+  var topTasks = tasks.slice(0, 3);
+  renderTopActions(topTasks);
   renderTopToSubmit();
   renderAITasks();
   initAITasksHandler();
@@ -1792,12 +1739,13 @@ function renderDashboard() {
   if (psEl) {
     var stages = ['New','Screening','Interview','Offer','Hired'];
     var stageColors = { New:'var(--accent)', Screening:'var(--accent2)', Interview:'var(--amber)', Submitted:'var(--teal)', Offer:'var(--purple)', Hired:'var(--green)' };
-    var total = candidates.length || 1;
-    if (!candidates.length) {
+    var _pipeSource = applications.length ? applications : candidates;
+    var total = _pipeSource.length || 1;
+    if (!_pipeSource.length) {
       psEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">No candidates yet</div></div>';
     } else {
       psEl.innerHTML = stages.map(function(s) {
-        var n   = candidates.filter(function(cd) { return cd.status === s; }).length;
+        var n   = _pipeSource.filter(function(x) { return x.status === s; }).length;
         var pct = Math.round((n / total) * 100);
         var col = stageColors[s] || 'var(--text4)';
         return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">' +
@@ -1857,10 +1805,12 @@ function init() {
   loadCompanies();
   loadJobs();
   loadCandidates();
+  loadApplications();
   loadActivityBoard();
   seedCompaniesIfEmpty();
   seedDataIfEmpty();
   migrateLegacyData();
+  migrateCandidatesToApplications();
   restoreUser();
   loadApiKey();
   nav('dashboard');
@@ -1997,21 +1947,22 @@ function renderJobDetail(j) {
       '<div class="job-detail-title">' + escHtml(j.title) + '</div>' +
       (j.companyId ? '<div style="font-size:12px;color:var(--text4);margin-top:2px;">' + escHtml(getCompanyName(j.companyId)) + '</div>' : '') +
       '<div style="display:flex;gap:8px;flex-shrink:0;">' +
-        '<button class="btn btn-ghost btn-sm" onclick="openEditJob(' + j.id + ')">Edit</button>' +
+        '<button class="btn btn-ghost btn-sm" data-jid="' + escHtml(String(j.id)) + '" onclick="openEditJob(this.dataset.jid)" style="border:1px solid rgba(255,255,255,.2);">Edit</button>' +
         (j.approvalStatus !== 'approved'
-          ? '<button class="btn btn-sm" onclick="markJobApproved(\'' + j.id + '\')" '
+          ? '<button class="btn btn-sm" data-jid="' + escHtml(String(j.id)) + '" onclick="markJobApproved(this.dataset.jid)" '
               + 'style="background:rgba(34,197,94,.1);color:#22c55e;border:1px solid rgba(34,197,94,.3);">Mark as Approved</button>'
           : '') +
-        '<button class="btn btn-sm" onclick="deleteJob(' + j.id + ')" ' +
-          'style="background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);">Delete</button>' +
+        '<button class="btn btn-sm" data-jid="' + escHtml(String(j.id)) + '" onclick="deleteJob(this.dataset.jid)" ' +
+          'style="background:rgba(239,68,68,.15);color:#ffffff;border:1px solid rgba(239,68,68,.35);">Delete</button>' +
       '</div>' +
     '</div>' +
 
     '<div class="job-detail-meta">' +
-      '<span class="job-status-badge ' + statusClass + '" style="font-size:11px;padding:2px 9px;">' + escHtml(j.status) + '</span>' +
-      (j.priority ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:' +
-        ({Critical:'rgba(239,68,68,.15)',High:'rgba(245,158,11,.15)',Medium:'rgba(59,130,246,.15)',Low:'rgba(148,163,184,.1)'}[j.priority]||'rgba(255,255,255,.07)') +
-        ';color:' + ({Critical:'var(--red)',High:'var(--amber)',Medium:'var(--accent2)',Low:'var(--text4)'}[j.priority]||'var(--text4)') +
+      '<span class="job-status-badge ' + statusClass + '" style="font-size:11px;font-weight:700;padding:3px 10px;">' + escHtml(j.status) + '</span>' +
+      (j.priority ? '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;background:' +
+        ({Critical:'rgba(239,68,68,.2)',High:'rgba(245,158,11,.2)',Medium:'rgba(59,130,246,.2)',Low:'rgba(148,163,184,.15)'}[j.priority]||'rgba(255,255,255,.07)') +
+        ';color:' + ({Critical:'#ff6b6b',High:'#fbbf24',Medium:'#60a5fa',Low:'var(--text3)'}[j.priority]||'var(--text3)') +
+        ';border:1px solid ' + ({Critical:'rgba(239,68,68,.4)',High:'rgba(245,158,11,.4)',Medium:'rgba(59,130,246,.4)',Low:'rgba(148,163,184,.25)'}[j.priority]||'rgba(255,255,255,.1)') +
         ';">' + escHtml(j.priority) + ' Priority</span>' : '') +
       (j.dept ? '<span>📁 ' + escHtml(j.dept) + '</span>' : '') +
       (j.location ? '<span>📍 ' + escHtml(j.location) + (j.locationType ? ' · ' + escHtml(j.locationType) : '') + '</span>' : '') +
@@ -2020,12 +1971,6 @@ function renderJobDetail(j) {
       (j.openings && j.openings > 1 ? '<span>🔢 ' + j.openings + ' openings</span>' : '') +
       (j.targetStart ? '<span>🎯 Start: ' + new Date(j.targetStart).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + '</span>' : '') +
       '<span>Added ' + created + (age > 0 ? ' · ' + age + 'd ago' : '') + '</span>' +
-      (j.approvalStatus === 'approved'
-        ? '<span style="font-size:10px;font-weight:700;background:rgba(34,197,94,.15);color:#22c55e;padding:2px 9px;border-radius:99px;border:1px solid rgba(34,197,94,.3);">✓ Approved</span>'
-        : '<span style="font-size:10px;font-weight:700;background:rgba(245,158,11,.12);color:#f59e0b;padding:2px 9px;border-radius:99px;border:1px solid rgba(245,158,11,.25);">Approval: Pending</span>') +
-      (j.title && j.notes && (j.salaryMin || j.salaryMax)
-        ? '<span style="font-size:10px;font-weight:700;background:rgba(34,197,94,.12);color:#22c55e;padding:2px 9px;border-radius:99px;border:1px solid rgba(34,197,94,.25);">&#10003; Ready to Recruit</span>'
-        : '<span style="font-size:10px;font-weight:700;background:rgba(245,158,11,.1);color:#f59e0b;padding:2px 9px;border-radius:99px;border:1px solid rgba(245,158,11,.2);">Needs Info</span>') +
     '</div>' +
 
     '<div style="border-top:1px solid var(--border);padding-top:20px;">' +
@@ -2260,6 +2205,62 @@ var candidates         = [];
 var selectedCandidateId = null;
 var editingCandidateId  = null;
 
+// ── APPLICATION DOMAIN (source of truth for pipeline + submissions) ───────────
+var APPLICATIONS_KEY = 'tb2_applications';
+var applications     = [];
+
+function loadApplications() {
+  try {
+    applications = JSON.parse(localStorage.getItem(APPLICATIONS_KEY) || '[]') || [];
+  } catch(e) { applications = []; }
+}
+
+function saveApplications() {
+  try { localStorage.setItem(APPLICATIONS_KEY, JSON.stringify(applications)); } catch(e) {}
+}
+
+// ── Get the primary (highest-stage) application for a candidate ───────────────
+function getPrimaryApplication(candidateId) {
+  var stages = ['New','Screening','Interview','Submitted','Offer','Hired','Rejected'];
+  var apps = applications.filter(function(a) {
+    return String(a.candidateId) === String(candidateId);
+  });
+  if (!apps.length) return null;
+  return apps.reduce(function(best, a) {
+    return stages.indexOf(a.status) >= stages.indexOf(best.status) ? a : best;
+  }, apps[0]);
+}
+
+// ── Derive candidate status from their highest-stage application ──────────────
+function deriveCandidateStatus(candidateId) {
+  var app = getPrimaryApplication(candidateId);
+  return app ? app.status : 'New';
+}
+
+// ── One-time migration: seed applications[] from existing candidates ──────────
+// Safe to call on every init() — skips if applications already populated
+function migrateCandidatesToApplications() {
+  if (applications.length) return;
+  candidates.forEach(function(cd) {
+    if (!cd.jobId) return;
+    applications.push({
+      id:             uid(),
+      candidateId:    String(cd.id),
+      jobId:          String(cd.jobId),
+      status:         cd.status         || 'New',
+      stage:          cd.status         || 'New',
+      firstContactAt: cd.firstContactAt || null,
+      lastActivityAt: cd.lastActivityAt || cd.createdAt || Date.now(),
+      createdAt:      cd.createdAt      || Date.now(),
+      updatedAt:      Date.now(),
+      interviewCount: cd.interviewCount || 0,
+      submissions:    Array.isArray(cd.submissions) ? cd.submissions.slice() : [],
+    });
+  });
+  saveApplications();
+  console.log('[TalentBase] migrated ' + applications.length + ' applications from candidates');
+}
+
 // ── Persistence ───────────────────────────────────────────────
 function loadCandidates() {
   try {
@@ -2308,45 +2309,25 @@ function renderCandidates() {
   var container = document.getElementById('cands-list');
   if (!container) return;
 
-  var q             = ((document.getElementById('cands-search')        || {}).value || '').trim().toLowerCase();
-  var filter        = ((document.getElementById('cands-filter-status') || {}).value || '');
-  var skillFilter   = ((document.getElementById('filter-skill')        || {}).value || '').trim().toLowerCase();
-  var companyFilter = ((document.getElementById('filter-company')      || {}).value || '').trim().toLowerCase();
-  var titleFilter   = ((document.getElementById('filter-title')        || {}).value || '').trim().toLowerCase();
+  var q      = ((document.getElementById('cands-search')        || {}).value || '').trim().toLowerCase();
+  var filter = ((document.getElementById('cands-filter-status') || {}).value || '');
 
-  var scored = candidates.map(function(cd) {
-    var matchScore = 0;
-    if (q) {
-      var tokens = q.split(/\s+/).filter(Boolean);
-      tokens.forEach(function(tok) {
-        if ((cd.name    || '').toLowerCase().includes(tok)) matchScore += 50;
-        if ((cd.title   || '').toLowerCase().includes(tok)) matchScore += 40;
-        if ((cd.skills  || '').toLowerCase().includes(tok)) matchScore += 35;
-        if ((cd.company || '').toLowerCase().includes(tok)) matchScore += 25;
-        if ((cd.industry|| '').toLowerCase().includes(tok)) matchScore += 20;
-        if ((cd.location|| '').toLowerCase().includes(tok)) matchScore += 15;
-        if ((cd.notes   || '').toLowerCase().includes(tok)) matchScore += 10;
-        var blob = JSON.stringify(cd).toLowerCase();
-        if (blob.includes(tok) && matchScore === 0) matchScore += 5;
-      });
+  var filtered = candidates.filter(function(cd) {
+    var text = (cd.name + ' ' + cd.title + ' ' + cd.company).toLowerCase();
+    if (q && !text.includes(q)) return false;
+    if (filter) {
+      var _cdStatus = deriveCandidateStatus(cd.id) || cd.status;
+      if (_cdStatus !== filter) return false;
     }
-    return Object.assign({}, cd, { _matchScore: matchScore });
-  });
-
-  var filtered = scored.filter(function(cd) {
-    if (q && cd._matchScore === 0) return false;
-    if (filter        && cd.status !== filter) return false;
-    if (skillFilter   && !(cd.skills  || '').toString().toLowerCase().includes(skillFilter))   return false;
-    if (companyFilter && !(cd.company || '').toString().toLowerCase().includes(companyFilter)) return false;
-    if (titleFilter   && !(cd.title   || '').toString().toLowerCase().includes(titleFilter))   return false;
     return true;
   });
 
-  // Sort: by match score when searching, else active stages first then newest
+  // Sort: active stages first, then by createdAt desc
   var stageOrder = { New:0, Screening:1, Interview:2, Offer:3, Hired:4 };
   filtered.sort(function(a, b) {
-    if (q) return b._matchScore - a._matchScore;
-    var so = (stageOrder[a.status] || 0) - (stageOrder[b.status] || 0);
+    var sa = deriveCandidateStatus(a.id) || a.status;
+    var sb = deriveCandidateStatus(b.id) || b.status;
+    var so = (stageOrder[sa] || 0) - (stageOrder[sb] || 0);
     if (so !== 0) return so;
     return (b.createdAt || 0) - (a.createdAt || 0);
   });
@@ -2367,45 +2348,45 @@ function renderCandidates() {
   }
 
   container.innerHTML = filtered.map(function(cd) {
-    var sel      = cd.id === selectedCandidateId;
-    var job      = jobs.find(function(j) { return j.id === cd.jobId; });
-    var jobName  = job ? job.title : null;
-    var sc       = candStatusClass(cd.status);
-    var expScore = calculateExperienceScore(cd);
-    var risk     = getRiskLevel(expScore);
-    var nba      = getNextBestAction(cd);
-    var riskBg   = risk === 'critical' ? 'rgba(239,68,68,.18)'   : risk === 'warning' ? 'rgba(245,158,11,.18)'  : 'rgba(16,185,129,.18)';
-    var riskBd   = risk === 'critical' ? 'rgba(239,68,68,.55)'   : risk === 'warning' ? 'rgba(245,158,11,.55)'  : 'rgba(16,185,129,.55)';
-    var riskFg   = risk === 'critical' ? '#f87171'               : risk === 'warning' ? '#fbbf24'               : '#34d399';
-    var topMatch = cd._matchScore && cd._matchScore > 70;
+    var sel     = cd.id === selectedCandidateId;
+    var job     = jobs.find(function(j) { return j.id === cd.jobId; });
+    var jobName = job ? job.title : null;
+    var _cStatus = deriveCandidateStatus(cd.id) || cd.status;
+    var sc      = candStatusClass(_cStatus);
+    var _app    = getPrimaryApplication(String(cd.id));
+    var score   = calculateExperienceScore(_app || cd);
+    var risk    = getRiskLevel(score);
+    var nba     = getNextBestAction(_app || cd);
 
-    return '<div class="cand-card' + (sel ? ' selected' : '') + '" data-cand-id="' + cd.id + '" onclick="selectCandidate(this.dataset.candId)">' +
+    return '<div class="cand-card' + (sel ? ' selected' : '') + '" ' +
+        'data-cand-id="' + cd.id + '" onclick="selectCandidate(this.dataset.candId)">' +
 
-      // Row 1: name + badge
-      '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">' +
-        '<div class="cand-card-name" style="line-height:1.3;">' + escHtml(cd.name) + '</div>' +
-        '<div style="display:flex;gap:4px;flex-shrink:0;">' +
-          (topMatch ? '<span style="font-size:10px;font-weight:700;background:rgba(59,130,246,.22);color:#93c5fd;border:1px solid rgba(59,130,246,.55);border-radius:4px;padding:2px 6px;">TOP</span>' : '') +
-          '<span style="font-size:10px;font-weight:700;background:' + riskBg + ';color:' + riskFg + ';border:1px solid ' + riskBd + ';border-radius:4px;padding:2px 6px;text-transform:uppercase;">' + risk + '</span>' +
+      // TOP ROW — name left, risk badge right
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;">' +
+        '<div class="cand-card-name" style="margin-bottom:0;">' + escHtml(cd.name) + '</div>' +
+        (risk !== 'healthy' ?
+          '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;flex-shrink:0;' +
+            (risk === 'critical'
+              ? 'background:rgba(239,68,68,.12);color:#ef4444;'
+              : 'background:rgba(245,158,11,.12);color:#f59e0b;') +
+          '">' + risk.toUpperCase() + '</span>'
+        : '') +
+      '</div>' +
+
+      // MIDDLE — title · company + job
+      '<div style="margin-bottom:5px;">' +
+        '<div class="cand-card-meta" style="margin-top:0;">' +
+          (cd.title   ? escHtml(cd.title)   : '') +
+          (cd.title && cd.company ? ' · ' : '') +
+          (cd.company ? escHtml(cd.company) : '') +
         '</div>' +
+        (jobName ? '<div class="cand-card-job" style="margin-top:4px;">📋 ' + escHtml(jobName) + '</div>' : '') +
       '</div>' +
 
-      // Row 2: title · company
-      '<div style="font-size:11px;color:#7a90a8;margin-bottom:4px;">' +
-        (cd.title ? escHtml(cd.title) : '') +
-        (cd.title && cd.company ? '<span style="margin:0 4px;opacity:.5;">·</span>' : '') +
-        (cd.company ? escHtml(cd.company) : '') +
-      '</div>' +
-
-      // Row 3: job link (only if exists)
-      (jobName ? '<div style="font-size:10px;color:#2dd4bf;margin-bottom:4px;">📋 ' + escHtml(jobName) + '</div>' : '') +
-
-      // Row 4: next action
-      '<div style="font-size:11px;color:#94a3b8;font-weight:600;margin-bottom:6px;">→ ' + escHtml(nba) + '</div>' +
-
-      // Row 5: status pill
-      '<div><span class="job-status-badge ' + sc + '">' + escHtml(cd.status) + '</span>' +
-        (cd._matchScore ? '<span style="font-size:10px;font-weight:700;color:var(--primary);margin-left:7px;">Match ' + cd._matchScore + '</span>' : '') +
+      // BOTTOM — next action left, status badge right
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;">' +
+        '<div style="font-size:10px;color:var(--accent2);font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">→ ' + escHtml(nba) + '</div>' +
+        '<span class="job-status-badge ' + sc + '" style="flex-shrink:0;">' + escHtml(_cStatus) + '</span>' +
       '</div>' +
 
     '</div>';
@@ -2437,9 +2418,12 @@ function renderCandidateDetail(cd) {
   }
 
   var job   = jobs.find(function(j) { return String(j.id) === String(cd.jobId); });
-  var sc    = candStatusClass(cd.status);
-  var nba   = getNextBestAction(cd);
-  var score = calculateExperienceScore(cd);
+  // Derive status, score, NBA from primary application (source of truth)
+  var _app  = getPrimaryApplication(String(cd.id));
+  var _status = _app ? _app.status : (cd.status || 'New');
+  var sc    = candStatusClass(_status);
+  var nba   = getNextBestAction(_app || cd);
+  var score = calculateExperienceScore(_app || cd);
   var risk  = getRiskLevel(score);
   var riskColor = { critical:'var(--red)', warning:'var(--amber)', healthy:'var(--green)' }[risk];
 
@@ -2448,19 +2432,21 @@ function renderCandidateDetail(cd) {
   if (cd.title && cd.company)           summary = cd.title + ' from ' + cd.company + '.';
   else if (cd.title)                    summary = cd.title + '.';
   else if (cd.company)                  summary = 'From ' + cd.company + '.';
-  if      (cd.status === 'Interview')   summary += ' Actively interviewing.';
-  else if (cd.status === 'Offer')       summary += ' Offer extended — needs close.';
-  else if (cd.status === 'Hired')       summary += ' Successfully placed.';
+  if      (_status === 'Interview')   summary += ' Actively interviewing.';
+  else if (_status === 'Offer')       summary += ' Offer extended — needs close.';
+  else if (_status === 'Hired')       summary += ' Successfully placed.';
   else if (nba === 'Follow up')         summary += ' Needs follow-up.';
   else if (nba === 'Contact candidate') summary += ' Not yet contacted.';
 
   // Timeline events
+  // Timeline reads from application (source of truth) with candidate fallback
+  var _tl = _app || cd;
   var tevs = [];
-  if (cd.createdAt)      tevs.push({ ts:cd.createdAt,      label:'Added to pipeline', icon:'➕', color:'var(--text4)' });
-  if (cd.firstContactAt) tevs.push({ ts:cd.firstContactAt, label:'First contact',     icon:'📞', color:'var(--accent2)' });
-  if (cd.interviewCount) tevs.push({ ts:cd.lastActivityAt||cd.createdAt, label:(cd.interviewCount)+' interview'+(cd.interviewCount>1?'s':'')+' completed', icon:'📅', color:'var(--amber)' });
-  if (cd.status==='Offer') tevs.push({ ts:cd.lastActivityAt, label:'Offer extended', icon:'🎉', color:'var(--purple)' });
-  if (cd.status==='Hired') tevs.push({ ts:cd.lastActivityAt, label:'Hired', icon:'✅', color:'var(--green)' });
+  if (cd.createdAt)           tevs.push({ ts:cd.createdAt,             label:'Added to pipeline', icon:'➕', color:'var(--text4)' });
+  if (_tl.firstContactAt)     tevs.push({ ts:_tl.firstContactAt,       label:'First contact',     icon:'📞', color:'var(--accent2)' });
+  if (_tl.interviewCount)     tevs.push({ ts:_tl.lastActivityAt||cd.createdAt, label:(_tl.interviewCount)+' interview'+(_tl.interviewCount>1?'s':'')+' completed', icon:'📅', color:'var(--amber)' });
+  if (_status==='Offer')      tevs.push({ ts:_tl.lastActivityAt,       label:'Offer extended',    icon:'🎉', color:'var(--purple)' });
+  if (_status==='Hired')      tevs.push({ ts:_tl.lastActivityAt,       label:'Hired',             icon:'✅', color:'var(--green)' });
   tevs.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
 
   panel.innerHTML =
@@ -2468,21 +2454,21 @@ function renderCandidateDetail(cd) {
     '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px;">' +
       '<div>' +
         '<div class="cand-detail-name">' + escHtml(cd.name) + '</div>' +
-        (cd.status === 'Interview' && score >= 70
+        (_status === 'Interview' && score >= 70
           ? '<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.35);border-radius:99px;padding:2px 10px;margin-top:4px;">' +
               '<span style="font-size:11px;">🔥</span>' +
               '<span style="font-size:10px;font-weight:800;color:var(--amber);letter-spacing:.05em;">READY TO SUBMIT</span>' +
             '</div>'
           : '') +
         '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;">' +
-          '<span class="job-status-badge ' + sc + '" style="font-size:11px;padding:2px 9px;">' + escHtml(cd.status) + '</span>' +
+          '<span class="job-status-badge ' + sc + '" style="font-size:11px;padding:2px 9px;">' + escHtml(_status) + '</span>' +
           (cd.title   ? '<span style="font-size:12px;color:var(--text3);">' + escHtml(cd.title)   + '</span>' : '') +
           (cd.company ? '<span style="font-size:12px;color:var(--text4);">@ ' + escHtml(cd.company) + '</span>' : '') +
         '</div>' +
       '</div>' +
       '<div style="display:flex;gap:8px;flex-shrink:0;">' +
-        '<button class="btn btn-ghost btn-sm" onclick="openEditCandidate(' + cd.id + ')">Edit</button>' +
-        '<button class="btn btn-sm" onclick="deleteCandidate(' + cd.id + ')" style="background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);">Delete</button>' +
+        '<button class="btn btn-ghost btn-sm" data-cid="' + escHtml(String(cd.id)) + '" onclick="openEditCandidate(this.dataset.cid)">Edit</button>' +
+        '<button class="btn btn-sm" data-cid="' + escHtml(String(cd.id)) + '" onclick="deleteCandidate(this.dataset.cid)" style="background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);">Delete</button>' +
       '</div>' +
     '</div>' +
 
@@ -2495,11 +2481,11 @@ function renderCandidateDetail(cd) {
         '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">Next Action</div>' +
         '<div style="font-size:13px;font-weight:700;color:var(--accent2);">→ ' + escHtml(nba) + '</div>' +
       '</div>' +
-      (cd.status === 'Offer'
+      (_status === 'Offer'
         ? '<button data-cid="' + cd.id + '" onclick="acceptOffer(this.dataset.cid)" style="padding:6px 14px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;">&#10003; Accept Offer</button>' +
           '<button data-cid="' + cd.id + '" onclick="declineOffer(this.dataset.cid)" style="padding:6px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:var(--red);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">&#10005; Decline</button>'
-        : '<button onclick="openSubmitModal(' + cd.id + ')" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;box-shadow:0 4px 18px rgba(20,184,166,.55);font-weight:800;">Submit Candidate</button>') +
-      '<button onclick="performCandidateAction(' + cd.id + ',\'message\')" class="btn btn-ghost btn-sm" style="font-size:11px;opacity:.75;">Generate Message</button>' +
+        : '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="openSubmitModal(this.dataset.cid)" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;box-shadow:0 4px 18px rgba(20,184,166,.55);font-weight:800;">Submit Candidate</button>') +
+      '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="showMessageModal(this.dataset.cid)" class="btn btn-ghost btn-sm" style="font-size:11px;opacity:.75;">Generate Message</button>' +
     '</div>' +
 
     // ── Stats ──────────────────────────────────────────────────────────
@@ -2509,11 +2495,11 @@ function renderCandidateDetail(cd) {
         '<div style="font-size:10px;color:var(--text4);margin-top:2px;">CX Score</div>' +
       '</div>' +
       '<div style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;text-align:center;">' +
-        '<div style="font-size:18px;font-weight:800;color:var(--text);">' + (cd.interviewCount||0) + '</div>' +
+        '<div style="font-size:18px;font-weight:800;color:var(--text);">' + (_app ? _app.interviewCount || 0 : 0) + '</div>' +
         '<div style="font-size:10px;color:var(--text4);margin-top:2px;">Interviews</div>' +
       '</div>' +
       '<div style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;text-align:center;">' +
-        '<div style="font-size:18px;font-weight:800;color:var(--text);">' + getDaysSince(cd.lastActivityAt||cd.createdAt) + 'd</div>' +
+        '<div style="font-size:18px;font-weight:800;color:var(--text);">' + getDaysSince(_app ? (_app.lastActivityAt || _app.createdAt) : cd.createdAt) + 'd</div>' +
         '<div style="font-size:10px;color:var(--text4);margin-top:2px;">Last Active</div>' +
       '</div>' +
     '</div>' +
@@ -2540,12 +2526,16 @@ function renderCandidateDetail(cd) {
           '</div></div>'
       : '') +
 
-    // ── Submissions
-    (cd.submissions && cd.submissions.length
-      ? '<div class="cand-detail-section">' +
-          '<div class="detail-section-label" style="margin-bottom:8px;">Submissions (' + cd.submissions.length + ')</div>' +
-          cd.submissions.slice().reverse().map(function(sub, ri) {
-            var realIdx = cd.submissions.length - 1 - ri;
+    // ── Submissions — read from application (source of truth)
+    (function() {
+      var _subs = (_app && Array.isArray(_app.submissions) && _app.submissions.length)
+        ? _app.submissions
+        : (Array.isArray(cd.submissions) ? cd.submissions : []);
+      if (!_subs.length) return '';
+      return '<div class="cand-detail-section">' +
+          '<div class="detail-section-label" style="margin-bottom:8px;">Submissions (' + _subs.length + ')</div>' +
+          _subs.slice().reverse().map(function(sub, ri) {
+            var realIdx = _subs.length - 1 - ri;
             var dt  = sub.timestamp ? new Date(sub.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
             var st  = sub.status || 'sent';
             var stColor = { sent:'var(--text4)', viewed:'var(--accent2)', interview:'var(--amber)', rejected:'var(--red)', hired:'var(--green)' }[st] || 'var(--text4)';
@@ -2571,8 +2561,8 @@ function renderCandidateDetail(cd) {
               '</div>' +
             '</div>';
           }).join('') +
-        '</div>'
-      : '') +
+        '</div>';
+    }()) +
 
     // ── Resume ────────────────────────────────────────────────────────
     // AI Summary
@@ -2621,15 +2611,15 @@ function renderCandidateDetail(cd) {
       ? '<div class="cand-detail-section">' +
           '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
             '<div class="detail-section-label" style="margin-bottom:0;">Resume / Background</div>' +
-            '<button onclick="openEditCandidate(' + cd.id + ')" style="padding:3px 10px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">&#9998; Edit / Re-upload</button>' +
+            '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="openEditCandidate(this.dataset.cid)" style="padding:3px 10px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">&#9998; Edit / Re-upload</button>' +
           '</div>' +
-          '<div style="max-height:180px;overflow-y:auto;font-size:12px;line-height:1.7;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;white-space:pre-wrap;">' +
+          '<div style="max-height:180px;overflow-y:auto;font-size:12px;line-height:1.7;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px 16px;white-space:pre-wrap;">' +
             escHtml(cd.resume) +
           '</div>' +
         '</div>'
       : '<div class="cand-detail-section">' +
           '<div class="detail-section-label">Resume / Background</div>' +
-          '<button onclick="openEditCandidate(' + cd.id + ')" style="font-size:11px;color:var(--accent2);background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:7px;padding:5px 12px;font-family:inherit;cursor:pointer;">+ Add Resume</button>' +
+          '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="openEditCandidate(this.dataset.cid)" style="font-size:11px;color:var(--accent2);background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:7px;padding:5px 12px;font-family:inherit;cursor:pointer;">+ Add Resume</button>' +
         '</div>') +
 
     // ── Linked Job ────────────────────────────────────────────────────
@@ -2686,7 +2676,9 @@ function openEditCandidate(id) {
   document.getElementById('cf-name').value    = cd.name    || '';
   document.getElementById('cf-title').value   = cd.title   || '';
   document.getElementById('cf-company').value = cd.company || '';
-  document.getElementById('cf-status').value  = cd.status  || 'New';
+  // Read status from application (source of truth), fall back to candidate
+  var _editApp = getPrimaryApplication(String(cd.id));
+  document.getElementById('cf-status').value  = (_editApp ? _editApp.status : cd.status) || 'New';
   document.getElementById('cf-notes').value   = cd.notes    || '';
   document.getElementById('cf-resume').value  = cd.resume   || '';
   populateCandJobDropdown(cd.jobId);
@@ -2746,9 +2738,8 @@ function submitCandForm(e) {
   var errEl  = document.getElementById('cand-form-error');
 
   if (!name) {
-    errEl.textContent = 'Full name is required.';
-    errEl.style.display = 'block';
-    document.getElementById('cf-name').focus();
+    if (errEl) { errEl.textContent = 'Full name is required.'; errEl.style.display = 'block'; }
+    var _cfn = document.getElementById('cf-name'); if (_cfn) _cfn.focus();
     return;
   }
 
@@ -2771,18 +2762,31 @@ function submitCandForm(e) {
   if (editingCandidateId !== null) {
     var idx = candidates.findIndex(function(x) { return x.id == editingCandidateId; });
     if (idx >= 0) {
+      var newStatus = document.getElementById('cf-status').value;
       candidates[idx].name      = name;
       candidates[idx].title     = document.getElementById('cf-title').value.trim();
       candidates[idx].company   = document.getElementById('cf-company').value.trim();
-      candidates[idx].status    = document.getElementById('cf-status').value;
+      candidates[idx].status    = newStatus;
       candidates[idx].jobId     = jobId;
       candidates[idx].notes     = document.getElementById('cf-notes').value.trim();
       candidates[idx].resume    = document.getElementById('cf-resume').value.trim();
       candidates[idx].updatedAt = Date.now();
+      // Sync status to application (source of truth)
+      var _syncApp = getPrimaryApplication(String(editingCandidateId));
+      if (_syncApp && _syncApp.status !== newStatus) {
+        _syncApp.status = newStatus;
+        _syncApp.stage  = newStatus;
+        _syncApp.updatedAt = Date.now();
+        if (!_syncApp.firstContactAt && ['Screening','Interview','Offer','Hired'].includes(newStatus)) {
+          _syncApp.firstContactAt = Date.now();
+        }
+        saveApplications();
+      }
     }
     saveCandidates();
     closeCandModal();
     renderCandidates();
+    try { renderPipeline(); } catch(e) {}
     if (state && state.currentView === 'dashboard') renderDashboard();
     var updated = candidates.find(function(x) { return x.id == editingCandidateId; });
     if (updated) renderCandidateDetail(updated);
@@ -2808,6 +2812,23 @@ function submitCandForm(e) {
     candidates.unshift(newCand);
     window._lastSavedCandId = String(newCand.id);
     saveCandidates();
+    // Create application record — source of truth for pipeline/submissions
+    if (newCand.jobId) {
+      applications.push({
+        id:             uid(),
+        candidateId:    String(newCand.id),
+        jobId:          String(newCand.jobId),
+        status:         newCand.status  || 'New',
+        stage:          newCand.status  || 'New',
+        firstContactAt: newCand.firstContactAt || null,
+        lastActivityAt: newCand.lastActivityAt || newCand.createdAt,
+        createdAt:      newCand.createdAt,
+        updatedAt:      Date.now(),
+        interviewCount: newCand.interviewCount || 0,
+        submissions:    [],
+      });
+      saveApplications();
+    }
     try { generateAITasks(); } catch(e) {}
     closeCandModal();
     selectedCandidateId = newCand.id;
@@ -2837,6 +2858,7 @@ function deleteCandidate(id) {
 function topbarPrimaryAction() {
   if (state.currentView === 'jobs')       openAddJob();
   if (state.currentView === 'candidates') openAddCandidateModal();
+  if (state.currentView === 'companies')  openAddCompany();
 }
 function topbarSecondaryAction() {
   if (state.currentView === 'candidates') {
@@ -2896,6 +2918,16 @@ var PIPE_STAGE_COLORS = {
   'Hired':      'var(--purple)',
 };
 
+// One canonical action per stage — drives pipeline card button
+var PIPE_STAGE_ACTION = {
+  'New':       { label:'Contact',   action:'contact',  style:'background:linear-gradient(135deg,var(--accent),#2563eb);' },
+  'Screening': { label:'Advance',   action:'advance',  style:'background:linear-gradient(135deg,var(--accent2),#3b82f6);' },
+  'Interview': { label:'Submit',    action:'submit',   style:'background:linear-gradient(135deg,var(--teal),#0d9488);' },
+  'Submitted': { label:'Follow Up', action:'followup', style:'background:linear-gradient(135deg,var(--amber),#d97706);' },
+  'Offer':     { label:'Close',     action:'close',    style:'background:linear-gradient(135deg,#22c55e,#16a34a);' },
+  'Hired':     null,
+};
+
 // ── Populate job filter dropdown ──────────────────────────────
 function populatePipeJobFilter() {
   var sel = document.getElementById('pipe-job-filter');
@@ -2915,83 +2947,87 @@ function renderPipeline() {
   var board = document.getElementById('pipe-board');
   if (!board) return;
 
-  // Score cache — compute once per candidate per render cycle
-  var _scoreCache = {};
-  var cachedScore = function(cd) {
-    var k = String(cd.id);
-    if (_scoreCache[k] === undefined) _scoreCache[k] = calculateExperienceScore(cd);
-    return _scoreCache[k];
-  };
-
   var jobFilter = (document.getElementById('pipe-job-filter') || {}).value || '';
 
-  // Filter candidates by job if selected
-  var filtered = jobFilter
-    ? candidates.filter(function(cd) { return String(cd.jobId) === String(jobFilter); })
-    : candidates;
+  // Pipeline driven by applications[] — fallback to candidates[] if no apps yet
+  var sourceApps = applications.length
+    ? applications
+    : candidates.filter(function(cd){ return !!cd.jobId; }).map(function(cd){
+        return {
+          id: 'tmp_'+cd.id, candidateId: String(cd.id), jobId: String(cd.jobId),
+          status: cd.status || 'New', stage: cd.status || 'New',
+          firstContactAt: cd.firstContactAt || null,
+          lastActivityAt: cd.lastActivityAt || cd.createdAt || Date.now(),
+          createdAt: cd.createdAt || Date.now(),
+          interviewCount: cd.interviewCount || 0,
+          submissions: Array.isArray(cd.submissions) ? cd.submissions : [],
+        };
+      });
+
+  var filteredApps = jobFilter
+    ? sourceApps.filter(function(app) { return String(app.jobId) === String(jobFilter); })
+    : sourceApps;
 
   // Summary
   var summaryEl = document.getElementById('pipe-summary');
   if (summaryEl) {
-    var total = filtered.length;
     var jobName = jobFilter ? (jobs.find(function(j){ return String(j.id) === String(jobFilter); }) || {}).title : null;
-    summaryEl.textContent = total + ' candidate' + (total !== 1 ? 's' : '') +
+    summaryEl.textContent = filteredApps.length + ' application' + (filteredApps.length !== 1 ? 's' : '') +
       (jobName ? ' on ' + jobName : ' across all jobs');
   }
 
-  // Build columns
-  var _pipeScroll = board.scrollLeft;
+  // Score cache keyed by applicationId
+  var _scoreCache = {};
+  var cachedScore = function(app) {
+    var k = String(app.id);
+    if (_scoreCache[k] === undefined) _scoreCache[k] = calculateExperienceScore(app);
+    return _scoreCache[k];
+  };
+
   board.innerHTML = PIPE_STAGES.map(function(stage) {
-    var stageCands = filtered.filter(function(cd) { return cd.status === stage; });
-    stageCands.sort(function(a, b) {
-      var sa = calculateExperienceScore(a);
-      var sb = calculateExperienceScore(b);
+    var stageApps = filteredApps.filter(function(app) { return app.status === stage; });
+    stageApps.sort(function(a, b) {
+      var sa = cachedScore(a);
+      var sb = cachedScore(b);
       if (sa !== sb) return sa - sb;
       return (a.lastActivityAt || a.createdAt || 0) - (b.lastActivityAt || b.createdAt || 0);
     });
-    var color      = PIPE_STAGE_COLORS[stage] || 'var(--text4)';
-    var isLast     = stage === 'Hired';
+    var color  = PIPE_STAGE_COLORS[stage] || 'var(--text4)';
+    var isLast = stage === 'Hired';
 
-    var cardsHtml = stageCands.length
-      ? stageCands.map(function(cd) {
-          var job     = jobs.find(function(j) { return String(j.id) === String(cd.jobId); });
-          var jobName = job ? job.title : null;
+    var cardsHtml = stageApps.length
+      ? stageApps.map(function(app) {
+          var cd  = candidates.find(function(x) { return String(x.id) === String(app.candidateId); });
+          if (!cd) return '';  // orphan application
+          var job = jobs.find(function(j) { return String(j.id) === String(app.jobId); });
 
           var stageColor = PIPE_STAGE_COLORS[stage] || 'var(--text4)';
-          var nba        = getNextBestAction(cd);
-          var cxScore    = cachedScore(cd);
+          var nba        = getNextBestAction(app);
+          var cxScore    = cachedScore(app);
           var cxRisk     = getRiskLevel(cxScore);
-          var isWarn     = cxRisk === 'critical' || cxRisk === 'warning';
-          var idleDays   = getDaysSince(cd.lastActivityAt || cd.createdAt);
-          var isPulse    = cd.status === 'Submitted' && idleDays > 5;
+          var idleDays   = getDaysSince(app.lastActivityAt || app.createdAt);
+          var isPulse    = app.status === 'Submitted' && idleDays > 5;
           var cardExtra  = isPulse ? ' pipe-card-pulse' : '';
+          var subs       = Array.isArray(app.submissions) ? app.submissions : (Array.isArray(cd.submissions) ? cd.submissions : []);
+          // Single action per stage from PIPE_STAGE_ACTION map
+          var _stageAct  = PIPE_STAGE_ACTION[app.status];
+          var actionBtn  = _stageAct
+            ? '<div style="font-size:9px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Next Action</div>' +
+              '<button data-cid="' + escHtml(String(cd.id)) + '" data-action="' + _stageAct.action + '" class="pipe-action-btn" style="' + _stageAct.style + '">' + _stageAct.label + '</button>'
+            : '';
           return '<div class="pipe-card risk-' + cxRisk + cardExtra + '" style="--pipe-accent:' + stageColor + ';">' +
             '<div class="pipe-card-name">' + escHtml(cd.name) + '</div>' +
             '<div class="pipe-card-role">' + escHtml(cd.title || '') + '</div>' +
             (cd.company ? '<div class="pipe-card-mid">' + escHtml(cd.company) + '</div>' : '') +
-            '<div style="font-size:10px;color:var(--accent2);font-weight:600;margin:6px 0 6px;">' +
-              '-> ' + escHtml(nba) +
-            '</div>' +
-            (cd.status === 'Interview'
-              ? '<button data-cid="' + cd.id + '" data-action="submit" class="pipe-action-btn" style="background:linear-gradient(135deg,var(--teal),#0d9488);">Submit</button>'
-              : cd.status === 'Submitted'
-                ? '<button data-cid="' + cd.id + '" data-action="followup" class="pipe-action-btn" style="background:linear-gradient(135deg,var(--amber),#d97706);">Follow Up</button>'
-                : cd.status === 'Offer'
-                  ? '<button data-cid="' + cd.id + '" data-action="close" class="pipe-action-btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);">Close</button>'
-                  : '') +
-            (cd.submissions && cd.submissions.length
-              ? '<div style="font-size:9px;color:var(--teal);font-weight:700;margin-bottom:6px;">Submitted to ' + cd.submissions.length + ' compan' + (cd.submissions.length===1?'y':'ies') + '</div>'
+            actionBtn +
+            (subs.length
+              ? '<div style="font-size:9px;color:var(--teal);font-weight:700;margin-bottom:6px;">Submitted to ' + subs.length + ' compan' + (subs.length===1?'y':'ies') + '</div>'
               : '') +
             '<div class="pipe-card-bottom">' +
-              '<button class="pipe-advance-btn"' +
-                (isLast ? ' disabled' : ' onclick="moveCandidate(' + cd.id + ')"') +
-              '>' +
-                (isLast ? '✓ Hired' : 'Advance →') +
-              '</button>' +
-              '<button class="pipe-msg-btn" onclick="performCandidateAction(' + cd.id + ',\'message\')">✉</button>' +
+              '<button class="pipe-msg-btn" data-cid="' + escHtml(String(cd.id)) + '" onclick="showMessageModal(this.dataset.cid)" title="Generate message">✉</button>' +
             '</div>' +
           '</div>';
-        }).join('')
+        }).filter(Boolean).join('')
       : '<div class="pipe-empty">No candidates</div>';
 
     return '<div class="pipe-col" data-stage="' + stage + '">' +
@@ -3000,7 +3036,7 @@ function renderPipeline() {
           '<span class="pipe-col-dot" style="background:' + color + ';"></span>' +
           escHtml(stage) +
         '</div>' +
-        '<span class="pipe-col-count">' + stageCands.length + '</span>' +
+        '<span class="pipe-col-count">' + stageApps.length + '</span>' +
       '</div>' +
       '<div class="pipe-col-body">' + cardsHtml + '</div>' +
     '</div>';
@@ -3014,22 +3050,29 @@ function moveCandidate(id) {
   var cd  = candidates.find(function(x) { return String(x.id) === sid; });
   if (!cd) return;
 
-  var idx = PIPE_STAGES.indexOf(cd.status);
+  var app = getPrimaryApplication(sid);
+  var currentStage = app ? app.status : cd.status;
+  var idx = PIPE_STAGES.indexOf(currentStage);
   if (idx < 0) idx = 0;
 
   if (idx < PIPE_STAGES.length - 1) {
-    var nextStage      = PIPE_STAGES[idx + 1];
-    cd.status          = nextStage;
-    cd.lastActivityAt  = Date.now();
+    var nextStage = PIPE_STAGES[idx + 1];
+    var now       = Date.now();
 
-    if (!cd.firstContactAt && ['Screening','Interview','Offer','Hired'].includes(nextStage)) {
-      cd.firstContactAt = Date.now();
-    }
-    if (nextStage === 'Interview') {
-      cd.interviewCount = (cd.interviewCount || 0) + 1;
+    if (app) {
+      app.status         = nextStage;
+      app.stage          = nextStage;
+      app.lastActivityAt = now;
+      app.updatedAt      = now;
+      if (!app.firstContactAt && ['Screening','Interview','Offer','Hired'].includes(nextStage)) {
+        app.firstContactAt = now;
+      }
+      if (nextStage === 'Interview') {
+        app.interviewCount = (app.interviewCount || 0) + 1;
+      }
+      saveApplications();
     }
 
-    saveCandidates();
     try { renderPipeline(); }   catch(e) { console.error('renderPipeline', e); }
     try { renderCandidates(); } catch(e) { console.error('renderCandidates', e); }
     if (state.currentView === 'dashboard') {
@@ -3306,68 +3349,18 @@ function refreshAllTaskDependentViews() {
   }
 }
 
-// ── Unified action dispatcher ─────────────────────────────────────────────────
-// Every recruiter action surface (pipeline, candidate detail, AI tasks) routes
-// through here.  actionType values:
-//   'contact'         — first outreach
-//   'followup'        — generic follow-up on any stage
-//   'submission-followup' — follow-up on a submitted candidate
-//   'schedule-interview'  — advance interview count
-//   'close'           — accept offer / hire
-//   'message'         — open message modal (stamps pendingContactAt first)
-function performCandidateAction(cid, actionType) {
-  var cd = candidates.find(function(x) { return String(x.id) === String(cid); });
-  if (!cd) return;
-
-  if (actionType === 'contact') {
-    markCandidateContacted(cid);
-    showMessageModal(cid);
-    return;
-  }
-
-  if (actionType === 'followup') {
-    markCandidateFollowedUp(cid);
-    showMessageModal(cid);
-    return;
-  }
-
-  if (actionType === 'submission-followup') {
-    markSubmissionFollowedUp(cid);
-    return;
-  }
-
-  if (actionType === 'schedule-interview') {
-    markInterviewAdvanced(cid);
-    showMessageModal(cid);
-    return;
-  }
-
-  if (actionType === 'close') {
-    acceptOffer(cid);
-    return;
-  }
-
-  if (actionType === 'message') {
-    // Stamp pendingContactAt so AI task panel suppresses this candidate
-    // for 30 min even if recruiter closes without clicking Mark Sent
-    cd.pendingContactAt = Date.now();
-    saveCandidates();
-    delete snoozedTasks[String(cid)];
-    try { renderAITasks(); } catch(e) {}
-    showMessageModal(cid);
-    return;
-  }
-}
-
 // Mark as contacted — sets firstContactAt + bumps lastActivityAt
 function markCandidateContacted(candId) {
   var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
   if (!cd) return;
   var now = Date.now();
-  cd.firstContactAt  = cd.firstContactAt || now;
-  cd.lastActivityAt  = now;
-  delete cd.pendingContactAt;
-  saveCandidates();
+  var _mccApp = getPrimaryApplication(String(candId));
+  if (_mccApp) {
+    _mccApp.firstContactAt = _mccApp.firstContactAt || now;
+    _mccApp.lastActivityAt = now;
+    _mccApp.updatedAt      = now;
+    saveApplications();
+  }
   addActivityItem('Contacted ' + cd.name);
   saveActivityBoard();
   delete snoozedTasks[String(candId)];
@@ -3378,9 +3371,9 @@ function markCandidateContacted(candId) {
 function markCandidateFollowedUp(candId) {
   var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
   if (!cd) return;
-  cd.lastActivityAt = Date.now();
-  delete cd.pendingContactAt;
-  saveCandidates();
+  var now = Date.now();
+  var _mcfuApp = getPrimaryApplication(String(candId));
+  if (_mcfuApp) { _mcfuApp.lastActivityAt = now; _mcfuApp.updatedAt = now; saveApplications(); }
   addActivityItem('Followed up with ' + cd.name);
   saveActivityBoard();
   delete snoozedTasks[String(candId)];
@@ -3391,14 +3384,18 @@ function markCandidateFollowedUp(candId) {
 function markSubmissionFollowedUp(candId) {
   var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
   if (!cd) return;
-  cd.lastActivityAt = Date.now();
-  delete cd.pendingContactAt;
-  if (Array.isArray(cd.submissions) && cd.submissions.length) {
-    var last = cd.submissions[cd.submissions.length - 1];
-    if (last.status === 'sent') last.status = 'followed_up';
-    last.followedUpAt = Date.now();
+  var now = Date.now();
+  var _msfuApp = getPrimaryApplication(String(candId));
+  if (_msfuApp) {
+    _msfuApp.lastActivityAt = now;
+    _msfuApp.updatedAt      = now;
+    if (Array.isArray(_msfuApp.submissions) && _msfuApp.submissions.length) {
+      var last = _msfuApp.submissions[_msfuApp.submissions.length - 1];
+      if (last.status === 'sent') last.status = 'followed_up';
+      last.followedUpAt = now;
+    }
+    saveApplications();
   }
-  saveCandidates();
   addActivityItem('Followed up on submission for ' + cd.name);
   saveActivityBoard();
   delete snoozedTasks[String(candId)];
@@ -3409,12 +3406,16 @@ function markSubmissionFollowedUp(candId) {
 function markInterviewAdvanced(candId) {
   var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
   if (!cd) return;
-  cd.lastActivityAt  = Date.now();
-  cd.firstContactAt  = cd.firstContactAt || Date.now();
-  cd.interviewCount  = (cd.interviewCount || 0) + 1;
-  delete cd.pendingContactAt;
-  saveCandidates();
-  addActivityItem('Interview scheduled/advanced for ' + cd.name + ' (interview ' + cd.interviewCount + ')');
+  var now = Date.now();
+  var _miaApp = getPrimaryApplication(String(candId));
+  if (_miaApp) {
+    _miaApp.lastActivityAt  = now;
+    _miaApp.firstContactAt  = _miaApp.firstContactAt || now;
+    _miaApp.interviewCount  = (_miaApp.interviewCount || 0) + 1;
+    _miaApp.updatedAt       = now;
+    saveApplications();
+  }
+  addActivityItem('Interview scheduled/advanced for ' + cd.name + ' (interview ' + (_miaApp ? _miaApp.interviewCount : '?') + ')');
   saveActivityBoard();
   delete snoozedTasks[String(candId)];
   refreshAllTaskDependentViews();
@@ -3426,8 +3427,6 @@ function markMessageSent(candId) {
   var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
   if (!cd) { closeMsgModal(); return; }
   closeMsgModal();
-  // Clear the pending stamp — real state update about to happen
-  delete cd.pendingContactAt;
   var norm = normalizeAITaskAction(getNextBestAction(cd));
   if (norm === 'Contact candidate') {
     markCandidateContacted(candId);
@@ -3474,33 +3473,38 @@ function normalizeAITaskAction(raw) {
 
 // ── Data layer: build ranked task list from current candidate state ───────────
 function getAITasks() {
-  var active = candidates.filter(function(cd) {
-    return !['Hired','Rejected'].includes(cd.status);
-  });
+  // Use applications as source of truth; fall back to candidates if no apps yet
+  var activeApps = applications.length
+    ? applications.filter(function(app) { return !['Hired','Rejected'].includes(app.status); })
+    : candidates.filter(function(cd)  { return !['Hired','Rejected'].includes(cd.status); }).map(function(cd){
+        return {
+          id: 'tmp_'+cd.id, candidateId: String(cd.id), jobId: String(cd.jobId),
+          status: cd.status || 'New', firstContactAt: cd.firstContactAt || null,
+          lastActivityAt: cd.lastActivityAt || cd.createdAt || Date.now(),
+          createdAt: cd.createdAt || Date.now(), interviewCount: cd.interviewCount || 0,
+          submissions: Array.isArray(cd.submissions) ? cd.submissions : [],
+        };
+      });
 
   var tasks = [];
-  active.forEach(function(cd) {
+  activeApps.forEach(function(app) {
+    var cd = candidates.find(function(x) { return String(x.id) === String(app.candidateId); });
+    if (!cd) return;
+
     // Skip snoozed
     if (snoozedTasks[String(cd.id)]) return;
 
-    var score     = calculateExperienceScore(cd);
+    var score     = calculateExperienceScore(app);
     var riskLevel = getRiskLevel(score);
-    var rawAction = getNextBestAction(cd);
+    var rawAction = getNextBestAction(app);
     var nextAction= normalizeAITaskAction(rawAction);
 
-    // Filter out monitor-only candidates
+    // Filter out monitor-only
     if (nextAction === 'Monitor') return;
 
-    // Suppress freshly-submitted candidates still awaiting client response — no action needed yet
-    if (rawAction === 'Await client response') return;
-
-    // Suppress if recruiter recently opened message modal but has not confirmed sent yet
-    // pendingContactAt is cleared when markMessageSent fires (30-min window)
-    if (cd.pendingContactAt && (Date.now() - cd.pendingContactAt) < 30 * 60 * 1000) return;
-
-    var reasons  = getAlertReasons(cd) || [];
-    var idleDays = getDaysSince(cd.lastActivityAt || cd.createdAt);
-    var job      = jobs.find(function(j) { return String(j.id) === String(cd.jobId); });
+    var reasons  = getAlertReasons(app) || [];
+    var idleDays = getDaysSince(app.lastActivityAt || app.createdAt);
+    var job      = jobs.find(function(j) { return String(j.id) === String(app.jobId || cd.jobId); });
 
     tasks.push({
       candidateId: String(cd.id),
@@ -3508,7 +3512,7 @@ function getAITasks() {
       title:       cd.title       || '',
       company:     cd.company     || '',
       jobTitle:    job ? job.title : '',
-      stage:       cd.status      || '',
+      stage:       app.status     || '',
       riskLevel:   riskLevel,
       score:       score,
       nextAction:  nextAction,
@@ -3634,7 +3638,7 @@ function handleAITasksClick(e) {
     return;
   }
 
-  // Do action button
+  // Do action — execute real state mutation for this candidate
   if (doBtn) {
     var cid = doBtn.dataset.cid;
     if (!cid) return;
@@ -3642,13 +3646,11 @@ function handleAITasksClick(e) {
     if (!cd) return;
     var norm = normalizeAITaskAction(getNextBestAction(cd));
 
-    // All message-based actions: stamp pendingContactAt, nav to detail, open modal
     if (norm === 'Contact candidate' ||
         norm === 'Follow up' ||
         norm === 'Follow up on submission' ||
         norm === 'Schedule next interview') {
-      cd.pendingContactAt = Date.now();
-      saveCandidates();
+      // Open message modal; Mark Sent will update state when recruiter confirms
       selectedCandidateId = cid;
       nav('candidates');
       setTimeout(function() {
@@ -3657,13 +3659,14 @@ function handleAITasksClick(e) {
         if (updated) renderCandidateDetail(updated);
         showMessageModal(cid);
       }, 80);
-      try { renderAITasks(); } catch(err) {}
+      // Do NOT snooze here — state update happens in markMessageSent
       return;
     }
 
     if (norm === 'Close candidate') {
+      // Open submit modal for final placement, or go to detail for offer decision
       if (cd.status === 'Offer') {
-        // Navigate to offer decision — acceptOffer/declineOffer control removal
+        // Show offer accept/decline in context — navigate to candidate detail
         selectedCandidateId = cid;
         nav('candidates');
         setTimeout(function() {
@@ -3672,19 +3675,22 @@ function handleAITasksClick(e) {
           if (updated) renderCandidateDetail(updated);
         }, 80);
       } else {
-        // submitCandidateAction() will move status to Submitted — no snooze needed
+        // Offer stage not yet reached — open submit modal
         openSubmitModal(cid);
       }
+      // Snooze only — real removal happens when acceptOffer/declineOffer changes status
+      snoozedTasks[String(cid)] = Date.now();
+      renderAITasks();
       return;
     }
 
-    // Fallback — snooze for truly unhandled actions only
+    // Fallback — snooze for unhandled actions
     snoozedTasks[String(cid)] = Date.now();
     renderAITasks();
     return;
   }
 
-  // Snooze button
+  // Snooze — remove from panel for this session
   if (snoozeBtn) {
     var cid = snoozeBtn.dataset.cid;
     if (!cid) return;
@@ -3794,22 +3800,92 @@ function addActivityItem(text) {
   if (!text || !text.trim()) return;
   activityBoard.push({ id: uid(), text: text.trim(), completed: false, createdAt: Date.now() });
   saveActivityBoard();
-  renderActivityBoard();
+  // Update badge count only — do NOT call renderActivityBoard() here.
+  // renderActivityBoard() owns #needs-action-list which is now controlled by
+  // renderTopActions() on the dashboard. Calling it here would overwrite the
+  // Top 3 Next Actions panel every time any action logs an activity.
+  var count = document.getElementById('needs-action-count');
+  if (count) {
+    var pending = activityBoard.filter(function(t){ return !t.completed; }).length;
+    count.textContent = pending ? pending + ' action' + (pending > 1 ? 's' : '') + ' needed' : '';
+  }
+}
+
+// ── Command Center: Top 3 Next Actions for dashboard ─────────────────────────
+function renderTopActions(tasks) {
+  var el = document.getElementById('needs-action-list');
+  if (!el) return;
+  if (!tasks.length) {
+    el.innerHTML =
+      '<div style="padding:16px 14px;color:var(--text4);font-size:12px;text-align:center;">' +
+      'All candidates are moving — no urgent actions' +
+      '</div>';
+    return;
+  }
+  el.innerHTML = tasks.map(function(t, i) {
+    return '' +
+      '<div style="display:flex;align-items:center;gap:12px;padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.05);">' +
+        '<div style="font-size:16px;font-weight:800;color:var(--accent2);width:20px;">' + (i+1) + '</div>' +
+        '<div style="flex:1;">' +
+          '<div style="font-size:13px;font-weight:700;color:var(--text);">' + t.name + '</div>' +
+          '<div style="font-size:11px;color:var(--text4);">' + t.nextAction + '</div>' +
+        '</div>' +
+        '<button onclick="executeTaskAction(\'' + t.candidateId + '\')" ' +
+          'style="padding:6px 12px;background:linear-gradient(135deg,var(--teal),#0d9488);border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">' +
+          'Do It' +
+        '</button>' +
+      '</div>';
+  }).join('');
+}
+
+// ── Bridge: execute a task action from the dashboard ─────────────────────────
+function executeTaskAction(cid) {
+  var app = getPrimaryApplication(cid);
+  if (!app) return;
+  var action = PIPE_STAGE_ACTION[app.status];
+  if (!action) return;
+  _pipeActionHandler({
+    target: {
+      closest: function() {
+        return {
+          dataset: {
+            cid:    cid,
+            action: action.action
+          }
+        };
+      }
+    },
+    stopPropagation: function() {}
+  });
 }
 
 function renderActivityBoard() {
+  // SAFETY GUARD: never overwrite #needs-action-list while on dashboard.
+  // The dashboard uses renderTopActions() for that element.
+  // renderActivityBoard() is only valid when explicitly opened outside the dashboard.
+  if (state && state.currentView === 'dashboard') return;
+
   var el    = document.getElementById('needs-action-list');
   var count = document.getElementById('needs-action-count');
   if (!el) return;
 
-  // Auto-generate pipeline tasks
+  // Auto-generate pipeline tasks — driven by applications[] (source of truth)
   var autoPipelineTasks = [];
-  candidates.filter(function(cd) {
-    return !['Hired','Rejected'].includes(cd.status);
-  }).forEach(function(cd) {
-    var action = getNextBestAction(cd);
-    var idle   = getDaysSince(cd.lastActivityAt || cd.createdAt);
-    var job    = jobs.find(function(j){ return String(j.id) === String(cd.jobId); });
+  var _rabSrc = applications.length
+    ? applications.filter(function(app) { return !['Hired','Rejected'].includes(app.status); })
+    : candidates.filter(function(cd)    { return !['Hired','Rejected'].includes(cd.status); })
+        .map(function(cd) {
+          return { id:'tmp_'+cd.id, candidateId:String(cd.id), jobId:String(cd.jobId),
+            status:cd.status||'New', lastActivityAt:cd.lastActivityAt||cd.createdAt,
+            createdAt:cd.createdAt, submissions:Array.isArray(cd.submissions)?cd.submissions:[] };
+        });
+
+  _rabSrc.forEach(function(app) {
+    var cd = candidates.find(function(x) { return String(x.id) === String(app.candidateId || app.id); });
+    if (!cd) return;
+    var action = getNextBestAction(app);
+    var idle   = getDaysSince(app.lastActivityAt || app.createdAt);
+    var job    = jobs.find(function(j){ return String(j.id) === String(app.jobId || cd.jobId); });
     var role   = job ? job.title : null;
     var suffix = role ? ' \u2014 ' + role : '';
 
@@ -3822,9 +3898,11 @@ function renderActivityBoard() {
     } else if (action === 'Schedule next interview') {
       autoPipelineTasks.push({ id:'auto_'+cd.id, text:'Schedule interview: '+cd.name+suffix, completed:false, autoId:String(cd.id), type:'interview', urgent:idle>3 });
     } else if (action === 'Follow up on submission') {
-      var lastSub = cd.submissions && cd.submissions.length ? cd.submissions[cd.submissions.length-1] : null;
-      var coName  = lastSub ? lastSub.company : '';
-      var subText = coName ? 'Follow up with ' + coName + ' on ' + cd.name : 'Follow up on submission: ' + cd.name + suffix;
+      // Read last submission from application (source of truth)
+      var _appSubs = Array.isArray(app.submissions) ? app.submissions : [];
+      var lastSub  = _appSubs.length ? _appSubs[_appSubs.length-1] : null;
+      var coName   = lastSub ? lastSub.company : '';
+      var subText  = coName ? 'Follow up with '+coName+' on '+cd.name : 'Follow up on submission: '+cd.name+suffix;
       autoPipelineTasks.push({ id:'auto_'+cd.id, text:subText, completed:false, autoId:String(cd.id), type:'submission', urgent:idle>5 });
     }
   });
@@ -3963,6 +4041,25 @@ function seedDataIfEmpty() {
   candidates = seedCands;
   saveJobs();
   saveCandidates();
+  // Seed applications from candidates
+  applications = [];
+  seedCands.forEach(function(cd) {
+    if (!cd.jobId) return;
+    applications.push({
+      id:             uid(),
+      candidateId:    String(cd.id),
+      jobId:          String(cd.jobId),
+      status:         cd.status         || 'New',
+      stage:          cd.status         || 'New',
+      firstContactAt: cd.firstContactAt || null,
+      lastActivityAt: cd.lastActivityAt || cd.createdAt || Date.now(),
+      createdAt:      cd.createdAt      || Date.now(),
+      updatedAt:      Date.now(),
+      interviewCount: cd.interviewCount || 0,
+      submissions:    [],
+    });
+  });
+  saveApplications();
 
   // ── Seed activity board ───────────────────────────────────
   activityBoard = [
@@ -3986,9 +4083,14 @@ function renderAnalytics() {
   var stages      = ['New','Screening','Interview','Offer','Hired'];
   var stageColors = { New:'var(--accent)', Screening:'var(--accent2)', Interview:'var(--amber)', Submitted:'var(--teal)', Offer:'var(--purple)', Hired:'var(--green)' };
   var openJobs    = jobs.filter(function(j) { return (j.status === 'Active' || j.status === 'Approved' || j.status === 'Open'); });
-  var hiredCands  = candidates.filter(function(cd) { return cd.status === 'Hired'; });
-  var offerCands  = candidates.filter(function(cd) { return cd.status === 'Offer'; });
-  var activeCands = candidates.filter(function(cd) { return !['Hired','Rejected'].includes(cd.status); });
+  // Use applications as source of truth where available; fall back to candidates
+  var _appSrc     = applications.length ? applications : null;
+  var hiredCands  = _appSrc ? _appSrc.filter(function(a) { return a.status === 'Hired'; })
+                             : candidates.filter(function(cd) { return cd.status === 'Hired'; });
+  var offerCands  = _appSrc ? _appSrc.filter(function(a) { return a.status === 'Offer'; })
+                             : candidates.filter(function(cd) { return cd.status === 'Offer'; });
+  var activeCands = _appSrc ? _appSrc.filter(function(a) { return !['Hired','Rejected'].includes(a.status); })
+                             : candidates.filter(function(cd) { return !['Hired','Rejected'].includes(cd.status); });
   var daysArr     = openJobs.map(function(j) { return j.createdAt ? (Date.now()-j.createdAt)/86400000 : 0; });
   var avgDays     = daysArr.length ? Math.round(daysArr.reduce(function(s,d){return s+d;},0)/daysArr.length) : 0;
 
@@ -4015,7 +4117,8 @@ function renderAnalytics() {
     if (!candidates.length) {
       funnelEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">No candidate data yet</div></div>';
     } else {
-      var counts = stages.map(function(s) { return candidates.filter(function(cd){ return cd.status===s; }).length; });
+      var _funnelSrc = applications.length ? applications : candidates;
+      var counts = stages.map(function(s) { return _funnelSrc.filter(function(x){ return x.status===s; }).length; });
       var maxN   = Math.max.apply(null, counts) || 1;
       funnelEl.innerHTML = stages.map(function(s, i) {
         var n   = counts[i];
@@ -4041,7 +4144,8 @@ function renderAnalytics() {
       tsEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">No data yet</div></div>';
     } else {
       tsEl.innerHTML = stages.slice(0,-1).map(function(s) {
-        var grp = candidates.filter(function(cd){ return cd.status===s && cd.lastActivityAt; });
+        var _timeSrc = applications.length ? applications : candidates;
+        var grp = _timeSrc.filter(function(x){ return x.status===s && x.lastActivityAt; });
         var avg = grp.length
           ? Math.round(grp.reduce(function(sum,cd){ return sum+getDaysSince(cd.lastActivityAt); },0)/grp.length)
           : null;
@@ -4058,14 +4162,14 @@ function renderAnalytics() {
   var ofEl = document.getElementById('an-offers');
   if (ofEl) {
     var rows = [];
-    offerCands.forEach(function(cd) {
-      var job = jobs.find(function(j){ return String(j.id)===String(cd.jobId); });
-      rows.push({ name:cd.name, role:job?job.title:'', status:'Offer', color:'var(--purple)' });
-    });
-    hiredCands.slice(0,3).forEach(function(cd) {
-      var job = jobs.find(function(j){ return String(j.id)===String(cd.jobId); });
-      rows.push({ name:cd.name, role:job?job.title:'', status:'Hired', color:'var(--green)' });
-    });
+    // offerCands and hiredCands may be app objects or candidate objects — resolve to {name,role}
+    var resolveRow = function(item, status, color) {
+      var cd  = item.candidateId ? candidates.find(function(x){ return String(x.id)===String(item.candidateId); }) : item;
+      var job = jobs.find(function(j){ return String(j.id)===String(item.jobId || (cd && cd.jobId)); });
+      if (cd) rows.push({ name:cd.name, role:job?job.title:'', status:status, color:color });
+    };
+    offerCands.forEach(function(item){ resolveRow(item,'Offer','var(--purple)'); });
+    hiredCands.slice(0,3).forEach(function(item){ resolveRow(item,'Hired','var(--green)'); });
     if (!rows.length) {
       ofEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">No offers or hires yet</div></div>';
     } else {
@@ -4125,7 +4229,13 @@ function renderOffer() {
   var sc = document.querySelector('#v-offer .view-scroll');
   if (!sc) return;
   while (sc.children.length > 1) sc.removeChild(sc.lastChild);
-  var offerCands = candidates.filter(function(cd) { return cd.status === 'Offer'; });
+  // Use applications as source of truth; fall back to candidates
+  var offerApps = applications.length
+    ? applications.filter(function(a) { return a.status === 'Offer'; })
+    : [];
+  var offerCands = offerApps.length
+    ? offerApps.map(function(a) { return candidates.find(function(cd){ return String(cd.id)===String(a.candidateId); }); }).filter(Boolean)
+    : candidates.filter(function(cd) { return cd.status === 'Offer'; });
   var div = document.createElement('div');
   if (!offerCands.length) {
     div.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#128221;</div><div class="empty-state-title">No candidates at Offer stage</div><div class="empty-state-sub">Advance candidates to Offer in the Pipeline to draft messages here.</div></div>';
@@ -4138,7 +4248,7 @@ function renderOffer() {
             '<div style="font-size:14px;font-weight:700;color:var(--text);">' + escHtml(cd.name) + '</div>' +
             '<div style="font-size:11px;color:var(--text4);">' + (job ? escHtml(job.title) : 'No job linked') + '</div>' +
           '</div>' +
-          '<button onclick="showMessageModal(' + cd.id + ')" class="btn btn-primary btn-sm">Draft Offer Message</button>' +
+          '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="showMessageModal(this.dataset.cid)" class="btn btn-primary btn-sm">Draft Offer Message</button>' +
         '</div>';
       }).join('') +
     '</div>';
@@ -4215,16 +4325,20 @@ function openSubmitModal(candId) {
   if (titleEl) titleEl.textContent = 'Submit ' + cd.name;
   if (subEl)   subEl.textContent   = job ? 'Role: ' + job.title : '';
   if (errEl)   { errEl.textContent = ''; errEl.style.display = 'none'; }
-  document.getElementById('sf-company').value = '';
-  document.getElementById('sf-hm').value      = (job && job.hiringManager) ? job.hiringManager : '';
-  document.getElementById('sf-comp').value    = '';
-  document.getElementById('sf-notes').value   = '';
-  document.getElementById('submit-modal-backdrop').style.display = 'flex';
-  setTimeout(function() { document.getElementById('sf-company').focus(); }, 60);
+  var sfCo = document.getElementById('sf-company');
+  var sfHm = document.getElementById('sf-hm');
+  var sfCp = document.getElementById('sf-comp');
+  var sfNt = document.getElementById('sf-notes');
+  if (sfCo) sfCo.value = '';
+  if (sfHm) sfHm.value = (job && job.hiringManager) ? job.hiringManager : '';
+  if (sfCp) sfCp.value = '';
+  if (sfNt) sfNt.value = '';
+  var _smb=document.getElementById('submit-modal-backdrop'); if(_smb) _smb.style.display = 'flex';
+  setTimeout(function() { var _sfc=document.getElementById('sf-company'); if(_sfc) _sfc.focus(); }, 60);
 }
 
 function closeSubmitModal() {
-  document.getElementById('submit-modal-backdrop').style.display = 'none';
+  var _smb2=document.getElementById('submit-modal-backdrop'); if(_smb2) _smb2.style.display = 'none';
   submittingCandId = null;
 }
 
@@ -4234,9 +4348,8 @@ function submitCandidateAction() {
   var company = (document.getElementById('sf-company').value || '').trim();
   var errEl   = document.getElementById('submit-form-error');
   if (!company) {
-    errEl.textContent = 'Company name is required.';
-    errEl.style.display = 'block';
-    document.getElementById('sf-company').focus();
+    if (errEl) { errEl.textContent = 'Company name is required.'; errEl.style.display = 'block'; }
+    var _sfc2 = document.getElementById('sf-company'); if (_sfc2) _sfc2.focus();
     return;
   }
   var cd = candidates.find(function(x) { return String(x.id) === String(submittingCandId); });
@@ -4244,19 +4357,29 @@ function submitCandidateAction() {
   var hm   = (document.getElementById('sf-hm').value   || '').trim();
   var comp = (document.getElementById('sf-comp').value  || '').trim();
   var note = (document.getElementById('sf-notes').value || '').trim();
-  if (!Array.isArray(cd.submissions)) cd.submissions = [];
-  cd.submissions.push({
+  var newSub = {
     company:       company,
     hiringManager: hm   || null,
     compensation:  comp || null,
     notes:         note || null,
     timestamp:     Date.now(),
     status:        'sent',
-  });
-  cd.status         = 'Submitted';
-  cd.lastActivityAt = Date.now();
-  if (!cd.firstContactAt) cd.firstContactAt = Date.now();
-  saveCandidates();
+  };
+  var now = Date.now();
+
+  // Application is source of truth — write submission there first
+  var _sApp = getPrimaryApplication(String(cd.id));
+  if (_sApp) {
+    if (!Array.isArray(_sApp.submissions)) _sApp.submissions = [];
+    _sApp.submissions.push(newSub);
+    _sApp.status         = 'Submitted';
+    _sApp.stage          = 'Submitted';
+    _sApp.lastActivityAt = now;
+    _sApp.updatedAt      = now;
+    if (!_sApp.firstContactAt) _sApp.firstContactAt = now;
+    saveApplications();
+  }
+
   addActivityItem('Submitted ' + cd.name + ' to ' + company);
   saveActivityBoard();
   closeSubmitModal();
@@ -4284,31 +4407,32 @@ document.addEventListener('keydown', function(e) {
 function updateSubmissionStatus(candId, idx, newStatus) {
   if (!newStatus) return;
   var cd = candidates.find(function(x) { return String(x.id) === String(candId); });
-  if (!cd || !cd.submissions || !cd.submissions[idx]) return;
+  if (!cd) return;
+  var now = Date.now();
 
-  cd.submissions[idx].status = newStatus;
-  cd.lastActivityAt = Date.now();
-
-  // Move pipeline stage based on outcome
-  if (newStatus === 'interview') {
-    cd.status = 'Interview';
-    cd.interviewCount = (cd.interviewCount || 0) + 1;
-    cd.firstContactAt = cd.firstContactAt || Date.now();
-  } else if (newStatus === 'hired') {
-    cd.status = 'Hired';
-  } else if (newStatus === 'rejected') {
-    // Keep Submitted stage — rejection is a submission outcome, not a pipeline removal
-    // Recruiter can manually move to Rejected via edit if needed
+  // Application is source of truth — update there first
+  var _ussApp = getPrimaryApplication(String(candId));
+  if (_ussApp && Array.isArray(_ussApp.submissions) && _ussApp.submissions[idx]) {
+    _ussApp.submissions[idx].status = newStatus;
+    _ussApp.lastActivityAt = now;
+    _ussApp.updatedAt = now;
+    if (newStatus === 'interview') {
+      _ussApp.status = 'Interview'; _ussApp.stage = 'Interview';
+      _ussApp.interviewCount = (_ussApp.interviewCount || 0) + 1;
+      _ussApp.firstContactAt = _ussApp.firstContactAt || now;
+    } else if (newStatus === 'hired') {
+      _ussApp.status = 'Hired'; _ussApp.stage = 'Hired';
+    }
+    saveApplications();
   }
-  // 'viewed', 'sent' — keep Submitted stage
 
-  saveCandidates();
-
-  // Log to activity board
-  var company = cd.submissions[idx].company || 'company';
+  // Log to activity board — read company from application submission
+  var _ussCompany = (_ussApp && Array.isArray(_ussApp.submissions) && _ussApp.submissions[idx])
+    ? (_ussApp.submissions[idx].company || 'company')
+    : 'company';
   var labelMap = { viewed:'Viewed by', interview:'Interview scheduled at', hired:'Hired at', rejected:'Rejected by' };
   var verb = labelMap[newStatus] || 'Updated submission at';
-  addActivityItem(verb + ' ' + company + ': ' + cd.name);
+  addActivityItem(verb + ' ' + _ussCompany + ': ' + cd.name);
   saveActivityBoard();
 
   try { renderCandidateDetail(cd); }  catch(e) {}
@@ -4320,9 +4444,18 @@ function updateSubmissionStatus(candId, idx, newStatus) {
 function renderTopToSubmit() {
   var el = document.getElementById("dash-top-submit");
   if (!el) return;
-  var ready = candidates
-    .filter(function(cd) { return cd.status === "Interview"; })
-    .map(function(cd) { return { cd:cd, score:calculateExperienceScore(cd) }; })
+  var _interviewApps = applications.length
+    ? applications.filter(function(a) { return a.status === 'Interview'; })
+    : candidates.filter(function(cd) { return cd.status === 'Interview'; }).map(function(cd){
+        return { id:'tmp_'+cd.id, candidateId:String(cd.id), jobId:String(cd.jobId), status:'Interview',
+          firstContactAt:cd.firstContactAt, lastActivityAt:cd.lastActivityAt, createdAt:cd.createdAt,
+          interviewCount:cd.interviewCount||0, submissions:[] };
+      });
+  var ready = _interviewApps
+    .map(function(app) {
+      var cd = candidates.find(function(x){ return String(x.id)===String(app.candidateId); });
+      return cd ? { cd:cd, app:app, score:calculateExperienceScore(app) } : null;
+    }).filter(Boolean)
     .sort(function(a,b) { return b.score-a.score; })
     .slice(0,3);
   if (!ready.length) {
@@ -4348,10 +4481,8 @@ function renderTopToSubmit() {
 
 var showAllTasks = false;
 function toggleTasksView() {
-  showAllTasks = !showAllTasks;
-  var btn = document.getElementById('tasks-toggle-btn');
-  if (btn) btn.textContent = showAllTasks ? 'Show Less' : 'View All';
-  renderActivityBoard();
+  // Disabled for Top 3 system — renderActivityBoard no longer owns #needs-action-list
+  console.log('[TalentBase] toggleTasksView disabled');
 }
 
 // === INPUT INTELLIGENCE LAYER ===
@@ -4499,6 +4630,8 @@ function analyzeResume(text) {
 document.addEventListener('DOMContentLoaded', function() {
   var t = document.getElementById('jf-title');
   if (t) t.addEventListener('blur', suggestSalary);
+  var imp = document.getElementById('import-candidates');
+  if (imp) imp.addEventListener('change', handleCandidateImport);
 });
 
 function markJobApproved(id) {
@@ -4555,11 +4688,11 @@ function openAddCompany() {
   if (f) f.reset();
   var err = document.getElementById('co-form-error');
   if (err) { err.style.display='none'; err.textContent=''; }
-  document.getElementById('company-modal-backdrop').style.display='flex';
+  var _cmb=document.getElementById('company-modal-backdrop'); if(_cmb) _cmb.style.display='flex';
   setTimeout(function(){ var n=document.getElementById('co-name'); if(n)n.focus(); },50);
 }
 function closeCompanyModal() {
-  document.getElementById('company-modal-backdrop').style.display='none';
+  var _cmb2=document.getElementById('company-modal-backdrop'); if(_cmb2) _cmb2.style.display='none';
 }
 function submitCompanyForm(e) {
   e.preventDefault();
@@ -4596,10 +4729,7 @@ function renderCompaniesView() {
   var jobCount  = function(coId) { return jobs.filter(function(j) { return String(j.companyId) === String(coId); }).length; };
   var candCount = function(coId) { return candidates.filter(function(cd) { return jobs.some(function(j) { return String(j.companyId) === String(coId) && String(j.id) === String(cd.jobId); }); }).length; };
 
-  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">' +
-    '<div style="font-size:18px;font-weight:800;color:var(--text);">Companies</div>' +
-    '<button onclick="openAddCompany()" class="btn btn-primary btn-sm">+ Add Company</button>' +
-    '</div>';
+  var html = '';
 
   if (!companies.length) {
     html += '<div class="empty-state"><div class="empty-state-icon">&#127970;</div>' +
@@ -4615,7 +4745,7 @@ function renderCompaniesView() {
           '<div style="font-size:14px;font-weight:700;color:var(--text);">' + escHtml(co.name) + '</div>' +
           '<div style="font-size:11px;color:var(--text4);margin-top:3px;">' + jc + ' job' + (jc !== 1 ? 's' : '') + ' · ' + cc + ' candidate' + (cc !== 1 ? 's' : '') + '</div>' +
         '</div>' +
-        '<button class="co-addjob-btn btn btn-sm" data-coid="' + escHtml(String(co.id)) + '" style="background:rgba(124,106,247,.1);border:1px solid rgba(124,106,247,.3);color:var(--accent2);font-size:11px;flex-shrink:0;">+ Add Job</button>' +
+        '<button class="co-addjob-btn btn btn-sm" data-coid="' + escHtml(String(co.id)) + '" style="background:rgba(124,106,247,.18);border:1px solid rgba(124,106,247,.6);color:var(--accent2);font-size:11px;font-weight:700;padding:5px 12px;flex-shrink:0;">+ Add Job for This Company</button>' +
       '</div>';
     }).join('');
   }
@@ -4642,6 +4772,9 @@ function openAddJobForCompany(coId) {
     populateCompanyDropdown(coId);
     var sel = document.getElementById('jf-company');
     if (sel) sel.value = String(coId);
+    var titleEl = document.getElementById('job-modal-title');
+    var coName = getCompanyName(coId);
+    if (titleEl && coName) titleEl.textContent = 'Add Job — ' + coName;
   }, 80);
 }
 
@@ -4649,8 +4782,9 @@ function openAddJobForCompany(coId) {
 function acceptOffer(candId) {
   var cd=candidates.find(function(x){return String(x.id)===String(candId);});
   if(!cd) return;
-  cd.status='Hired'; cd.lastActivityAt=Date.now();
-  saveCandidates();
+  var now=Date.now();
+  var _aoApp=getPrimaryApplication(String(candId));
+  if(_aoApp){_aoApp.status='Hired';_aoApp.stage='Hired';_aoApp.lastActivityAt=now;_aoApp.updatedAt=now;saveApplications();}
   addActivityItem('Offer accepted — Hired: '+cd.name); saveActivityBoard();
   delete snoozedTasks[String(candId)];
   try{renderCandidateDetail(cd);}catch(e){}
@@ -4662,8 +4796,9 @@ function acceptOffer(candId) {
 function declineOffer(candId) {
   var cd=candidates.find(function(x){return String(x.id)===String(candId);});
   if(!cd) return;
-  cd.status='Rejected'; cd.lastActivityAt=Date.now();
-  saveCandidates();
+  var now=Date.now();
+  var _doApp=getPrimaryApplication(String(candId));
+  if(_doApp){_doApp.status='Rejected';_doApp.stage='Rejected';_doApp.lastActivityAt=now;_doApp.updatedAt=now;saveApplications();}
   addActivityItem('Offer declined — Rejected: '+cd.name); saveActivityBoard();
   delete snoozedTasks[String(candId)];
   try{renderCandidateDetail(cd);}catch(e){}
@@ -4673,17 +4808,69 @@ function declineOffer(candId) {
   try{renderDashboard();}catch(e){}
 }
 
-// Pipe-board action handler — no extra modals, no nav jumps
+// Pipe-board action handler — single dispatch, application-driven
 function _pipeActionHandler(e) {
   var btn = e.target.closest('.pipe-action-btn');
   if (!btn) return;
+
   var cid    = btn.dataset.cid;
   var action = btn.dataset.action;
   if (!cid || !action) return;
   e.stopPropagation();
-  if (action === 'submit')   { openSubmitModal(cid); }
-  if (action === 'followup') { performCandidateAction(cid, 'submission-followup'); }
-  if (action === 'close')    { performCandidateAction(cid, 'close'); }
+
+  var cd  = candidates.find(function(x){ return String(x.id) === String(cid); });
+  var app = getPrimaryApplication(String(cid));
+  if (!cd || !app) return;
+
+  var now = Date.now();
+  console.log('[PIPE ACTION]', action, cid);
+
+  // CONTACT — open message modal; Mark Sent will update application state
+  if (action === 'contact') {
+    showMessageModal(cid);
+    addActivityItem('Contact initiated: ' + cd.name);
+  }
+
+  // ADVANCE — move to next pipeline stage (writes to application)
+  else if (action === 'advance') {
+    moveCandidate(cid);
+    addActivityItem('Advanced stage: ' + cd.name);
+  }
+
+  // SUBMIT — open submission modal (writes to application on confirm)
+  else if (action === 'submit') {
+    openSubmitModal(cid);
+    addActivityItem('Submission started: ' + cd.name);
+  }
+
+  // FOLLOW UP — stamp last submission + bump lastActivityAt on application
+  else if (action === 'followup') {
+    app.lastActivityAt = now;
+    app.updatedAt      = now;
+    if (Array.isArray(app.submissions) && app.submissions.length) {
+      var last = app.submissions[app.submissions.length - 1];
+      last.followedUpAt = now;
+      if (last.status === 'sent') {
+        last.status = 'followed_up';
+      }
+    }
+    saveApplications();
+    addActivityItem('Followed up: ' + cd.name);
+  }
+
+  // CLOSE — accept offer, move to Hired
+  else if (action === 'close') {
+    acceptOffer(cid);
+    addActivityItem('Offer closed: ' + cd.name);
+  }
+
+  saveActivityBoard();
+
+  // Re-render all affected views
+  try { renderPipeline();   } catch(err) {}
+  try { renderCandidates(); } catch(err) {}
+  try { renderAITasks();    } catch(err) {}
+  try { renderDashboard();  } catch(err) {}
 }
 
 // toggleCandMore — show/hide optional candidate fields
@@ -4730,32 +4917,51 @@ function stressTestSeed() {
   if (!jobs.length) { alert('Add at least one job first'); return; }
   var count = 0;
   for (var i = 0; i < 50; i++) {
-    var fn = firstNames[i % firstNames.length];
-    var ln = lastNames[Math.floor(i/firstNames.length) % lastNames.length];
-    var job = jobs[i % jobs.length];
+    var fn    = firstNames[i % firstNames.length];
+    var ln    = lastNames[Math.floor(i/firstNames.length) % lastNames.length];
+    var job   = jobs[i % jobs.length];
     var stage = stages[i % stages.length];
+    var subs  = stage==='Submitted'?[{company:'Test Client',hiringManager:null,compensation:null,notes:null,timestamp:now-i*day*2,status:'sent'}]:[];
+    var cdId  = 'stress_'+i+'_'+Date.now();
     candidates.push({
-      id: 'stress_'+i+'_'+Date.now(), name: fn+' '+ln,
+      id: cdId, name: fn+' '+ln,
       title: titles[i % titles.length], company: 'Test Co '+(i%5+1),
       status: stage, jobId: String(job.id),
       notes: 'Stress test candidate '+i, resume: '', aiSummary: null,
-      submissions: stage==='Submitted'?[{company:'Test Client',hiringManager:null,compensation:null,notes:null,timestamp:now-i*day*2,status:'sent'}]:[],
+      submissions: subs,
       workspaceId: state.currentWorkspace, createdAt: now-i*day,
       lastActivityAt: now-Math.floor(i/2)*day,
       firstContactAt: ['Interview','Submitted','Offer','Hired'].includes(stage)?now-i*day:null,
       interviewCount: stage==='Interview'?1:stage==='Offer'?2:0,
       stage: stage
     });
+    // Create application record so pipeline sees this candidate
+    applications.push({
+      id:             'stress_app_'+i+'_'+Date.now(),
+      candidateId:    cdId,
+      jobId:          String(job.id),
+      status:         stage,
+      stage:          stage,
+      firstContactAt: ['Interview','Submitted','Offer','Hired'].includes(stage)?now-i*day:null,
+      lastActivityAt: now-Math.floor(i/2)*day,
+      createdAt:      now-i*day,
+      updatedAt:      Date.now(),
+      interviewCount: stage==='Interview'?1:stage==='Offer'?2:0,
+      submissions:    subs,
+    });
     count++;
   }
   saveCandidates();
+  saveApplications();
   try { renderCandidates(); } catch(e) {}
   try { renderPipeline(); } catch(e) {}
-  alert('Added '+count+' test candidates. Run cleanStressTest() to remove them.');
+  alert('Added '+count+' test candidates + applications. Run cleanStressTest() to remove them.');
 }
 function cleanStressTest() {
-  candidates = candidates.filter(function(x){ return !String(x.id).startsWith('stress_'); });
+  candidates   = candidates.filter(function(x){ return !String(x.id).startsWith('stress_'); });
+  applications = applications.filter(function(x){ return !String(x.id).startsWith('stress_app_') && !String(x.candidateId).startsWith('stress_'); });
   saveCandidates();
+  saveApplications();
   try { renderCandidates(); } catch(e) {}
   try { renderPipeline(); } catch(e) {}
   alert('Stress test data removed.');
@@ -5279,6 +5485,8 @@ function runResumeParse(text) {
 
   var more = document.getElementById('cf-more');
   if (more && more.style.display !== 'flex') toggleCandMore();
+
+  if (confident) applyResumeParseResults();
 }
 
 // ── Apply: fill form fields (empty-guard), then clear parse state ─────────────
@@ -5389,69 +5597,69 @@ var _origOpenAddCandidateModal = window.openAddCandidateModal;
 })();
 
 
+// ── Candidate CSV Import ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  var importInput = document.getElementById('import-candidates');
+  if (importInput) importInput.addEventListener('change', handleCandidateImport);
+});
+
+function handleCandidateImport(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var name = file.name.toLowerCase();
+  if (name.endsWith('.csv')) {
+    readCSV(file);
+  } else if (name.endsWith('.xlsx')) {
+    alert('Convert Excel to CSV for now');
+  } else {
+    alert('Unsupported file');
+  }
+  // Reset so same file can be re-imported
+  e.target.value = '';
+}
+
+function readCSV(file) {
+  var reader = new FileReader();
+  reader.onload = function(evt) {
+    var text = evt.target.result;
+    var rows = text.split('\n');
+    var now = Date.now();
+    var added = 0;
+    rows.slice(1).forEach(function(row) {
+      if (!row.trim()) return;
+      var cols = row.split(',');
+      if (!cols[0] || !cols[0].trim()) return;
+      var newCand = {
+        id:             String(uid()),
+        name:           cols[0].trim(),
+        title:          cols[1] ? cols[1].trim() : '',
+        company:        cols[2] ? cols[2].trim() : '',
+        resume:         cols[3] ? cols[3].trim().slice(0, 2000) : '',
+        status:         'New',
+        jobId:          null,
+        notes:          '',
+        skills:         [],
+        workspaceId:    state.currentWorkspace,
+        createdAt:      now,
+        lastActivityAt: now,
+        firstContactAt: null,
+        interviewCount: 0,
+      };
+      candidates.push(newCand);
+      added++;
+    });
+    if (added > 0) {
+      saveCandidates();
+      renderCandidates();
+      renderDashboard();
+    }
+    alert(added > 0 ? 'Import complete — ' + added + ' candidate' + (added !== 1 ? 's' : '') + ' added.' : 'No valid rows found in file.');
+  };
+  reader.onerror = function() { alert('Could not read file.'); };
+  reader.readAsText(file);
+}
+
 document.addEventListener('DOMContentLoaded', init);
-
-// ── Bulk Resume Import ────────────────────────────────────────────────────────
-function openBulkImport() {
-  document.getElementById('bulk-import-backdrop').style.display = 'flex';
-}
-function closeBulkImport() {
-  document.getElementById('bulk-import-backdrop').style.display = 'none';
-  document.getElementById('bulk-paste').value = '';
-  document.getElementById('bulk-import-status').textContent = '';
-}
-function processBulkPaste() {
-  var raw     = (document.getElementById('bulk-paste').value || '').trim();
-  if (!raw) return;
-  var resumes = raw.split(/(?:\n{3,}|={5,}|-{5,})/);
-  var created = 0;
-  resumes.forEach(function(text) {
-    text = text.trim();
-    if (text.length < 50) return;
-    var parsed = parseResumeText(text);
-    if (!parsed.name) return;
-    var newCand = {
-      id:             uid(),
-      name:           parsed.name,
-      title:          parsed.title   || '',
-      company:        parsed.company || '',
-      location:       parsed.location|| '',
-      skills:         Array.isArray(parsed.skills) ? parsed.skills.join(', ') : (parsed.skills || ''),
-      notes:          parsed.summary || '',
-      resume:         text,
-      status:         'New',
-      createdAt:      Date.now(),
-      lastActivityAt: Date.now()
-    };
-    candidates.unshift(newCand);
-    created++;
-  });
-  saveCandidates();
-  renderCandidates();
-  document.getElementById('bulk-import-status').textContent = 'Imported ' + created + ' candidate' + (created !== 1 ? 's' : '');
-  if (created > 0) document.getElementById('bulk-paste').value = '';
-}
 </script>
-
-<!-- Bulk Resume Import Modal -->
-<div id="bulk-import-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;width:620px;max-width:94vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;">
-    <div style="padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-      <div>
-        <div style="font-size:15px;font-weight:700;color:var(--text);">Import Resumes</div>
-        <div style="font-size:11px;color:var(--text4);margin-top:2px;">Paste multiple resumes — separate each with 3+ blank lines or a row of dashes</div>
-      </div>
-      <button onclick="closeBulkImport()" style="background:none;border:none;color:var(--text4);font-size:20px;cursor:pointer;padding:0 4px;line-height:1;">&times;</button>
-    </div>
-    <div style="padding:18px 22px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;">
-      <textarea id="bulk-paste" placeholder="Paste resume text here...&#10;&#10;Separate each resume with 3 blank lines or -----" style="width:100%;height:320px;padding:12px;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-size:12px;font-family:inherit;resize:vertical;outline:none;box-sizing:border-box;line-height:1.5;"></textarea>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <button onclick="processBulkPaste()" style="padding:9px 22px;background:var(--primary);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">Import Candidates</button>
-        <button onclick="closeBulkImport()" style="padding:9px 16px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text3);font-size:13px;font-family:inherit;cursor:pointer;">Cancel</button>
-        <span id="bulk-import-status" style="font-size:12px;color:var(--primary);font-weight:600;"></span>
-      </div>
-    </div>
-  </div>
-</div>
 </body>
 </html>
