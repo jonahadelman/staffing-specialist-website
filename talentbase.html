@@ -1163,6 +1163,23 @@ input:focus, select:focus, textarea:focus {
             <form id="company-form" onsubmit="submitCompanyForm(event)" autocomplete="off">
               <div style="display:flex;flex-direction:column;gap:14px;padding:20px;">
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Company Name <span style="color:var(--red);">*</span></label><input id="co-name" type="text" placeholder="e.g. Boston Scientific" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                  <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Location</label><input id="co-location" type="text" placeholder="e.g. Marlborough, MA" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
+                  <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Work Model</label><select id="co-workmodel" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">—</option><option value="Onsite">Onsite</option><option value="Hybrid">Hybrid</option><option value="Remote">Remote</option></select></div>
+                </div>
+
+                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">About Company</label><textarea id="co-about" rows="3" placeholder="Brief overview: industry, size, culture, what makes them interesting..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
+
+                <div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                    <label style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;">Hiring Managers</label>
+                    <button type="button" onclick="addHiringManagerField()" style="padding:3px 10px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">+ Add</button>
+                  </div>
+                  <div id="co-hm-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+                  <div id="co-hm-empty" style="font-size:11px;color:var(--text4);padding:8px 0;font-style:italic;">No hiring managers added yet.</div>
+                </div>
+
                 <div id="co-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
                 <div style="display:flex;gap:8px;justify-content:flex-end;"><button type="button" onclick="closeCompanyModal()" class="btn btn-ghost">Cancel</button><button type="submit" class="btn btn-primary" id="co-submit-btn">Add Company</button></div>
               </div>
@@ -4996,9 +5013,48 @@ function openAddCompany() {
   if (f) f.reset();
   var err = document.getElementById('co-form-error');
   if (err) { err.style.display='none'; err.textContent=''; }
+  // Clear dynamically-added HM rows — form.reset() doesn't touch appended DOM
+  var hmList = document.getElementById('co-hm-list');
+  if (hmList) hmList.innerHTML = '';
+  var hmEmpty = document.getElementById('co-hm-empty');
+  if (hmEmpty) hmEmpty.style.display = 'block';
   var _cmb=document.getElementById('company-modal-backdrop'); if(_cmb) _cmb.style.display='flex';
   setTimeout(function(){ var n=document.getElementById('co-name'); if(n)n.focus(); },50);
 }
+function addHiringManagerField(prefill) {
+  var container = document.getElementById('co-hm-list');
+  if (!container) return;
+  var empty = document.getElementById('co-hm-empty');
+  if (empty) empty.style.display = 'none';
+  var hm = prefill || { name:'', email:'', phone:'' };
+  var row = document.createElement('div');
+  row.className = 'co-hm-row';
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;align-items:center;';
+  row.innerHTML =
+    '<input class="hm-name"  type="text"  placeholder="Name"  value="' + escHtml(hm.name)  + '" ' +
+      'style="padding:7px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit;outline:none;"/>' +
+    '<input class="hm-email" type="email" placeholder="Email" value="' + escHtml(hm.email) + '" ' +
+      'style="padding:7px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit;outline:none;"/>' +
+    '<input class="hm-phone" type="tel"   placeholder="Phone" value="' + escHtml(hm.phone) + '" ' +
+      'style="padding:7px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit;outline:none;"/>' +
+    '<button type="button" onclick="removeHiringManagerField(this)" ' +
+      'style="width:26px;height:26px;padding:0;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:6px;color:var(--red);font-size:14px;font-family:inherit;cursor:pointer;line-height:1;">&times;</button>';
+  container.appendChild(row);
+  // Focus the first name input of the row just added
+  var nameInput = row.querySelector('.hm-name');
+  if (nameInput && !prefill) nameInput.focus();
+}
+
+function removeHiringManagerField(btn) {
+  var row = btn && btn.closest ? btn.closest('.co-hm-row') : null;
+  if (row && row.parentNode) row.parentNode.removeChild(row);
+  var container = document.getElementById('co-hm-list');
+  var empty = document.getElementById('co-hm-empty');
+  if (empty && container) {
+    empty.style.display = container.children.length ? 'none' : 'block';
+  }
+}
+
 function closeCompanyModal() {
   var _cmb2=document.getElementById('company-modal-backdrop'); if(_cmb2) _cmb2.style.display='none';
 }
@@ -5007,7 +5063,32 @@ function submitCompanyForm(e) {
   var name=(document.getElementById('co-name').value||'').trim();
   var err=document.getElementById('co-form-error');
   if (!name) { err.textContent='Company name is required.'; err.style.display='block'; return; }
-  var co={ id:'co_'+Date.now(), name:name, createdAt:Date.now() };
+
+  var location  = (document.getElementById('co-location')  ||{}).value || '';
+  var workModel = (document.getElementById('co-workmodel') ||{}).value || '';
+  var about     = (document.getElementById('co-about')     ||{}).value || '';
+
+  var managers = [];
+  document.querySelectorAll('#co-hm-list > .co-hm-row').forEach(function(row) {
+    var nEl = row.querySelector('.hm-name');
+    var eEl = row.querySelector('.hm-email');
+    var pEl = row.querySelector('.hm-phone');
+    var hmName  = nEl ? (nEl.value || '').trim() : '';
+    var hmEmail = eEl ? (eEl.value || '').trim() : '';
+    var hmPhone = pEl ? (pEl.value || '').trim() : '';
+    // Only save rows with at least a name (ignore empty rows)
+    if (hmName) managers.push({ name:hmName, email:hmEmail, phone:hmPhone });
+  });
+
+  var co = {
+    id:             'co_'+Date.now(),
+    name:           name,
+    location:       location.trim(),
+    workModel:      workModel,
+    about:          about.trim(),
+    hiringManagers: managers,
+    createdAt:      Date.now(),
+  };
   companies.unshift(co);
   saveCompanies();
   setTimeout(function() {
