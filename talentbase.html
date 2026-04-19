@@ -2897,12 +2897,14 @@ function renderCandidateDetail(cd) {
             '<div class="detail-section-label" style="margin-bottom:0;">AI Summary</div>' +
             '<span style="font-size:9px;font-weight:700;color:var(--text4);background:rgba(255,255,255,.07);padding:1px 6px;border-radius:4px;">AI</span>' +
           '</div>' +
+          (cd.aiSummary.headline ? '<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:6px;">' + escHtml(cd.aiSummary.headline) + '</div>' : '') +
           (cd.aiSummary.summary ? '<div style="font-size:12px;color:var(--text3);line-height:1.6;margin-bottom:10px;">' + escHtml(cd.aiSummary.summary) + '</div>' : '') +
           (cd.aiSummary.keySkills && cd.aiSummary.keySkills.length
             ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;">' +
                 cd.aiSummary.keySkills.slice(0,8).map(function(s) { return '<span style="font-size:10px;background:rgba(124,106,247,.12);color:var(--accent2);padding:2px 8px;border-radius:99px;">' + escHtml(s) + '</span>'; }).join('') +
               '</div>'
             : '') +
+          (cd.aiSummary.pitch ? '<div style="font-size:11px;font-style:italic;color:#2dd4bf;line-height:1.5;padding:8px 10px;background:rgba(20,184,166,.06);border-left:2px solid rgba(20,184,166,.4);border-radius:0 6px 6px 0;margin-bottom:10px;">' + escHtml(cd.aiSummary.pitch) + '</div>' : '') +
           // Experience blocks
           (cd.experience && cd.experience.length
             ? '<div style="margin-bottom:8px;"><div style="font-size:9px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Experience</div>' +
@@ -6386,9 +6388,43 @@ function _emptyParse(rawText) {
   };
 }
 
+// Enrich parsed resume with a submission-ready AI summary.
+// Produces headline + pitch + strengths on top of the existing aiSummary shape.
+function generateCandidateSummary(parsed) {
+  if (!parsed) return null;
+  var name      = parsed.name || 'This candidate';
+  var title     = parsed.title || 'Experienced Professional';
+  var skills    = Array.isArray(parsed.skills) ? parsed.skills : [];
+  var topThree  = skills.slice(0, 3);
+  var strengths = skills.slice(0, 5);
+  var pitch;
+  if (topThree.length) {
+    pitch = name + ' is a strong candidate with experience in ' + topThree.join(', ') + '. Well aligned for technical roles.';
+  } else {
+    pitch = name + ' is a strong candidate worth a closer look.';
+  }
+  return {
+    headline:  title,
+    summary:   parsed.summary || '',
+    strengths: strengths,
+    pitch:     pitch,
+  };
+}
+
 // ── Run parse and update review strip ────────────────────────────────────────
 function runResumeParse(text) {
   var parsed        = parseResumeText(text);
+
+  // Enrich aiSummary with headline/pitch/strengths — extends existing shape, doesn't replace it
+  var ai = generateCandidateSummary(parsed);
+  if (ai && parsed.aiSummary) {
+    parsed.aiSummary.headline  = ai.headline;
+    parsed.aiSummary.pitch     = ai.pitch;
+    parsed.aiSummary.strengths = ai.strengths;
+    // Keep existing summary if parseResumeText produced one, else fall back to ai.summary
+    if (!parsed.aiSummary.summary && ai.summary) parsed.aiSummary.summary = ai.summary;
+  }
+
   _parsedResume     = parsed;
   window._lastFullParse         = parsed;
   window._pendingResumeAnalysis = parsed.aiSummary;
@@ -6473,6 +6509,7 @@ function applyResumeParseResults() {
 
   // Build structured notes
   var notesParts = [];
+  if (p.aiSummary && p.aiSummary.pitch) notesParts.push(p.aiSummary.pitch + '\n');
   if (p.summary) notesParts.push(p.summary);
   if (p.experience && p.experience.length) {
     notesParts.push('\nExperience:');
