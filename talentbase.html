@@ -1206,7 +1206,7 @@ input:focus, select:focus, textarea:focus {
                 <div id="jf-advanced" style="display:none;flex-direction:column;gap:14px;">
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Department</label><input id="jf-dept" type="text" placeholder="e.g. R&amp;D" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Status</label><select id="jf-status" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="Active">Active</option><option value="Draft">Draft</option><option value="Approved">Approved</option><option value="Closed">Closed</option></select></div></div>
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Employment Type</label><select id="jf-type" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="Full-time">Full-time</option><option value="Part-time">Part-time</option><option value="Contract">Contract</option><option value="Contract-to-Hire">Contract-to-Hire</option></select></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Work Model</label><select id="jf-loctype" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="Onsite">Onsite</option><option value="Hybrid">Hybrid</option><option value="Remote">Remote</option></select></div></div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Hiring Manager</label><input id="jf-hm" type="text" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Recruiter Owner</label><input id="jf-recruiter" type="text" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Openings</label><input id="jf-openings" type="number" placeholder="1" min="1" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div></div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Hiring Manager</label><select id="jf-hm-select" onchange="handleHMSelectChange()" style="display:none;width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">Select Hiring Manager...</option></select><input id="jf-hm" type="text" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Recruiter Owner</label><input id="jf-recruiter" type="text" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Openings</label><input id="jf-openings" type="number" placeholder="1" min="1" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div></div>
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Priority</label><select id="jf-priority" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="Medium">Medium</option><option value="High">High</option><option value="Critical">Critical</option><option value="Low">Low</option></select></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Target Start</label><input id="jf-start" type="date" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"/></div></div>
                 </div>
                 <div id="job-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
@@ -2188,7 +2188,14 @@ function openAddJob() {
   editingJobId = null;
   var form = document.getElementById('job-form');
   if (form) form.reset();
+  // Reset HM dropdown visibility — default to text input mode until company triggers change
+  var _hmSel = document.getElementById('jf-hm-select');
+  var _hmInp = document.getElementById('jf-hm');
+  if (_hmSel) { _hmSel.innerHTML = '<option value="">Select Hiring Manager...</option>'; _hmSel.style.display = 'none'; }
+  if (_hmInp) _hmInp.style.display = '';
   populateCompanyDropdown(companies.length ? companies[0].id : null);
+  // If a company was pre-selected, fire change to populate HM dropdown / auto-fill
+  if (companies.length) { try { handleCompanyChange(); } catch(e) {} }
   var errEl = document.getElementById('job-form-error');
   if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
   var titleEl = document.getElementById('job-modal-title');
@@ -2202,6 +2209,12 @@ function openEditJob(id) {
   var j = jobs.find(function(x) { return x.id === id; });
   if (!j) return;
   editingJobId = id;
+
+  // Reset HM dropdown visibility — default to text input until company triggers change
+  var _hmSel = document.getElementById('jf-hm-select');
+  var _hmInp = document.getElementById('jf-hm');
+  if (_hmSel) { _hmSel.innerHTML = '<option value="">Select Hiring Manager...</option>'; _hmSel.style.display = 'none'; }
+  if (_hmInp) _hmInp.style.display = '';
 
   populateCompanyDropdown(j.companyId || '');
   if (document.getElementById('jf-company')) document.getElementById('jf-company').value = j.companyId || '';
@@ -2219,6 +2232,9 @@ function openEditJob(id) {
   document.getElementById('jf-priority').value   = j.priority      || 'Medium';
   document.getElementById('jf-loctype').value    = j.locationType   || 'Onsite';
   document.getElementById('jf-start').value      = j.targetStart    || '';
+
+  // Fire company-change to populate HM dropdown / toggle visibility / preselect saved HM
+  try { handleCompanyChange(); } catch(e) {}
 
   var errEl = document.getElementById('job-form-error');
   if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
@@ -5035,10 +5051,33 @@ function handleCompanyChange() {
   var co = companies.find(function(x) { return String(x.id) === String(companyId); });
   if (!co) return;
 
-  // Auto-fill hiring manager (only if empty)
-  var hmField = document.getElementById('jf-hm');
-  if (hmField && !hmField.value && co.hiringManagers && co.hiringManagers.length) {
-    hmField.value = co.hiringManagers[0].name || '';
+  // Hiring Manager: if company has HMs, show dropdown; otherwise fall back to text input
+  var hmField  = document.getElementById('jf-hm');
+  var hmSelect = document.getElementById('jf-hm-select');
+  if (hmSelect && hmField) {
+    if (co.hiringManagers && co.hiringManagers.length) {
+      // Populate dropdown from company HMs
+      hmSelect.innerHTML = '<option value="">Select Hiring Manager...</option>' +
+        co.hiringManagers.map(function(hm) {
+          var label = escHtml(hm.name || '') + (hm.email ? ' (' + escHtml(hm.email) + ')' : '');
+          return '<option value="' + escHtml(hm.name || '') + '">' + label + '</option>';
+        }).join('');
+      // If the hidden text field already has a value that matches a HM, preselect it
+      if (hmField.value) {
+        hmSelect.value = hmField.value;
+      }
+      // If field is empty, default to first HM and sync
+      if (!hmField.value) {
+        hmField.value    = co.hiringManagers[0].name || '';
+        hmSelect.value   = co.hiringManagers[0].name || '';
+      }
+      hmSelect.style.display = '';
+      hmField.style.display  = 'none';
+    } else {
+      // No HMs — show original text input
+      hmSelect.style.display = 'none';
+      hmField.style.display  = '';
+    }
   }
 
   // Auto-fill location (only if empty)
@@ -5052,6 +5091,13 @@ function handleCompanyChange() {
   if (typeField && !typeField.value && co.workModel) {
     typeField.value = co.workModel;
   }
+}
+
+// Sync HM dropdown selection back to the canonical jf-hm field that save logic reads
+function handleHMSelectChange() {
+  var sel = document.getElementById('jf-hm-select');
+  var hmField = document.getElementById('jf-hm');
+  if (sel && hmField) hmField.value = sel.value || '';
 }
 
 function populateCompanyDropdown(selectedId) {
