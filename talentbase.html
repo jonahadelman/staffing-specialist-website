@@ -1737,7 +1737,7 @@ function renderDashboard() {
   var tasks    = getAITasks();
   var topTasks = tasks.slice(0, 3);
   renderTopActions(topTasks);
-  renderTopToSubmit();
+  renderSubmissionDecisions();
   renderAITasks();
   initAITasksHandler();
 
@@ -4679,6 +4679,74 @@ function updateSubmissionStatus(candId, idx, newStatus) {
   try { renderCandidates(); }          catch(e) {}
   try { renderPipeline(); }            catch(e) {}
   if (state && state.currentView === 'dashboard') { try { renderDashboard(); } catch(e) {} }
+}
+
+// ── Auto-Submit Decision Engine ───────────────────────────────
+// Filters candidates by stage, match score, experience score, and idleness
+// to surface ONLY those ready to submit right now.
+function getSubmissionDecisions() {
+  return candidates
+    .map(function(cd) {
+      var job = jobs.find(function(j) { return String(j.id) === String(cd.jobId); });
+      if (!job) return null;
+
+      var app = getPrimaryApplication(cd.id);
+      if (!app) return null;
+
+      // Score experience from application (source of truth — cd.status may be stale)
+      var matchScore = scoreCandidateForJob(cd, job);
+      var expScore   = calculateExperienceScore(app);
+      var stage      = app.status;
+      var idle       = getDaysSince(app.lastActivityAt || app.createdAt);
+
+      return {
+        candidate:  cd,
+        job:        job,
+        matchScore: matchScore,
+        expScore:   expScore,
+        stage:      stage,
+        idleDays:   idle,
+      };
+    })
+    .filter(function(x) {
+      if (!x) return false;
+      if (x.stage !== 'Interview') return false;  // Must be in Interview stage
+      if (x.matchScore < 50)       return false;  // Must be strong match
+      if (x.expScore < 65)         return false;  // Must be healthy
+      if (x.idleDays > 3)          return false;  // Must not be stale
+      return true;
+    })
+    .sort(function(a, b) {
+      if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore;
+      return b.expScore - a.expScore;
+    })
+    .slice(0, 3);
+}
+
+function renderSubmissionDecisions() {
+  var el = document.getElementById('dash-top-submit');
+  if (!el) return;
+
+  var decisions = getSubmissionDecisions();
+
+  if (!decisions.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text4);padding:12px 0;">No candidates ready for submission right now.</div>';
+    return;
+  }
+
+  el.innerHTML = decisions.map(function(x) {
+    var cd  = x.candidate;
+    var job = x.job;
+    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:13px;font-weight:700;color:var(--text);">' + escHtml(cd.name) + '</div>' +
+        '<div style="font-size:11px;color:var(--text4);">' + escHtml((cd.title || '') + (job ? ' · ' + job.title : '')) + '</div>' +
+      '</div>' +
+      '<div style="font-size:10px;font-weight:800;color:var(--green);letter-spacing:.04em;flex-shrink:0;">READY</div>' +
+      '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="openSubmitModal(this.dataset.cid)" ' +
+        'class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;font-size:11px;padding:5px 12px;flex-shrink:0;">Submit</button>' +
+    '</div>';
+  }).join('');
 }
 
 function renderTopToSubmit() {
