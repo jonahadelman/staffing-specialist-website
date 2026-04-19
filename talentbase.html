@@ -1498,6 +1498,7 @@ input:focus, select:focus, textarea:focus {
         </div>
         <div>
           <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Hiring Manager</label>
+          <select id="sf-hm-select" onchange="handleSubmitHMSelectChange()" style="display:none;width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;margin-bottom:6px;"><option value="">Select Hiring Manager...</option></select>
           <input id="sf-hm" type="text" placeholder="Optional"
             style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
         </div>
@@ -1507,7 +1508,10 @@ input:focus, select:focus, textarea:focus {
             style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
         </div>
         <div>
-          <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Notes</label>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+            <label style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;">Notes</label>
+            <button type="button" onclick="regenerateSubmissionMessage()" style="padding:3px 10px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">Generate Message</button>
+          </div>
           <textarea id="sf-notes" rows="3" placeholder="Submission notes, context, fit summary..."
             style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
         </div>
@@ -4634,16 +4638,84 @@ function openSubmitModal(candId) {
   if (titleEl) titleEl.textContent = 'Submit ' + cd.name;
   if (subEl)   subEl.textContent   = job ? 'Role: ' + job.title : '';
   if (errEl)   { errEl.textContent = ''; errEl.style.display = 'none'; }
-  var sfCo = document.getElementById('sf-company');
-  var sfHm = document.getElementById('sf-hm');
-  var sfCp = document.getElementById('sf-comp');
-  var sfNt = document.getElementById('sf-notes');
+  var sfCo  = document.getElementById('sf-company');
+  var sfHm  = document.getElementById('sf-hm');
+  var sfSel = document.getElementById('sf-hm-select');
+  var sfCp  = document.getElementById('sf-comp');
+  var sfNt  = document.getElementById('sf-notes');
   if (sfCo) sfCo.value = '';
   if (sfHm) sfHm.value = (job && job.hiringManager) ? job.hiringManager : '';
   if (sfCp) sfCp.value = '';
   if (sfNt) sfNt.value = '';
+  // Reset dropdown to hidden default
+  if (sfSel) {
+    sfSel.innerHTML = '<option value="">Select Hiring Manager...</option>';
+    sfSel.style.display = 'none';
+  }
+
+  // Company-driven HM intelligence
+  var co = (job && job.companyId)
+    ? companies.find(function(x) { return String(x.id) === String(job.companyId); })
+    : null;
+  if (co && co.hiringManagers && co.hiringManagers.length) {
+    // Fallback: if sf-hm is still empty after job fill, use first company HM
+    if (sfHm && !sfHm.value) {
+      sfHm.value = co.hiringManagers[0].name || '';
+    }
+    // Multi-HM: show dropdown above text input (spec: more than 1 HM)
+    if (co.hiringManagers.length > 1 && sfSel) {
+      sfSel.innerHTML = '<option value="">Select Hiring Manager...</option>' +
+        co.hiringManagers.map(function(hm) {
+          var label = escHtml(hm.name || '') + (hm.email ? ' (' + escHtml(hm.email) + ')' : '');
+          return '<option value="' + escHtml(hm.name || '') + '">' + label + '</option>';
+        }).join('');
+      // Preselect whatever sf-hm currently holds if it matches
+      if (sfHm && sfHm.value) sfSel.value = sfHm.value;
+      sfSel.style.display = '';
+    }
+  }
+
+  // Prefill notes with generated submission message
+  if (sfNt && !sfNt.value && job) {
+    try { sfNt.value = generateSubmissionMessage(cd, job, sfHm ? sfHm.value : ''); } catch(e) {}
+  }
+
   var _smb=document.getElementById('submit-modal-backdrop'); if(_smb) _smb.style.display = 'flex';
   setTimeout(function() { var _sfc=document.getElementById('sf-company'); if(_sfc) _sfc.focus(); }, 60);
+}
+
+// Sync HM dropdown selection back to canonical sf-hm field
+function handleSubmitHMSelectChange() {
+  var sel = document.getElementById('sf-hm-select');
+  var hmField = document.getElementById('sf-hm');
+  if (sel && hmField) hmField.value = sel.value || '';
+}
+
+// Build a submission message using candidate, job, and HM name
+function generateSubmissionMessage(cd, job, hm) {
+  if (!cd || !job) return '';
+  var firstName = (cd.name || '').split(' ')[0];
+  var greeting = hm ? 'Hi ' + (hm.split(' ')[0] || hm) + ',' : 'Hi there,';
+  var titleLine = cd.title ? 'a ' + cd.title : 'a strong candidate';
+  return greeting + '\n\n' +
+    "I wanted to share a candidate for your " + job.title + " role.\n\n" +
+    cd.name + " is currently " + titleLine +
+    " and aligns well with what you're looking for.\n\n" +
+    "Let me know if you'd like to connect — I can coordinate quickly.\n\n" +
+    "Best,\nJonah";
+}
+
+// Button-driven regeneration (reads current field values, writes to notes)
+function regenerateSubmissionMessage() {
+  if (!submittingCandId) return;
+  var cd  = candidates.find(function(x) { return String(x.id) === String(submittingCandId); });
+  if (!cd) return;
+  var job = jobs.find(function(j) { return String(j.id) === String(cd.jobId); });
+  if (!job) return;
+  var hmField = document.getElementById('sf-hm');
+  var hm = hmField ? hmField.value : '';
+  var notesEl = document.getElementById('sf-notes');
+  if (notesEl) notesEl.value = generateSubmissionMessage(cd, job, hm);
 }
 
 function closeSubmitModal() {
