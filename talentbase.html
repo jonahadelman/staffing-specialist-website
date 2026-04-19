@@ -1223,7 +1223,7 @@ input:focus, select:focus, textarea:focus {
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Job Title <span style="color:var(--red);">*</span></label><input id="jf-title" type="text" placeholder="e.g. Senior Program Manager" required oninput="document.getElementById('job-form-error').style.display='none'" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Location</label><input id="jf-location" type="text" placeholder="e.g. Boston, MA" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Salary Range</label><div style="display:flex;gap:8px;align-items:center;"><input id="jf-salary-min" type="number" placeholder="Min" style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/><span style="font-size:12px;color:var(--text4);flex-shrink:0;">&mdash;</span><input id="jf-salary-max" type="number" placeholder="Max" style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><button type="button" onclick="suggestSalary()" style="margin-top:7px;padding:5px 12px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:7px;color:#2dd4bf;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">&#128176; Suggest Salary</button><div id="salary-suggest-banner" style="display:none;margin-top:6px;padding:7px 12px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.25);border-radius:7px;"><div style="display:flex;align-items:center;gap:10px;"><span id="salary-suggest-text" style="font-size:11px;color:#2dd4bf;flex:1;">Suggested range</span><button type="button" onclick="applySalarySuggestion()" style="padding:2px 10px;background:rgba(20,184,166,.2);border:1px solid rgba(20,184,166,.4);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">Apply</button><button type="button" onclick="this.parentElement.parentElement.style.display='none'" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:14px;padding:0 2px;">&times;</button></div></div></div>
-                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Job Description</label><textarea id="jf-notes" onblur="analyzeJobDescription(this.value)" rows="3" placeholder="Role overview, key requirements, hiring manager, team context..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
+                <div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;"><label style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;">Job Description</label><button type="button" onclick="openJobWizard()" style="padding:3px 10px;background:rgba(124,106,247,.12);border:1px solid rgba(124,106,247,.3);border-radius:6px;color:var(--accent2);font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">&#10024; Job Wizard</button></div><textarea id="jf-notes" onblur="analyzeJobDescription(this.value)" rows="3" placeholder="Role overview, key requirements, hiring manager, team context..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
                 <div id="jd-improve-banner" style="display:none;padding:10px 14px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);border-radius:8px;"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;"><div style="font-size:12px;color:var(--text3);">&#10024; <strong style="color:var(--text);">We improved this job description</strong></div><div style="display:flex;gap:6px;"><button type="button" onclick="applyJobDescriptionImprovement()" class="btn btn-primary btn-sm" style="font-size:10px;padding:3px 10px;">Apply</button><button type="button" onclick="dismissJobDescriptionImprovement()" class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 10px;">Keep Original</button></div></div><div id="jd-improved-preview" style="font-size:11px;color:var(--text4);margin-top:7px;max-height:80px;overflow-y:auto;line-height:1.6;white-space:pre-wrap;"></div></div>
                 <div><button type="button" id="jf-advanced-toggle" onclick="toggleJobAdvanced()" style="background:none;border:none;color:var(--text4);font-size:11px;font-family:inherit;cursor:pointer;padding:0;">&#9881; Advanced Options <span id="jf-adv-arrow">&#9662;</span></button></div>
                 <div id="jf-advanced" style="display:none;flex-direction:column;gap:14px;">
@@ -1236,6 +1236,33 @@ input:focus, select:focus, textarea:focus {
                 <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;"><button type="button" onclick="closeJobModal()" class="btn btn-ghost">Cancel</button><button type="submit" class="btn btn-primary" id="job-submit-btn">Add Job</button></div>
               </div>
             </form>
+          </div>
+        </div>
+
+        <!-- Job Wizard Modal -->
+        <div id="job-wizard-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:1100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeJobWizard()">
+          <div style="background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:24px 28px;width:560px;max-width:calc(100vw - 32px);max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.7);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <div>
+                <div style="font-size:16px;font-weight:800;color:var(--text);">✨ Job Description Wizard</div>
+                <div style="font-size:11px;color:var(--text4);margin-top:3px;">Describe the role in plain language. Wizard generates a structured draft.</div>
+              </div>
+              <button type="button" onclick="closeJobWizard()" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:22px;line-height:1;padding:0;">&times;</button>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div>
+                <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Role Context</label>
+                <textarea id="jw-input" rows="4" placeholder="Example: Senior Program Manager leading product launches for our medical device team. 8+ years experience, FDA process familiarity, ability to coordinate R&D, Quality, and commercial teams." style="width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;line-height:1.5;"></textarea>
+              </div>
+
+              <div id="jw-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
+
+              <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" onclick="closeJobWizard()" class="btn btn-ghost">Cancel</button>
+                <button type="button" onclick="generateJobDescription()" class="btn btn-primary" style="background:linear-gradient(135deg,var(--accent),var(--accent2));">Generate</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -2430,6 +2457,65 @@ function closeJobModal() {
   var backdrop = document.getElementById('job-modal-backdrop');
   if (backdrop) backdrop.style.display = 'none';
   editingJobId = null;
+}
+
+// ── Job Description Wizard ─────────────────────────────────
+function openJobWizard() {
+  var m = document.getElementById('job-wizard-modal');
+  if (!m) return;
+  m.style.display = 'flex';
+  var err = document.getElementById('jw-form-error');
+  if (err) { err.textContent = ''; err.style.display = 'none'; }
+  setTimeout(function() {
+    var ta = document.getElementById('jw-input');
+    if (ta) ta.focus();
+  }, 50);
+}
+
+function closeJobWizard() {
+  var m = document.getElementById('job-wizard-modal');
+  if (m) m.style.display = 'none';
+}
+
+function generateJobDescription() {
+  var inputEl = document.getElementById('jw-input');
+  var errEl   = document.getElementById('jw-form-error');
+  var input   = inputEl ? (inputEl.value || '').trim() : '';
+
+  if (!input) {
+    if (errEl) { errEl.textContent = 'Describe the role to generate a draft.'; errEl.style.display = 'block'; }
+    return;
+  }
+
+  var jd = "Position Overview:\n" + input + "\n\n" +
+    "Key Responsibilities:\n" +
+    "• Lead core initiatives aligned to business goals\n" +
+    "• Collaborate cross-functionally with stakeholders\n" +
+    "• Drive execution and measurable results\n\n" +
+    "Required Qualifications:\n" +
+    "• Relevant experience in the field\n" +
+    "• Strong communication and leadership skills\n" +
+    "• Ability to deliver results in a fast-paced environment\n\n" +
+    "Why Join:\n" +
+    "• High-impact role with visibility to senior leadership\n" +
+    "• Growth opportunity and clear path forward\n";
+
+  var notesEl = document.getElementById('jf-notes');
+  if (!notesEl) { closeJobWizard(); return; }
+
+  // Confirm before overwriting existing user-typed notes
+  if (notesEl.value && notesEl.value.trim()) {
+    if (!confirm('The Job Description field already has content. Replace it with the generated draft?')) return;
+  }
+
+  notesEl.value = jd;
+  // Clear wizard textarea so next open starts fresh
+  if (inputEl) inputEl.value = '';
+  closeJobWizard();
+  // Brief visual confirmation on the target field
+  notesEl.style.transition  = 'border-color .2s';
+  notesEl.style.borderColor = 'rgba(124,106,247,.7)';
+  setTimeout(function() { if (notesEl) notesEl.style.borderColor = ''; }, 1500);
 }
 
 // Close on backdrop click
