@@ -922,6 +922,16 @@ input:focus, select:focus, textarea:focus {
         Candidates
         <span class="nav-badge" id="nb-cands" style="display:none;"></span>
       </button>
+      <button class="nav-item" data-view="wizard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+        Resume Wizard
+      </button>
       <button class="nav-item" data-view="pipeline">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -1304,6 +1314,84 @@ input:focus, select:focus, textarea:focus {
 
       </section>
 
+      <!-- ── RESUME WIZARD ────────────────────── -->
+      <section class="view" id="v-wizard">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;padding:22px;height:100%;overflow:auto;">
+
+          <!-- LEFT — Structured input form -->
+          <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+            <div style="font-size:13px;font-weight:800;color:var(--text);">Candidate Inputs</div>
+            <div style="font-size:11px;color:var(--text4);margin-top:-10px;">Fill out below. Preview updates live on the right.</div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Name <span style="color:var(--red);">*</span></label>
+                <input id="wz-name" type="text" oninput="renderWizardPreview()" placeholder="Alex Chen" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+              </div>
+              <div>
+                <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Target Role</label>
+                <input id="wz-role" type="text" oninput="renderWizardPreview()" placeholder="VP of Sales" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Email</label>
+                <input id="wz-email" type="email" placeholder="alex@example.com" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+              </div>
+              <div>
+                <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Phone</label>
+                <input id="wz-phone" type="tel" placeholder="555 555 5555" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+              </div>
+            </div>
+
+            <div>
+              <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Professional Summary</label>
+              <textarea id="wz-summary" rows="3" oninput="renderWizardPreview()" placeholder="2-3 sentences describing background, strengths, what they bring..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
+            </div>
+
+            <div>
+              <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Experience</label>
+              <textarea id="wz-experience" rows="5" oninput="renderWizardPreview()" placeholder="One experience item per line. Example:&#10;Led team of 12 engineers to ship new product&#10;Grew ARR from 2M to 8M in 18 months&#10;Closed 40+ enterprise deals" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;font-family:inherit;"></textarea>
+            </div>
+
+            <div>
+              <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Skills (comma separated)</label>
+              <input id="wz-skills" type="text" oninput="renderWizardPreview()" placeholder="Python, Kubernetes, SaaS, Team Leadership" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+            </div>
+
+            <div>
+              <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Education</label>
+              <input id="wz-education" type="text" oninput="renderWizardPreview()" placeholder="B.S. Computer Science, MIT, 2015" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+            </div>
+
+            <div>
+              <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Link to Job <span style="color:var(--red);">*</span></label>
+              <select id="wz-job" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">Select job...</option></select>
+            </div>
+
+            <div id="wz-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;">
+              <button type="button" onclick="clearResumeWizard()" class="btn btn-ghost">Clear</button>
+              <button type="button" onclick="createCandidateFromWizard()" class="btn btn-primary" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;">Create Candidate</button>
+            </div>
+          </div>
+
+          <!-- RIGHT — Live preview -->
+          <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="font-size:13px;font-weight:800;color:var(--text);">Generated Resume</div>
+              <span style="font-size:9px;font-weight:700;color:var(--text4);background:rgba(255,255,255,.07);padding:2px 8px;border-radius:4px;letter-spacing:.06em;">PREVIEW</span>
+            </div>
+            <div id="wz-preview" style="display:flex;flex-direction:column;gap:14px;">
+              <div style="font-size:12px;color:var(--text4);font-style:italic;padding:20px 0;text-align:center;">Fill in the form to see your generated resume here.</div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+
       <!-- ── PIPELINE ────────────────────────── -->
       <section class="view" id="v-pipeline">
         <div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
@@ -1609,6 +1697,7 @@ var TOPBAR_CONFIG = {
   dashboard:   { title: '', sub: '', primary: null, secondary: null },
   jobs:        { title: 'Jobs',          sub: 'Open requisitions', primary: '+ New Job',       secondary: null },
   candidates:  { title: 'Candidates',    sub: 'Talent pool',      primary: '+ Add Candidate', secondary: 'Upload Resume' },
+  wizard:      { title: 'Resume Wizard', sub: 'Build from structured inputs', primary: null, secondary: null },
   pipeline:    { title: 'Pipeline',      sub: 'Hiring board',     primary: null, secondary: null },
   command:     { title: 'Command Center', sub: 'Tasks, candidates, submissions', primary: null, secondary: null },
   match:       { title: 'AI Match',      sub: 'Smart matching',   primary: null, secondary: null },
@@ -1675,6 +1764,7 @@ function nav(viewId) {
   if (viewId === 'companies')   renderCompaniesView();
   if (viewId === 'jobs')         renderJobs();
   if (viewId === 'candidates')   renderCandidatesView();
+  if (viewId === 'wizard')       renderResumeWizard();
   if (viewId === 'pipeline')     renderPipeline();
   if (viewId === 'command')      renderCommandCenter();
   if (viewId === 'analytics')    renderAnalytics();
@@ -3317,6 +3407,217 @@ function populatePipeJobFilter() {
       return '<option value="' + j.id + '"' + (j.id == current ? ' selected' : '') + '>' +
         escHtml(j.title) + (j.location ? ' — ' + escHtml(j.location) : '') + '</option>';
     }).join('');
+}
+
+// ── Resume Wizard ──────────────────────────────────────────
+// Lets a user build a candidate from structured inputs instead of uploading a resume.
+// Uses existing candidate + application data model — no new schema.
+
+function renderResumeWizard() {
+  populateWizardJobDropdown();
+  renderWizardPreview();
+}
+
+function populateWizardJobDropdown() {
+  var sel = document.getElementById('wz-job');
+  if (!sel) return;
+  var openJobs = jobs.filter(function(j) { return j.status !== 'Closed' && j.status !== 'Filled'; });
+  sel.innerHTML = '<option value="">Select job...</option>' +
+    openJobs.map(function(j) {
+      var co = companies.find(function(c) { return String(c.id) === String(j.companyId); });
+      var label = (co ? co.name + ' · ' : '') + j.title;
+      return '<option value="' + escHtml(String(j.id)) + '">' + escHtml(label) + '</option>';
+    }).join('');
+}
+
+// Core generator — takes form inputs, returns a structured resume object
+function generateResumeFromInput(data) {
+  if (!data) return { summary:'', bullets:[], skills:[] };
+  var lines = (data.experience || '').split(/\r?\n/).map(function(s) { return s.trim(); }).filter(Boolean);
+  return {
+    summary: (data.summary || '').trim(),
+    bullets: lines.map(function(line) {
+      // Only append impact tag if the line doesn't already end with punctuation suggesting completion
+      if (/[.!?]$/.test(line)) return line;
+      return line + '. Delivered measurable impact.';
+    }),
+    skills: (data.skills || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean),
+  };
+}
+
+function collectWizardInputs() {
+  return {
+    name:       (document.getElementById('wz-name')       || {}).value || '',
+    role:       (document.getElementById('wz-role')       || {}).value || '',
+    email:      (document.getElementById('wz-email')      || {}).value || '',
+    phone:      (document.getElementById('wz-phone')      || {}).value || '',
+    summary:    (document.getElementById('wz-summary')    || {}).value || '',
+    experience: (document.getElementById('wz-experience') || {}).value || '',
+    skills:     (document.getElementById('wz-skills')     || {}).value || '',
+    education:  (document.getElementById('wz-education')  || {}).value || '',
+    jobId:      (document.getElementById('wz-job')        || {}).value || '',
+  };
+}
+
+function renderWizardPreview() {
+  var el = document.getElementById('wz-preview');
+  if (!el) return;
+  var data = collectWizardInputs();
+  var gen  = generateResumeFromInput(data);
+
+  // Empty state
+  if (!data.name && !data.role && !gen.summary && !gen.bullets.length && !gen.skills.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text4);font-style:italic;padding:20px 0;text-align:center;">Fill in the form to see your generated resume here.</div>';
+    return;
+  }
+
+  var html = '';
+
+  // Header
+  if (data.name || data.role) {
+    html += '<div style="border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:4px;">';
+    if (data.name) html += '<div style="font-size:18px;font-weight:800;color:var(--text);">' + escHtml(data.name) + '</div>';
+    if (data.role) html += '<div style="font-size:12px;color:var(--accent2);font-weight:700;margin-top:2px;">' + escHtml(data.role) + '</div>';
+    var contact = [data.email, data.phone].filter(Boolean).join('  ·  ');
+    if (contact) html += '<div style="font-size:11px;color:var(--text4);margin-top:4px;">' + escHtml(contact) + '</div>';
+    html += '</div>';
+  }
+
+  // Summary
+  if (gen.summary) {
+    html += '<div>' +
+      '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Summary</div>' +
+      '<div style="font-size:12px;color:var(--text3);line-height:1.6;">' + escHtml(gen.summary) + '</div>' +
+    '</div>';
+  }
+
+  // Experience bullets
+  if (gen.bullets.length) {
+    html += '<div>' +
+      '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Experience</div>' +
+      '<ul style="margin:0;padding:0 0 0 16px;list-style:disc;">' +
+        gen.bullets.map(function(b) {
+          return '<li style="font-size:12px;color:var(--text3);line-height:1.6;margin-bottom:4px;">' + escHtml(b) + '</li>';
+        }).join('') +
+      '</ul>' +
+    '</div>';
+  }
+
+  // Skills
+  if (gen.skills.length) {
+    html += '<div>' +
+      '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Skills</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:5px;">' +
+        gen.skills.map(function(s) {
+          return '<span style="font-size:11px;background:rgba(124,106,247,.12);color:var(--accent2);padding:3px 9px;border-radius:99px;">' + escHtml(s) + '</span>';
+        }).join('') +
+      '</div>' +
+    '</div>';
+  }
+
+  // Education
+  if (data.education) {
+    html += '<div>' +
+      '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Education</div>' +
+      '<div style="font-size:12px;color:var(--text3);">' + escHtml(data.education) + '</div>' +
+    '</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+function createCandidateFromWizard() {
+  var err = document.getElementById('wz-form-error');
+  function showErr(msg) { if (err) { err.textContent = msg; err.style.display = 'block'; } }
+  if (err) { err.textContent = ''; err.style.display = 'none'; }
+
+  var data = collectWizardInputs();
+
+  if (!data.name.trim()) { showErr('Name is required.'); return; }
+  if (!data.jobId)       { showErr('Please link this candidate to a job.'); return; }
+
+  var gen = generateResumeFromInput(data);
+
+  // Build the resume blob that goes into cd.resume (plaintext form)
+  var resumeBlob = '';
+  if (data.name)     resumeBlob += data.name + '\n';
+  if (data.role)     resumeBlob += data.role + '\n';
+  var contact = [data.email, data.phone].filter(Boolean).join(' | ');
+  if (contact)       resumeBlob += contact + '\n';
+  resumeBlob += '\n';
+  if (gen.summary)   resumeBlob += 'SUMMARY\n' + gen.summary + '\n\n';
+  if (gen.bullets.length) {
+    resumeBlob += 'EXPERIENCE\n';
+    gen.bullets.forEach(function(b) { resumeBlob += '  ' + b + '\n'; });
+    resumeBlob += '\n';
+  }
+  if (gen.skills.length) resumeBlob += 'SKILLS\n' + gen.skills.join(', ') + '\n\n';
+  if (data.education)    resumeBlob += 'EDUCATION\n' + data.education + '\n';
+
+  var _now = Date.now();
+  var newCand = {
+    id:             String(uid()),
+    name:           data.name.trim(),
+    title:          data.role.trim(),
+    company:        '',
+    status:         'New',
+    jobId:          data.jobId,
+    notes:          gen.summary || '',
+    resume:         resumeBlob.trim(),
+    email:          data.email.trim(),
+    phone:          data.phone.trim(),
+    skills:         gen.skills,
+    aiSummary: {
+      headline:  data.role.trim() || 'Experienced Professional',
+      summary:   gen.summary,
+      keySkills: gen.skills.slice(0, 8),
+      strengths: gen.skills.slice(0, 5),
+      pitch:     (data.name.trim() || 'This candidate') + ' — built via Resume Wizard.',
+      highlights: [],
+    },
+    workspaceId:    state.currentWorkspace,
+    createdAt:      _now,
+    lastActivityAt: _now,
+    firstContactAt: null,
+    interviewCount: 0,
+  };
+  candidates.unshift(newCand);
+  window._lastSavedCandId = String(newCand.id);
+  saveCandidates();
+
+  // Create application record (source of truth for pipeline/submissions)
+  applications.push({
+    id:             uid(),
+    candidateId:    String(newCand.id),
+    jobId:          String(newCand.jobId),
+    status:         'New',
+    stage:          'New',
+    firstContactAt: null,
+    lastActivityAt: _now,
+    createdAt:      _now,
+    updatedAt:      _now,
+    interviewCount: 0,
+    submissions:    [],
+  });
+  saveApplications();
+
+  addActivityItem('Candidate built via Resume Wizard: ' + newCand.name);
+
+  showFlowHint('Candidate created. Opening their profile...');
+  clearResumeWizard();
+  setTimeout(function() { navToCandFromTask(newCand.id); }, 400);
+}
+
+function clearResumeWizard() {
+  ['wz-name','wz-role','wz-email','wz-phone','wz-summary','wz-experience','wz-skills','wz-education'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  var sel = document.getElementById('wz-job');
+  if (sel) sel.value = '';
+  var err = document.getElementById('wz-form-error');
+  if (err) { err.textContent = ''; err.style.display = 'none'; }
+  renderWizardPreview();
 }
 
 // ── Main render ───────────────────────────────────────────────
