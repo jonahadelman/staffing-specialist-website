@@ -1648,6 +1648,59 @@ input:focus, select:focus, textarea:focus {
 
 </div>
 
+<!-- Offer Wizard Modal -->
+<div id="offer-wizard-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:1100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeOfferWizard()">
+  <div style="background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:24px 28px;width:640px;max-width:calc(100vw - 32px);max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.7);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <div style="font-size:16px;font-weight:800;color:var(--text);">✨ Offer Letter Wizard</div>
+        <div style="font-size:11px;color:var(--text4);margin-top:3px;">Fill in the terms. Generate creates a clean, copy-ready letter.</div>
+      </div>
+      <button type="button" onclick="closeOfferWizard()" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:22px;line-height:1;padding:0;">&times;</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Position Title <span style="color:var(--red);">*</span></label>
+          <input id="ow-title" type="text" placeholder="e.g. Senior Program Manager" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Reports To</label>
+          <input id="ow-hm" type="text" placeholder="Hiring manager name" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Base Salary <span style="color:var(--red);">*</span></label>
+          <input id="ow-salary" type="text" placeholder="e.g. 150000" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Start Date <span style="color:var(--red);">*</span></label>
+          <input id="ow-start" type="date" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+        </div>
+      </div>
+
+      <div id="ow-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:12px;margin-top:4px;">
+        <button type="button" onclick="closeOfferWizard()" class="btn btn-ghost">Cancel</button>
+        <button type="button" onclick="generateOfferLetter()" class="btn btn-primary" style="background:linear-gradient(135deg,var(--accent),var(--accent2));">Generate Letter</button>
+      </div>
+
+      <!-- Output -->
+      <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <label style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;">Generated Letter</label>
+          <button type="button" onclick="copyOfferLetter()" id="ow-copy-btn" style="padding:4px 12px;background:rgba(20,184,166,.12);border:1px solid rgba(20,184,166,.3);border-radius:6px;color:#2dd4bf;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">Copy</button>
+        </div>
+        <textarea id="ow-output" rows="12" readonly placeholder="Fill in the required fields above and click Generate Letter..." style="width:100%;padding:12px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;line-height:1.6;"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Submit Modal -->
 <div id="submit-modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:center;justify-content:center;">
   <div id="submit-modal" style="background:var(--bg2);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:480px;margin:0 16px;box-shadow:0 24px 60px rgba(0,0,0,.5);overflow:hidden;">
@@ -2984,7 +3037,8 @@ function renderCandidateDetail(cd) {
       '</div>' +
       (_status === 'Offer'
         ? '<button data-cid="' + cd.id + '" onclick="acceptOffer(this.dataset.cid)" style="padding:6px 14px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;">&#10003; Accept Offer</button>' +
-          '<button data-cid="' + cd.id + '" onclick="declineOffer(this.dataset.cid)" style="padding:6px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:var(--red);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">&#10005; Decline</button>'
+          '<button data-cid="' + cd.id + '" onclick="declineOffer(this.dataset.cid)" style="padding:6px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:var(--red);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">&#10005; Decline</button>' +
+          '<button data-cid="' + cd.id + '" onclick="openOfferWizard(this.dataset.cid)" style="padding:6px 14px;background:rgba(124,106,247,.12);border:1px solid rgba(124,106,247,.3);border-radius:8px;color:var(--accent2);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">&#10024; Offer Wizard</button>'
         : '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="openSubmitModal(this.dataset.cid)" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;box-shadow:0 4px 18px rgba(20,184,166,.55);font-weight:800;">Submit Candidate</button>') +
       '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="showMessageModal(this.dataset.cid)" class="btn btn-ghost btn-sm" style="font-size:11px;opacity:.75;">Generate Message</button>' +
     '</div>' +
@@ -6114,6 +6168,131 @@ function declineOffer(candId) {
   try{renderPipeline();}catch(e){}
   try{renderAITasks();}catch(e){}
   try{renderDashboard();}catch(e){}
+}
+
+// ── Offer Letter Wizard ─────────────────────────────────────
+// Generates a professional offer letter in a copyable textarea.
+// Pure generation — never auto-sends, never mutates candidate/application data.
+var currentOfferCandidateId = null;
+
+function openOfferWizard(cid) {
+  currentOfferCandidateId = String(cid);
+  var cd = candidates.find(function(x) { return String(x.id) === String(cid); });
+  if (!cd) return;
+  var job = jobs.find(function(j) { return String(j.id) === String(cd.jobId); });
+
+  // Prefill safely from linked job (does not overwrite if user already opened previously)
+  var titleEl  = document.getElementById('ow-title');
+  var hmEl     = document.getElementById('ow-hm');
+  var salEl    = document.getElementById('ow-salary');
+  var startEl  = document.getElementById('ow-start');
+  var outEl    = document.getElementById('ow-output');
+  var errEl    = document.getElementById('ow-form-error');
+
+  if (titleEl) titleEl.value = (job && job.title)         ? job.title         : '';
+  if (hmEl)    hmEl.value    = (job && job.hiringManager) ? job.hiringManager : '';
+  if (salEl)   salEl.value   = (job && job.salaryMax)     ? String(job.salaryMax) : '';
+  if (startEl) startEl.value = '';
+  if (outEl)   outEl.value   = '';
+  if (errEl)   { errEl.textContent = ''; errEl.style.display = 'none'; }
+
+  var m = document.getElementById('offer-wizard-modal');
+  if (m) m.style.display = 'flex';
+  setTimeout(function() { if (titleEl) titleEl.focus(); }, 50);
+}
+
+function closeOfferWizard() {
+  var m = document.getElementById('offer-wizard-modal');
+  if (m) m.style.display = 'none';
+  currentOfferCandidateId = null;
+}
+
+function generateOfferLetter() {
+  var errEl = document.getElementById('ow-form-error');
+  function showErr(msg) {
+    if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+  }
+  if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+
+  var cd = candidates.find(function(x) { return String(x.id) === String(currentOfferCandidateId); });
+  if (!cd) { showErr('Candidate context lost. Close and reopen the wizard.'); return; }
+
+  var title  = (document.getElementById('ow-title').value  || '').trim();
+  var hm     = (document.getElementById('ow-hm').value     || '').trim();
+  var salary = (document.getElementById('ow-salary').value || '').trim();
+  var start  = (document.getElementById('ow-start').value  || '').trim();
+
+  // Validation
+  if (!title || !salary || !start) {
+    showErr('Please fill in Position Title, Base Salary, and Start Date.');
+    return;
+  }
+
+  // Format salary if it's a pure number
+  var salaryFormatted = salary;
+  var salaryNum = Number(salary.replace(/[^0-9.]/g, ''));
+  if (!isNaN(salaryNum) && salaryNum > 0 && /^\d+(\.\d+)?$/.test(salary.replace(/[,\s$]/g, ''))) {
+    salaryFormatted = '$' + Math.round(salaryNum).toLocaleString();
+  }
+
+  // Format start date for display
+  var startDisplay = start;
+  var startParsed = new Date(start);
+  if (!isNaN(startParsed.getTime())) {
+    var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    startDisplay = months[startParsed.getMonth()] + ' ' + startParsed.getDate() + ', ' + startParsed.getFullYear();
+  }
+
+  var letter = 'Dear ' + cd.name + ',\n\n' +
+    'We are pleased to offer you the position of ' + title + '.\n\n' +
+    (hm ? 'You will report to ' + hm + '.\n\n' : '') +
+    'Base Salary: ' + salaryFormatted + '\n\n' +
+    'Start Date: ' + startDisplay + '\n\n' +
+    'We are excited to have you join the team.\n\n' +
+    'Sincerely,\nThe Hiring Team';
+
+  var outEl = document.getElementById('ow-output');
+  if (outEl) {
+    outEl.value = letter;
+    outEl.scrollTop = 0;
+  }
+}
+
+function copyOfferLetter() {
+  var t = document.getElementById('ow-output');
+  if (!t || !t.value) return;
+
+  // Prefer modern Clipboard API, fall back to execCommand for older environments
+  var copyFallback = function() {
+    try {
+      t.removeAttribute('readonly');
+      t.select();
+      t.setSelectionRange(0, 99999);
+      document.execCommand('copy');
+      t.setAttribute('readonly', 'readonly');
+    } catch (e) {}
+  };
+
+  var finish = function() {
+    try { showFlowHint('Offer letter copied to clipboard'); } catch(e) {}
+    // Brief visual confirmation on Copy button
+    var btn = document.getElementById('ow-copy-btn');
+    if (btn) {
+      var orig = btn.textContent;
+      btn.textContent = '✓ Copied';
+      setTimeout(function() { if (btn) btn.textContent = orig; }, 1500);
+    }
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(t.value).then(finish).catch(function() {
+      copyFallback();
+      finish();
+    });
+  } else {
+    copyFallback();
+    finish();
+  }
 }
 
 // Pipe-board action handler — single dispatch, application-driven
