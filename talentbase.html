@@ -5139,15 +5139,19 @@ function processResumeFile(file) {
         } catch(e) {
           console.error('[TalentBase] extraction error:', e);
         }
-        if (!text || text.trim().length < 20) {
+        if (!text || text.trim().length < 200 || !_hasReadableContent(text)) {
           showParseStrip(
-            '\u26a0 Could not extract text from this file. The resume may be scanned or image-based.' +
-            ' Paste the text manually below.',
+            '\u26a0 This PDF cannot be parsed reliably. Please paste resume text instead.',
             'warn'
           );
-          // Still expand More Details so recruiter can paste
+          // Expand More Details so recruiter can paste
           var more = document.getElementById('cf-more');
           if (more && more.style.display !== 'flex') toggleCandMore();
+          // Focus the resume textarea so recruiter can paste immediately
+          setTimeout(function() {
+            var ta = document.getElementById('cf-resume');
+            if (ta) { ta.focus(); try { ta.scrollIntoView({behavior:'smooth',block:'center'}); } catch(e) {} }
+          }, 180);
           return;
         }
         showParseStrip('\u29d6 Parsing\u2026', 'loading');
@@ -5179,6 +5183,17 @@ function _safeRunParse(text, ext) {
     var more = document.getElementById('cf-more');
     if (more && more.style.display !== 'flex') toggleCandMore();
   }
+}
+
+// ── Readable-content guard: rejects mostly-symbols/garbled extractions ──
+// Returns true if >=40% of non-whitespace characters are alphanumeric.
+// Real resumes run 80%+; garbled PDF extractions run <30%.
+function _hasReadableContent(text) {
+  if (!text) return false;
+  var t = text.replace(/\s+/g, '');
+  if (t.length < 50) return false;
+  var alnum = (t.match(/[A-Za-z0-9]/g) || []).length;
+  return (alnum / t.length) >= 0.4;
 }
 
 // ── PDF text extraction ───────────────────────────────────────────────────────
@@ -5516,7 +5531,7 @@ function runResumeParse(text) {
   var fieldCount = [parsed.name, parsed.title, parsed.company, parsed.email].filter(Boolean).length;
   var statusMsg = confident
     ? '\u2713 Parsed (' + fieldCount + ' field' + (fieldCount > 1 ? 's' : '') + ' found) \u2014 click Apply to fill the form'
-    : '\u26a0 Limited data extracted \u2014 review raw text below and fill fields manually';
+    : '\u26a0 Limited data extracted \u2014 paste resume text below for best results';
 
   showParseStrip(statusMsg, confident ? 'ok' : 'warn');
 
@@ -5526,7 +5541,15 @@ function runResumeParse(text) {
   var more = document.getElementById('cf-more');
   if (more && more.style.display !== 'flex') toggleCandMore();
 
-  if (confident) applyResumeParseResults();
+  if (confident) {
+    applyResumeParseResults();
+  } else {
+    // Low-confidence: focus resume textarea so recruiter can paste immediately
+    setTimeout(function() {
+      var ta = document.getElementById('cf-resume');
+      if (ta) { ta.focus(); try { ta.scrollIntoView({behavior:'smooth',block:'center'}); } catch(e) {} }
+    }, 180);
+  }
 }
 
 // ── Apply: fill form fields (empty-guard), then clear parse state ─────────────
