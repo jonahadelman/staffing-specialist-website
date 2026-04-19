@@ -929,6 +929,14 @@ input:focus, select:focus, textarea:focus {
         Pipeline
       </button>
 
+      <button class="nav-item" data-view="command">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+        Command Center
+      </button>
+
       <div class="nav-section-label" style="margin-top:8px;display:none;">Tools</div>
       <button class="nav-item" data-view="match" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1314,6 +1322,34 @@ input:focus, select:focus, textarea:focus {
       </section>
 
 
+      <!-- ── COMMAND CENTER ────────────────────── -->
+      <section class="view" id="v-command">
+        <div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;padding:20px 22px;flex:1;overflow:auto;">
+
+            <!-- LEFT — Tasks -->
+            <div class="card" style="padding:14px 16px;display:flex;flex-direction:column;min-height:0;">
+              <div style="font-size:11px;font-weight:800;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">⚡ Top Tasks</div>
+              <div id="cc-tasks" style="flex:1;overflow-y:auto;"></div>
+            </div>
+
+            <!-- MIDDLE — Active Candidates -->
+            <div class="card" style="padding:14px 16px;display:flex;flex-direction:column;min-height:0;">
+              <div style="font-size:11px;font-weight:800;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">👥 Active Candidates</div>
+              <div id="cc-candidates" style="flex:1;overflow-y:auto;"></div>
+            </div>
+
+            <!-- RIGHT — Recent Submissions -->
+            <div class="card" style="padding:14px 16px;display:flex;flex-direction:column;min-height:0;">
+              <div style="font-size:11px;font-weight:800;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">📤 Recent Submissions</div>
+              <div id="cc-submissions" style="flex:1;overflow-y:auto;"></div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+
       <!-- ── AI MATCH ────────────────────────── -->
       <section class="view" id="v-match">
         <div class="view-scroll">
@@ -1557,6 +1593,7 @@ var TOPBAR_CONFIG = {
   jobs:        { title: 'Jobs',          sub: 'Open requisitions', primary: '+ New Job',       secondary: null },
   candidates:  { title: 'Candidates',    sub: 'Talent pool',      primary: '+ Add Candidate', secondary: 'Upload Resume' },
   pipeline:    { title: 'Pipeline',      sub: 'Hiring board',     primary: null, secondary: null },
+  command:     { title: 'Command Center', sub: 'Tasks, candidates, submissions', primary: null, secondary: null },
   match:       { title: 'AI Match',      sub: 'Smart matching',   primary: null, secondary: null },
   offer:       { title: 'Offer Builder', sub: '',                 primary: null, secondary: null },
   templates:   { title: 'Templates',     sub: 'Docs & emails',    primary: null, secondary: null },
@@ -1622,6 +1659,7 @@ function nav(viewId) {
   if (viewId === 'jobs')         renderJobs();
   if (viewId === 'candidates')   renderCandidatesView();
   if (viewId === 'pipeline')     renderPipeline();
+  if (viewId === 'command')      renderCommandCenter();
   if (viewId === 'analytics')    renderAnalytics();
   if (viewId === 'match')        renderAIMatch();
   if (viewId === 'offer')        renderOffer();
@@ -3243,6 +3281,115 @@ function populatePipeJobFilter() {
 }
 
 // ── Main render ───────────────────────────────────────────────
+// ── Command Center ─────────────────────────────────────────
+// Aggregates tasks, candidates, and submissions into one execution view.
+// No data mutation — pure read-and-render.
+function renderCommandCenter() {
+  renderCCTasks();
+  renderCCCandidates();
+  renderCCSubmissions();
+}
+
+function renderCCTasks() {
+  var el = document.getElementById('cc-tasks');
+  if (!el) return;
+  var tasks = getAITasks().slice(0, 5);
+  if (!tasks.length) {
+    el.innerHTML = '<div style="padding:16px 0;color:var(--text4);font-size:12px;text-align:center;">No urgent actions right now.</div>';
+    return;
+  }
+  el.innerHTML = tasks.map(function(t, i) {
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
+      '<div style="font-size:14px;font-weight:800;color:var(--accent2);width:18px;flex-shrink:0;">' + (i+1) + '</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:12px;font-weight:700;color:var(--text);">' + escHtml(t.name) + '</div>' +
+        '<div style="font-size:10px;color:var(--text4);margin-top:1px;">' + escHtml(t.nextAction) + '</div>' +
+      '</div>' +
+      '<button data-cid="' + escHtml(String(t.candidateId)) + '" onclick="executeTaskAction(this.dataset.cid)" ' +
+        'style="padding:4px 10px;background:linear-gradient(135deg,var(--teal),#0d9488);border:none;border-radius:6px;color:#fff;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;">Do It</button>' +
+    '</div>';
+  }).join('');
+}
+
+function renderCCCandidates() {
+  var el = document.getElementById('cc-candidates');
+  if (!el) return;
+  // Build active-candidate list from applications (source of truth)
+  var activeApps = applications.filter(function(app) {
+    return !['Hired','Rejected'].includes(app.status);
+  });
+  var rows = activeApps.map(function(app) {
+    var cd = candidates.find(function(x) { return String(x.id) === String(app.candidateId); });
+    if (!cd) return null;
+    var score = calculateExperienceScore(app);
+    return { cd: cd, app: app, score: score, stage: app.status || 'New' };
+  }).filter(Boolean);
+  // Sort: Interview stage first, then score desc (higher = healthier)
+  rows.sort(function(a, b) {
+    var aInt = a.stage === 'Interview' ? 0 : 1;
+    var bInt = b.stage === 'Interview' ? 0 : 1;
+    if (aInt !== bInt) return aInt - bInt;
+    return b.score - a.score;
+  });
+  rows = rows.slice(0, 5);
+  if (!rows.length) {
+    el.innerHTML = '<div style="padding:16px 0;color:var(--text4);font-size:12px;text-align:center;">No active candidates.</div>';
+    return;
+  }
+  var stageColor = { New:'var(--accent)', Screening:'var(--accent2)', Interview:'var(--amber)', Submitted:'var(--teal)', Offer:'var(--purple)' };
+  el.innerHTML = rows.map(function(r) {
+    var col = stageColor[r.stage] || 'var(--text4)';
+    return '<div data-cid="' + escHtml(String(r.cd.id)) + '" onclick="navToCandFromTask(this.dataset.cid)" ' +
+        'style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:12px;font-weight:700;color:var(--text);">' + escHtml(r.cd.name) + '</div>' +
+        '<div style="font-size:10px;color:var(--text4);margin-top:1px;">' + escHtml(r.cd.title || '') + '</div>' +
+      '</div>' +
+      '<div style="font-size:9px;font-weight:800;color:' + col + ';text-transform:uppercase;letter-spacing:.06em;flex-shrink:0;">' + escHtml(r.stage) + '</div>' +
+      '<div style="font-size:11px;font-weight:800;color:var(--accent2);flex-shrink:0;min-width:22px;text-align:right;">' + r.score + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderCCSubmissions() {
+  var el = document.getElementById('cc-submissions');
+  if (!el) return;
+  // Flatten all submissions across all applications
+  var flat = [];
+  applications.forEach(function(app) {
+    if (!Array.isArray(app.submissions) || !app.submissions.length) return;
+    var cd = candidates.find(function(x) { return String(x.id) === String(app.candidateId); });
+    if (!cd) return;
+    app.submissions.forEach(function(sub) {
+      flat.push({
+        cd:           cd,
+        app:          app,
+        company:      sub.company || '',
+        submittedAt:  sub.submittedAt || sub.timestamp || app.updatedAt || app.createdAt,
+        status:       app.status || '',
+      });
+    });
+  });
+  flat.sort(function(a, b) { return (b.submittedAt || 0) - (a.submittedAt || 0); });
+  flat = flat.slice(0, 5);
+  if (!flat.length) {
+    el.innerHTML = '<div style="padding:16px 0;color:var(--text4);font-size:12px;text-align:center;">No submissions yet.</div>';
+    return;
+  }
+  var statusColor = { Submitted:'var(--teal)', Interview:'var(--amber)', Offer:'var(--purple)', Hired:'var(--green)', Rejected:'var(--red)' };
+  el.innerHTML = flat.map(function(s) {
+    var col = statusColor[s.status] || 'var(--text4)';
+    return '<div data-cid="' + escHtml(String(s.cd.id)) + '" onclick="navToCandFromTask(this.dataset.cid)" ' +
+        'style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:12px;font-weight:700;color:var(--text);">' + escHtml(s.cd.name) + '</div>' +
+        '<div style="font-size:10px;color:var(--text4);margin-top:1px;">' + escHtml(s.company) + '</div>' +
+      '</div>' +
+      '<div style="font-size:9px;font-weight:800;color:' + col + ';text-transform:uppercase;letter-spacing:.06em;flex-shrink:0;">' + escHtml(s.status) + '</div>' +
+    '</div>';
+  }).join('');
+}
+
 function renderPipeline() {
   populatePipeJobFilter();
 
