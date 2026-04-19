@@ -1994,6 +1994,71 @@ function renderJobDetail(j) {
         ? '<div class="detail-notes">' + escHtml(j.notes) + '</div>'
         : '<div style="font-size:12px;color:var(--text4);">No description added.</div>') +
     '</div>';
+
+  // ── Top Matches panel (additive — appended after job description) ──
+  var matches = getTopCandidatesForJob(j.id);
+  var matchHtml =
+    '<div style="border-top:1px solid var(--border);padding-top:20px;margin-top:22px;">' +
+      '<div class="detail-section-label" style="margin-bottom:10px;">⚡ Top Matches</div>';
+  if (!matches.length) {
+    matchHtml += '<div style="font-size:12px;color:var(--text4);padding:8px 0;">No strong matches yet. Add candidates or refine the job description.</div>';
+  } else {
+    matchHtml += matches.map(function(m) {
+      var cd = m.candidate;
+      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;margin-bottom:6px;">' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:13px;font-weight:700;color:var(--text);">' + escHtml(cd.name) + '</div>' +
+          (cd.title ? '<div style="font-size:11px;color:var(--text4);margin-top:2px;">' + escHtml(cd.title) + '</div>' : '') +
+        '</div>' +
+        '<div style="font-size:12px;font-weight:800;color:var(--accent2);flex-shrink:0;min-width:28px;text-align:right;">' + m.score + '</div>' +
+        '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="openSubmitModal(this.dataset.cid)" ' +
+          'class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;font-size:11px;padding:5px 12px;flex-shrink:0;">Submit</button>' +
+      '</div>';
+    }).join('');
+  }
+  matchHtml += '</div>';
+  panel.insertAdjacentHTML('beforeend', matchHtml);
+}
+
+// ── Matching engine (additive — does not modify any existing data) ──
+function scoreCandidateForJob(cd, job) {
+  if (!cd || !job) return 0;
+  var score = 0;
+  var title    = (cd.title || '').toLowerCase();
+  var jobTitle = (job.title || '').toLowerCase();
+  var resume   = (cd.resume || '').toLowerCase();
+  var skills   = (cd.skills || []).join(' ').toLowerCase();
+
+  // Title match (highest weight)
+  if (title && jobTitle) {
+    if (title.includes(jobTitle) || jobTitle.includes(title)) {
+      score += 40;
+    }
+  }
+
+  // Keyword match from job title tokens
+  var tokens = jobTitle.split(/\s+/);
+  tokens.forEach(function(tok) {
+    if (!tok) return;
+    if (resume.includes(tok)) score += 10;
+    if (skills.includes(tok)) score += 8;
+  });
+
+  // Seniority alignment bonus
+  if (title.includes('senior')  && jobTitle.includes('senior'))  score += 10;
+  if (title.includes('manager') && jobTitle.includes('manager')) score += 10;
+
+  return score;
+}
+
+function getTopCandidatesForJob(jobId) {
+  var job = jobs.find(function(j) { return String(j.id) === String(jobId); });
+  if (!job) return [];
+  return candidates
+    .map(function(cd) { return { candidate: cd, score: scoreCandidateForJob(cd, job) }; })
+    .filter(function(x) { return x.score > 0; })
+    .sort(function(a, b) { return b.score - a.score; })
+    .slice(0, 5);
 }
 
 // ── Add / Edit job modal ───────────────────────────────────────
