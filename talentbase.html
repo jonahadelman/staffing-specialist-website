@@ -3030,6 +3030,18 @@ function renderCandidateDetail(cd) {
     (summary ? '<div style="font-size:12px;color:var(--text3);line-height:1.6;padding:10px 14px;background:var(--bg3);border-radius:9px;border:1px solid var(--border);margin-bottom:16px;">' + escHtml(summary) + '</div>' : '') +
 
     // ── Next Action ────────────────────────────────────────────────────
+    // ── Next Step guidance banner (Offer stage only) ──────────────────
+    (_status === 'Offer'
+      ? '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:rgba(124,106,247,.08);border:1px solid rgba(124,106,247,.25);border-radius:9px;margin-bottom:10px;">' +
+          '<div style="font-size:15px;flex-shrink:0;">&#10024;</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;">Next Step</div>' +
+            '<div style="font-size:12px;color:var(--text);">Generate a formal offer letter with key terms.</div>' +
+          '</div>' +
+          '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="openOfferWizard(this.dataset.cid)" style="padding:5px 12px;background:rgba(124,106,247,.18);border:1px solid rgba(124,106,247,.4);border-radius:7px;color:var(--accent2);font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;">Open Wizard &rarr;</button>' +
+        '</div>'
+      : '') +
+
     '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);border-radius:9px;margin-bottom:16px;">' +
       '<div>' +
         '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">Next Action</div>' +
@@ -4660,7 +4672,10 @@ function handleAITasksClick(e) {
 
     if (norm === 'Close candidate') {
       // Open submit modal for final placement, or go to detail for offer decision
-      if (cd.status === 'Offer') {
+      // Read stage from application (source of truth — cd.status may be stale)
+      var _execApp = getPrimaryApplication(String(cid));
+      var _execStatus = _execApp ? _execApp.status : cd.status;
+      if (_execStatus === 'Offer') {
         // Show offer accept/decline in context — navigate to candidate detail
         selectedCandidateId = cid;
         nav('candidates');
@@ -4879,8 +4894,8 @@ function renderTopActions(tasks) {
         '<div style="display:flex;align-items:center;gap:12px;padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.05);">' +
           '<div style="font-size:16px;font-weight:800;color:var(--accent2);width:20px;">' + (i+1) + '</div>' +
           '<div style="flex:1;">' +
-            '<div style="font-size:13px;font-weight:700;color:var(--text);">' + t.name + '</div>' +
-            '<div style="font-size:11px;color:var(--text4);">' + t.nextAction + '</div>' +
+            '<div style="font-size:13px;font-weight:700;color:var(--text);">' + escHtml(t.name) + '</div>' +
+            '<div style="font-size:11px;color:var(--text4);">' + escHtml(t.nextAction) + '</div>' +
           '</div>' +
           '<button onclick="executeTaskAction(\'' + t.candidateId + '\')" ' +
             'style="padding:6px 12px;background:linear-gradient(135deg,var(--teal),#0d9488);border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">' +
