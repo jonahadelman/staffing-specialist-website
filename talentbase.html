@@ -1033,7 +1033,7 @@ input:focus, select:focus, textarea:focus {
           </div>
 
           <!-- KPI row — 3 cards -->
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;" id="kpi-grid">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;" id="kpi-grid">
             <div class="kpi-card" style="border-left:3px solid var(--accent2);">
               <div class="kpi-label">Open Jobs</div>
               <div class="kpi-value" style="color:var(--accent2);" id="kpi-open-jobs">—</div>
@@ -1048,6 +1048,11 @@ input:focus, select:focus, textarea:focus {
               <div class="kpi-label">Avg Time to Fill</div>
               <div class="kpi-value" style="color:var(--amber);" id="kpi-days">—</div>
               <div class="kpi-sub" id="kpi-days-sub">Across open reqs</div>
+            </div>
+            <div class="kpi-card" style="border-left:3px solid var(--teal);">
+              <div class="kpi-label">Total Revenue</div>
+              <div class="kpi-value" style="color:var(--teal);" id="kpi-revenue">—</div>
+              <div class="kpi-sub" id="kpi-revenue-sub">Placements YTD</div>
             </div>
           </div>
 
@@ -1804,6 +1809,26 @@ function renderDashboard() {
   if (elHRS) elHRS.textContent = offerCands.length + ' offer' + (offerCands.length !== 1 ? 's' : '') + ' pending';
   if (elDY)  { elDY.textContent = avgDays ? avgDays + 'd' : '—'; elDY.style.color = daysColor; }
   if (elDYS) elDYS.textContent = openJobs.length ? openJobs.length + ' open req' + (openJobs.length !== 1 ? 's' : '') : 'No open reqs';
+
+  // Total Revenue KPI — sum revenue across all Hired applications
+  // Legacy hires without stored revenue get backfilled at read time via estimatePlacementFee
+  var hiredApps  = applications.filter(function(a) { return a.status === 'Hired'; });
+  var totalRev   = hiredApps.reduce(function(sum, a) {
+    var rev = (typeof a.revenue === 'number') ? a.revenue : estimatePlacementFee(a);
+    return sum + (rev || 0);
+  }, 0);
+  var elRev   = document.getElementById('kpi-revenue');
+  var elRevS  = document.getElementById('kpi-revenue-sub');
+  if (elRev) {
+    elRev.textContent = totalRev >= 1000000
+      ? '$' + (totalRev / 1000000).toFixed(1) + 'M'
+      : '$' + totalRev.toLocaleString();
+  }
+  if (elRevS) {
+    elRevS.textContent = hiredApps.length
+      ? hiredApps.length + ' placement' + (hiredApps.length !== 1 ? 's' : '') + ' YTD'
+      : 'No placements yet';
+  }
 
   var tasks    = getAITasks();
   var topTasks = tasks.slice(0, 3);
@@ -5660,11 +5685,25 @@ function openAddJobForCompany(coId) {
 }
 
 
+// Estimate placement fee from job salaryMax (fallback $120k), at 20%
+function estimatePlacementFee(app) {
+  var base = 120000;
+  if (app && app.jobId) {
+    var job = jobs.find(function(j) { return String(j.id) === String(app.jobId); });
+    if (job && job.salaryMax) base = job.salaryMax;
+  }
+  return Math.round(base * 0.2);
+}
+
 function acceptOffer(candId) {
   var cd=candidates.find(function(x){return String(x.id)===String(candId);});
   if(!cd) return;
   var _aoApp=getPrimaryApplication(String(candId));
-  if(_aoApp){ setApplicationStage(_aoApp, 'Hired'); }
+  if(_aoApp){
+    // Stamp revenue before stage change so the save in setApplicationStage captures it
+    _aoApp.revenue = estimatePlacementFee(_aoApp);
+    setApplicationStage(_aoApp, 'Hired');
+  }
   addActivityItem('Offer accepted — Hired: '+cd.name); saveActivityBoard();
   delete snoozedTasks[String(candId)];
   try{renderCandidateDetail(cd);}catch(e){}
