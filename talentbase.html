@@ -1263,7 +1263,7 @@ input:focus, select:focus, textarea:focus {
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Current Title</label><input id="cf-title" type="text" placeholder="e.g. Sr. Program Manager" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Current Employer</label><input id="cf-company" type="text" placeholder="Current employer" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div></div>
                   <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Stage</label><select id="cf-status" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="New">New</option><option value="Screening">Screening</option><option value="Interview">Interview</option><option value="Submitted">Submitted</option><option value="Offer">Offer</option><option value="Hired">Hired</option></select></div>
                   <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Notes</label><textarea id="cf-notes" rows="2" placeholder="Background, fit, next steps..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
-                  <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Resume / Background</label><textarea id="cf-resume" onblur="analyzeResume(this.value)" rows="3" placeholder="Paste resume text or LinkedIn summary..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
+                  <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Resume / Background</label><textarea id="cf-resume" onblur="analyzeResume(this.value)" rows="3" placeholder="Paste resume text or LinkedIn summary..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea><div id="cf-resume-hint" style="display:none;margin-top:6px;padding:8px 10px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.2);border-radius:6px;font-size:11px;color:#2dd4bf;line-height:1.5;">&#128161; Tip: open the resume in your PDF viewer, select all (Ctrl+A / Cmd+A), copy, then paste here.</div></div>
                 </div>
                 <div id="cand-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
                 <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;"><button type="button" onclick="closeCandModal()" class="btn btn-ghost">Cancel</button><button type="submit" class="btn btn-primary" id="cand-submit-btn">Add Candidate</button></div>
@@ -5037,6 +5037,11 @@ function _resetUploadState(keepStrip) {
     if (preview)  { preview.style.display = 'none'; preview.innerHTML = ''; }
     if (applyBtn) { applyBtn.style.display= 'none'; }
   }
+  // Clear textarea highlight + hide helper hint so UI doesn't leak across sessions
+  var ta = document.getElementById('cf-resume');
+  if (ta) { ta.style.borderColor = ''; ta.style.boxShadow = ''; }
+  var hint = document.getElementById('cf-resume-hint');
+  if (hint) hint.style.display = 'none';
 }
 
 // ── Upload zone label reset ───────────────────────────────────────────────────
@@ -5141,16 +5146,23 @@ function processResumeFile(file) {
         }
         if (!text || text.trim().length < 200 || !_hasReadableContent(text)) {
           showParseStrip(
-            '\u26a0 This PDF cannot be parsed reliably. Please paste resume text instead.',
+            '\u26a0 We couldn\'t read this PDF automatically. This usually happens with scanned or image-based resumes. Paste the resume text below to continue.',
             'warn'
           );
           // Expand More Details so recruiter can paste
           var more = document.getElementById('cf-more');
           if (more && more.style.display !== 'flex') toggleCandMore();
-          // Focus the resume textarea so recruiter can paste immediately
+          // Focus, highlight, and scroll the resume textarea so recruiter can paste immediately
           setTimeout(function() {
             var ta = document.getElementById('cf-resume');
-            if (ta) { ta.focus(); try { ta.scrollIntoView({behavior:'smooth',block:'center'}); } catch(e) {} }
+            if (ta) {
+              ta.focus();
+              ta.style.borderColor = 'var(--teal)';
+              ta.style.boxShadow   = '0 0 0 2px rgba(20,184,166,.2)';
+              try { ta.scrollIntoView({behavior:'smooth',block:'center'}); } catch(e) {}
+            }
+            var hint = document.getElementById('cf-resume-hint');
+            if (hint) hint.style.display = 'block';
           }, 180);
           return;
         }
@@ -5544,10 +5556,17 @@ function runResumeParse(text) {
   if (confident) {
     applyResumeParseResults();
   } else {
-    // Low-confidence: focus resume textarea so recruiter can paste immediately
+    // Low-confidence: focus, highlight, scroll textarea so recruiter can paste immediately
     setTimeout(function() {
       var ta = document.getElementById('cf-resume');
-      if (ta) { ta.focus(); try { ta.scrollIntoView({behavior:'smooth',block:'center'}); } catch(e) {} }
+      if (ta) {
+        ta.focus();
+        ta.style.borderColor = 'var(--teal)';
+        ta.style.boxShadow   = '0 0 0 2px rgba(20,184,166,.2)';
+        try { ta.scrollIntoView({behavior:'smooth',block:'center'}); } catch(e) {}
+      }
+      var hint = document.getElementById('cf-resume-hint');
+      if (hint) hint.style.display = 'block';
     }, 180);
   }
 }
