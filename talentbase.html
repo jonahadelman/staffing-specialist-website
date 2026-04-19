@@ -2053,6 +2053,47 @@ function scoreCandidateForJob(cd, job) {
   return score;
 }
 
+// ── Reverse matching: score jobs for a given candidate ──
+function scoreJobForCandidate(job, cd) {
+  if (!cd || !job) return 0;
+  var score = 0;
+  var title    = (cd.title || '').toLowerCase();
+  var jobTitle = (job.title || '').toLowerCase();
+  var resume   = (cd.resume || '').toLowerCase();
+  var skills   = (cd.skills || []).join(' ').toLowerCase();
+
+  // Title match (highest weight)
+  if (title && jobTitle) {
+    if (title.includes(jobTitle) || jobTitle.includes(title)) {
+      score += 40;
+    }
+  }
+
+  // Keyword match from job title tokens
+  var tokens = jobTitle.split(/\s+/);
+  tokens.forEach(function(tok) {
+    if (!tok) return;
+    if (resume.includes(tok)) score += 10;
+    if (skills.includes(tok)) score += 8;
+  });
+
+  // Seniority alignment
+  if (title.includes('senior')  && jobTitle.includes('senior'))  score += 10;
+  if (title.includes('manager') && jobTitle.includes('manager')) score += 10;
+
+  return score;
+}
+
+function getTopJobsForCandidate(candidateId) {
+  var cd = candidates.find(function(c) { return String(c.id) === String(candidateId); });
+  if (!cd) return [];
+  return jobs
+    .map(function(job) { return { job: job, score: scoreJobForCandidate(job, cd) }; })
+    .filter(function(x) { return x.score > 0; })
+    .sort(function(a, b) { return b.score - a.score; })
+    .slice(0, 5);
+}
+
 function explainMatch(cd, job) {
   if (!cd || !job) return [];
   var reasons  = [];
@@ -2750,6 +2791,30 @@ function renderCandidateDetail(cd) {
           '<div class="detail-notes">' + escHtml(cd.notes) + '</div>' +
         '</div>'
       : '');
+
+  // ── Matching Jobs panel (additive — appended after existing sections) ──
+  var jobMatches = getTopJobsForCandidate(cd.id);
+  var matchHtml =
+    '<div style="border-top:1px solid var(--border);padding-top:20px;margin-top:22px;">' +
+      '<div class="detail-section-label" style="margin-bottom:10px;">⚡ Matching Jobs</div>';
+  if (!jobMatches.length) {
+    matchHtml += '<div style="font-size:12px;color:var(--text4);padding:8px 0;">No strong matches yet.</div>';
+  } else {
+    matchHtml += jobMatches.map(function(m) {
+      var jb = m.job;
+      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;margin-bottom:6px;">' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-size:13px;font-weight:700;color:var(--text);">' + escHtml(jb.title) + '</div>' +
+          (jb.location ? '<div style="font-size:11px;color:var(--text4);margin-top:2px;">' + escHtml(jb.location) + '</div>' : '') +
+        '</div>' +
+        '<div style="font-size:12px;font-weight:800;color:var(--accent2);flex-shrink:0;min-width:28px;text-align:right;">' + m.score + '</div>' +
+        '<button data-jid="' + escHtml(String(jb.id)) + '" onclick="navToJob(this.dataset.jid)" ' +
+          'class="btn btn-ghost btn-sm" style="font-size:11px;padding:5px 12px;flex-shrink:0;">View</button>' +
+      '</div>';
+    }).join('');
+  }
+  matchHtml += '</div>';
+  panel.insertAdjacentHTML('beforeend', matchHtml);
 }
 
 
