@@ -1196,7 +1196,7 @@ input:focus, select:focus, textarea:focus {
             </div>
             <form id="job-form" onsubmit="submitJobForm(event)" autocomplete="off">
               <div style="display:flex;flex-direction:column;gap:14px;">
-                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Company <span style="color:var(--red);">*</span></label><select id="jf-company" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">Select company...</option></select></div>
+                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Company <span style="color:var(--red);">*</span></label><select id="jf-company" onchange="handleCompanyChange()" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">Select company...</option></select></div>
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Job Title <span style="color:var(--red);">*</span></label><input id="jf-title" type="text" placeholder="e.g. Senior Program Manager" required oninput="document.getElementById('job-form-error').style.display='none'" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Location</label><input id="jf-location" type="text" placeholder="e.g. Boston, MA" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
                 <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Salary Range</label><div style="display:flex;gap:8px;align-items:center;"><input id="jf-salary-min" type="number" placeholder="Min" style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/><span style="font-size:12px;color:var(--text4);flex-shrink:0;">&mdash;</span><input id="jf-salary-max" type="number" placeholder="Max" style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><button type="button" onclick="suggestSalary()" style="margin-top:7px;padding:5px 12px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:7px;color:#2dd4bf;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">&#128176; Suggest Salary</button><div id="salary-suggest-banner" style="display:none;margin-top:6px;padding:7px 12px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.25);border-radius:7px;"><div style="display:flex;align-items:center;gap:10px;"><span id="salary-suggest-text" style="font-size:11px;color:#2dd4bf;flex:1;">Suggested range</span><button type="button" onclick="applySalarySuggestion()" style="padding:2px 10px;background:rgba(20,184,166,.2);border:1px solid rgba(20,184,166,.4);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">Apply</button><button type="button" onclick="this.parentElement.parentElement.style.display='none'" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:14px;padding:0 2px;">&times;</button></div></div></div>
@@ -2011,6 +2011,37 @@ function renderJobDetail(j) {
         ? '<div class="detail-notes">' + escHtml(j.notes) + '</div>'
         : '<div style="font-size:12px;color:var(--text4);">No description added.</div>') +
     '</div>';
+
+  // ── Company panel (additive — appended between job description and matches) ──
+  var _jobCo = companies.find(function(x) { return String(x.id) === String(j.companyId); });
+  if (_jobCo && (_jobCo.location || _jobCo.workModel || _jobCo.about || (_jobCo.hiringManagers && _jobCo.hiringManagers.length))) {
+    var companyHtml =
+      '<div style="border-top:1px solid var(--border);padding-top:20px;margin-top:22px;">' +
+        '<div class="detail-section-label" style="margin-bottom:8px;">Company</div>' +
+        (_jobCo.location
+          ? '<div style="font-size:12px;color:var(--text3);">&#128205; ' + escHtml(_jobCo.location) + '</div>'
+          : '') +
+        (_jobCo.workModel
+          ? '<div style="font-size:12px;color:var(--text3);margin-top:3px;">&#127970; ' + escHtml(_jobCo.workModel) + '</div>'
+          : '') +
+        (_jobCo.about
+          ? '<div style="font-size:12px;color:var(--text3);margin-top:8px;line-height:1.6;">' + escHtml(_jobCo.about) + '</div>'
+          : '') +
+        (_jobCo.hiringManagers && _jobCo.hiringManagers.length
+          ? '<div style="margin-top:12px;">' +
+              '<div style="font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Hiring Managers</div>' +
+              _jobCo.hiringManagers.map(function(hm) {
+                return '<div style="font-size:12px;color:var(--text3);padding:3px 0;">' +
+                  '<span style="color:var(--text);font-weight:600;">' + escHtml(hm.name || '') + '</span>' +
+                  (hm.email ? ' &middot; <a href="mailto:' + escHtml(hm.email) + '" style="color:var(--accent2);text-decoration:none;">' + escHtml(hm.email) + '</a>' : '') +
+                  (hm.phone ? ' &middot; <a href="tel:' + escHtml(hm.phone) + '" style="color:var(--accent2);text-decoration:none;">' + escHtml(hm.phone) + '</a>' : '') +
+                '</div>';
+              }).join('') +
+            '</div>'
+          : '') +
+      '</div>';
+    panel.insertAdjacentHTML('beforeend', companyHtml);
+  }
 
   // ── Top Matches panel (additive — appended after job description) ──
   var matches = getTopCandidatesForJob(j.id);
@@ -4992,6 +5023,35 @@ function migrateLegacyData() {
     if (!cd.stage) { cd.stage = cd.status || 'New'; changed = true; }
   });
   if (changed) { saveJobs(); saveCandidates(); }
+}
+
+// Auto-fill job form from company data — only fills empty fields,
+// never overwrites user input
+function handleCompanyChange() {
+  var sel = document.getElementById('jf-company');
+  if (!sel) return;
+  var companyId = sel.value;
+  if (!companyId) return;
+  var co = companies.find(function(x) { return String(x.id) === String(companyId); });
+  if (!co) return;
+
+  // Auto-fill hiring manager (only if empty)
+  var hmField = document.getElementById('jf-hm');
+  if (hmField && !hmField.value && co.hiringManagers && co.hiringManagers.length) {
+    hmField.value = co.hiringManagers[0].name || '';
+  }
+
+  // Auto-fill location (only if empty)
+  var locField = document.getElementById('jf-location');
+  if (locField && !locField.value && co.location) {
+    locField.value = co.location;
+  }
+
+  // Auto-fill work model (only if empty)
+  var typeField = document.getElementById('jf-loctype');
+  if (typeField && !typeField.value && co.workModel) {
+    typeField.value = co.workModel;
+  }
 }
 
 function populateCompanyDropdown(selectedId) {
