@@ -1325,7 +1325,19 @@ input:focus, select:focus, textarea:focus {
       <!-- ── COMMAND CENTER ────────────────────── -->
       <section class="view" id="v-command">
         <div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;padding:20px 22px;flex:1;overflow:auto;">
+
+          <!-- Auto Actions strip -->
+          <div style="padding:14px 22px 0;flex-shrink:0;">
+            <div class="card" style="padding:14px 16px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <div style="font-size:11px;font-weight:800;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;">⚡ Auto Actions</div>
+                <div style="font-size:10px;color:var(--text4);font-style:italic;">High-confidence actions — one click to open</div>
+              </div>
+              <div id="cc-auto-actions"></div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;padding:14px 22px 20px;flex:1;overflow:auto;">
 
             <!-- LEFT — Tasks -->
             <div class="card" style="padding:14px 16px;display:flex;flex-direction:column;min-height:0;">
@@ -3285,9 +3297,64 @@ function populatePipeJobFilter() {
 // Aggregates tasks, candidates, and submissions into one execution view.
 // No data mutation — pure read-and-render.
 function renderCommandCenter() {
+  renderAutoActions();
   renderCCTasks();
   renderCCCandidates();
   renderCCSubmissions();
+}
+
+// ── Auto Actions: high-confidence tasks the recruiter can trigger in one click ──
+// Never auto-executes or auto-sends — Run always opens a UI for the user to confirm.
+function getAutoActions() {
+  return getAITasks().filter(function(t) {
+    return (
+      t.riskLevel === 'critical' ||
+      t.nextAction === 'Follow up on submission' ||
+      t.nextAction === 'Contact candidate'
+    );
+  }).slice(0, 3);
+}
+
+function renderAutoActions() {
+  var el = document.getElementById('cc-auto-actions');
+  if (!el) return;
+  var actions = getAutoActions();
+  if (!actions.length) {
+    el.innerHTML = '<div style="padding:10px 0;color:var(--text4);font-size:12px;text-align:center;">No auto actions right now.</div>';
+    return;
+  }
+  el.innerHTML = actions.map(function(a) {
+    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:13px;font-weight:700;color:var(--text);">' + escHtml(a.name) + '</div>' +
+        '<div style="font-size:11px;color:var(--text4);margin-top:2px;">' + escHtml(a.nextAction) + '</div>' +
+      '</div>' +
+      '<button data-cid="' + escHtml(String(a.candidateId)) + '" onclick="executeAutoAction(this.dataset.cid)" ' +
+        'class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;font-size:11px;padding:5px 14px;flex-shrink:0;">Run</button>' +
+    '</div>';
+  }).join('');
+}
+
+// Opens the appropriate UI for the task's next action. Never auto-sends or auto-advances without confirmation.
+function executeAutoAction(cid) {
+  var cd = candidates.find(function(x) { return String(x.id) === String(cid); });
+  if (!cd) return;
+  // Read from application (source of truth for stage) when available
+  var _app   = getPrimaryApplication(String(cid));
+  var action = normalizeAITaskAction(getNextBestAction(_app || cd));
+  if (action === 'Contact candidate')       { showMessageModal(cid); return; }
+  if (action === 'Follow up')               { showMessageModal(cid); return; }
+  if (action === 'Follow up on submission') { showMessageModal(cid); return; }
+  if (action === 'Close candidate')         { showMessageModal(cid); return; }
+  if (action === 'Schedule next interview') {
+    // Confirm before advancing — this writes to the application
+    if (confirm('Advance ' + cd.name + ' to next interview round?')) {
+      markInterviewAdvanced(cid);
+    }
+    return;
+  }
+  // Fallback: open a message modal so the recruiter can decide
+  showMessageModal(cid);
 }
 
 function renderCCTasks() {
