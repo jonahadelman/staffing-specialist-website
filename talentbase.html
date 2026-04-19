@@ -2317,6 +2317,20 @@ function renderJobDetail(j) {
   }
   matchHtml += '</div>';
   panel.insertAdjacentHTML('beforeend', matchHtml);
+
+  // ── Next Actions strip (job-level guidance) ────────────────────────
+  var isClosed = j.status === 'Closed' || j.status === 'Filled';
+  var nextActionsHtml =
+    '<div style="border-top:1px solid var(--border);padding-top:20px;margin-top:22px;">' +
+      '<div class="detail-section-label" style="margin-bottom:10px;">Next Actions</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+        (isClosed
+          ? '<div style="font-size:12px;color:var(--text4);font-style:italic;">This job is ' + escHtml(j.status) + '. Reopen to add candidates.</div>'
+          : '<button onclick="openAddCandidateModal()" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;">+ Add Candidate</button>' +
+            '<button data-jid="' + escHtml(String(j.id)) + '" onclick="openEditJob(this.dataset.jid)" class="btn btn-ghost btn-sm">Edit Job</button>') +
+      '</div>' +
+    '</div>';
+  panel.insertAdjacentHTML('beforeend', nextActionsHtml);
 }
 
 // ── Matching engine (additive — does not modify any existing data) ──
@@ -3053,6 +3067,7 @@ function renderCandidateDetail(cd) {
           '<button data-cid="' + cd.id + '" onclick="openOfferWizard(this.dataset.cid)" style="padding:6px 14px;background:rgba(124,106,247,.12);border:1px solid rgba(124,106,247,.3);border-radius:8px;color:var(--accent2);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">&#10024; Offer Wizard</button>'
         : '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="openSubmitModal(this.dataset.cid)" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;box-shadow:0 4px 18px rgba(20,184,166,.55);font-weight:800;">Submit Candidate</button>') +
       '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="showMessageModal(this.dataset.cid)" class="btn btn-ghost btn-sm" style="font-size:11px;opacity:.75;">Generate Message</button>' +
+      (cd.jobId ? '<button data-jid="' + escHtml(String(cd.jobId)) + '" onclick="navToJob(this.dataset.jid)" class="btn btn-ghost btn-sm" style="font-size:11px;opacity:.75;">View Job &rarr;</button>' : '') +
     '</div>' +
 
     // ── Stats ──────────────────────────────────────────────────────────
@@ -3887,13 +3902,19 @@ function renderCCCandidates() {
   el.innerHTML = rows.map(function(r) {
     var col = stageColor[r.stage] || 'var(--text4)';
     return '<div data-cid="' + escHtml(String(r.cd.id)) + '" onclick="navToCandFromTask(this.dataset.cid)" ' +
-        'style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">' +
+        'style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;">' +
       '<div style="flex:1;min-width:0;">' +
         '<div style="font-size:12px;font-weight:700;color:var(--text);">' + escHtml(r.cd.name) + '</div>' +
         '<div style="font-size:10px;color:var(--text4);margin-top:1px;">' + escHtml(r.cd.title || '') + '</div>' +
       '</div>' +
       '<div style="font-size:9px;font-weight:800;color:' + col + ';text-transform:uppercase;letter-spacing:.06em;flex-shrink:0;">' + escHtml(r.stage) + '</div>' +
       '<div style="font-size:11px;font-weight:800;color:var(--accent2);flex-shrink:0;min-width:22px;text-align:right;">' + r.score + '</div>' +
+      '<button data-cid="' + escHtml(String(r.cd.id)) + '" onclick="event.stopPropagation();openSubmitModal(this.dataset.cid)" ' +
+        'title="Submit candidate" ' +
+        'style="background:rgba(20,184,166,.12);border:1px solid rgba(20,184,166,.3);border-radius:6px;color:#2dd4bf;cursor:pointer;font-size:10px;padding:4px 8px;flex-shrink:0;font-family:inherit;font-weight:700;">Submit</button>' +
+      '<button data-cid="' + escHtml(String(r.cd.id)) + '" onclick="event.stopPropagation();showMessageModal(this.dataset.cid)" ' +
+        'title="Generate message" ' +
+        'style="background:none;border:1px solid var(--border2);border-radius:6px;color:var(--text3);cursor:pointer;font-size:11px;padding:3px 7px;flex-shrink:0;font-family:inherit;line-height:1;">✉</button>' +
     '</div>';
   }).join('');
 }
