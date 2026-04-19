@@ -2004,11 +2004,13 @@ function renderJobDetail(j) {
     matchHtml += '<div style="font-size:12px;color:var(--text4);padding:8px 0;">No strong matches yet. Add candidates or refine the job description.</div>';
   } else {
     matchHtml += matches.map(function(m) {
-      var cd = m.candidate;
+      var cd      = m.candidate;
+      var reasons = explainMatch(cd, j);
       return '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;margin-bottom:6px;">' +
         '<div style="flex:1;min-width:0;">' +
           '<div style="font-size:13px;font-weight:700;color:var(--text);">' + escHtml(cd.name) + '</div>' +
           (cd.title ? '<div style="font-size:11px;color:var(--text4);margin-top:2px;">' + escHtml(cd.title) + '</div>' : '') +
+          (reasons.length ? '<div style="font-size:10px;color:#2dd4bf;margin-top:3px;">Matched on: ' + reasons.map(escHtml).join(', ') + '</div>' : '') +
         '</div>' +
         '<div style="font-size:12px;font-weight:800;color:var(--accent2);flex-shrink:0;min-width:28px;text-align:right;">' + m.score + '</div>' +
         '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="openSubmitModal(this.dataset.cid)" ' +
@@ -2049,6 +2051,37 @@ function scoreCandidateForJob(cd, job) {
   if (title.includes('manager') && jobTitle.includes('manager')) score += 10;
 
   return score;
+}
+
+function explainMatch(cd, job) {
+  if (!cd || !job) return [];
+  var reasons  = [];
+  var title    = (cd.title || '').toLowerCase();
+  var jobTitle = (job.title || '').toLowerCase();
+  var resume   = (cd.resume || '').toLowerCase();
+  var skills   = (cd.skills || []).join(' ').toLowerCase();
+
+  // Title match
+  if (title && jobTitle) {
+    if (title.includes(jobTitle) || jobTitle.includes(title)) {
+      reasons.push('Title match');
+    }
+  }
+
+  // Keyword matches
+  var tokens = jobTitle.split(/\s+/);
+  tokens.forEach(function(tok) {
+    if (!tok) return;
+    if (resume.includes(tok) || skills.includes(tok)) {
+      reasons.push(tok);
+    }
+  });
+
+  // Seniority alignment
+  if (title.includes('senior')  && jobTitle.includes('senior'))  reasons.push('Senior level');
+  if (title.includes('manager') && jobTitle.includes('manager')) reasons.push('Manager level');
+
+  return reasons.slice(0, 3);
 }
 
 function getTopCandidatesForJob(jobId) {
