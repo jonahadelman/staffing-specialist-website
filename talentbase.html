@@ -1905,7 +1905,11 @@ function nav(viewId) {
 
 // Wire nav clicks
 document.querySelectorAll('.nav-item').forEach(function(el) {
-  el.addEventListener('click', function() { nav(el.dataset.view); });
+  el.addEventListener('click', function() {
+    // Only route to a view if this nav-item actually has one.
+    // Wizard buttons have their own onclick handlers and no data-view attribute.
+    if (el.dataset.view) nav(el.dataset.view);
+  });
 });
 
 // ═══════════════════════════════════════════════════════════
