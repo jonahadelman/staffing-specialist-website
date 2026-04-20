@@ -1041,6 +1041,11 @@ input:focus, select:focus, textarea:focus {
         <div id="topbar-sub" style="display:none;"></div>
       </div>
       <div id="topbar-right">
+        <div id="topbar-workspace" style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(124,106,247,.1);border:1px solid rgba(124,106,247,.25);border-radius:99px;font-size:11px;font-weight:700;color:var(--accent2);margin-right:10px;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+          <span>Workspace:</span>
+          <span id="topbar-workspace-name" style="color:var(--text);">—</span>
+        </div>
         <button class="btn btn-ghost btn-sm" id="tb-btn-secondary" onclick="topbarSecondaryAction()" style="display:none;"></button>
         <button class="btn btn-primary btn-sm" id="tb-btn-primary" onclick="topbarPrimaryAction()" style="display:none;"></button>
       </div>
@@ -1056,6 +1061,17 @@ input:focus, select:focus, textarea:focus {
           <div id="dash-greeting" style="margin-bottom:20px;">
             <div style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--text);" id="dash-welcome">Good morning</div>
             <div style="font-size:12px;color:var(--text4);margin-top:3px;" id="dash-date"></div>
+          </div>
+
+          <div id="first-time-banner" style="display:none;margin-bottom:22px;padding:16px 20px;background:linear-gradient(135deg,rgba(124,106,247,.1),rgba(20,184,166,.06));border:1px solid rgba(124,106,247,.25);border-radius:12px;">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <div style="font-size:22px;flex-shrink:0;">👋</div>
+              <div style="flex:1;min-width:220px;">
+                <div style="font-size:13px;font-weight:800;color:var(--text);">Welcome to TalentBase</div>
+                <div style="font-size:12px;color:var(--text3);margin-top:2px;">Start by creating a company. You'll then add jobs and candidates to that company.</div>
+              </div>
+              <button onclick="nav('companies')" style="padding:7px 14px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;">Create Company →</button>
+            </div>
           </div>
 
           <!-- KPI row — 3 cards -->
@@ -1599,6 +1615,17 @@ input:focus, select:focus, textarea:focus {
             <div class="page-sub">Workspace configuration and integrations</div>
           </div>
 
+          <!-- Data Privacy notice -->
+          <div class="card" style="max-width:520px;margin-bottom:16px;padding:14px 16px;background:rgba(20,184,166,.04);border:1px solid rgba(20,184,166,.2);">
+            <div style="display:flex;align-items:flex-start;gap:10px;">
+              <div style="font-size:18px;flex-shrink:0;">🔒</div>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px;">Data Privacy</div>
+                <div style="font-size:11px;color:var(--text3);line-height:1.55;">All data belongs to the client and is private to their workspace. Candidates, jobs, and companies are never shared across workspaces.</div>
+              </div>
+            </div>
+          </div>
+
           <!-- API Key section -->
           <div class="card" style="max-width:520px;margin-bottom:16px;">
             <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">Anthropic API Key</div>
@@ -1799,7 +1826,7 @@ var USERS = [
 var TOPBAR_CONFIG = {
   companies:   { title: 'Companies', sub: 'Client accounts',  primary: '+ Add Company', secondary: null },
   dashboard:   { title: '', sub: '', primary: null, secondary: null },
-  jobs:        { title: 'Jobs',          sub: 'Open requisitions', primary: '+ New Job',       secondary: null },
+  jobs:        { title: 'Jobs',          sub: 'Open requisitions', primary: '+ Add Job',       secondary: null },
   candidates:  { title: 'Candidates',    sub: 'Talent pool',      primary: '+ Add Candidate', secondary: 'Upload Resume' },
   wizard:      { title: 'Resume Wizard', sub: 'Build from structured inputs', primary: null, secondary: null },
   pipeline:    { title: 'Pipeline',      sub: 'Hiring board',     primary: null, secondary: null },
@@ -1937,6 +1964,13 @@ function switchUser(userId) {
   if (dotEl)   dotEl.style.background = (user.role === 'admin') ? 'var(--green)' : 'var(--accent2)';
   if (selEl)   selEl.value = userId;
 
+  // Update topbar workspace label
+  var wsNameEl = document.getElementById('topbar-workspace-name');
+  if (wsNameEl) {
+    var ws = WORKSPACES.find(function(w) { return w.id === state.currentWorkspace; });
+    wsNameEl.textContent = ws ? ws.name : state.currentWorkspace;
+  }
+
   // Workspace changed → re-run all scoped loaders so in-memory arrays reflect new workspace
   if (prevWorkspace !== state.currentWorkspace) {
     try { loadCompanies(); }     catch(e) {}
@@ -2030,6 +2064,10 @@ function renderDashboard() {
   var dateEl    = document.getElementById('dash-date');
   if (welcomeEl) welcomeEl.textContent = greet + name + " — let's move some candidates.";
   if (dateEl)    dateEl.textContent    = days[now.getDay()] + ', ' + mos[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+
+  // First-time banner: no companies yet → prompt user to create one
+  var ftBanner = document.getElementById('first-time-banner');
+  if (ftBanner) ftBanner.style.display = companies.length ? 'none' : 'block';
 
 
   var openJobs   = jobs.filter(function(j) { return (j.status === 'Active' || j.status === 'Approved' || j.status === 'Open'); });
@@ -5418,7 +5456,7 @@ function seedDataIfEmpty() {
   ];
   saveActivityBoard();
 
-  console.log('[TalentBase] Seed data loaded — ' + seedJobs.length + ' jobs, ' + seedCands.length + ' candidates');
+  console.log('[TalentBase] Demo content loaded — ' + seedJobs.length + ' jobs, ' + seedCands.length + ' candidates');
 }
 
 
