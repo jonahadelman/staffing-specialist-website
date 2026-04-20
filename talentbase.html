@@ -1876,6 +1876,9 @@ function restoreSidebarActiveFromState() {
 }
 
 function nav(viewId) {
+  // Kill any open modal before switching views — prevents invisible overlays blocking clicks on new view
+  try { closeAllModals(); } catch(e) {}
+
   // Hide all views
   document.querySelectorAll('.view').forEach(function(v) {
     v.classList.remove('active');
@@ -2641,6 +2644,25 @@ function showJobModal() {
       if (tf) tf.focus();
     }, 50);
   }
+}
+
+// ── Global modal kill switch ─────────────────────────────────
+// Closes every modal in one call. Used by nav() to prevent modals persisting across view changes.
+function closeAllModals() {
+  var modalIds = [
+    'company-modal-backdrop',
+    'job-modal-backdrop',
+    'cand-modal-backdrop',
+    'submit-modal-backdrop',
+    'offer-wizard-modal',
+    'job-wizard-modal'
+  ];
+  modalIds.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  // Reset Offer Wizard state if it was open
+  try { currentOfferCandidateId = null; } catch(e) {}
 }
 
 function closeJobModal() {
@@ -6308,8 +6330,15 @@ function openAddCompany() {
   if (hmList) hmList.innerHTML = '';
   var hmEmpty = document.getElementById('co-hm-empty');
   if (hmEmpty) hmEmpty.style.display = 'block';
-  var _cmb=document.getElementById('company-modal-backdrop'); if(_cmb) _cmb.style.display='flex';
+  var _cmb=document.getElementById('company-modal-backdrop');
+  if (!_cmb) { console.error("company-modal-backdrop missing"); return; }
+  _cmb.style.display='flex';
   setTimeout(function(){ var n=document.getElementById('co-name'); if(n)n.focus(); },50);
+}
+
+// Alias for consistency with other handlers — matches openAddJob / openAddCandidateModal naming
+function openAddCompanyModal() {
+  openAddCompany();
 }
 function addHiringManagerField(prefill) {
   var container = document.getElementById('co-hm-list');
