@@ -1113,15 +1113,15 @@ input:focus, select:focus, textarea:focus {
 
           <!-- Primary Actions -->
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;" id="dash-primary-actions">
-            <button onclick="openAddCompany()" class="card" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid rgba(124,106,247,.2);background:rgba(124,106,247,.04);text-align:center;">
+            <button onclick="handleAddCompanyClick()" class="card" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid rgba(124,106,247,.2);background:rgba(124,106,247,.04);text-align:center;">
               <div style="font-size:20px;">&#127970;</div>
               <div style="font-size:12px;font-weight:700;color:var(--text);">Add Company</div>
             </button>
-            <button onclick="openAddJob()" class="card" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid rgba(59,130,246,.2);background:rgba(59,130,246,.04);text-align:center;">
+            <button onclick="handleAddJobClick()" class="card" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid rgba(59,130,246,.2);background:rgba(59,130,246,.04);text-align:center;">
               <div style="font-size:20px;">&#128188;</div>
               <div style="font-size:12px;font-weight:700;color:var(--text);">Add Job</div>
             </button>
-            <button onclick="openAddCandidateModal()" class="card" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid rgba(20,184,166,.2);background:rgba(20,184,166,.04);text-align:center;">
+            <button onclick="handleAddCandidateClick()" class="card" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid rgba(20,184,166,.2);background:rgba(20,184,166,.04);text-align:center;">
               <div style="font-size:20px;">&#128100;</div>
               <div style="font-size:12px;font-weight:700;color:var(--text);">Add Candidate</div>
             </button>
@@ -3713,6 +3713,38 @@ function topbarSecondaryAction() {
     openResumeUploadFlow();
     return;
   }
+}
+
+// ── Homepage button chain-through handlers ─────────────────────
+// Each button guides the user to the required prerequisite modal if dependencies are missing.
+// Note: submitCompanyForm() already auto-opens Add Job after save, so creating a company
+// from any of these paths continues the flow naturally.
+
+function handleAddCompanyClick() {
+  openAddCompany();
+}
+
+function handleAddJobClick() {
+  if (!companies.length) {
+    // Need a company first — opens Add Company modal. On save, submitCompanyForm auto-opens Add Job.
+    openAddCompany();
+    return;
+  }
+  openAddJob();
+}
+
+function handleAddCandidateClick() {
+  var openJobs = jobs.filter(function(j) { return j.status !== 'Closed' && j.status !== 'Filled'; });
+  if (!openJobs.length) {
+    if (!companies.length) {
+      // No companies → open company modal → submitCompanyForm auto-opens Add Job → then user must click Add Candidate again
+      openAddCompany();
+      return;
+    }
+    openAddJob();
+    return;
+  }
+  openAddCandidateModal();
 }
 
 // Opens Add Candidate modal in upload-first mode:
