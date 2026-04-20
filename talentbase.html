@@ -2613,7 +2613,6 @@ function closeJobModal() {
 
 // ── Job Description Wizard ─────────────────────────────────
 function openJobWizard() {
-  console.log("Job Wizard modal opening");
   var m = document.getElementById('job-wizard-modal');
   if (!m) {
     console.error("job-wizard-modal missing");
@@ -2636,7 +2635,6 @@ function closeJobWizard() {
 
 // Sidebar entry point: opens Add Job modal then Job Wizard on top
 function launchJobWizardFromSidebar() {
-  console.log("Job Wizard clicked");
   // Close any competing candidate modal (NOT job modal — we need it open)
   try { closeCandModal(); } catch(e) {}
 
@@ -2651,17 +2649,12 @@ function launchJobWizardFromSidebar() {
   // Step 2: Wait for DOM to render
   requestAnimationFrame(function() {
     requestAnimationFrame(function() {
-      console.log("Jobs view ready");
-      console.log("job-modal-backdrop exists:", !!document.getElementById('job-modal-backdrop'));
-      console.log("job-wizard-modal exists:",   !!document.getElementById('job-wizard-modal'));
-
       // Step 3: Open job modal
       openAddJob();
 
       // Step 4: Wait again for modal mount
       requestAnimationFrame(function() {
         requestAnimationFrame(function() {
-          console.log("Opening wizard");
           openJobWizard();
 
           // Force visible
@@ -2724,9 +2717,15 @@ document.addEventListener('click', function(e) {
   if (e.target === backdrop) closeJobModal();
 });
 
-// Escape key closes modal
+// Escape key closes modal — but only the topmost. Wizards layer on top of job modal,
+// so if a wizard is open, Escape should close it first (not the underlying job modal).
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeJobModal();
+  if (e.key !== 'Escape') return;
+  var jobWizard   = document.getElementById('job-wizard-modal');
+  var offerWizard = document.getElementById('offer-wizard-modal');
+  if (jobWizard   && jobWizard.style.display   === 'flex') { closeJobWizard();   return; }
+  if (offerWizard && offerWizard.style.display === 'flex') { closeOfferWizard(); return; }
+  closeJobModal();
 });
 
 function submitJobForm(e) {
@@ -5760,7 +5759,6 @@ function closeSubmitModal() {
 
 function submitCandidateAction() {
   try {
-  console.log('[TalentBase] SUBMIT:', submittingCandId);
   var company = (document.getElementById('sf-company').value || '').trim();
   var errEl   = document.getElementById('submit-form-error');
   if (!company) {
@@ -6463,7 +6461,6 @@ function openOfferWizard(cid) {
 
 // Sidebar entry point: open wizard with a candidate picker populated from Offer-stage candidates
 function launchOfferWizardFromSidebar() {
-  console.log("Offer Wizard clicked");
   // Close any competing modals that could stack
   try { closeJobModal(); }  catch(e) {}
   try { closeCandModal(); } catch(e) {}
@@ -6631,7 +6628,6 @@ function _pipeActionHandler(e) {
   if (!cd || !app) return;
 
   var now = Date.now();
-  console.log('[PIPE ACTION]', action, cid);
 
   // CONTACT — open message modal; Mark Sent will update application state
   if (action === 'contact') {
