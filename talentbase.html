@@ -1070,7 +1070,7 @@ input:focus, select:focus, textarea:focus {
                 <div style="font-size:13px;font-weight:800;color:var(--text);">Welcome to TalentBase</div>
                 <div style="font-size:12px;color:var(--text3);margin-top:2px;">Start by creating a company. You'll then add jobs and candidates to that company.</div>
               </div>
-              <button onclick="nav('companies')" style="padding:7px 14px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;">Create Company →</button>
+              <button onclick="handleAddCompanyClick()" style="padding:7px 14px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;">Create Company →</button>
             </div>
           </div>
 
@@ -3124,8 +3124,8 @@ function renderCandidates() {
         '<div class="empty-state-sub">' + (q || filter ? 'Try adjusting your search or filter.' :
           (_hasJobs ? 'Click + Add Candidate in the topbar to get started.' : 'Create a job first, then add candidates.')) + '</div>' +
         ((!q && !filter) ? (_hasJobs
-          ? '<button onclick="openAddCandidateModal()" class="btn btn-primary" style="margin-top:14px;">+ Add Candidate</button>'
-          : '<button onclick="openAddJob()" class="btn btn-primary" style="margin-top:14px;">+ Create Job First</button>') : '') +
+          ? '<button onclick="handleAddCandidateClick()" class="btn btn-primary" style="margin-top:14px;">+ Add Candidate</button>'
+          : '<button onclick="handleAddJobClick()" class="btn btn-primary" style="margin-top:14px;">+ Create Job First</button>') : '') +
       '</div>';
     return;
   }
@@ -3488,8 +3488,8 @@ function renderCandidateDetail(cd) {
 // ── Add / Edit modal ──────────────────────────────────────────
 function openAddCandidateModal() {
   if (!jobs.filter(function(j) { return j.status !== 'Closed'; }).length) {
-    alert('Create a job first before adding candidates.');
-    nav('jobs');
+    // No open jobs — route through chain handler instead of blocking alert
+    handleAddCandidateClick();
     return;
   }
   editingCandidateId = null;
@@ -3717,34 +3717,43 @@ function topbarSecondaryAction() {
 
 // ── Homepage button chain-through handlers ─────────────────────
 // Each button guides the user to the required prerequisite modal if dependencies are missing.
-// Note: submitCompanyForm() already auto-opens Add Job after save, so creating a company
-// from any of these paths continues the flow naturally.
+// CRITICAL: modals for company/job/candidate live inside their view sections and won't
+// render when the view is display:none. Always nav to the view first, wait for paint,
+// then open the modal.
+
+function _openModalAfterNav(viewId, openFn) {
+  nav(viewId);
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      try { openFn(); } catch(e) { console.error('[handler] open failed:', e); }
+    });
+  });
+}
 
 function handleAddCompanyClick() {
-  openAddCompany();
+  _openModalAfterNav('companies', openAddCompany);
 }
 
 function handleAddJobClick() {
   if (!companies.length) {
-    // Need a company first — opens Add Company modal. On save, submitCompanyForm auto-opens Add Job.
-    openAddCompany();
+    // Need a company first — submitCompanyForm auto-continues to Add Job on first-run save
+    _openModalAfterNav('companies', openAddCompany);
     return;
   }
-  openAddJob();
+  _openModalAfterNav('jobs', openAddJob);
 }
 
 function handleAddCandidateClick() {
   var openJobs = jobs.filter(function(j) { return j.status !== 'Closed' && j.status !== 'Filled'; });
   if (!openJobs.length) {
     if (!companies.length) {
-      // No companies → open company modal → submitCompanyForm auto-opens Add Job → then user must click Add Candidate again
-      openAddCompany();
+      _openModalAfterNav('companies', openAddCompany);
       return;
     }
-    openAddJob();
+    _openModalAfterNav('jobs', openAddJob);
     return;
   }
-  openAddCandidateModal();
+  _openModalAfterNav('candidates', openAddCandidateModal);
 }
 
 // Opens Add Candidate modal in upload-first mode:
@@ -6381,16 +6390,27 @@ function submitCompanyForm(e) {
   saveActivityBoard();
   try { renderPipeline(); } catch(e) {}
   if (state && state.currentView === 'dashboard') { try { renderDashboard(); } catch(e) {} }
-  // Auto-flow: open Add Job immediately, pre-filled
-  populateCompanyDropdown(co.id);
-  openAddJob();
-  setTimeout(function() {
-    populateCompanyDropdown(co.id);
-    var sel = document.getElementById('jf-company');
-    if (sel) sel.value = co.id;
-    var t = document.getElementById('jf-title');
-    if (t) t.focus();
-  }, 80);
+  // First-run auto-flow: only auto-open Add Job if user is setting up for the first time
+  // (this is their only company AND they have no jobs yet). Prevents intrusive popup
+  // every time an existing user adds a second/third company.
+  var isFirstRunSetup = (companies.length === 1) && (jobs.length === 0);
+  if (isFirstRunSetup) {
+    // Nav to jobs view so the job modal (inside v-jobs) can actually render
+    nav('jobs');
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        populateCompanyDropdown(co.id);
+        openAddJob();
+        setTimeout(function() {
+          populateCompanyDropdown(co.id);
+          var sel = document.getElementById('jf-company');
+          if (sel) sel.value = co.id;
+          var t = document.getElementById('jf-title');
+          if (t) t.focus();
+        }, 80);
+      });
+    });
+  }
 }
 
 function renderCompaniesView() {
