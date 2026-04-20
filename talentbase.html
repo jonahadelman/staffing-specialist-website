@@ -2613,8 +2613,12 @@ function closeJobModal() {
 
 // ── Job Description Wizard ─────────────────────────────────
 function openJobWizard() {
+  console.log("Job Wizard modal opening");
   var m = document.getElementById('job-wizard-modal');
-  if (!m) return;
+  if (!m) {
+    console.error("job-wizard-modal missing");
+    return;
+  }
   m.style.display = 'flex';
   var err = document.getElementById('jw-form-error');
   if (err) { err.textContent = ''; err.style.display = 'none'; }
@@ -2633,21 +2637,44 @@ function closeJobWizard() {
 // Sidebar entry point: opens Add Job modal then Job Wizard on top
 function launchJobWizardFromSidebar() {
   console.log("Job Wizard clicked");
-  // Close any competing modal that could stack (NOT the job modal — we need it)
+  // Close any competing candidate modal (NOT job modal — we need it open)
   try { closeCandModal(); } catch(e) {}
-  // Guard: can't create a job without a company
-  if (!companies.length) {
-    alert('Create a company first before building a job.');
-    nav('companies');
-    return;
-  }
-  openAddJob();
-  setTimeout(function() {
-    openJobWizard();
-    // Force visibility as belt-and-suspenders
-    var w = document.getElementById('job-wizard-modal');
-    if (w) w.style.display = 'flex';
-  }, 200);
+
+  // Step 1: Ensure Jobs view is active — modals live inside v-jobs and won't render
+  // if the view is display:none (CSS .view { display:none } applies to all descendants)
+  nav('jobs');
+
+  // Re-highlight the Job Wizard sidebar button (nav('jobs') just switched active to Jobs)
+  var jobWizardBtn = document.querySelector('.nav-item[onclick*="handleJobWizardClick"]');
+  if (jobWizardBtn) setActiveSidebarButton(jobWizardBtn);
+
+  // Step 2: Wait for DOM to render
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      console.log("Jobs view ready");
+      console.log("job-modal-backdrop exists:", !!document.getElementById('job-modal-backdrop'));
+      console.log("job-wizard-modal exists:",   !!document.getElementById('job-wizard-modal'));
+
+      // Step 3: Open job modal
+      openAddJob();
+
+      // Step 4: Wait again for modal mount
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          console.log("Opening wizard");
+          openJobWizard();
+
+          // Force visible
+          var wizard = document.getElementById('job-wizard-modal');
+          if (wizard) {
+            wizard.style.display = 'flex';
+          } else {
+            console.error("job-wizard-modal missing after nav");
+          }
+        });
+      });
+    });
+  });
 }
 
 function generateJobDescription() {
