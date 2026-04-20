@@ -1293,7 +1293,7 @@ input:focus, select:focus, textarea:focus {
             <div style="padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;overflow:visible;">
               <input id="cands-search" type="text" placeholder="Search candidates..."
                 oninput="renderCandidates()"
-                style="flex:1;padding:7px 11px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;outline:none;"/>
+                style="flex:1;min-width:120px;max-width:140px;padding:7px 11px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;outline:none;"/>
               <select id="cands-filter-status" onchange="renderCandidates()"
                 style="padding:7px 9px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text3);font-size:11px;font-family:inherit;outline:none;cursor:pointer;">
                 <option value="">All</option>
@@ -2603,6 +2603,8 @@ function closeJobWizard() {
 // Sidebar entry point: opens Add Job modal then Job Wizard on top
 function launchJobWizardFromSidebar() {
   console.log("Job Wizard clicked");
+  // Close any competing modal that could stack (NOT the job modal — we need it)
+  try { closeCandModal(); } catch(e) {}
   // Guard: can't create a job without a company
   if (!companies.length) {
     alert('Create a company first before building a job.');
@@ -2610,16 +2612,12 @@ function launchJobWizardFromSidebar() {
     return;
   }
   openAddJob();
-  // Poll with requestAnimationFrame — opens wizard the frame after modal becomes visible
-  function waitForModal() {
-    var modal = document.getElementById('job-modal-backdrop');
-    if (modal && modal.style.display === 'flex') {
-      openJobWizard();
-    } else {
-      requestAnimationFrame(waitForModal);
-    }
-  }
-  waitForModal();
+  setTimeout(function() {
+    openJobWizard();
+    // Force visibility as belt-and-suspenders
+    var w = document.getElementById('job-wizard-modal');
+    if (w) w.style.display = 'flex';
+  }, 200);
 }
 
 function generateJobDescription() {
@@ -6409,6 +6407,9 @@ function openOfferWizard(cid) {
 // Sidebar entry point: open wizard with a candidate picker populated from Offer-stage candidates
 function launchOfferWizardFromSidebar() {
   console.log("Offer Wizard clicked");
+  // Close any competing modals that could stack
+  try { closeJobModal(); }  catch(e) {}
+  try { closeCandModal(); } catch(e) {}
   // Clear state, populate picker with ALL candidates, show modal
   currentOfferCandidateId = null;
   var picker = document.getElementById('ow-picker');
