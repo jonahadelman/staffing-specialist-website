@@ -1344,6 +1344,7 @@ input:focus, select:focus, textarea:focus {
                 <div><button type="button" id="cf-more-toggle" onclick="toggleCandMore()" style="background:none;border:none;color:var(--text4);font-size:11px;font-family:inherit;cursor:pointer;padding:0;">&#9881; More Details <span id="cf-more-arrow">&#9662;</span></button></div>
                 <div id="cf-more" style="display:none;flex-direction:column;gap:12px;">
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Current Title</label><input id="cf-title" type="text" placeholder="e.g. Sr. Program Manager" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Current Employer</label><input id="cf-company" type="text" placeholder="Current employer" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div></div>
+                  <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">LinkedIn URL</label><input id="cf-linkedin" type="url" placeholder="https://linkedin.com/in/username" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
                   <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Stage</label><select id="cf-status" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="New">New</option><option value="Screening">Screening</option><option value="Interview">Interview</option><option value="Submitted">Submitted</option><option value="Offer">Offer</option><option value="Hired">Hired</option></select></div>
                   <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Notes</label><textarea id="cf-notes" rows="2" placeholder="Background, fit, next steps..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
                   <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Resume / Background</label><textarea id="cf-resume" onblur="analyzeResume(this.value)" rows="3" placeholder="Paste resume text or LinkedIn summary..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea><div id="cf-resume-hint" style="display:none;margin-top:6px;padding:8px 10px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.2);border-radius:6px;font-size:11px;color:#2dd4bf;line-height:1.5;">&#128161; Tip: open the resume in your PDF viewer, select all (Ctrl+A / Cmd+A), copy, then paste here.</div></div>
@@ -2789,6 +2790,20 @@ function escHtml(s) {
   return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// Accepts LinkedIn URL (or any external URL). Returns safe https:// URL string, or '' if invalid.
+// Prepends https:// if scheme missing. Rejects javascript: / data: / other non-http schemes.
+function safeExternalUrl(raw) {
+  var s = (raw || '').trim();
+  if (!s) return '';
+  // Reject anything that starts with a dangerous scheme
+  if (/^\s*(javascript|data|vbscript|file):/i.test(s)) return '';
+  // If no scheme, assume https
+  if (!/^https?:\/\//i.test(s)) s = 'https://' + s;
+  // Sanity: must contain a dot (domain separator)
+  if (!/\./.test(s)) return '';
+  return s;
+}
+
 // ── Flow hint toast — non-blocking guidance after key creation steps ──
 function showFlowHint(message) {
   var existing = document.getElementById('flow-hint');
@@ -3134,6 +3149,12 @@ function renderCandidateDetail(cd) {
           '<span class="job-status-badge ' + sc + '" style="font-size:11px;padding:2px 9px;">' + escHtml(_status) + '</span>' +
           (cd.title   ? '<span style="font-size:12px;color:var(--text3);">' + escHtml(cd.title)   + '</span>' : '') +
           (cd.company ? '<span style="font-size:12px;color:var(--text4);">@ ' + escHtml(cd.company) + '</span>' : '') +
+          (function(){
+            var liUrl = safeExternalUrl(cd.linkedin);
+            return liUrl
+              ? '<a href="' + escHtml(liUrl) + '" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:var(--accent2);text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(124,106,247,.1);border:1px solid rgba(124,106,247,.25);border-radius:99px;">in &rarr;</a>'
+              : '';
+          })() +
         '</div>' +
       '</div>' +
       '<div style="display:flex;gap:8px;flex-shrink:0;">' +
@@ -3170,6 +3191,12 @@ function renderCandidateDetail(cd) {
         : '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="openSubmitModal(this.dataset.cid)" class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;box-shadow:0 4px 18px rgba(20,184,166,.55);font-weight:800;">Submit Candidate</button>') +
       '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="showMessageModal(this.dataset.cid)" class="btn btn-ghost btn-sm" style="font-size:11px;opacity:.75;">Generate Message</button>' +
       (cd.jobId ? '<button data-jid="' + escHtml(String(cd.jobId)) + '" onclick="navToJob(this.dataset.jid)" class="btn btn-ghost btn-sm" style="font-size:11px;opacity:.75;">View Job &rarr;</button>' : '') +
+      (function(){
+        var liUrl = safeExternalUrl(cd.linkedin);
+        return liUrl
+          ? '<a href="' + escHtml(liUrl) + '" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm" style="font-size:11px;opacity:.75;text-decoration:none;display:inline-flex;align-items:center;">LinkedIn &rarr;</a>'
+          : '';
+      })() +
     '</div>' +
 
     // ── Stats ──────────────────────────────────────────────────────────
@@ -3391,6 +3418,8 @@ function openEditCandidate(id) {
   document.getElementById('cf-status').value  = (_editApp ? _editApp.status : cd.status) || 'New';
   document.getElementById('cf-notes').value   = cd.notes    || '';
   document.getElementById('cf-resume').value  = cd.resume   || '';
+  var _cfLi = document.getElementById('cf-linkedin');
+  if (_cfLi) _cfLi.value = cd.linkedin || '';
   populateCandJobDropdown(cd.jobId);
 
   var errEl = document.getElementById('cand-form-error');
@@ -3480,6 +3509,8 @@ function submitCandForm(e) {
       candidates[idx].jobId     = jobId;
       candidates[idx].notes     = document.getElementById('cf-notes').value.trim();
       candidates[idx].resume    = document.getElementById('cf-resume').value.trim();
+      var _cfLiEdit = document.getElementById('cf-linkedin');
+      candidates[idx].linkedin  = _cfLiEdit ? _cfLiEdit.value.trim() : (candidates[idx].linkedin || '');
       candidates[idx].updatedAt = Date.now();
       // Sync status to application (source of truth)
       var _syncApp = getPrimaryApplication(String(editingCandidateId));
@@ -3513,6 +3544,7 @@ function submitCandForm(e) {
       jobId:          jobId,
       notes:          document.getElementById('cf-notes').value.trim(),
       resume:         document.getElementById('cf-resume').value.trim(),
+      linkedin:       (function(){ var _li = document.getElementById('cf-linkedin'); return _li ? _li.value.trim() : ''; })(),
       workspaceId:    state.currentWorkspace,
       createdAt:      _now,
       lastActivityAt: _now,
