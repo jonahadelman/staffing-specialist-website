@@ -932,7 +932,7 @@ input:focus, select:focus, textarea:focus {
         </svg>
         Resume Wizard
       </button>
-      <button class="nav-item" onclick="launchJobWizardFromSidebar()">
+      <button class="nav-item" onclick="handleJobWizardClick(this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="4" width="18" height="16" rx="2"/>
           <line x1="7" y1="10" x2="17" y2="10"/>
@@ -940,7 +940,7 @@ input:focus, select:focus, textarea:focus {
         </svg>
         Job Wizard
       </button>
-      <button class="nav-item" onclick="launchOfferWizardFromSidebar()">
+      <button class="nav-item" onclick="handleOfferWizardClick(this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 2L2 7l10 5 10-5-10-5z"/>
           <path d="M2 17l10 5 10-5"/>
@@ -1823,6 +1823,31 @@ var state = {
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════
 
+// Action-based sidebar buttons (wizards) — manage visual active state without routing
+function setActiveSidebarButton(buttonEl) {
+  document.querySelectorAll('.nav-item').forEach(function(el) {
+    el.classList.remove('active');
+  });
+  if (buttonEl) buttonEl.classList.add('active');
+}
+
+function handleJobWizardClick(btn) {
+  setActiveSidebarButton(btn);
+  launchJobWizardFromSidebar();
+}
+
+function handleOfferWizardClick(btn) {
+  setActiveSidebarButton(btn);
+  launchOfferWizardFromSidebar();
+}
+
+// Restore active state on whichever view the user was actually on (not hard-coded dashboard)
+function restoreSidebarActiveFromState() {
+  var current = (state && state.currentView) ? state.currentView : 'dashboard';
+  var el = document.querySelector('.nav-item[data-view="' + current + '"]');
+  setActiveSidebarButton(el);
+}
+
 function nav(viewId) {
   // Hide all views
   document.querySelectorAll('.view').forEach(function(v) {
@@ -2598,6 +2623,7 @@ function openJobWizard() {
 function closeJobWizard() {
   var m = document.getElementById('job-wizard-modal');
   if (m) m.style.display = 'none';
+  try { restoreSidebarActiveFromState(); } catch(e) {}
 }
 
 // Sidebar entry point: opens Add Job modal then Job Wizard on top
@@ -6468,6 +6494,7 @@ function closeOfferWizard() {
   var m = document.getElementById('offer-wizard-modal');
   if (m) m.style.display = 'none';
   currentOfferCandidateId = null;
+  try { restoreSidebarActiveFromState(); } catch(e) {}
 }
 
 function generateOfferLetter() {
