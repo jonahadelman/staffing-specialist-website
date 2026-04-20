@@ -932,6 +932,22 @@ input:focus, select:focus, textarea:focus {
         </svg>
         Resume Wizard
       </button>
+      <button class="nav-item" onclick="launchJobWizardFromSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="16" rx="2"/>
+          <line x1="7" y1="10" x2="17" y2="10"/>
+          <line x1="7" y1="14" x2="13" y2="14"/>
+        </svg>
+        Job Wizard
+      </button>
+      <button class="nav-item" onclick="launchOfferWizardFromSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+        Offer Wizard
+      </button>
       <button class="nav-item" data-view="pipeline">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -1660,6 +1676,13 @@ input:focus, select:focus, textarea:focus {
     </div>
 
     <div style="display:flex;flex-direction:column;gap:12px;">
+      <!-- Candidate picker row (shown only when launched from sidebar with no context) -->
+      <div id="ow-picker-row" style="display:none;padding:10px 12px;background:rgba(124,106,247,.06);border:1px solid rgba(124,106,247,.2);border-radius:8px;">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Pick Candidate</label>
+        <select id="ow-picker" onchange="handleOfferPickerChange()" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">Select a candidate at Offer stage...</option></select>
+        <div id="ow-picker-hint" style="font-size:10px;color:var(--text4);margin-top:5px;font-style:italic;">Tip: to skip this step, open the wizard from a candidate's detail page.</div>
+      </div>
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div>
           <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Position Title <span style="color:var(--red);">*</span></label>
@@ -1867,6 +1890,8 @@ function switchUser(userId) {
   var user = USERS.find(function(u) { return u.id === userId; });
   if (!user) return;
 
+  var prevWorkspace = state.currentWorkspace;
+
   state.currentUser      = user;
   state.currentWorkspace = user.workspaceId;
   localStorage.setItem('tb2_user', userId);
@@ -1882,7 +1907,29 @@ function switchUser(userId) {
   if (dotEl)   dotEl.style.background = (user.role === 'admin') ? 'var(--green)' : 'var(--accent2)';
   if (selEl)   selEl.value = userId;
 
-  // Re-render current view
+  // Workspace changed → re-run all scoped loaders so in-memory arrays reflect new workspace
+  if (prevWorkspace !== state.currentWorkspace) {
+    try { loadCompanies(); }     catch(e) {}
+    try { loadJobs(); }          catch(e) {}
+    try { loadCandidates(); }    catch(e) {}
+    try { loadApplications(); }  catch(e) {}
+    try { loadActivityBoard(); } catch(e) {}
+    // Re-render whichever view the user is on
+    try {
+      if (state.currentView === 'dashboard')  renderDashboard();
+      else if (state.currentView === 'jobs')        renderJobs();
+      else if (state.currentView === 'candidates')  renderCandidatesView();
+      else if (state.currentView === 'companies')   renderCompaniesView();
+      else if (state.currentView === 'pipeline')    renderPipeline();
+      else if (state.currentView === 'command')     renderCommandCenter();
+      else if (state.currentView === 'wizard')      renderResumeWizard();
+      else if (state.currentView === 'analytics')   renderAnalytics();
+      else if (state.currentView === 'settings')    renderSettings();
+    } catch(e) { console.warn('[TalentBase] re-render after workspace switch failed:', e); }
+    return;
+  }
+
+  // Same workspace — just re-render the current view to reflect any user-specific UI
   if (state.currentView === 'dashboard') renderDashboard();
   if (state.currentView === 'settings')  renderSettings();
 }
@@ -2106,10 +2153,18 @@ function loadJobs() {
   try {
     jobs = JSON.parse(localStorage.getItem(JOBS_KEY) || '[]') || [];
   } catch(e) { jobs = []; }
+  // Workspace isolation: in-memory jobs[] holds only current workspace's records
+  jobs = jobs.filter(function(j) { return j.workspaceId === state.currentWorkspace; });
 }
 
 function saveJobs() {
-  try { localStorage.setItem(JOBS_KEY, JSON.stringify(jobs)); } catch(e) {}
+  try {
+    // Merge-preserve: keep other workspaces' records, replace only current workspace's
+    var all = [];
+    try { all = JSON.parse(localStorage.getItem(JOBS_KEY) || '[]') || []; } catch(e) {}
+    var otherWs = all.filter(function(j) { return j.workspaceId !== state.currentWorkspace; });
+    localStorage.setItem(JOBS_KEY, JSON.stringify(otherWs.concat(jobs)));
+  } catch(e) {}
 }
 
 function uid() {
@@ -2544,6 +2599,18 @@ function closeJobWizard() {
   if (m) m.style.display = 'none';
 }
 
+// Sidebar entry point: opens Add Job modal then Job Wizard on top
+function launchJobWizardFromSidebar() {
+  // Guard: can't create a job without a company
+  if (!companies.length) {
+    alert('Create a company first before building a job.');
+    nav('companies');
+    return;
+  }
+  openAddJob();
+  setTimeout(function() { openJobWizard(); }, 150);
+}
+
 function generateJobDescription() {
   var inputEl = document.getElementById('jw-input');
   var errEl   = document.getElementById('jw-form-error');
@@ -2777,10 +2844,30 @@ function loadApplications() {
   try {
     applications = JSON.parse(localStorage.getItem(APPLICATIONS_KEY) || '[]') || [];
   } catch(e) { applications = []; }
+  // Workspace isolation: prefer direct workspaceId, fall back to candidate lookup for legacy records
+  applications = applications.filter(function(a) {
+    if (a.workspaceId) return a.workspaceId === state.currentWorkspace;
+    var cd = candidates.find(function(c) { return String(c.id) === String(a.candidateId); });
+    return cd ? cd.workspaceId === state.currentWorkspace : false;
+  });
 }
 
 function saveApplications() {
-  try { localStorage.setItem(APPLICATIONS_KEY, JSON.stringify(applications)); } catch(e) {}
+  try {
+    var all = [];
+    try { all = JSON.parse(localStorage.getItem(APPLICATIONS_KEY) || '[]') || []; } catch(e) {}
+    // Merge-preserve: keep other-workspace apps, replace current-workspace apps
+    var otherWs = all.filter(function(a) {
+      if (a.workspaceId) return a.workspaceId !== state.currentWorkspace;
+      // Legacy app without workspaceId — resolve via candidate. Preserve if can't resolve.
+      return true; // Keep legacy entries as-is; current-workspace stamped apps will overwrite via merge
+    });
+    // Remove duplicates that exist in both (same id) — current-workspace wins
+    var currentIds = {};
+    applications.forEach(function(a) { currentIds[a.id] = true; });
+    var preserved = otherWs.filter(function(a) { return !currentIds[a.id]; });
+    localStorage.setItem(APPLICATIONS_KEY, JSON.stringify(preserved.concat(applications)));
+  } catch(e) {}
 }
 
 // ── Get the primary (highest-stage) application for a candidate ───────────────
@@ -2819,6 +2906,7 @@ function migrateCandidatesToApplications() {
       updatedAt:      Date.now(),
       interviewCount: cd.interviewCount || 0,
       submissions:    Array.isArray(cd.submissions) ? cd.submissions.slice() : [],
+      workspaceId:    cd.workspaceId    || state.currentWorkspace,
     });
   });
   saveApplications();
@@ -2830,30 +2918,44 @@ function loadCandidates() {
   try {
     candidates = JSON.parse(localStorage.getItem(CANDS_KEY) || '[]') || [];
   } catch(e) { candidates = []; }
+  // Workspace isolation
+  candidates = candidates.filter(function(c) { return c.workspaceId === state.currentWorkspace; });
 }
 
 function saveCompanies() {
-  try { localStorage.setItem(COMPANIES_KEY, JSON.stringify(companies)); } catch(e) {}
+  try {
+    var all = [];
+    try { all = JSON.parse(localStorage.getItem(COMPANIES_KEY) || '[]') || []; } catch(e) {}
+    var otherWs = all.filter(function(c) { return c.workspaceId !== state.currentWorkspace; });
+    localStorage.setItem(COMPANIES_KEY, JSON.stringify(otherWs.concat(companies)));
+  } catch(e) {}
 }
 function loadCompanies() {
   try {
     companies = JSON.parse(localStorage.getItem(COMPANIES_KEY) || '[]') || [];
   } catch(e) { companies = []; }
+  // Workspace isolation
+  companies = companies.filter(function(c) { return c.workspaceId === state.currentWorkspace; });
 }
 function seedCompaniesIfEmpty() {
   if (companies.length) return;
   var now = Date.now();
   companies = [
-    { id:'sc_1', name:'Boston Scientific', createdAt: now-90*86400000 },
-    { id:'sc_2', name:'Becton Dickinson',  createdAt: now-85*86400000 },
-    { id:'sc_3', name:'Werfen',            createdAt: now-80*86400000 },
-    { id:'sc_4', name:'Abbott',            createdAt: now-75*86400000 },
+    { id:'sc_1', name:'Boston Scientific', workspaceId: state.currentWorkspace, createdAt: now-90*86400000 },
+    { id:'sc_2', name:'Becton Dickinson',  workspaceId: state.currentWorkspace, createdAt: now-85*86400000 },
+    { id:'sc_3', name:'Werfen',            workspaceId: state.currentWorkspace, createdAt: now-80*86400000 },
+    { id:'sc_4', name:'Abbott',            workspaceId: state.currentWorkspace, createdAt: now-75*86400000 },
   ];
   saveCompanies();
 }
 
 function saveCandidates() {
-  try { localStorage.setItem(CANDS_KEY, JSON.stringify(candidates)); } catch(e) {}
+  try {
+    var all = [];
+    try { all = JSON.parse(localStorage.getItem(CANDS_KEY) || '[]') || []; } catch(e) {}
+    var otherWs = all.filter(function(c) { return c.workspaceId !== state.currentWorkspace; });
+    localStorage.setItem(CANDS_KEY, JSON.stringify(otherWs.concat(candidates)));
+  } catch(e) {}
 }
 
 // ── Status badge helper ───────────────────────────────────────
@@ -3437,6 +3539,7 @@ function submitCandForm(e) {
         updatedAt:      Date.now(),
         interviewCount: newCand.interviewCount || 0,
         submissions:    [],
+        workspaceId:    state.currentWorkspace,
       });
       saveApplications();
     }
@@ -3765,6 +3868,7 @@ function createCandidateFromWizard() {
     updatedAt:      _now,
     interviewCount: 0,
     submissions:    [],
+    workspaceId:    state.currentWorkspace,
   });
   saveApplications();
 
@@ -4794,10 +4898,27 @@ function loadActivityBoard() {
   try {
     activityBoard = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]');
   } catch(e) { activityBoard = []; }
+  // Workspace isolation: filter by workspaceId. Legacy items without workspaceId treated as belonging to current workspace.
+  activityBoard = activityBoard.filter(function(t) {
+    if (!t.workspaceId) return true;  // legacy: keep visible in whichever workspace is active
+    return t.workspaceId === state.currentWorkspace;
+  });
 }
 
 function saveActivityBoard() {
-  try { localStorage.setItem(ACTIVITY_KEY, JSON.stringify(activityBoard)); } catch(e) {}
+  try {
+    var all = [];
+    try { all = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]') || []; } catch(e) {}
+    // Merge-preserve: keep other-workspace activities, drop legacy duplicates that match our in-memory IDs
+    var currentIds = {};
+    activityBoard.forEach(function(t) { currentIds[t.id] = true; });
+    var otherWs = all.filter(function(t) {
+      if (currentIds[t.id]) return false;                          // current-workspace overwrites by id
+      if (!t.workspaceId) return false;                            // legacy already migrated into current workspace in-memory
+      return t.workspaceId !== state.currentWorkspace;             // preserve other workspaces
+    });
+    localStorage.setItem(ACTIVITY_KEY, JSON.stringify(otherWs.concat(activityBoard)));
+  } catch(e) {}
 }
 
 function toggleActivity(idx) {
@@ -4866,7 +4987,7 @@ function addActivityItem(input) {
   var entry;
   if (typeof input === 'string') {
     if (!input.trim()) return;
-    entry = { id: uid(), text: input.trim(), completed: false, createdAt: Date.now() };
+    entry = { id: uid(), text: input.trim(), completed: false, createdAt: Date.now(), workspaceId: state.currentWorkspace };
   } else if (input && typeof input === 'object' && typeof input.text === 'string') {
     if (!input.text.trim()) return;
     entry = {
@@ -4876,6 +4997,7 @@ function addActivityItem(input) {
       jobId:       input.jobId       || null,
       completed:   false,
       createdAt:   Date.now(),
+      workspaceId: state.currentWorkspace,
     };
   } else {
     return;
@@ -5185,6 +5307,7 @@ function seedDataIfEmpty() {
       updatedAt:      Date.now(),
       interviewCount: cd.interviewCount || 0,
       submissions:    [],
+      workspaceId:    state.currentWorkspace,
     });
   });
   saveApplications();
@@ -6212,12 +6335,16 @@ function declineOffer(candId) {
 var currentOfferCandidateId = null;
 
 function openOfferWizard(cid) {
+  // Hide picker — launching with a specific candidate
+  var pickerRow = document.getElementById('ow-picker-row');
+  if (pickerRow) pickerRow.style.display = 'none';
+
   currentOfferCandidateId = String(cid);
   var cd = candidates.find(function(x) { return String(x.id) === String(cid); });
   if (!cd) return;
   var job = jobs.find(function(j) { return String(j.id) === String(cd.jobId); });
 
-  // Prefill safely from linked job (does not overwrite if user already opened previously)
+  // Prefill from linked job
   var titleEl  = document.getElementById('ow-title');
   var hmEl     = document.getElementById('ow-hm');
   var salEl    = document.getElementById('ow-salary');
@@ -6235,6 +6362,72 @@ function openOfferWizard(cid) {
   var m = document.getElementById('offer-wizard-modal');
   if (m) m.style.display = 'flex';
   setTimeout(function() { if (titleEl) titleEl.focus(); }, 50);
+}
+
+// Sidebar entry point: open wizard with a candidate picker populated from Offer-stage candidates
+function launchOfferWizardFromSidebar() {
+  // Find all candidates whose application is at Offer stage
+  var offerCands = candidates.filter(function(cd) {
+    var app = getPrimaryApplication(String(cd.id));
+    var stage = app ? app.status : cd.status;
+    return stage === 'Offer';
+  });
+
+  if (!offerCands.length) {
+    alert('No candidates currently at Offer stage. Move a candidate to Offer first — then launch the wizard.');
+    return;
+  }
+
+  // Clear state, populate picker, show modal
+  currentOfferCandidateId = null;
+  var picker = document.getElementById('ow-picker');
+  var pickerRow = document.getElementById('ow-picker-row');
+  if (picker) {
+    picker.innerHTML = '<option value="">Select a candidate at Offer stage...</option>' +
+      offerCands.map(function(cd) {
+        var job = jobs.find(function(j) { return String(j.id) === String(cd.jobId); });
+        var label = cd.name + (job ? ' — ' + job.title : '');
+        return '<option value="' + escHtml(String(cd.id)) + '">' + escHtml(label) + '</option>';
+      }).join('');
+    picker.value = '';
+  }
+  if (pickerRow) pickerRow.style.display = 'block';
+
+  // Clear form fields — will be populated when user picks
+  ['ow-title','ow-hm','ow-salary','ow-start','ow-output'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  var errEl = document.getElementById('ow-form-error');
+  if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+
+  var m = document.getElementById('offer-wizard-modal');
+  if (m) m.style.display = 'flex';
+}
+
+// Picker change: set currentOfferCandidateId and prefill form fields from linked job
+function handleOfferPickerChange() {
+  var picker = document.getElementById('ow-picker');
+  if (!picker) return;
+  var cid = picker.value;
+  if (!cid) { currentOfferCandidateId = null; return; }
+
+  currentOfferCandidateId = String(cid);
+  var cd = candidates.find(function(x) { return String(x.id) === String(cid); });
+  if (!cd) return;
+  var job = jobs.find(function(j) { return String(j.id) === String(cd.jobId); });
+
+  var titleEl = document.getElementById('ow-title');
+  var hmEl    = document.getElementById('ow-hm');
+  var salEl   = document.getElementById('ow-salary');
+
+  if (titleEl) titleEl.value = (job && job.title)         ? job.title         : '';
+  if (hmEl)    hmEl.value    = (job && job.hiringManager) ? job.hiringManager : '';
+  if (salEl)   salEl.value   = (job && job.salaryMax)     ? String(job.salaryMax) : '';
+
+  // Move focus to Start Date (first unfilled field)
+  var startEl = document.getElementById('ow-start');
+  if (startEl) startEl.focus();
 }
 
 function closeOfferWizard() {
@@ -6471,6 +6664,7 @@ function stressTestSeed() {
       updatedAt:      Date.now(),
       interviewCount: stage==='Interview'?1:stage==='Offer'?2:0,
       submissions:    subs,
+      workspaceId:    state.currentWorkspace,
     });
     count++;
   }
