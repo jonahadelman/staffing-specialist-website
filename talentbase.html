@@ -841,6 +841,15 @@ input:focus, select:focus, textarea:focus {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.15); }
+/* Dashboard responsive collapse — keeps Command Center usable on narrow viewports */
+@media (max-width: 1100px) {
+  .dash-primary-zone { grid-template-columns: 1fr !important; }
+  .dash-intel-grid   { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 720px) {
+  #kpi-grid             { grid-template-columns: 1fr !important; }
+  #dash-primary-actions { grid-template-columns: repeat(2, 1fr) !important; }
+}
 </style>
 </head>
 
@@ -1064,18 +1073,14 @@ input:focus, select:focus, textarea:focus {
           </div>
 
           <div id="first-time-banner" style="display:none;margin-bottom:22px;padding:16px 20px;background:linear-gradient(135deg,rgba(124,106,247,.1),rgba(20,184,166,.06));border:1px solid rgba(124,106,247,.25);border-radius:12px;">
-            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-              <div style="font-size:22px;flex-shrink:0;">👋</div>
-              <div style="flex:1;min-width:220px;">
-                <div style="font-size:13px;font-weight:800;color:var(--text);">Welcome to TalentBase</div>
-                <div style="font-size:12px;color:var(--text3);margin-top:2px;">Start by creating a company. You'll then add jobs and candidates to that company.</div>
-              </div>
-              <button onclick="handleAddCompanyClick()" style="padding:7px 14px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;">Create Company →</button>
-            </div>
+            <!-- Content populated by updateGuardrailBanner() — reflects next setup step -->
           </div>
 
-          <!-- KPI row — 3 cards -->
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;" id="kpi-grid">
+          <!-- ══ LAYER 1: METRICS ROW ═══════════════════════════════════════ -->
+          <!-- Hidden revenue IDs kept so renderDashboard's revenue writes don't error. Revenue remains visible in Analytics view. -->
+          <span id="kpi-revenue" style="display:none;"></span>
+          <span id="kpi-revenue-sub" style="display:none;"></span>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px;" id="kpi-grid">
             <div class="kpi-card" style="border-left:3px solid var(--accent2);">
               <div class="kpi-label">Open Jobs</div>
               <div class="kpi-value" style="color:var(--accent2);" id="kpi-open-jobs">—</div>
@@ -1091,88 +1096,98 @@ input:focus, select:focus, textarea:focus {
               <div class="kpi-value" style="color:var(--amber);" id="kpi-days">—</div>
               <div class="kpi-sub" id="kpi-days-sub">Across open reqs</div>
             </div>
-            <div class="kpi-card" style="border-left:3px solid var(--teal);">
-              <div class="kpi-label">Total Revenue</div>
-              <div class="kpi-value" style="color:var(--teal);" id="kpi-revenue">—</div>
-              <div class="kpi-sub" id="kpi-revenue-sub">Placements YTD</div>
-            </div>
           </div>
 
-          <!-- Needs Action — activity board -->
-          <div style="margin-bottom:22px;">
-            <div class="section-header">
-              <div class="section-title">⚡ Needs Action</div>
-              <div style="display:flex;align-items:center;gap:10px;">
-                <div class="section-sub" id="needs-action-count"></div>
-                <button id="tasks-toggle-btn" onclick="toggleTasksView()" style="display:none;background:none;border:1px solid var(--border2);border-radius:6px;color:var(--accent2);font-size:10px;font-weight:700;font-family:inherit;padding:2px 9px;cursor:pointer;">View All</button>
-              </div>
-            </div>
-            <div class="card" id="needs-action-list" style="padding:6px 8px;"></div>
-          </div>
-
-
-          <!-- Primary Actions -->
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;" id="dash-primary-actions">
-            <button onclick="handleAddCompanyClick()" class="card" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid rgba(124,106,247,.2);background:rgba(124,106,247,.04);text-align:center;">
-              <div style="font-size:20px;">&#127970;</div>
+          <!-- Quick-action strip (preserved from original — kept compact, above the action zone) -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:26px;" id="dash-primary-actions">
+            <button onclick="handleAddCompanyClick()" class="card" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;border:1px solid rgba(124,106,247,.2);background:rgba(124,106,247,.04);text-align:center;">
+              <div style="font-size:18px;">&#127970;</div>
               <div style="font-size:12px;font-weight:700;color:var(--text);">Add Company</div>
             </button>
-            <button onclick="handleAddJobClick()" class="card" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid rgba(59,130,246,.2);background:rgba(59,130,246,.04);text-align:center;">
-              <div style="font-size:20px;">&#128188;</div>
+            <button onclick="handleAddJobClick()" class="card" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;border:1px solid rgba(59,130,246,.2);background:rgba(59,130,246,.04);text-align:center;">
+              <div style="font-size:18px;">&#128188;</div>
               <div style="font-size:12px;font-weight:700;color:var(--text);">Add Job</div>
             </button>
-            <button onclick="handleAddCandidateClick()" class="card" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid rgba(20,184,166,.2);background:rgba(20,184,166,.04);text-align:center;">
-              <div style="font-size:20px;">&#128100;</div>
+            <button onclick="handleAddCandidateClick()" class="card" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;border:1px solid rgba(20,184,166,.2);background:rgba(20,184,166,.04);text-align:center;">
+              <div style="font-size:18px;">&#128100;</div>
               <div style="font-size:12px;font-weight:700;color:var(--text);">Add Candidate</div>
             </button>
-            <button onclick="nav('pipeline')" class="card" style="padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;border:1px solid rgba(245,158,11,.2);background:rgba(245,158,11,.04);text-align:center;">
-              <div style="font-size:20px;">&#128203;</div>
+            <button onclick="nav('pipeline')" class="card" style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;border:1px solid rgba(245,158,11,.2);background:rgba(245,158,11,.04);text-align:center;">
+              <div style="font-size:18px;">&#128203;</div>
               <div style="font-size:12px;font-weight:700;color:var(--text);">View Pipeline</div>
             </button>
           </div>
 
-          <!-- Pipeline Stages + Aging Reqs -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-            <div>
-              <div class="section-header">
-                <div class="section-title">Pipeline Stages</div>
-              </div>
-              <div class="card" id="pipeline-stages">
-                <div class="empty-state" style="padding:24px 0;">
-                  <div class="empty-state-sub">No candidates yet</div>
+          <!-- ══ LAYER 2: COMMAND CENTER (PRIMARY ACTION ZONE) ═══════════════ -->
+          <div style="margin-bottom:26px;">
+            <div class="section-header" style="margin-bottom:14px;">
+              <div class="section-title" style="font-size:13px;">Command Center</div>
+              <div class="section-sub">Your highest-priority moves, right now</div>
+            </div>
+            <div class="dash-primary-zone" style="display:grid;grid-template-columns:3fr 2fr;gap:16px;align-items:start;">
+              <!-- LEFT 60%: Top 3 Next Actions -->
+              <div>
+                <div class="section-header" style="margin-bottom:8px;">
+                  <div class="section-title" style="font-size:12px;">⚡ Top Next Actions</div>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div class="section-sub" id="needs-action-count"></div>
+                    <button id="tasks-toggle-btn" onclick="toggleTasksView()" style="display:none;background:none;border:1px solid var(--border2);border-radius:6px;color:var(--accent2);font-size:10px;font-weight:700;font-family:inherit;padding:2px 9px;cursor:pointer;">View All</button>
+                  </div>
                 </div>
+                <div class="card" id="needs-action-list" style="padding:6px 8px;min-height:200px;"></div>
+              </div>
+              <!-- RIGHT 40%: Top Candidates to Submit -->
+              <div>
+                <div class="section-header" style="margin-bottom:8px;">
+                  <div class="section-title" style="font-size:12px;">🎯 Top to Submit</div>
+                  <div class="section-sub">Interview-stage, ranked</div>
+                </div>
+                <div class="card" id="dash-top-submit" style="padding:4px 14px 8px;min-height:200px;"><div style="font-size:12px;color:var(--text4);padding:12px 0;">Loading...</div></div>
               </div>
             </div>
-            <div>
-              <div class="section-header">
-                <div class="section-title">Aging Reqs</div>
+          </div>
+
+          <!-- ══ LAYER 3: PIPELINE INTELLIGENCE ══════════════════════════════ -->
+          <div>
+            <div class="section-header" style="margin-bottom:14px;">
+              <div class="section-title" style="font-size:13px;">Pipeline Health</div>
+              <div class="section-sub">Flow, aging, and AI-suggested actions</div>
+            </div>
+            <div class="dash-intel-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+              <!-- LEFT: Pipeline Stages -->
+              <div>
+                <div class="section-header" style="margin-bottom:8px;">
+                  <div class="section-title" style="font-size:12px;">Pipeline Stages</div>
+                </div>
+                <div class="card" id="pipeline-stages" style="min-height:180px;">
+                  <div class="empty-state" style="padding:24px 0;">
+                    <div class="empty-state-sub">No candidates yet</div>
+                  </div>
+                </div>
               </div>
-              <div class="card" id="aging-reqs">
-                <div class="empty-state" style="padding:24px 0;">
-                  <div class="empty-state-sub">No aging reqs</div>
+              <!-- CENTER: Aging Reqs -->
+              <div>
+                <div class="section-header" style="margin-bottom:8px;">
+                  <div class="section-title" style="font-size:12px;">Aging Reqs</div>
+                </div>
+                <div class="card" id="aging-reqs" style="min-height:180px;">
+                  <div class="empty-state" style="padding:24px 0;">
+                    <div class="empty-state-sub">No aging reqs</div>
+                  </div>
+                </div>
+              </div>
+              <!-- RIGHT: AI Tasks -->
+              <div>
+                <div class="section-header" style="margin-bottom:8px;">
+                  <div class="section-title" style="font-size:12px;">AI Tasks</div>
+                </div>
+                <div class="card" id="dash-ai-tasks" style="padding:4px 14px 8px;min-height:180px;">
+                  <div style="font-size:12px;color:var(--text4);padding:12px 0;">Loading...</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div style="margin-top:20px;">
-            <div class="section-header">
-              <div class="section-title">Top Candidates to Submit</div>
-              <div class="section-sub">Interview-stage, ranked by CX score</div>
-            </div>
-            <div class="card" id="dash-top-submit" style="padding:4px 16px 8px;"><div style="font-size:12px;color:var(--text4);padding:12px 0;">Loading...</div></div>
-          </div>
-
-          <!-- AI Tasks panel -->
-          <div style="margin-top:20px;">
-            <div class="section-header">
-              <div class="section-title">AI Tasks</div>
-              <div class="section-sub">Today's candidate experience actions</div>
-            </div>
-            <div class="card" id="dash-ai-tasks" style="padding:4px 16px 8px;">
-              <div style="font-size:12px;color:var(--text4);padding:12px 0;">Loading...</div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -1872,6 +1887,13 @@ function nav(viewId) {
   // Kill any open modal before switching views — prevents invisible overlays blocking clicks on new view
   try { closeAllModals(); } catch(e) {}
 
+  // Clear stale selections when leaving their owning view
+  // (prevents blank detail panels pointing at no-longer-visible records)
+  try {
+    if (state.currentView === 'jobs'       && viewId !== 'jobs')       selectedJobId = null;
+    if (state.currentView === 'candidates' && viewId !== 'candidates') selectedCandidateId = null;
+  } catch(e) {}
+
   // Hide all views
   document.querySelectorAll('.view').forEach(function(v) {
     v.classList.remove('active');
@@ -1969,6 +1991,8 @@ function switchUser(userId) {
 
   // Workspace changed → re-run all scoped loaders so in-memory arrays reflect new workspace
   if (prevWorkspace !== state.currentWorkspace) {
+    // Clear stale selections — selectedJobId/selectedCandidateId point at the previous workspace's records
+    try { selectedJobId = null; selectedCandidateId = null; } catch(e) {}
     try { loadCompanies(); }     catch(e) {}
     try { loadJobs(); }          catch(e) {}
     try { loadCandidates(); }    catch(e) {}
@@ -2756,8 +2780,9 @@ document.addEventListener('keydown', function(e) {
 
 function submitJobForm(e) {
   e.preventDefault();
-  var title = (document.getElementById('jf-title').value || '').trim();
   var errEl = document.getElementById('job-form-error');
+  try {
+  var title = (document.getElementById('jf-title').value || '').trim();
 
   var companyId = (document.getElementById('jf-company') || {}).value || '';
   if (!companyId) {
@@ -2853,6 +2878,10 @@ function submitJobForm(e) {
         if (nm) nm.focus();
       }, 80);
     }, 120);
+  }
+  } catch(ex) {
+    console.error('[submitJobForm]', ex);
+    if (errEl) { errEl.textContent = 'Could not save job. ' + (ex && ex.message ? ex.message : 'Try again.'); errEl.style.display = 'block'; }
   }
 }
 
@@ -2991,6 +3020,28 @@ function getPrimaryApplication(candidateId) {
 function deriveCandidateStatus(candidateId) {
   var app = getPrimaryApplication(candidateId);
   return app ? app.status : 'New';
+}
+
+// ── Canonical status setter — updates candidate AND primary application together
+// Use this anywhere candidate status changes, to prevent drift between the two.
+function setCandidateStatus(candidateId, newStatus) {
+  if (!newStatus) return;
+  var cd = candidates.find(function(x) { return String(x.id) === String(candidateId); });
+  if (cd) {
+    cd.status       = newStatus;
+    cd.lastActivityAt = Date.now();
+  }
+  var app = getPrimaryApplication(String(candidateId));
+  if (app) {
+    app.status    = newStatus;
+    app.stage     = newStatus;
+    app.updatedAt = Date.now();
+    if (!app.firstContactAt && ['Screening','Interview','Submitted','Offer','Hired'].indexOf(newStatus) !== -1) {
+      app.firstContactAt = Date.now();
+    }
+    try { saveApplications(); } catch(e) {}
+  }
+  if (cd) { try { saveCandidates(); } catch(e) {} }
 }
 
 // ── One-time migration: seed applications[] from existing candidates ──────────
@@ -3558,8 +3609,9 @@ document.addEventListener('click', function(e) {
 
 function submitCandForm(e) {
   e.preventDefault();
-  var name   = (document.getElementById('cf-name').value || '').trim();
   var errEl  = document.getElementById('cand-form-error');
+  try {
+  var name   = (document.getElementById('cf-name').value || '').trim();
 
   if (!name) {
     if (errEl) { errEl.textContent = 'Full name is required.'; errEl.style.display = 'block'; }
@@ -3666,6 +3718,10 @@ function submitCandForm(e) {
     renderCandidates();
     // Auto-flow: go straight to pipeline
     setTimeout(function() { nav('pipeline'); }, 100);
+  }
+  } catch(ex) {
+    console.error('[submitCandForm]', ex);
+    if (errEl) { errEl.textContent = 'Could not save candidate. ' + (ex && ex.message ? ex.message : 'Try again.'); errEl.style.display = 'block'; }
   }
 }
 
@@ -4035,6 +4091,34 @@ function clearResumeWizard() {
 // Aggregates tasks, candidates, and submissions into one execution view.
 // No data mutation — pure read-and-render.
 function renderCommandCenter() {
+  // Prerequisite check: no applications means no active pipeline to command
+  var hasApps = applications.length > 0 || candidates.some(function(cd) { return !!cd.jobId; });
+  if (!hasApps) {
+    var auto = document.getElementById('cc-auto-actions');
+    var tasks = document.getElementById('cc-tasks');
+    var cands = document.getElementById('cc-candidates');
+    var subs  = document.getElementById('cc-submissions');
+    var ctaLabel, ctaHandler;
+    if (!candidates.length) {
+      ctaLabel = 'Add Candidate →'; ctaHandler = 'handleAddCandidateClick()';
+    } else {
+      ctaLabel = 'Go to Candidates →'; ctaHandler = "nav('candidates')";
+    }
+    var banner =
+      '<div style="padding:32px 20px;text-align:center;">' +
+        '<div style="font-size:28px;margin-bottom:6px;">📋</div>' +
+        '<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px;">No active pipeline yet</div>' +
+        '<div style="font-size:11px;color:var(--text3);line-height:1.55;max-width:300px;margin:0 auto 14px;">Submit candidates to jobs to activate the Command Center.</div>' +
+        '<button onclick="' + ctaHandler + '" style="padding:7px 14px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">' + ctaLabel + '</button>' +
+      '</div>';
+    var placeholder = '<div style="padding:24px 12px;text-align:center;color:var(--text4);font-size:11px;font-style:italic;">Activates once candidates are in the pipeline.</div>';
+    if (auto)  auto.innerHTML  = banner;
+    if (tasks) tasks.innerHTML = placeholder;
+    if (cands) cands.innerHTML = placeholder;
+    if (subs)  subs.innerHTML  = placeholder;
+    return;
+  }
+
   renderAutoActions();
   renderCCTasks();
   renderCCCandidates();
@@ -4207,6 +4291,33 @@ function renderPipeline() {
   var board = document.getElementById('pipe-board');
   if (!board) return;
 
+  // Prerequisite guidance: show next-step banner when pipeline has nothing to show
+  var hasCandidates   = candidates.length > 0;
+  var hasApplications = applications.length > 0 || candidates.some(function(cd) { return !!cd.jobId; });
+
+  if (!hasCandidates || !hasApplications) {
+    var icon, title, sub, ctaLabel, ctaHandler;
+    if (!hasCandidates) {
+      icon = '👥'; title = 'No candidates yet';
+      sub  = 'Add candidates and link them to a job to activate your pipeline.';
+      ctaLabel = 'Add Candidate →'; ctaHandler = 'handleAddCandidateClick()';
+    } else {
+      icon = '📋'; title = 'Candidates exist but not yet submitted to pipeline';
+      sub  = 'Link a candidate to a job from the Candidates view to add them to the pipeline.';
+      ctaLabel = 'Go to Candidates →'; ctaHandler = "nav('candidates')";
+    }
+    board.innerHTML =
+      '<div style="padding:40px 24px;text-align:center;background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin:20px;">' +
+        '<div style="font-size:32px;margin-bottom:8px;">' + icon + '</div>' +
+        '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:6px;">' + title + '</div>' +
+        '<div style="font-size:12px;color:var(--text3);max-width:420px;margin:0 auto 16px;line-height:1.55;">' + sub + '</div>' +
+        '<button onclick="' + ctaHandler + '" style="padding:8px 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;">' + ctaLabel + '</button>' +
+      '</div>';
+    var summaryEl = document.getElementById('pipe-summary');
+    if (summaryEl) summaryEl.textContent = '';
+    return;
+  }
+
   var jobFilter = (document.getElementById('pipe-job-filter') || {}).value || '';
 
   // Pipeline driven by applications[] — fallback to candidates[] if no apps yet
@@ -4325,6 +4436,15 @@ function setApplicationStage(app, stageName) {
     app.interviewCount = (app.interviewCount || 0) + 1;
   }
   saveApplications();
+  // Cascade to candidate.status so any non-app-aware reader stays consistent
+  try {
+    var _cd = candidates.find(function(x) { return String(x.id) === String(app.candidateId); });
+    if (_cd && _cd.status !== stageName) {
+      _cd.status         = stageName;
+      _cd.lastActivityAt = now;
+      saveCandidates();
+    }
+  } catch(e) {}
 }
 
 function moveCandidate(id) {
@@ -6321,8 +6441,9 @@ function closeCompanyModal() {
 }
 function submitCompanyForm(e) {
   e.preventDefault();
-  var name=(document.getElementById('co-name').value||'').trim();
   var err=document.getElementById('co-form-error');
+  try {
+  var name=(document.getElementById('co-name').value||'').trim();
   if (!name) { err.textContent='Company name is required.'; err.style.display='block'; return; }
 
   var location  = (document.getElementById('co-location')  ||{}).value || '';
@@ -6375,6 +6496,10 @@ function submitCompanyForm(e) {
       var t = document.getElementById('jf-title');
       if (t) t.focus();
     }, 80);
+  }
+  } catch(ex) {
+    console.error('[submitCompanyForm]', ex);
+    if (err) { err.textContent = 'Could not save company. ' + (ex && ex.message ? ex.message : 'Try again.'); err.style.display = 'block'; }
   }
 }
 
@@ -6467,9 +6592,8 @@ function acceptOffer(candId) {
 function declineOffer(candId) {
   var cd=candidates.find(function(x){return String(x.id)===String(candId);});
   if(!cd) return;
-  var now=Date.now();
   var _doApp=getPrimaryApplication(String(candId));
-  if(_doApp){_doApp.status='Rejected';_doApp.stage='Rejected';_doApp.lastActivityAt=now;_doApp.updatedAt=now;saveApplications();}
+  if(_doApp){ setApplicationStage(_doApp, 'Rejected'); }
   addActivityItem('Offer declined — Rejected: '+cd.name); saveActivityBoard();
   delete snoozedTasks[String(candId)];
   try{renderCandidateDetail(cd);}catch(e){}
