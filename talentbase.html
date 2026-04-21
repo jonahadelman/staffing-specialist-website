@@ -1208,96 +1208,6 @@ input:focus, select:focus, textarea:focus {
 
         </div>
 
-        <!-- Add Company Modal -->
-        <div id="company-modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeCompanyModal()">
-          <div style="background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:14px;width:min(480px,calc(100vw - 32px));max-height:90vh;overflow-y:auto;position:relative;">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.08);">
-              <div style="font-size:15px;font-weight:800;color:var(--text);">Add Company</div>
-              <button onclick="closeCompanyModal()" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:20px;line-height:1;padding:0;">&times;</button>
-            </div>
-            <form id="company-form" onsubmit="submitCompanyForm(event)" autocomplete="off">
-              <div style="display:flex;flex-direction:column;gap:14px;padding:20px;">
-                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Company Name <span style="color:var(--red);">*</span></label><input id="co-name" type="text" placeholder="e.g. Boston Scientific" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
-
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                  <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Location</label><input id="co-location" type="text" placeholder="e.g. Marlborough, MA" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
-                  <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Work Model</label><select id="co-workmodel" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">—</option><option value="Onsite">Onsite</option><option value="Hybrid">Hybrid</option><option value="Remote">Remote</option></select></div>
-                </div>
-
-                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">About Company</label><textarea id="co-about" rows="3" placeholder="Brief overview: industry, size, culture, what makes them interesting..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
-
-                <div>
-                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                    <label style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;">Hiring Managers</label>
-                    <button type="button" onclick="addHiringManagerField()" style="padding:3px 10px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">+ Add</button>
-                  </div>
-                  <div id="co-hm-list" style="display:flex;flex-direction:column;gap:8px;"></div>
-                  <div id="co-hm-empty" style="font-size:11px;color:var(--text4);padding:8px 0;font-style:italic;">No hiring managers added yet.</div>
-                </div>
-
-                <div id="co-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
-                <div style="display:flex;gap:8px;justify-content:flex-end;"><button type="button" onclick="closeCompanyModal()" class="btn btn-ghost">Cancel</button><button type="submit" class="btn btn-primary" id="co-submit-btn">Add Company</button></div>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!-- Add Job Modal -->
-        <div id="job-modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;">
-          <div style="background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:28px 30px;width:480px;max-width:calc(100vw - 32px);box-shadow:0 24px 60px rgba(0,0,0,.7);">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
-              <div style="font-size:16px;font-weight:800;color:var(--text);" id="job-modal-title">Add Job</div>
-              <button onclick="closeJobModal()" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:22px;line-height:1;padding:0;">&times;</button>
-            </div>
-            <form id="job-form" onsubmit="submitJobForm(event)" autocomplete="off">
-              <div style="display:flex;flex-direction:column;gap:14px;">
-                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Company <span style="color:var(--red);">*</span></label><select id="jf-company" onchange="handleCompanyChange()" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">Select company...</option></select></div>
-                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Job Title <span style="color:var(--red);">*</span></label><input id="jf-title" type="text" placeholder="e.g. Senior Program Manager" required oninput="document.getElementById('job-form-error').style.display='none'" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
-                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Location</label><input id="jf-location" type="text" placeholder="e.g. Boston, MA" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
-                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Salary Range</label><div style="display:flex;gap:8px;align-items:center;"><input id="jf-salary-min" type="number" placeholder="Min" style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/><span style="font-size:12px;color:var(--text4);flex-shrink:0;">&mdash;</span><input id="jf-salary-max" type="number" placeholder="Max" style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><button type="button" onclick="suggestSalary()" style="margin-top:7px;padding:5px 12px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:7px;color:#2dd4bf;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">&#128176; Suggest Salary</button><div id="salary-suggest-banner" style="display:none;margin-top:6px;padding:7px 12px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.25);border-radius:7px;"><div style="display:flex;align-items:center;gap:10px;"><span id="salary-suggest-text" style="font-size:11px;color:#2dd4bf;flex:1;">Suggested range</span><button type="button" onclick="applySalarySuggestion()" style="padding:2px 10px;background:rgba(20,184,166,.2);border:1px solid rgba(20,184,166,.4);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">Apply</button><button type="button" onclick="this.parentElement.parentElement.style.display='none'" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:14px;padding:0 2px;">&times;</button></div></div></div>
-                <div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;"><label style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;">Job Description</label><button type="button" onclick="openJobWizard()" style="padding:3px 10px;background:rgba(124,106,247,.12);border:1px solid rgba(124,106,247,.3);border-radius:6px;color:var(--accent2);font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">&#10024; Job Wizard</button></div><textarea id="jf-notes" onblur="analyzeJobDescription(this.value)" rows="3" placeholder="Role overview, key requirements, hiring manager, team context..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
-                <div id="jd-improve-banner" style="display:none;padding:10px 14px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);border-radius:8px;"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;"><div style="font-size:12px;color:var(--text3);">&#10024; <strong style="color:var(--text);">We improved this job description</strong></div><div style="display:flex;gap:6px;"><button type="button" onclick="applyJobDescriptionImprovement()" class="btn btn-primary btn-sm" style="font-size:10px;padding:3px 10px;">Apply</button><button type="button" onclick="dismissJobDescriptionImprovement()" class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 10px;">Keep Original</button></div></div><div id="jd-improved-preview" style="font-size:11px;color:var(--text4);margin-top:7px;max-height:80px;overflow-y:auto;line-height:1.6;white-space:pre-wrap;"></div></div>
-                <div><button type="button" id="jf-advanced-toggle" onclick="toggleJobAdvanced()" style="background:none;border:none;color:var(--text4);font-size:11px;font-family:inherit;cursor:pointer;padding:0;">&#9881; Advanced Options <span id="jf-adv-arrow">&#9662;</span></button></div>
-                <div id="jf-advanced" style="display:none;flex-direction:column;gap:14px;">
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Department</label><input id="jf-dept" type="text" placeholder="e.g. R&amp;D" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Status</label><select id="jf-status" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="Active">Active</option><option value="Draft">Draft</option><option value="Approved">Approved</option><option value="Closed">Closed</option></select></div></div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Employment Type</label><select id="jf-type" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="Full-time">Full-time</option><option value="Part-time">Part-time</option><option value="Contract">Contract</option><option value="Contract-to-Hire">Contract-to-Hire</option></select></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Work Model</label><select id="jf-loctype" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="Onsite">Onsite</option><option value="Hybrid">Hybrid</option><option value="Remote">Remote</option></select></div></div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Hiring Manager</label><select id="jf-hm-select" onchange="handleHMSelectChange()" style="display:none;width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">Select Hiring Manager...</option></select><input id="jf-hm" type="text" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Recruiter Owner</label><input id="jf-recruiter" type="text" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Openings</label><input id="jf-openings" type="number" placeholder="1" min="1" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div></div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Priority</label><select id="jf-priority" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="Medium">Medium</option><option value="High">High</option><option value="Critical">Critical</option><option value="Low">Low</option></select></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Target Start</label><input id="jf-start" type="date" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"/></div></div>
-                </div>
-                <div id="job-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
-                <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;"><button type="button" onclick="closeJobModal()" class="btn btn-ghost">Cancel</button><button type="submit" class="btn btn-primary" id="job-submit-btn">Add Job</button></div>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!-- Job Wizard Modal -->
-        <div id="job-wizard-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:1100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeJobWizard()">
-          <div style="background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:24px 28px;width:560px;max-width:calc(100vw - 32px);max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.7);">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-              <div>
-                <div style="font-size:16px;font-weight:800;color:var(--text);">✨ Job Description Wizard</div>
-                <div style="font-size:11px;color:var(--text4);margin-top:3px;">Describe the role in plain language. Wizard generates a structured draft.</div>
-              </div>
-              <button type="button" onclick="closeJobWizard()" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:22px;line-height:1;padding:0;">&times;</button>
-            </div>
-
-            <div style="display:flex;flex-direction:column;gap:14px;">
-              <div>
-                <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Role Context</label>
-                <textarea id="jw-input" rows="4" placeholder="Example: Senior Program Manager leading product launches for our medical device team. 8+ years experience, FDA process familiarity, ability to coordinate R&D, Quality, and commercial teams." style="width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;line-height:1.5;"></textarea>
-              </div>
-
-              <div id="jw-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
-
-              <div style="display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="closeJobWizard()" class="btn btn-ghost">Cancel</button>
-                <button type="button" onclick="generateJobDescription()" class="btn btn-primary" style="background:linear-gradient(135deg,var(--accent),var(--accent2));">Generate</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </section>
 
       <!-- ── CANDIDATES ──────────────────────── -->
@@ -1342,34 +1252,6 @@ input:focus, select:focus, textarea:focus {
             </div>
           </div>
 
-        </div>
-
-        <!-- Add / Edit Candidate Modal -->
-        <div id="cand-modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;">
-          <div style="background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:28px 30px;width:480px;max-width:calc(100vw - 32px);box-shadow:0 24px 60px rgba(0,0,0,.7);">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
-              <div style="font-size:16px;font-weight:800;color:var(--text);" id="cand-modal-title">Add Candidate</div>
-              <button onclick="closeCandModal()" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:22px;line-height:1;padding:0;">&times;</button>
-            </div>
-            <form id="cand-form" onsubmit="submitCandForm(event)" autocomplete="off">
-              <div style="display:flex;flex-direction:column;gap:12px;">
-                <div id="cf-upload-zone" ondragover="event.preventDefault();this.style.borderColor='var(--teal)'" ondragleave="this.style.borderColor=''" ondrop="event.preventDefault();this.style.borderColor='';handleResumeFileDrop(event)" style="border:1.5px dashed var(--border2);border-radius:10px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color .15s,background .15s;"><div style="width:32px;height:32px;background:rgba(20,184,166,.12);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;">&#128196;</div><div style="flex:1;min-width:0;"><div id="cf-upload-label" style="font-size:12px;font-weight:700;color:var(--text);">Upload Resume</div><div id="cf-upload-sub" style="font-size:11px;color:var(--text4);margin-top:1px;">PDF, DOCX, or TXT &middot; drag &amp; drop or click</div></div><button type="button" onclick="document.getElementById('cf-resume-file').click()" style="padding:4px 12px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:7px;color:#2dd4bf;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;">Browse</button><input id="cf-resume-file" type="file" accept=".pdf,.doc,.docx,.txt" style="display:none" onchange="handleResumeFileSelect(event)"/></div>
-                <div id="cf-parse-strip" style="display:none;padding:10px 14px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.25);border-radius:8px;"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:11px;font-weight:700;color:#2dd4bf;" id="cf-parse-status">&#8987; Parsing...</span><div style="display:flex;gap:6px;margin-left:auto;"><button type="button" onclick="applyResumeParseResults()" id="cf-parse-apply-btn" style="display:none;padding:3px 10px;background:rgba(20,184,166,.2);border:1px solid rgba(20,184,166,.4);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">&#10003; Apply Fields</button><button type="button" onclick="dismissResumeParse()" style="padding:3px 8px;background:none;border:1px solid var(--border2);border-radius:6px;color:var(--text4);font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">Dismiss</button></div></div><div id="cf-parse-preview" style="margin-top:8px;font-size:11px;color:var(--text3);line-height:1.5;display:none;"></div></div>
-                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Full Name <span style="color:var(--red);">*</span></label><input id="cf-name" type="text" placeholder="e.g. Sarah Johnson" required oninput="document.getElementById('cand-form-error').style.display='none'" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
-                <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Linked Job <span style="color:var(--red);">*</span></label><select id="cf-job" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">— Select job —</option></select></div>
-                <div><button type="button" id="cf-more-toggle" onclick="toggleCandMore()" style="background:none;border:none;color:var(--text4);font-size:11px;font-family:inherit;cursor:pointer;padding:0;">&#9881; More Details <span id="cf-more-arrow">&#9662;</span></button></div>
-                <div id="cf-more" style="display:none;flex-direction:column;gap:12px;">
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Current Title</label><input id="cf-title" type="text" placeholder="e.g. Sr. Program Manager" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Current Employer</label><input id="cf-company" type="text" placeholder="Current employer" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div></div>
-                  <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">LinkedIn URL</label><input id="cf-linkedin" type="url" placeholder="https://linkedin.com/in/username" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
-                  <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Stage</label><select id="cf-status" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="New">New</option><option value="Screening">Screening</option><option value="Interview">Interview</option><option value="Submitted">Submitted</option><option value="Offer">Offer</option><option value="Hired">Hired</option></select></div>
-                  <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Notes</label><textarea id="cf-notes" rows="2" placeholder="Background, fit, next steps..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
-                  <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Resume / Background</label><textarea id="cf-resume" onblur="analyzeResume(this.value)" rows="3" placeholder="Paste resume text or LinkedIn summary..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea><div id="cf-resume-hint" style="display:none;margin-top:6px;padding:8px 10px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.2);border-radius:6px;font-size:11px;color:#2dd4bf;line-height:1.5;">&#128161; Tip: open the resume in your PDF viewer, select all (Ctrl+A / Cmd+A), copy, then paste here.</div></div>
-                </div>
-                <div id="cand-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
-                <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;"><button type="button" onclick="closeCandModal()" class="btn btn-ghost">Cancel</button><button type="submit" class="btn btn-primary" id="cand-submit-btn">Add Candidate</button></div>
-              </div>
-            </form>
-          </div>
         </div>
 
       </section>
@@ -1690,6 +1572,117 @@ input:focus, select:focus, textarea:focus {
   </div>
   <!-- ═══ /MAIN ═════════════════════════════════ -->
 
+</div>
+
+<!-- Add Company Modal -->
+<div id="company-modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeCompanyModal()">
+  <div style="background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:14px;width:min(480px,calc(100vw - 32px));max-height:90vh;overflow-y:auto;position:relative;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.08);">
+      <div style="font-size:15px;font-weight:800;color:var(--text);">Add Company</div>
+      <button onclick="closeCompanyModal()" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:20px;line-height:1;padding:0;">&times;</button>
+    </div>
+    <form id="company-form" onsubmit="submitCompanyForm(event)" autocomplete="off">
+      <div style="display:flex;flex-direction:column;gap:14px;padding:20px;">
+        <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Company Name <span style="color:var(--red);">*</span></label><input id="co-name" type="text" placeholder="e.g. Boston Scientific" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Location</label><input id="co-location" type="text" placeholder="e.g. Marlborough, MA" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
+          <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Work Model</label><select id="co-workmodel" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">—</option><option value="Onsite">Onsite</option><option value="Hybrid">Hybrid</option><option value="Remote">Remote</option></select></div>
+        </div>
+        <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">About Company</label><textarea id="co-about" rows="3" placeholder="Brief overview: industry, size, culture, what makes them interesting..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <label style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;">Hiring Managers</label>
+            <button type="button" onclick="addHiringManagerField()" style="padding:3px 10px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">+ Add</button>
+          </div>
+          <div id="co-hm-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <div id="co-hm-empty" style="font-size:11px;color:var(--text4);padding:8px 0;font-style:italic;">No hiring managers added yet.</div>
+        </div>
+        <div id="co-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;"><button type="button" onclick="closeCompanyModal()" class="btn btn-ghost">Cancel</button><button type="submit" class="btn btn-primary" id="co-submit-btn">Add Company</button></div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add Job Modal -->
+<div id="job-modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:28px 30px;width:480px;max-width:calc(100vw - 32px);box-shadow:0 24px 60px rgba(0,0,0,.7);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+      <div style="font-size:16px;font-weight:800;color:var(--text);" id="job-modal-title">Add Job</div>
+      <button onclick="closeJobModal()" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:22px;line-height:1;padding:0;">&times;</button>
+    </div>
+    <form id="job-form" onsubmit="submitJobForm(event)" autocomplete="off">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Company <span style="color:var(--red);">*</span></label><select id="jf-company" onchange="handleCompanyChange()" required style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">Select company...</option></select></div>
+        <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Job Title <span style="color:var(--red);">*</span></label><input id="jf-title" type="text" placeholder="e.g. Senior Program Manager" required oninput="document.getElementById('job-form-error').style.display='none'" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
+        <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Location</label><input id="jf-location" type="text" placeholder="e.g. Boston, MA" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
+        <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Salary Range</label><div style="display:flex;gap:8px;align-items:center;"><input id="jf-salary-min" type="number" placeholder="Min" style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/><span style="font-size:12px;color:var(--text4);flex-shrink:0;">&mdash;</span><input id="jf-salary-max" type="number" placeholder="Max" style="flex:1;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><button type="button" onclick="suggestSalary()" style="margin-top:7px;padding:5px 12px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:7px;color:#2dd4bf;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">&#128176; Suggest Salary</button><div id="salary-suggest-banner" style="display:none;margin-top:6px;padding:7px 12px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.25);border-radius:7px;"><div style="display:flex;align-items:center;gap:10px;"><span id="salary-suggest-text" style="font-size:11px;color:#2dd4bf;flex:1;">Suggested range</span><button type="button" onclick="applySalarySuggestion()" style="padding:2px 10px;background:rgba(20,184,166,.2);border:1px solid rgba(20,184,166,.4);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">Apply</button><button type="button" onclick="this.parentElement.parentElement.style.display='none'" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:14px;padding:0 2px;">&times;</button></div></div></div>
+        <div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;"><label style="font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;">Job Description</label><button type="button" onclick="openJobWizard()" style="padding:3px 10px;background:rgba(124,106,247,.12);border:1px solid rgba(124,106,247,.3);border-radius:6px;color:var(--accent2);font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">&#10024; Job Wizard</button></div><textarea id="jf-notes" onblur="analyzeJobDescription(this.value)" rows="3" placeholder="Role overview, key requirements, hiring manager, team context..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
+        <div id="jd-improve-banner" style="display:none;padding:10px 14px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);border-radius:8px;"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;"><div style="font-size:12px;color:var(--text3);">&#10024; <strong style="color:var(--text);">We improved this job description</strong></div><div style="display:flex;gap:6px;"><button type="button" onclick="applyJobDescriptionImprovement()" class="btn btn-primary btn-sm" style="font-size:10px;padding:3px 10px;">Apply</button><button type="button" onclick="dismissJobDescriptionImprovement()" class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 10px;">Keep Original</button></div></div><div id="jd-improved-preview" style="font-size:11px;color:var(--text4);margin-top:7px;max-height:80px;overflow-y:auto;line-height:1.6;white-space:pre-wrap;"></div></div>
+        <div><button type="button" id="jf-advanced-toggle" onclick="toggleJobAdvanced()" style="background:none;border:none;color:var(--text4);font-size:11px;font-family:inherit;cursor:pointer;padding:0;">&#9881; Advanced Options <span id="jf-adv-arrow">&#9662;</span></button></div>
+        <div id="jf-advanced" style="display:none;flex-direction:column;gap:14px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Department</label><input id="jf-dept" type="text" placeholder="e.g. R&amp;D" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Status</label><select id="jf-status" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="Active">Active</option><option value="Draft">Draft</option><option value="Approved">Approved</option><option value="Closed">Closed</option></select></div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Employment Type</label><select id="jf-type" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="Full-time">Full-time</option><option value="Part-time">Part-time</option><option value="Contract">Contract</option><option value="Contract-to-Hire">Contract-to-Hire</option></select></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Work Model</label><select id="jf-loctype" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="Onsite">Onsite</option><option value="Hybrid">Hybrid</option><option value="Remote">Remote</option></select></div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Hiring Manager</label><select id="jf-hm-select" onchange="handleHMSelectChange()" style="display:none;width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">Select Hiring Manager...</option></select><input id="jf-hm" type="text" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Recruiter Owner</label><input id="jf-recruiter" type="text" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Openings</label><input id="jf-openings" type="number" placeholder="1" min="1" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Priority</label><select id="jf-priority" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="Medium">Medium</option><option value="High">High</option><option value="Critical">Critical</option><option value="Low">Low</option></select></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Target Start</label><input id="jf-start" type="date" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"/></div></div>
+        </div>
+        <div id="job-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;"><button type="button" onclick="closeJobModal()" class="btn btn-ghost">Cancel</button><button type="submit" class="btn btn-primary" id="job-submit-btn">Add Job</button></div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Job Wizard Modal -->
+<div id="job-wizard-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:1100;align-items:center;justify-content:center;" onclick="if(event.target===this)closeJobWizard()">
+  <div style="background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:24px 28px;width:560px;max-width:calc(100vw - 32px);max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.7);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <div style="font-size:16px;font-weight:800;color:var(--text);">✨ Job Description Wizard</div>
+        <div style="font-size:11px;color:var(--text4);margin-top:3px;">Describe the role in plain language. Wizard generates a structured draft.</div>
+      </div>
+      <button type="button" onclick="closeJobWizard()" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:22px;line-height:1;padding:0;">&times;</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Role Context</label>
+        <textarea id="jw-input" rows="4" placeholder="Example: Senior Program Manager leading product launches for our medical device team. 8+ years experience, FDA process familiarity, ability to coordinate R&D, Quality, and commercial teams." style="width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;line-height:1.5;"></textarea>
+      </div>
+      <div id="jw-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button type="button" onclick="closeJobWizard()" class="btn btn-ghost">Cancel</button>
+        <button type="button" onclick="generateJobDescription()" class="btn btn-primary" style="background:linear-gradient(135deg,var(--accent),var(--accent2));">Generate</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit Candidate Modal -->
+<div id="cand-modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:28px 30px;width:480px;max-width:calc(100vw - 32px);box-shadow:0 24px 60px rgba(0,0,0,.7);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+      <div style="font-size:16px;font-weight:800;color:var(--text);" id="cand-modal-title">Add Candidate</div>
+      <button onclick="closeCandModal()" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:22px;line-height:1;padding:0;">&times;</button>
+    </div>
+    <form id="cand-form" onsubmit="submitCandForm(event)" autocomplete="off">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div id="cf-upload-zone" ondragover="event.preventDefault();this.style.borderColor='var(--teal)'" ondragleave="this.style.borderColor=''" ondrop="event.preventDefault();this.style.borderColor='';handleResumeFileDrop(event)" style="border:1.5px dashed var(--border2);border-radius:10px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color .15s,background .15s;"><div style="width:32px;height:32px;background:rgba(20,184,166,.12);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;">&#128196;</div><div style="flex:1;min-width:0;"><div id="cf-upload-label" style="font-size:12px;font-weight:700;color:var(--text);">Upload Resume</div><div id="cf-upload-sub" style="font-size:11px;color:var(--text4);margin-top:1px;">PDF, DOCX, or TXT &middot; drag &amp; drop or click</div></div><button type="button" onclick="document.getElementById('cf-resume-file').click()" style="padding:4px 12px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);border-radius:7px;color:#2dd4bf;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;">Browse</button><input id="cf-resume-file" type="file" accept=".pdf,.doc,.docx,.txt" style="display:none" onchange="handleResumeFileSelect(event)"/></div>
+        <div id="cf-parse-strip" style="display:none;padding:10px 14px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.25);border-radius:8px;"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:11px;font-weight:700;color:#2dd4bf;" id="cf-parse-status">&#8987; Parsing...</span><div style="display:flex;gap:6px;margin-left:auto;"><button type="button" onclick="applyResumeParseResults()" id="cf-parse-apply-btn" style="display:none;padding:3px 10px;background:rgba(20,184,166,.2);border:1px solid rgba(20,184,166,.4);border-radius:6px;color:#2dd4bf;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">&#10003; Apply Fields</button><button type="button" onclick="dismissResumeParse()" style="padding:3px 8px;background:none;border:1px solid var(--border2);border-radius:6px;color:var(--text4);font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;">Dismiss</button></div></div><div id="cf-parse-preview" style="margin-top:8px;font-size:11px;color:var(--text3);line-height:1.5;display:none;"></div></div>
+        <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Full Name <span style="color:var(--red);">*</span></label><input id="cf-name" type="text" placeholder="e.g. Sarah Johnson" required oninput="document.getElementById('cand-form-error').style.display='none'" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
+        <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Linked Job <span style="font-size:10px;color:var(--text4);font-weight:500;">(optional)</span></label><select id="cf-job" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="">— No job linked —</option></select></div>
+        <div><button type="button" id="cf-more-toggle" onclick="toggleCandMore()" style="background:none;border:none;color:var(--text4);font-size:11px;font-family:inherit;cursor:pointer;padding:0;">&#9881; More Details <span id="cf-more-arrow">&#9662;</span></button></div>
+        <div id="cf-more" style="display:none;flex-direction:column;gap:12px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Current Title</label><input id="cf-title" type="text" placeholder="e.g. Sr. Program Manager" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div><div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Current Employer</label><input id="cf-company" type="text" placeholder="Current employer" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div></div>
+          <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">LinkedIn URL</label><input id="cf-linkedin" type="url" placeholder="https://linkedin.com/in/username" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/></div>
+          <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Stage</label><select id="cf-status" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;"><option value="New">New</option><option value="Screening">Screening</option><option value="Interview">Interview</option><option value="Submitted">Submitted</option><option value="Offer">Offer</option><option value="Hired">Hired</option></select></div>
+          <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Notes</label><textarea id="cf-notes" rows="2" placeholder="Background, fit, next steps..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
+          <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Resume / Background</label><textarea id="cf-resume" onblur="analyzeResume(this.value)" rows="3" placeholder="Paste resume text or LinkedIn summary..." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea><div id="cf-resume-hint" style="display:none;margin-top:6px;padding:8px 10px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.2);border-radius:6px;font-size:11px;color:#2dd4bf;line-height:1.5;">&#128161; Tip: open the resume in your PDF viewer, select all (Ctrl+A / Cmd+A), copy, then paste here.</div></div>
+        </div>
+        <div id="cand-form-error" style="font-size:12px;color:var(--red);display:none;"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;"><button type="button" onclick="closeCandModal()" class="btn btn-ghost">Cancel</button><button type="submit" class="btn btn-primary" id="cand-submit-btn">Add Candidate</button></div>
+      </div>
+    </form>
+  </div>
 </div>
 
 <!-- Offer Wizard Modal -->
@@ -2695,39 +2688,12 @@ function closeJobWizard() {
 
 // Sidebar entry point: opens Add Job modal then Job Wizard on top
 function launchJobWizardFromSidebar() {
-  // Close any competing candidate modal (NOT job modal — we need it open)
+  // Modals are now top-level (outside view sections) so they render from any view —
+  // no nav dance needed. Just open Add Job then Job Wizard on top.
   try { closeCandModal(); } catch(e) {}
-
-  // Step 1: Ensure Jobs view is active — modals live inside v-jobs and won't render
-  // if the view is display:none (CSS .view { display:none } applies to all descendants)
-  nav('jobs');
-
-  // Re-highlight the Job Wizard sidebar button (nav('jobs') just switched active to Jobs)
-  var jobWizardBtn = document.querySelector('.nav-item[onclick*="handleJobWizardClick"]');
-  if (jobWizardBtn) setActiveSidebarButton(jobWizardBtn);
-
-  // Step 2: Wait for DOM to render
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      // Step 3: Open job modal
-      openAddJob();
-
-      // Step 4: Wait again for modal mount
-      requestAnimationFrame(function() {
-        requestAnimationFrame(function() {
-          openJobWizard();
-
-          // Force visible
-          var wizard = document.getElementById('job-wizard-modal');
-          if (wizard) {
-            wizard.style.display = 'flex';
-          } else {
-            console.error("job-wizard-modal missing after nav");
-          }
-        });
-      });
-    });
-  });
+  openAddJob();
+  // Small delay so Add Job modal paints before wizard layers on top
+  setTimeout(function() { openJobWizard(); }, 50);
 }
 
 function generateJobDescription() {
@@ -3509,11 +3475,6 @@ function renderCandidateDetail(cd) {
 
 // ── Add / Edit modal ──────────────────────────────────────────
 function openAddCandidateModal() {
-  if (!jobs.filter(function(j) { return j.status !== 'Closed'; }).length) {
-    // No open jobs — route through chain handler instead of blocking alert
-    handleAddCandidateClick();
-    return;
-  }
   editingCandidateId = null;
   var form = document.getElementById('cand-form');
   if (form) form.reset();
@@ -3739,43 +3700,24 @@ function topbarSecondaryAction() {
 
 // ── Homepage button chain-through handlers ─────────────────────
 // Each button guides the user to the required prerequisite modal if dependencies are missing.
-// CRITICAL: modals for company/job/candidate live inside their view sections and won't
-// render when the view is display:none. Always nav to the view first, wait for paint,
-// then open the modal.
-
-function _openModalAfterNav(viewId, openFn) {
-  nav(viewId);
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      try { openFn(); } catch(e) { console.error('[handler] open failed:', e); }
-    });
-  });
-}
+// Modals are top-level siblings (outside .view containers) so they render from any view.
 
 function handleAddCompanyClick() {
-  _openModalAfterNav('companies', openAddCompany);
+  openAddCompany();
 }
 
 function handleAddJobClick() {
   if (!companies.length) {
     // Need a company first — submitCompanyForm auto-continues to Add Job on first-run save
-    _openModalAfterNav('companies', openAddCompany);
+    openAddCompany();
     return;
   }
-  _openModalAfterNav('jobs', openAddJob);
+  openAddJob();
 }
 
 function handleAddCandidateClick() {
-  var openJobs = jobs.filter(function(j) { return j.status !== 'Closed' && j.status !== 'Filled'; });
-  if (!openJobs.length) {
-    if (!companies.length) {
-      _openModalAfterNav('companies', openAddCompany);
-      return;
-    }
-    _openModalAfterNav('jobs', openAddJob);
-    return;
-  }
-  _openModalAfterNav('candidates', openAddCandidateModal);
+  // Allow candidate creation without jobs. Modal shows "— No job linked —" as default option.
+  openAddCandidateModal();
 }
 
 // Opens Add Candidate modal in upload-first mode:
@@ -6424,21 +6366,15 @@ function submitCompanyForm(e) {
   // every time an existing user adds a second/third company.
   var isFirstRunSetup = (companies.length === 1) && (jobs.length === 0);
   if (isFirstRunSetup) {
-    // Nav to jobs view so the job modal (inside v-jobs) can actually render
-    nav('jobs');
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
-        populateCompanyDropdown(co.id);
-        openAddJob();
-        setTimeout(function() {
-          populateCompanyDropdown(co.id);
-          var sel = document.getElementById('jf-company');
-          if (sel) sel.value = co.id;
-          var t = document.getElementById('jf-title');
-          if (t) t.focus();
-        }, 80);
-      });
-    });
+    populateCompanyDropdown(co.id);
+    openAddJob();
+    setTimeout(function() {
+      populateCompanyDropdown(co.id);
+      var sel = document.getElementById('jf-company');
+      if (sel) sel.value = co.id;
+      var t = document.getElementById('jf-title');
+      if (t) t.focus();
+    }, 80);
   }
 }
 
