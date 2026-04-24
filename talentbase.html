@@ -1991,6 +1991,8 @@ function switchUser(userId) {
 
   // Workspace changed → re-run all scoped loaders so in-memory arrays reflect new workspace
   if (prevWorkspace !== state.currentWorkspace) {
+    // Close any open modal first — its data is from the previous workspace and would leak into the new one
+    try { closeAllModals(); } catch(e) {}
     // Clear stale selections — selectedJobId/selectedCandidateId point at the previous workspace's records
     try { selectedJobId = null; selectedCandidateId = null; } catch(e) {}
     try { loadCompanies(); }     catch(e) {}
@@ -2087,7 +2089,22 @@ function renderDashboard() {
 
   // First-time banner: no companies yet → prompt user to create one
   var ftBanner = document.getElementById('first-time-banner');
-  if (ftBanner) ftBanner.style.display = companies.length ? 'none' : 'block';
+  if (ftBanner) {
+    if (!companies.length) {
+      ftBanner.innerHTML =
+        '<div style="display:flex;align-items:center;gap:14px;">' +
+          '<div style="font-size:24px;flex-shrink:0;">&#128075;</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:2px;">Welcome to TalentBase</div>' +
+            '<div style="font-size:12px;color:var(--text3);line-height:1.5;">Get started by adding your first company. From there you can post jobs and add candidates.</div>' +
+          '</div>' +
+          '<button onclick="handleAddCompanyClick()" style="padding:8px 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;">+ Add Company</button>' +
+        '</div>';
+      ftBanner.style.display = 'block';
+    } else {
+      ftBanner.style.display = 'none';
+    }
+  }
 
 
   var openJobs   = jobs.filter(function(j) { return (j.status === 'Active' || j.status === 'Approved' || j.status === 'Open'); });
@@ -2678,8 +2695,16 @@ function closeAllModals() {
     var el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
-  // Reset Offer Wizard state if it was open
+  // Also remove dynamically-injected message modal if present
+  try {
+    var msg = document.getElementById('msg-modal');
+    if (msg && msg.parentNode) msg.parentNode.removeChild(msg);
+  } catch(e) {}
+  // Reset all in-progress modal state so a stale ID can't bleed into a new modal session
   try { currentOfferCandidateId = null; } catch(e) {}
+  try { editingJobId           = null; } catch(e) {}
+  try { editingCandidateId      = null; } catch(e) {}
+  try { submittingCandId        = null; } catch(e) {}
 }
 
 function closeJobModal() {
@@ -2894,11 +2919,26 @@ function deleteJob(id) {
   jobs = jobs.filter(function(x) { return String(x.id) !== String(id); });
   saveJobs();
 
+  // Clean up dependent records so the array doesn't grow with orphans
+  try {
+    applications = applications.filter(function(a) { return String(a.jobId) !== String(id); });
+    saveApplications();
+  } catch(e) {}
+  try {
+    candidates.forEach(function(cd) {
+      if (String(cd.jobId) === String(id)) cd.jobId = null;
+    });
+    saveCandidates();
+  } catch(e) {}
+
   if (selectedJobId === id) {
     selectedJobId = null;
     renderJobDetail(null);
   }
   renderJobList();
+  // Re-render any view that may now show stale data
+  if (state.currentView === 'pipeline')  { try { renderPipeline();  } catch(e) {} }
+  if (state.currentView === 'dashboard') { try { renderDashboard(); } catch(e) {} }
 }
 
 // ── Wire topbar primary button for jobs ───────────────────────
@@ -2955,9 +2995,14 @@ function showFlowHint(message) {
 
 // ── renderJobs — called by nav() ──────────────────────────────
 function renderJobs() {
+  // Defensive: drop stale selection if the record is no longer in this workspace's array
+  if (selectedJobId && !jobs.some(function(j) { return String(j.id) === String(selectedJobId); })) {
+    selectedJobId = null;
+  }
   renderJobList();
   // If no job selected, clear detail
   if (!selectedJobId) renderJobDetail(null);
+  else renderJobDetail(jobs.find(function(j) { return String(j.id) === String(selectedJobId); }));
 }
 
 
@@ -3090,6 +3135,15 @@ function loadCompanies() {
   try {
     companies = JSON.parse(localStorage.getItem(COMPANIES_KEY) || '[]') || [];
   } catch(e) { companies = []; }
+  // Backfill: legacy companies (saved before workspaceId was stamped) have no workspaceId.
+  // Adopt them into the current workspace and persist so they're not lost on the next filter.
+  var _legacyFound = false;
+  companies.forEach(function(c) {
+    if (!c.workspaceId) { c.workspaceId = state.currentWorkspace; _legacyFound = true; }
+  });
+  if (_legacyFound) {
+    try { localStorage.setItem(COMPANIES_KEY, JSON.stringify(companies)); } catch(e) {}
+  }
   // Workspace isolation
   companies = companies.filter(function(c) { return c.workspaceId === state.currentWorkspace; });
 }
@@ -3734,11 +3788,20 @@ function deleteCandidate(id) {
   candidates = candidates.filter(function(x) { return String(x.id) !== String(id); });
   saveCandidates();
 
+  // Remove orphan applications so they don't accumulate
+  try {
+    applications = applications.filter(function(a) { return String(a.candidateId) !== String(id); });
+    saveApplications();
+  } catch(e) {}
+
   if (selectedCandidateId == id) {
     selectedCandidateId = null;
     renderCandidateDetail(null);
   }
   renderCandidates();
+  // Re-render any view that may now show stale data
+  if (state.currentView === 'pipeline')  { try { renderPipeline();  } catch(e) {} }
+  if (state.currentView === 'dashboard') { try { renderDashboard(); } catch(e) {} }
 }
 
 // ── Wire topbar buttons ───────────────────────────────────────
@@ -3832,8 +3895,13 @@ function renderPriorityCandidates() {
 
 // ── Entry point called by nav() ───────────────────────────────
 function renderCandidatesView() {
+  // Defensive: drop stale selection if the record is no longer in this workspace's array
+  if (selectedCandidateId && !candidates.some(function(cd) { return String(cd.id) === String(selectedCandidateId); })) {
+    selectedCandidateId = null;
+  }
   renderCandidates();
   if (!selectedCandidateId) renderCandidateDetail(null);
+  else renderCandidateDetail(candidates.find(function(cd) { return String(cd.id) === String(selectedCandidateId); }));
 }
 
 
@@ -6469,6 +6537,7 @@ function submitCompanyForm(e) {
     workModel:      workModel,
     about:          about.trim(),
     hiringManagers: managers,
+    workspaceId:    state.currentWorkspace,
     createdAt:      Date.now(),
   };
   companies.unshift(co);
@@ -7006,6 +7075,8 @@ function handleResumeFileDrop(e) {
 function handleResumeFileSelect(e) {
   var files = e.target && e.target.files;
   if (files && files[0]) processResumeFile(files[0]);
+  // Reset value so picking the same file again still fires a change event
+  try { if (e && e.target) e.target.value = ''; } catch(err) {}
 }
 
 function processResumeFile(file) {
