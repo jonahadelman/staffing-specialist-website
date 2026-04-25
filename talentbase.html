@@ -841,7 +841,7 @@ input:focus, select:focus, textarea:focus {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.15); }
-/* Dashboard responsive collapse — keeps Command Center usable on narrow viewports */
+/* Dashboard responsive collapse — kpi/action grids fold on narrow viewports */
 @media (max-width: 1100px) {
   .dash-primary-zone { grid-template-columns: 1fr !important; }
   .dash-intel-grid   { grid-template-columns: 1fr !important; }
@@ -1068,7 +1068,7 @@ input:focus, select:focus, textarea:focus {
         <div class="view-scroll">
 
           <div id="dash-greeting" style="margin-bottom:20px;">
-            <div style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--text);" id="dash-welcome">Good morning</div>
+            <div style="font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--text);" id="dash-welcome">Good evening, Dir. – Let's make some hires!</div>
             <div style="font-size:12px;color:var(--text4);margin-top:3px;" id="dash-date"></div>
           </div>
 
@@ -1118,73 +1118,30 @@ input:focus, select:focus, textarea:focus {
             </button>
           </div>
 
-          <!-- ══ LAYER 2: COMMAND CENTER (PRIMARY ACTION ZONE) ═══════════════ -->
+          <!-- ══ DAILY TASKS & REMINDERS ════════════════════════════════════ -->
           <div style="margin-bottom:26px;">
             <div class="section-header" style="margin-bottom:14px;">
-              <div class="section-title" style="font-size:13px;">Command Center</div>
-              <div class="section-sub">Your highest-priority moves, right now</div>
+              <div class="section-title" style="font-size:13px;">Daily Tasks &amp; Reminders</div>
+              <div class="section-sub" id="tasks-summary"></div>
             </div>
-            <div class="dash-primary-zone" style="display:grid;grid-template-columns:3fr 2fr;gap:16px;align-items:start;">
-              <!-- LEFT 60%: Top 3 Next Actions -->
-              <div>
-                <div class="section-header" style="margin-bottom:8px;">
-                  <div class="section-title" style="font-size:12px;">⚡ Top Next Actions</div>
-                  <div style="display:flex;align-items:center;gap:10px;">
-                    <div class="section-sub" id="needs-action-count"></div>
-                    <button id="tasks-toggle-btn" onclick="toggleTasksView()" style="display:none;background:none;border:1px solid var(--border2);border-radius:6px;color:var(--accent2);font-size:10px;font-weight:700;font-family:inherit;padding:2px 9px;cursor:pointer;">View All</button>
-                  </div>
-                </div>
-                <div class="card" id="needs-action-list" style="padding:6px 8px;min-height:200px;"></div>
-              </div>
-              <!-- RIGHT 40%: Top Candidates to Submit -->
-              <div>
-                <div class="section-header" style="margin-bottom:8px;">
-                  <div class="section-title" style="font-size:12px;">🎯 Top to Submit</div>
-                  <div class="section-sub">Interview-stage, ranked</div>
-                </div>
-                <div class="card" id="dash-top-submit" style="padding:4px 14px 8px;min-height:200px;"><div style="font-size:12px;color:var(--text4);padding:12px 0;">Loading...</div></div>
-              </div>
-            </div>
-          </div>
 
-          <!-- ══ LAYER 3: PIPELINE INTELLIGENCE ══════════════════════════════ -->
-          <div>
-            <div class="section-header" style="margin-bottom:14px;">
-              <div class="section-title" style="font-size:13px;">Pipeline Health</div>
-              <div class="section-sub">Flow, aging, and AI-suggested actions</div>
-            </div>
-            <div class="dash-intel-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
-              <!-- LEFT: Pipeline Stages -->
-              <div>
-                <div class="section-header" style="margin-bottom:8px;">
-                  <div class="section-title" style="font-size:12px;">Pipeline Stages</div>
-                </div>
-                <div class="card" id="pipeline-stages" style="min-height:180px;">
-                  <div class="empty-state" style="padding:24px 0;">
-                    <div class="empty-state-sub">No candidates yet</div>
-                  </div>
-                </div>
+            <div class="card" style="padding:14px 16px;">
+              <!-- Add task input row -->
+              <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <input id="task-input" type="text" placeholder="Add task..."
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();addTaskFromInput();}"
+                  style="flex:1;padding:8px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;outline:none;"/>
+                <select id="task-input-priority"
+                  style="padding:8px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:inherit;outline:none;cursor:pointer;">
+                  <option value="High">High</option>
+                  <option value="Medium" selected>Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+                <button onclick="addTaskFromInput()" class="btn btn-primary btn-sm">Add</button>
               </div>
-              <!-- CENTER: Aging Reqs -->
-              <div>
-                <div class="section-header" style="margin-bottom:8px;">
-                  <div class="section-title" style="font-size:12px;">Aging Reqs</div>
-                </div>
-                <div class="card" id="aging-reqs" style="min-height:180px;">
-                  <div class="empty-state" style="padding:24px 0;">
-                    <div class="empty-state-sub">No aging reqs</div>
-                  </div>
-                </div>
-              </div>
-              <!-- RIGHT: AI Tasks -->
-              <div>
-                <div class="section-header" style="margin-bottom:8px;">
-                  <div class="section-title" style="font-size:12px;">AI Tasks</div>
-                </div>
-                <div class="card" id="dash-ai-tasks" style="padding:4px 14px 8px;min-height:180px;">
-                  <div style="font-size:12px;color:var(--text4);padding:12px 0;">Loading...</div>
-                </div>
-              </div>
+
+              <!-- Task list -->
+              <div id="task-list"></div>
             </div>
           </div>
 
@@ -2072,6 +2029,195 @@ function loadApiKey() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// DAILY TASKS & REMINDERS SYSTEM
+// Storage key: tb_tasks
+// Task shape: { id, text, priority: "High"|"Medium"|"Low", status: "Open"|"Done", createdAt }
+// ═══════════════════════════════════════════════════════════
+
+var TB_TASKS_KEY = 'tb_tasks';
+
+function loadTasks() {
+  try {
+    var raw = localStorage.getItem(TB_TASKS_KEY);
+    var arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch(e) { return []; }
+}
+
+function saveTasks(tasks) {
+  try { localStorage.setItem(TB_TASKS_KEY, JSON.stringify(tasks || [])); } catch(e) {}
+}
+
+function _newTaskId() {
+  return 't_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+}
+
+function addTask(text, priority) {
+  if (!text || !text.trim()) return null;
+  var tasks = loadTasks();
+  var task = {
+    id:        _newTaskId(),
+    text:      text.trim(),
+    priority:  (priority === 'High' || priority === 'Low') ? priority : 'Medium',
+    status:    'Open',
+    createdAt: Date.now(),
+  };
+  tasks.push(task);
+  saveTasks(tasks);
+  return task;
+}
+
+function deleteTask(id) {
+  var tasks = loadTasks().filter(function(t) { return t.id !== id; });
+  saveTasks(tasks);
+}
+
+function updateTaskStatus(id, status) {
+  if (status !== 'Open' && status !== 'Done') return;
+  var tasks = loadTasks();
+  var t = tasks.find(function(x) { return x.id === id; });
+  if (!t) return;
+  t.status = status;
+  saveTasks(tasks);
+}
+
+function updateTaskPriority(id, priority) {
+  if (priority !== 'High' && priority !== 'Medium' && priority !== 'Low') return;
+  var tasks = loadTasks();
+  var t = tasks.find(function(x) { return x.id === id; });
+  if (!t) return;
+  t.priority = priority;
+  saveTasks(tasks);
+}
+
+// UI handlers wired from inline onclick / onchange in renderTasks output
+function addTaskFromInput() {
+  var inputEl    = document.getElementById('task-input');
+  var priorityEl = document.getElementById('task-input-priority');
+  if (!inputEl) return;
+  var text = inputEl.value;
+  var priority = priorityEl ? priorityEl.value : 'Medium';
+  if (!text || !text.trim()) { try { inputEl.focus(); } catch(e) {} return; }
+  addTask(text, priority);
+  inputEl.value = '';
+  try { inputEl.focus(); } catch(e) {}
+  renderTasks();
+}
+
+function handleTaskDelete(id) {
+  deleteTask(id);
+  renderTasks();
+}
+
+function handleTaskStatusToggle(id) {
+  var tasks = loadTasks();
+  var t = tasks.find(function(x) { return x.id === id; });
+  if (!t) return;
+  updateTaskStatus(id, t.status === 'Open' ? 'Done' : 'Open');
+  renderTasks();
+}
+
+function handleTaskPriorityChange(id, priority) {
+  updateTaskPriority(id, priority);
+  renderTasks();
+}
+
+function renderTasks() {
+  var listEl    = document.getElementById('task-list');
+  var summaryEl = document.getElementById('tasks-summary');
+  if (!listEl) return;
+
+  var tasks = loadTasks();
+
+  // Update summary line
+  if (summaryEl) {
+    var openCount = tasks.filter(function(t) { return t.status === 'Open'; }).length;
+    var doneCount = tasks.length - openCount;
+    if (!tasks.length) {
+      summaryEl.textContent = '';
+    } else {
+      summaryEl.textContent =
+        openCount + ' open' +
+        (doneCount ? ' · ' + doneCount + ' done' : '');
+    }
+  }
+
+  // Empty state
+  if (!tasks.length) {
+    listEl.innerHTML =
+      '<div style="padding:18px 6px;text-align:center;font-size:12px;color:var(--text4);">' +
+        'No tasks yet. Add one above to get started.' +
+      '</div>';
+    return;
+  }
+
+  // Sort: Open before Done; within each, High → Medium → Low; within each, newest first
+  // NOTE: priorityRank[High] is 0; do NOT use `|| 1` here — 0 is falsy and would short-circuit.
+  function _priRank(p) {
+    if (p === 'High')   return 0;
+    if (p === 'Medium') return 1;
+    if (p === 'Low')    return 2;
+    return 1; // unknown defaults to Medium
+  }
+  function _statRank(s) {
+    if (s === 'Open') return 0;
+    if (s === 'Done') return 1;
+    return 0;
+  }
+  var sorted = tasks.slice().sort(function(a, b) {
+    var sd = _statRank(a.status) - _statRank(b.status);
+    if (sd !== 0) return sd;
+    var pd = _priRank(a.priority) - _priRank(b.priority);
+    if (pd !== 0) return pd;
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
+
+  // Priority chip colors
+  var priColor = {
+    High:   { bg: 'rgba(239,68,68,.12)',   fg: '#ef4444', border: 'rgba(239,68,68,.3)' },
+    Medium: { bg: 'rgba(245,158,11,.12)',  fg: '#f59e0b', border: 'rgba(245,158,11,.3)' },
+    Low:    { bg: 'rgba(148,163,184,.12)', fg: '#94a3b8', border: 'rgba(148,163,184,.3)' },
+  };
+
+  listEl.innerHTML = sorted.map(function(t) {
+    var done = t.status === 'Done';
+    var pc   = priColor[t.priority] || priColor.Medium;
+    var statusBg = done ? 'rgba(34,197,94,.12)'  : 'rgba(255,255,255,.04)';
+    var statusFg = done ? '#22c55e'              : 'var(--text3)';
+    var statusBd = done ? 'rgba(34,197,94,.3)'   : 'var(--border2)';
+    var rowOpacity = done ? '.55' : '1';
+    var textStyle  = done ? 'text-decoration:line-through;color:var(--text4);' : 'color:var(--text);';
+
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.05);opacity:' + rowOpacity + ';">' +
+      // Task text
+      '<div style="flex:1;min-width:0;font-size:13px;font-weight:500;' + textStyle + 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
+        escHtml(t.text) +
+      '</div>' +
+      // Priority dropdown
+      '<select data-task-id="' + escHtml(t.id) + '" onchange="handleTaskPriorityChange(this.dataset.taskId, this.value)" ' +
+        'style="padding:4px 8px;background:' + pc.bg + ';border:1px solid ' + pc.border + ';border-radius:6px;color:' + pc.fg + ';font-size:11px;font-weight:700;font-family:inherit;outline:none;cursor:pointer;flex-shrink:0;">' +
+        '<option value="High"'   + (t.priority === 'High'   ? ' selected' : '') + '>High</option>' +
+        '<option value="Medium"' + (t.priority === 'Medium' ? ' selected' : '') + '>Medium</option>' +
+        '<option value="Low"'    + (t.priority === 'Low'    ? ' selected' : '') + '>Low</option>' +
+      '</select>' +
+      // Status toggle button
+      '<button data-task-id="' + escHtml(t.id) + '" onclick="handleTaskStatusToggle(this.dataset.taskId)" ' +
+        'title="Toggle status" ' +
+        'style="padding:4px 10px;background:' + statusBg + ';border:1px solid ' + statusBd + ';border-radius:6px;color:' + statusFg + ';font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;min-width:54px;">' +
+        escHtml(t.status) +
+      '</button>' +
+      // Delete button
+      '<button data-task-id="' + escHtml(t.id) + '" onclick="handleTaskDelete(this.dataset.taskId)" ' +
+        'title="Delete task" ' +
+        'style="width:24px;height:24px;padding:0;background:none;border:1px solid var(--border2);border-radius:6px;color:var(--text4);cursor:pointer;font-size:13px;line-height:1;font-family:inherit;flex-shrink:0;">' +
+        '&times;' +
+      '</button>' +
+    '</div>';
+  }).join('');
+}
+
+
+// ═══════════════════════════════════════════════════════════
 // DASHBOARD RENDER
 // ═══════════════════════════════════════════════════════════
 
@@ -2079,12 +2225,11 @@ function renderDashboard() {
   var now   = new Date();
   var hours = now.getHours();
   var greet = hours < 12 ? 'Good morning' : hours < 17 ? 'Good afternoon' : 'Good evening';
-  var name  = state.currentUser ? ', ' + state.currentUser.name.split(' ')[0] : '';
   var days  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var mos   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var welcomeEl = document.getElementById('dash-welcome');
   var dateEl    = document.getElementById('dash-date');
-  if (welcomeEl) welcomeEl.textContent = greet + name + " — let's move some candidates.";
+  if (welcomeEl) welcomeEl.textContent = greet + ", Dir. \u2013 Let's make some hires!";
   if (dateEl)    dateEl.textContent    = days[now.getDay()] + ', ' + mos[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
 
   // First-time banner: no companies yet → prompt user to create one
@@ -2152,56 +2297,8 @@ function renderDashboard() {
       : 'No placements yet';
   }
 
-  var tasks    = getAITasks();
-  var topTasks = tasks.slice(0, 3);
-  renderTopActions(topTasks);
-  renderSubmissionDecisions();
-  renderAITasks();
-  initAITasksHandler();
-
-  var psEl = document.getElementById('pipeline-stages');
-  if (psEl) {
-    var stages = ['New','Screening','Interview','Offer','Hired'];
-    var stageColors = { New:'var(--accent)', Screening:'var(--accent2)', Interview:'var(--amber)', Submitted:'var(--teal)', Offer:'var(--purple)', Hired:'var(--green)' };
-    var _pipeSource = applications.length ? applications : candidates;
-    var total = _pipeSource.length || 1;
-    if (!_pipeSource.length) {
-      psEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">No candidates yet</div></div>';
-    } else {
-      psEl.innerHTML = stages.map(function(s) {
-        var n   = _pipeSource.filter(function(x) { return x.status === s; }).length;
-        var pct = Math.round((n / total) * 100);
-        var col = stageColors[s] || 'var(--text4)';
-        return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">' +
-          '<div style="font-size:11px;color:var(--text4);width:68px;flex-shrink:0;">' + s + '</div>' +
-          '<div style="flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;">' +
-            '<div style="height:100%;width:' + pct + '%;background:' + col + ';border-radius:99px;transition:width .4s;"></div>' +
-          '</div>' +
-          '<div style="font-size:12px;font-weight:700;color:var(--text);width:20px;text-align:right;">' + n + '</div>' +
-        '</div>';
-      }).join('');
-    }
-  }
-
-  var arEl = document.getElementById('aging-reqs');
-  if (arEl) {
-    var aging = openJobs.filter(function(j) {
-      return j.createdAt && (Date.now() - j.createdAt) / 86400000 > 20;
-    }).sort(function(a,b) { return a.createdAt - b.createdAt; });
-    if (!aging.length) {
-      arEl.innerHTML = '<div class="empty-state" style="padding:20px 0;"><div class="empty-state-sub">All roles are fresh</div></div>';
-    } else {
-      arEl.innerHTML = aging.slice(0, 5).map(function(j) {
-        var d   = Math.floor((Date.now() - j.createdAt) / 86400000);
-        var col = d > 60 ? 'var(--red)' : d > 30 ? 'var(--amber)' : 'var(--text3)';
-        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
-          '<div style="flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(j.title) + '</div>' +
-          (j.location ? '<div style="font-size:11px;color:var(--text4);flex-shrink:0;margin-right:8px;">' + escHtml(j.location) + '</div>' : '') +
-          '<div style="font-size:12px;font-weight:700;color:' + col + ';flex-shrink:0;">' + d + 'd</div>' +
-        '</div>';
-      }).join('');
-    }
-  }
+  // Render the Daily Tasks & Reminders section
+  try { renderTasks(); } catch(e) { console.warn('[TalentBase] renderTasks failed:', e); }
 }
 
 
@@ -4634,52 +4731,7 @@ function getAlerts() {
     .sort(function(a, b) { return a.score - b.score; });
 }
 
-// ── Render alert panel on dashboard ──────────────────────────────────────────
-function gotoCandidates() { nav('candidates'); }
-
-function gotoRiskView() { nav('pipeline'); }
-
-function renderHiringRisks() {
-  var el = document.getElementById('dash-hiring-risks');
-  if (!el) return;
-
-  var alerts = getAlerts();
-  if (!alerts.length) {
-    el.innerHTML =
-      '<div class="empty-state" style="padding:24px 0;">' +
-        '<div class="empty-state-icon" style="font-size:20px;">✓</div>' +
-        '<div class="empty-state-title">No hiring risks</div>' +
-        '<div class="empty-state-sub">All active candidates look healthy.</div>' +
-      '</div>';
-    return;
-  }
-
-  el.innerHTML = alerts.slice(0, 8).map(function(item) {
-    var cd   = item.cd;
-    var risk = getRiskLevel(item.score);
-    var riskColor = { critical: 'var(--red)', warning: 'var(--amber)', healthy: 'var(--green)' }[risk];
-    var riskLabel = { critical: '🚨 Critical', warning: '⚠️ At Risk', healthy: '✓ Healthy' }[risk];
-
-    return '<div style="display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.05);">' +
-      '<div style="flex:1;min-width:0;">' +
-        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">' +
-          '<span style="font-size:13px;font-weight:600;color:var(--text);">' + escHtml(cd.name) + '</span>' +
-          '<span style="font-size:10px;font-weight:700;color:' + riskColor + ';">' + riskLabel + '</span>' +
-        '</div>' +
-        '<div style="font-size:11px;color:var(--text4);">' + escHtml(item.reasons[0] || '') + '</div>' +
-      '</div>' +
-      '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
-        '<span style="font-size:12px;font-weight:800;color:' + riskColor + ';">' + item.score + '</span>' +
-        '<button onclick="gotoRiskView()" class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px;">View</button>' +
-      '</div>' +
-    '</div>';
-  }).join('');
-}
-
-
-// ═══════════════════════════════════════════════════════════
-// AI RECRUITER LAYER
-// ═══════════════════════════════════════════════════════════
+// ── AI RECRUITER LAYER (kept for Command Center view) ────────────────────────
 
 function getNextBestAction(cd) {
   var now      = Date.now();
@@ -4768,29 +4820,6 @@ function showMessageModal(candId) {
 
   document.body.appendChild(modal);
   modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
-}
-
-function renderAIInsights() {
-  var el = document.getElementById('dash-ai-insights');
-  if (!el) return;
-  var ins = getAIInsights();
-  var items = [];
-  if (ins.toContact > 0) items.push({ icon:'📞', text: ins.toContact + ' candidate' + (ins.toContact>1?'s':'') + ' need' + (ins.toContact>1?'':'s') + ' first contact' });
-  if (ins.followUps > 0) items.push({ icon:'⏱',  text: ins.followUps + ' candidate' + (ins.followUps>1?'s':'') + ' need follow-up today' });
-  if (ins.offers > 0)    items.push({ icon:'🎯',  text: ins.offers + ' candidate' + (ins.offers>1?'s are':' is') + ' ready to close' });
-  if (ins.stalled > 0)   items.push({ icon:'⚠️', text: ins.stalled + ' candidate' + (ins.stalled>1?'s are':' is') + ' stalling (score < 60)' });
-  if (ins.interviews > 0)items.push({ icon:'📅',  text: ins.interviews + ' candidate' + (ins.interviews>1?'s':'') + ' in active interview stage' });
-
-  if (!items.length) {
-    el.innerHTML = '<div style="font-size:12px;color:var(--text4);padding:12px 0;">Pipeline is healthy — no immediate actions needed.</div>';
-    return;
-  }
-  el.innerHTML = items.map(function(it) {
-    return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);last-child:border-none;">' +
-      '<span style="font-size:15px;flex-shrink:0;">' + it.icon + '</span>' +
-      '<span style="font-size:12px;color:var(--text2);">' + escHtml(it.text) + '</span>' +
-    '</div>';
-  }).join('');
 }
 
 
@@ -5340,62 +5369,6 @@ function addActivityItem(input) {
     var pending = activityBoard.filter(function(t){ return !t.completed; }).length;
     count.textContent = pending ? pending + ' action' + (pending > 1 ? 's' : '') + ' needed' : '';
   }
-}
-
-// ── Command Center: Top 3 Next Actions for dashboard ─────────────────────────
-function renderTopActions(tasks) {
-  var el = document.getElementById('needs-action-list');
-  if (!el) return;
-
-  // Preserve any in-progress manual input value across re-renders
-  var _preservedInput = '';
-  var _existingInput = document.getElementById('manual-task-input');
-  if (_existingInput) _preservedInput = _existingInput.value || '';
-
-  var bodyHtml;
-  if (!tasks.length) {
-    bodyHtml =
-      '<div style="padding:16px 14px;color:var(--text4);font-size:12px;text-align:center;">' +
-      'All candidates are moving — no urgent actions' +
-      '</div>';
-  } else {
-    bodyHtml = tasks.map(function(t, i) {
-      return '' +
-        '<div style="display:flex;align-items:center;gap:12px;padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.05);">' +
-          '<div style="font-size:16px;font-weight:800;color:var(--accent2);width:20px;">' + (i+1) + '</div>' +
-          '<div style="flex:1;">' +
-            '<div style="font-size:13px;font-weight:700;color:var(--text);">' + escHtml(t.name) + '</div>' +
-            '<div style="font-size:11px;color:var(--text4);">' + escHtml(t.nextAction) + '</div>' +
-          '</div>' +
-          '<button onclick="executeTaskAction(\'' + t.candidateId + '\')" ' +
-            'style="padding:6px 12px;background:linear-gradient(135deg,var(--teal),#0d9488);border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">' +
-            'Do It' +
-          '</button>' +
-        '</div>';
-    }).join('');
-  }
-
-  // Manual task input row — always rendered, sits below AI tasks (or empty state)
-  var manualHtml =
-    '<div style="display:flex;align-items:center;gap:8px;padding:10px;border-top:1px solid rgba(255,255,255,.05);">' +
-      '<input id="manual-task-input" placeholder="Add task..." ' +
-        'value="' + escHtml(_preservedInput) + '" ' +
-        'onkeydown="if(event.key===\'Enter\'){event.preventDefault();addManualTask();}" ' +
-        'style="flex:1;padding:6px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:11px;font-family:inherit;outline:none;" />' +
-      '<button onclick="addManualTask()" ' +
-        'style="padding:6px 12px;background:var(--accent2);border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">Add</button>' +
-    '</div>';
-
-  el.innerHTML = bodyHtml + manualHtml;
-}
-
-function addManualTask() {
-  var input = document.getElementById('manual-task-input');
-  if (!input || !input.value.trim()) return;
-  var parsed = parseSmartTask(input.value);
-  addActivityItem(parsed);
-  input.value = '';
-  input.focus();
 }
 
 // ── Bridge: execute a task action from the dashboard ─────────────────────────
@@ -6123,75 +6096,7 @@ function getSubmissionDecisions() {
     .slice(0, 3);
 }
 
-function renderSubmissionDecisions() {
-  var el = document.getElementById('dash-top-submit');
-  if (!el) return;
 
-  var decisions = getSubmissionDecisions();
-
-  if (!decisions.length) {
-    el.innerHTML = '<div style="font-size:12px;color:var(--text4);padding:12px 0;">No candidates ready for submission right now.</div>';
-    return;
-  }
-
-  el.innerHTML = decisions.map(function(x) {
-    var cd  = x.candidate;
-    var job = x.job;
-    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
-      '<div style="flex:1;min-width:0;">' +
-        '<div style="font-size:13px;font-weight:700;color:var(--text);">' + escHtml(cd.name) + '</div>' +
-        '<div style="font-size:11px;color:var(--text4);">' + escHtml((cd.title || '') + (job ? ' · ' + job.title : '')) + '</div>' +
-      '</div>' +
-      '<div style="font-size:10px;font-weight:800;color:var(--green);letter-spacing:.04em;flex-shrink:0;">READY</div>' +
-      '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="openSubmitModal(this.dataset.cid)" ' +
-        'class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,var(--teal),#0d9488);border-color:#0d9488;font-size:11px;padding:5px 12px;flex-shrink:0;">Submit</button>' +
-    '</div>';
-  }).join('');
-}
-
-function renderTopToSubmit() {
-  var el = document.getElementById("dash-top-submit");
-  if (!el) return;
-  var _interviewApps = applications.length
-    ? applications.filter(function(a) { return a.status === 'Interview'; })
-    : candidates.filter(function(cd) { return cd.status === 'Interview'; }).map(function(cd){
-        return { id:'tmp_'+cd.id, candidateId:String(cd.id), jobId:String(cd.jobId), status:'Interview',
-          firstContactAt:cd.firstContactAt, lastActivityAt:cd.lastActivityAt, createdAt:cd.createdAt,
-          interviewCount:cd.interviewCount||0, submissions:[] };
-      });
-  var ready = _interviewApps
-    .map(function(app) {
-      var cd = candidates.find(function(x){ return String(x.id)===String(app.candidateId); });
-      return cd ? { cd:cd, app:app, score:calculateExperienceScore(app) } : null;
-    }).filter(Boolean)
-    .sort(function(a,b) { return b.score-a.score; })
-    .slice(0,3);
-  if (!ready.length) {
-    el.innerHTML = '<div style="font-size:12px;color:var(--text4);padding:12px 0;">No Interview-stage candidates yet.</div>';
-    return;
-  }
-  el.innerHTML = ready.map(function(item) {
-    var cd=item.cd;
-    var job=jobs.find(function(j){ return String(j.id)===String(cd.jobId); });
-    var sc=item.score;
-    var col=sc>=80?"var(--green)":sc>=60?"var(--amber)":"var(--text4)";
-    return '<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);">' +
-      '<div style="flex:1;min-width:0;">' +
-        '<div style="font-size:13px;font-weight:700;color:var(--text);">' + escHtml(cd.name) + '</div>' +
-        '<div style="font-size:11px;color:var(--text4);">' + (cd.title||"") + (job?" · "+job.title:"") + '</div>' +
-      '</div>' +
-      '<div style="font-size:12px;font-weight:800;color:' + col + ';flex-shrink:0;margin-right:8px;">' + sc + '</div>' +
-      '<button data-cid="' + cd.id + '" onclick="openSubmitModal(this.dataset.cid)" '
-        + 'style="padding:4px 12px;background:linear-gradient(135deg,var(--teal),#0d9488);border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">Submit</button>' +
-    '</div>';
-  }).join("");
-}
-
-var showAllTasks = false;
-function toggleTasksView() {
-  // Disabled for Top 3 system — renderActivityBoard no longer owns #needs-action-list
-  console.log('[TalentBase] toggleTasksView disabled');
-}
 
 // === INPUT INTELLIGENCE LAYER ===
 var _pendingJDImprovement = null;
