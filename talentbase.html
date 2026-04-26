@@ -930,6 +930,16 @@ input:focus, select:focus, textarea:focus {
 }
 #v-dashboard .tasks-panel:hover { transform: none; box-shadow: none; }
 
+/* Ready to Submit: same flat surface, no min-height (list is short) */
+#v-dashboard .rts-panel {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 22px;
+  box-shadow: none;
+}
+#v-dashboard .rts-panel .rts-row:last-child { border-bottom: none; }
+
 /* Greeting: tighten */
 #v-dashboard #dash-greeting { margin-bottom: 24px; }
 </style>
@@ -1190,6 +1200,17 @@ input:focus, select:focus, textarea:focus {
               <div class="icon">&#128100;</div>
               <div class="label">Add Candidate</div>
             </button>
+          </div>
+
+          <!-- ══ READY TO SUBMIT ═════════════════════════════════════════ -->
+          <div style="margin-bottom:32px;">
+            <div class="section-header" style="margin-bottom:14px;">
+              <div class="section-title" style="font-size:15px;letter-spacing:-.2px;">Ready to Submit</div>
+              <div class="section-sub" id="ready-to-submit-summary" style="font-size:12px;"></div>
+            </div>
+            <div class="rts-panel">
+              <div id="ready-to-submit-list"></div>
+            </div>
           </div>
 
           <!-- ══ DAILY TASKS & REMINDERS — primary working surface ═════════ -->
@@ -2352,6 +2373,9 @@ function renderDashboard() {
       : 'No placements yet';
   }
 
+  // Render the Ready to Submit section
+  try { renderReadyToSubmit(); } catch(e) { console.warn('[TalentBase] renderReadyToSubmit failed:', e); }
+
   // Render the Daily Tasks & Reminders section
   try { renderTasks(); } catch(e) { console.warn('[TalentBase] renderTasks failed:', e); }
 }
@@ -2756,6 +2780,94 @@ function getTopCandidatesForJob(jobId) {
     .filter(function(x) { return x.score > 0; })
     .sort(function(a, b) { return b.score - a.score; })
     .slice(0, 5);
+}
+
+// ── Ready to Submit ──────────────────────────────────────────
+// A candidate is "Ready to Submit" if they have an application linked to a job
+// in a mid-stage (Screening or Interview — NOT Submitted/Offer/Hired/New) and a
+// non-zero match score. Returns top 5 by score desc.
+var READY_TO_SUBMIT_STAGES = ['Screen', 'Screening', 'Interview'];
+var READY_TO_SUBMIT_MIN_SCORE = 1; // any positive match qualifies; sort surfaces best
+var READY_TO_SUBMIT_HIGH_FIT_SCORE = 70; // threshold for "High Fit" badge
+
+function getReadyToSubmitCandidates() {
+  if (!Array.isArray(applications) || !applications.length) return [];
+  var out = [];
+  for (var i = 0; i < applications.length; i++) {
+    var app = applications[i];
+    if (!app || !app.candidateId || !app.jobId) continue;
+    if (READY_TO_SUBMIT_STAGES.indexOf(app.status) === -1) continue;
+
+    var cd  = candidates.find(function(c) { return String(c.id) === String(app.candidateId); });
+    var job = jobs.find(function(j)       { return String(j.id) === String(app.jobId); });
+    if (!cd || !job) continue;
+
+    var score = scoreCandidateForJob(cd, job);
+    if (score < READY_TO_SUBMIT_MIN_SCORE) continue;
+
+    var reasons = [];
+    try { reasons = explainMatch(cd, job) || []; } catch(e) { reasons = []; }
+
+    out.push({
+      candidate:   cd,
+      job:         job,
+      application: app,
+      score:       score,
+      explanation: reasons[0] || ''
+    });
+  }
+  out.sort(function(a, b) { return b.score - a.score; });
+  return out.slice(0, 5);
+}
+
+function renderReadyToSubmit() {
+  var listEl    = document.getElementById('ready-to-submit-list');
+  var summaryEl = document.getElementById('ready-to-submit-summary');
+  if (!listEl) return;
+
+  var items = getReadyToSubmitCandidates();
+
+  if (summaryEl) {
+    summaryEl.textContent = items.length ? items.length + (items.length === 1 ? ' candidate' : ' candidates') : '';
+  }
+
+  if (!items.length) {
+    listEl.innerHTML =
+      '<div style="padding:40px 20px;text-align:center;font-size:13px;color:var(--text4);">' +
+        'No candidates ready for submission yet' +
+      '</div>';
+    return;
+  }
+
+  listEl.innerHTML = items.map(function(it) {
+    var cd      = it.candidate;
+    var job     = it.job;
+    var score   = it.score;
+    var expl    = it.explanation;
+    var highFit = score >= READY_TO_SUBMIT_HIGH_FIT_SCORE;
+    var scoreColor = highFit ? 'var(--green)' : score >= 40 ? 'var(--amber)' : 'var(--text3)';
+
+    return '<div class="rts-row" style="display:flex;align-items:center;gap:14px;padding:12px 4px;border-bottom:1px solid var(--border);">' +
+      // Name + job + explanation
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">' +
+          '<span style="font-size:14px;font-weight:600;color:var(--text);letter-spacing:-.1px;">' + escHtml(cd.name) + '</span>' +
+          (highFit
+            ? '<span style="font-size:10px;font-weight:700;color:var(--green);background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:4px;padding:2px 6px;letter-spacing:.04em;text-transform:uppercase;">High Fit</span>'
+            : '') +
+        '</div>' +
+        '<div style="font-size:12px;color:var(--text4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
+          escHtml(job.title) +
+          (expl ? ' · ' + escHtml(expl) : '') +
+        '</div>' +
+      '</div>' +
+      // Score
+      '<div style="font-size:15px;font-weight:700;color:' + scoreColor + ';flex-shrink:0;min-width:36px;text-align:right;">' + score + '</div>' +
+      // Submit button
+      '<button data-cid="' + escHtml(String(cd.id)) + '" onclick="openSubmitModal(this.dataset.cid)" ' +
+        'class="btn btn-primary" style="padding:7px 16px;font-size:12px;flex-shrink:0;">Submit</button>' +
+    '</div>';
+  }).join('');
 }
 
 // ── Add / Edit job modal ───────────────────────────────────────
