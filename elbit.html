@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elbit Systems Resume Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<style>
+  :root{
+    --bg:#0e1a2b; --panel:#14233a; --panel2:#1a2e4a; --line:#28406a;
+    --ink:#e9f0fa; --muted:#9db2d2; --gold:#c8a96a; --gold-dim:#9c8350;
+    --blue:#4d8df0; --cyan:#3fb6c9; --teal:#2bb39a; --yellow:#e3b341;
+    --orange:#e08a3c; --purple:#9b7be0; --gray:#6f7f97; --red:#e0564f; --green:#3fae6b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:14px;line-height:1.45}
+  h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0}
+  button{font-family:inherit;cursor:pointer}
+  input,select,textarea{font-family:inherit;font-size:14px}
+  .wrap{max-width:1380px;margin:0 auto;padding:0 18px}
+  header{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#11203580,#0e1a2b)}
+  .topbar{display:flex;align-items:center;gap:16px;padding:16px 0;flex-wrap:wrap}
+  .brand{display:flex;align-items:baseline;gap:10px}
+  .brand h1{font-size:22px;letter-spacing:.3px}
+  .brand .dot{color:var(--gold)}
+  .brand .sub{color:var(--muted);font-size:12px;letter-spacing:1.5px;text-transform:uppercase}
+  .vobadge{background:#2a1f0d;color:var(--gold);border:1px solid var(--gold-dim);border-radius:20px;padding:3px 11px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+  .grow{flex:1}
+  .userbox{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
+  .search{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:240px}
+  .search input{background:transparent;border:0;color:var(--ink);width:100%;outline:none}
+  .search svg{flex:0 0 auto;opacity:.6}
+  .btn{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;transition:.15s}
+  .btn:hover{border-color:var(--gold-dim)}
+  .btn.gold{background:var(--gold);color:#1a1208;border-color:var(--gold)}
+  .btn.gold:hover{filter:brightness(1.06)}
+  .btn.ghost{background:transparent}
+  .btn.sm{padding:5px 10px;font-size:12px}
+  .btn.danger:hover{border-color:var(--red);color:var(--red)}
+  .btn.block{width:100%;padding:11px;font-size:14px}
+  .layout{display:grid;grid-template-columns:236px 1fr;gap:20px;padding:18px 0 60px}
+  .side{position:sticky;top:14px;align-self:start}
+  .side h3{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:18px 0 8px;font-family:inherit;font-weight:700}
+  .side h3:first-child{margin-top:0}
+  .vtab{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:transparent;border:0;color:var(--muted);padding:7px 10px;border-radius:7px;font-size:13px;font-weight:600}
+  .vtab:hover{background:var(--panel)}
+  .vtab.active{background:var(--panel2);color:var(--ink)}
+  .vtab .count{background:#0e1a2b;border:1px solid var(--line);border-radius:20px;padding:0 7px;font-size:11px;color:var(--muted)}
+  .vtab.active .count{color:var(--gold);border-color:var(--gold-dim)}
+  .filterbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:6px}
+  .filterbox label{display:block;font-size:11px;color:var(--muted);margin:8px 0 4px;text-transform:uppercase;letter-spacing:.5px}
+  .filterbox label:first-child{margin-top:0}
+  select.fil{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+  .main{min-width:0}
+  .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .toolbar .title{font-family:Georgia,serif;font-size:19px}
+  .toolbar .meta{color:var(--muted);font-size:12px}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  thead th{text-align:left;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);padding:11px 12px;border-bottom:1px solid var(--line);font-weight:700;background:#11203a}
+  tbody td{padding:11px 12px;border-bottom:1px solid #1d3252;font-size:13px;vertical-align:top}
+  thead th{text-align:left;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);padding:11px 12px;border-bottom:1px solid var(--line);font-weight:700;background:#11203a;vertical-align:bottom;white-space:nowrap}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr.click{cursor:pointer;transition:background .12s}
+  tbody tr.click:hover{background:var(--panel2)}
+  .nm{font-weight:600;color:var(--ink)}
+  .sub2{color:var(--muted);font-size:12px}
+  .grouphdr td{background:#0f1e34;color:var(--gold);font-weight:700;letter-spacing:.5px;text-transform:uppercase;font-size:11px}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid transparent;white-space:nowrap}
+  .due{font-size:12px;font-weight:700}
+  .empty{padding:50px 20px;text-align:center;color:var(--muted)}
+  .empty .big{font-family:Georgia,serif;font-size:18px;color:var(--ink);margin-bottom:6px}
+  .scrim{position:fixed;inset:0;background:#05080dcc;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;z-index:50;overflow:auto}
+  .scrim.open{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:100%;max-width:760px;box-shadow:0 30px 80px #000a}
+  .modal.wide{max-width:620px}
+  .mhead{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
+  .mhead h2{font-size:19px}
+  .mbody{padding:20px 22px}
+  .x{background:transparent;border:0;color:var(--muted);font-size:22px;line-height:1}
+  .x:hover{color:var(--ink)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+  .fld{display:flex;flex-direction:column;gap:5px;margin-bottom:2px}
+  .fld.full{grid-column:1 / -1}
+  .fld label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+  .fld input,.fld select,.fld textarea{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:8px 10px;outline:none}
+  .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--gold-dim)}
+  .fld textarea{resize:vertical;min-height:64px}
+  .reqgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px}
+  .reqck{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--ink)}
+  .reqck input{margin-top:2px}
+  .roval{background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 10px;color:var(--ink);min-height:18px}
+  .mfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:16px 22px;border-top:1px solid var(--line)}
+  .mfoot .right{display:flex;gap:10px}
+  .drop{border:2px dashed var(--line);border-radius:10px;padding:26px;text-align:center;color:var(--muted);background:var(--bg);transition:.15s}
+  .drop.hot{border-color:var(--gold);color:var(--ink);background:#13243d}
+  .hint{color:var(--muted);font-size:12px;margin:10px 0 0;line-height:1.5}
+  .act{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--bg)}
+  .act .top{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+  .act .top b{color:var(--gold)}
+  .act .nt{margin-top:4px}
+  .tag{display:inline-block;background:#10203a;border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:11px;color:var(--muted);margin:2px 4px 2px 0}
+  .tag.gold{color:var(--gold);border-color:var(--gold-dim)}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--gold);color:#1a1208;padding:10px 18px;border-radius:8px;font-weight:700;font-size:13px;box-shadow:0 10px 30px #0008;opacity:0;pointer-events:none;transition:.25s;z-index:120}
+  .toast.show{opacity:1}
+  /* login */
+  .gate{position:fixed;inset:0;background:radial-gradient(1200px 600px at 50% -10%, #16294480, #0e1a2b);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
+  .gate .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:30px;width:100%;max-width:380px;box-shadow:0 30px 80px #000a}
+  .gate h1{font-size:24px}
+  .gate .dot{color:var(--gold)}
+  .gate .sub{color:var(--muted);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;margin:4px 0 22px}
+  .gate label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin:14px 0 5px}
+  .gate input{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:11px;outline:none}
+  .gate input:focus{border-color:var(--gold-dim)}
+  .gate .msg{margin-top:14px;font-size:13px;min-height:18px}
+  .gate .msg.err{color:var(--red)}
+  .gate .msg.ok{color:var(--green)}
+  #app{display:none}
+  @media(max-width:880px){.layout{grid-template-columns:1fr}.side{position:static}.grid2,.reqgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="card">
+    <h1>Elbit Systems<span class="dot">.</span></h1>
+    <div class="sub">Resume Tracker</div>
+    <div id="gateForm">
+      <label>Email</label>
+      <input id="loginEmail" type="email" autocomplete="username" placeholder="you@company.com">
+      <label>Password</label>
+      <input id="loginPass" type="password" autocomplete="current-password" placeholder="Your password">
+      <div style="margin-top:18px"><button class="btn gold block" id="loginBtn">Sign In</button></div>
+      <div class="msg" id="loginMsg"></div>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+<header>
+  <div class="wrap topbar">
+    <div class="brand">
+      <h1>Elbit Systems<span class="dot">.</span> Resume Tracker</h1>
+      <span class="sub">Talent Pipeline</span>
+      <span class="vobadge" id="voBadge" style="display:none">View Only</span>
+    </div>
+    <div class="grow"></div>
+    <div class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+      <input id="q" type="text" placeholder='Search  (try: java AND "rtos" NOT intern)'>    </div>
+    <button class="btn ghost sm" id="importBtn">Import CSV</button>
+    <button class="btn ghost sm" id="exportBtn">Export</button>
+    <button class="btn ghost sm" id="dayforceBtn">Dayforce CSV</button>
+    <button class="btn ghost sm" id="bulkBtn">Bulk Add</button>
+    <button class="btn gold" id="addBtn">+ Candidate</button>
+    <div class="userbox"><span id="whoami"></span><button class="btn ghost sm" id="signoutBtn">Sign Out</button></div>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <aside class="side">
+    <h3>Views</h3>
+    <div id="tabs"></div>
+    <h3>Filters</h3>
+    <div class="filterbox">
+      <label>Status</label><select class="fil" id="fStatus"></select>
+      <label>Discipline</label><select class="fil" id="fDiscipline"></select>
+      <label>Target Req</label><select class="fil" id="fReq"></select>
+      <label>Recruiter</label><select class="fil" id="fOwner"></select>
+      <label>Priority</label><select class="fil" id="fPriority"></select>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="toolbar"><span class="title" id="viewTitle">All Candidates</span><span class="meta" id="viewMeta"></span><div class="grow"></div></div>
+    <div id="list"></div>
+  </main>
+</div>
+</div>
+
+<div class="scrim" id="scrim"><div class="modal" id="modal"></div></div>
+<input type="file" id="fileInput" accept=".csv" style="display:none">
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   STEP 1: paste your two Supabase values between the quotes.
+   Find them in Supabase: Project Settings -> API.
+   ============================================================ */
+var SUPABASE_URL = "https://apxirlgoiruvczhwdgue.supabase.co";
+var SUPABASE_ANON_KEY = "sb_publishable_KrYU_Wa9pJtQiNo8vWNTKA_znqip7TX";
+
+/*CONFIG_START*/
+var CONFIG = {"company": "Elbit", "brand": "Elbit Systems", "subtitle": "Talent Pipeline", "org": "elbit", "owners": ["Amy", "Jonah", "Anthony", "Craig", "Unassigned"], "managers": [{"name": "Alex Rekhelis", "title": "Senior Manager, Systems Engineering", "email": "Alex.Rekhelis@elbitsystems-us.com", "phone": "817-905-5688"}, {"name": "Michael Elliott", "title": "Director, Engineering", "email": "MichaelJ.Elliott@elbitsystems-us.com", "phone": ""}, {"name": "Matthew Allen", "title": "Project Engineering Manager, SIGMA", "email": "Matthew.Allen@elbitsystems-us.com", "phone": "682-464-3239"}, {"name": "Scott Swartzwelter", "title": "Sr. Director of Operations & Site Lead", "email": "Scott.Swartzwelter@elbitsystems-us.com", "phone": "843-860-1742"}, {"name": "Cobb Laslie", "title": "", "email": "Cobb.Laslie@elbitsystems-us.com", "phone": ""}, {"name": "Sue Spencer", "title": "", "email": "Susan.Spencer@elbitsystems-us.com", "phone": ""}, {"name": "Taylor Mercer", "title": "", "email": "Taylor.Mercer@elbitsystems-us.com", "phone": ""}, {"name": "Eric Leidholt", "title": "Manager, Software Engineering", "email": "eric.leidholt@elbitsystems-us.com", "phone": "682-286-2148"}, {"name": "Tom Jisa", "title": "", "email": "Tom.Jisa@elbitsystems-us.com", "phone": "817-798-1697"}], "reqs": [{"title": "Program Manager 3", "loc": "Yuma", "disc": "Other", "urgency": "Open", "openings": 1}, {"title": "Program Manager 3", "loc": "Charleston", "disc": "Other", "urgency": "Open", "openings": 1}, {"title": "Program Manager 3", "loc": "FTW/DET/CHS", "disc": "Other", "urgency": "Open", "openings": 1}, {"title": "Project Manager", "loc": "Charleston", "disc": "Other", "urgency": "Open", "openings": 1}, {"title": "Sr Director Engineer", "loc": "FTW/DET", "disc": "Other", "urgency": "Open", "openings": 1}, {"title": "Sr Staff Engineer", "loc": "FTW/DET", "disc": "Other", "urgency": "Open", "openings": 1}, {"title": "Sr Systems Engineer", "loc": "FTW/DET", "disc": "Other", "urgency": "Open", "openings": 1}, {"title": "Sr Engineer", "loc": "FTW/DET", "disc": "Other", "urgency": "Open", "openings": 1}, {"title": "Sr Engineer", "loc": "Remote/FTW", "disc": "Other", "urgency": "Open", "openings": 1}], "reqOptions": ["Program Manager 3 – Yuma", "Program Manager 3 – Charleston", "Program Manager 3 – FTW/DET/CHS", "Project Manager – Charleston", "Sr Director Engineer – FTW/DET", "Sr Staff Engineer – FTW/DET", "Sr Systems Engineer – FTW/DET", "Sr Engineer – FTW/DET", "Sr Engineer – Remote/FTW"]};
+/*CONFIG_END*/
+
+var ORG = CONFIG.org;
+var STATUS = ["New","Review","Contacted","Screening","Submitted","Interviewing","On Hold","Archived"];
+var PRIORITY = ["High","Medium","Low"];
+var SOURCE = ["LinkedIn","Referral","Direct Applicant","Resume Database","Recruiter Outreach","Internal Referral","Agency","Other"];
+var DISCIPLINES = ["Program Management","Systems Engineering","Electrical / Hardware","Software","Manufacturing","Quality","Supply Chain","Other"];
+var ACT_TYPES = ["Call","Email","LinkedIn Message","Text","Voicemail","Meeting","Interview Scheduled","Interview Completed","Declined by HM (Resume)","Declined by HM (Post-Interview)","Resume Submitted","Status Change","Note","Other"];
+var OWNERS = CONFIG.owners;
+var MANAGERS = CONFIG.managers || [];
+var REQS = CONFIG.reqs;
+var REQ_OPTIONS = CONFIG.reqOptions;
+var PROGRAM_NOTES = {
+  title:"Mobile Tactical Cannon (MTC) Program Notes",
+  intro:"These are the identified roles we are seeking to fill, prioritized using the Rank column on the left.",
+  rules:[
+    "Location: when DET is listed alongside another location, there is no preference. We are open to candidates in either FTW or DET.",
+    "Status updates: the team meets twice per week, using the cadence already established by Tom Jisa at Elbit America.",
+    "Engineering role resume reviews: send all resumes to Michael Elliott, Alex Rekhelis, and Matt Allen.",
+    "Program Management role resume reviews: send all resumes to Taylor Mercer."
+  ]
+};
+
+var STATUS_COLOR = {"New":"--blue","Review":"--cyan","Contacted":"--teal","Screening":"--yellow","Submitted":"--orange","Interviewing":"--purple","On Hold":"--gray","Archived":"--gray"};
+var PRI_COLOR = {"High":"--red","Medium":"--yellow","Low":"--gray"};
+var URG_COLOR = {"Immediate need":"--red","Immediate":"--red","Contract Award":"--orange","August":"--yellow","Open":"--teal","July Start":"--cyan","August Start":"--blue","Closed/Filled":"--green","Closed Not Filled":"--gray"};
+
+var VIEW_ONLY = true;       /* set from profile after login */
+var sb = null;
+var state = { candidates:[], activities:[] };
+var ui = { view:"reqs", q:"", fStatus:"", fDiscipline:"", fReq:"", fOwner:"", fPriority:"" };
+var openId = null;
+
+/* ---------- auth ---------- */
+function gateMsg(text, cls){ var m = document.getElementById("loginMsg"); m.textContent = text || ""; m.className = "msg" + (cls ? " " + cls : ""); }
+function configReady(){ return SUPABASE_URL.indexOf("http") === 0 && SUPABASE_ANON_KEY.length > 20 && SUPABASE_URL.indexOf("PASTE_") === -1 && SUPABASE_ANON_KEY.indexOf("PASTE_") === -1; }
+
+async function boot(){
+  if(!configReady()){
+    document.getElementById("gateForm").innerHTML = "";
+    gateMsg("Setup needed: paste your Supabase URL and anon key into this file (top of the script), then redeploy.", "err");
+    return;
+  }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  var sess = await sb.auth.getSession();
+  if(sess.data && sess.data.session){ await onAuthed(sess.data.session.user); }
+}
+async function doLogin(){
+  gateMsg("Signing in...", "");
+  var email = document.getElementById("loginEmail").value.trim();
+  var pass = document.getElementById("loginPass").value;
+  var res = await sb.auth.signInWithPassword({ email: email, password: pass });
+  if(res.error){ gateMsg(res.error.message, "err"); return; }
+  await onAuthed(res.data.user);
+}
+async function onAuthed(user){
+  var prof = await sb.from("profiles").select("role,orgs,email").eq("id", user.id).single();
+  if(prof.error || !prof.data){ gateMsg("Your account has no access profile yet. Ask the admin to set your role.", "err"); return; }
+  var orgs = prof.data.orgs || [];
+  if(orgs.indexOf(ORG) === -1){ gateMsg("Your account does not have access to this program.", "err"); return; }
+  VIEW_ONLY = prof.data.role !== "editor";
+  document.getElementById("whoami").textContent = (prof.data.email || user.email) + " (" + (VIEW_ONLY ? "viewer" : "editor") + ")";
+  document.getElementById("gate").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  applyViewOnly();
+  await loadData();
+  wireRealtime();
+  refresh();
+}
+function applyViewOnly(){
+  document.getElementById("voBadge").style.display = VIEW_ONLY ? "inline-block" : "none";
+  ["importBtn","exportBtn","dayforceBtn","bulkBtn","addBtn"].forEach(function(id){ var b = document.getElementById(id); if(b){ b.style.display = (VIEW_ONLY && id !== "exportBtn") ? "none" : ""; } });
+}
+
+/* ---------- data layer ---------- */
+function nz(v){ return (v && String(v).length) ? v : null; }
+function rowToCand(r){
+  return { id:r.id, firstName:r.first_name||"", lastName:r.last_name||"", email:r.email||"", phone:r.phone||"",
+    location:r.location||"", title:r.title||"", company:r.company||"", skills:r.skills||[], discipline:r.discipline||"",
+    reqs:r.reqs||[], opportunity:r.opportunity === true, source:r.source||"Other", status:r.status||"New", priority:r.priority||"Medium", owner:r.owner||"Unassigned",
+    summary:r.summary||"",
+    dateReceived:r.date_received||"", lastContacted:r.last_contacted||"", nextFollowUp:r.next_follow_up||"",
+    resumeLink:r.resume_link||"", resumeFileName:r.resume_file_name||"", resumePath:r.resume_path||"", resumeText:r.resume_text||"", linkedin:r.linkedin||"", notes:r.notes||"",
+    createdAt:r.created_at, updatedAt:r.updated_at };
+}
+function rowToAct(r){ return { id:r.id, candidateId:r.candidate_id, type:r.type||"Note", date:r.date||"", notes:r.notes||"", owner:r.owner||"" }; }
+function candToRow(c){
+  return { org:ORG, first_name:c.firstName||"", last_name:c.lastName||"", email:c.email||"", phone:c.phone||"",
+    location:c.location||"", title:c.title||"", company:c.company||"", skills:c.skills||[], discipline:c.discipline||"",
+    reqs:c.reqs||[], opportunity:c.opportunity === true, source:c.source||"Other", status:c.status||"New", priority:c.priority||"Medium", owner:c.owner||"Unassigned",
+    summary:c.summary||"",
+    date_received:nz(c.dateReceived), last_contacted:nz(c.lastContacted), next_follow_up:nz(c.nextFollowUp),
+    resume_link:c.resumeLink||"", resume_file_name:c.resumeFileName||"", resume_path:c.resumePath||"", resume_text:c.resumeText||"", linkedin:c.linkedin||"", notes:c.notes||"",
+    updated_at:new Date().toISOString() };
+}
+function rowToReq(r){ return { id:r.id, title:r.title||"", role:r.role||"", loc:r.loc||"", disc:r.discipline||"Other", urgency:r.urgency||"Open", priority:r.priority||"", reqStatus:r.req_status||"", rank:(typeof r.rank === "number" ? r.rank : null), desiredStart:r.desired_start||"", contingent:r.contingent||"", compMin:r.comp_min||"", compMax:r.comp_max||"", compTarget:r.comp_target||"", openings:r.openings||1, hm:r.hiring_manager||"", hmTitle:r.hm_title||"", hmEmail:r.hm_email||"", hmPhone:r.hm_phone||"", jobId:r.job_id||"", jd:r.jd||"", jdLink:r.jd_link||"" }; }
+function setReqs(arr){
+  REQS = arr;
+  REQ_OPTIONS = arr.map(function(r){ return r.title + " \u2013 " + r.loc; });
+  var sel = document.getElementById("fReq"); var cur = ui.fReq; fillSelect(sel, REQ_OPTIONS, "All Reqs"); sel.value = cur;
+}
+async function loadData(){
+  var c = await sb.from("candidates").select("*").eq("org", ORG).order("created_at", { ascending:false });
+  var a = await sb.from("activities").select("*").eq("org", ORG).order("date", { ascending:false });
+  var rq = await sb.from("reqs").select("*").eq("org", ORG).order("created_at", { ascending:true });
+  if(c.error){ toast(c.error.message); }
+  state.candidates = (c.data || []).map(rowToCand);
+  state.activities = (a.data || []).map(rowToAct);
+  if(rq.data){ setReqs(rq.data.map(rowToReq)); }
+}
+async function reloadSoft(){ await loadData(); refresh(); }
+function wireRealtime(){
+  sb.channel("rt-" + ORG)
+    .on("postgres_changes", { event:"*", schema:"public", table:"candidates", filter:"org=eq." + ORG }, function(){ reloadSoft(); })
+    .on("postgres_changes", { event:"*", schema:"public", table:"activities", filter:"org=eq." + ORG }, function(){ reloadSoft(); })
+    .on("postgres_changes", { event:"*", schema:"public", table:"reqs", filter:"org=eq." + ORG }, function(){ reloadSoft(); })
+    .subscribe();
+}
+async function run(promise, okMsg){
+  var res = await promise;
+  if(res && res.error){ toast(res.error.message || "Error"); return false; }
+  await reloadSoft();
+  if(okMsg){ toast(okMsg); }
+  return true;
+}
+
+/* ---------- computed ---------- */
+function fullName(c){ return (c.firstName + " " + c.lastName).trim(); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function followUp(c){
+  if(c.status === "Archived" || !c.nextFollowUp){ return {label:"", color:"--muted"}; }
+  var t = todayISO();
+  if(c.nextFollowUp < t){ return {label:"Overdue", color:"--red"}; }
+  if(c.nextFollowUp === t){ return {label:"Due Today", color:"--yellow"}; }
+  return {label:"Upcoming", color:"--green"};
+}
+function ageDays(c){ var d = c.dateReceived || (c.createdAt ? c.createdAt.slice(0,10) : todayISO()); return Math.max(0, Math.round((new Date(todayISO()) - new Date(d)) / 86400000)); }
+function withinDays(c,n){ return ageDays(c) <= n; }
+
+/* ---------- views ---------- */
+var VIEWS = [
+  { id:"all", name:"All Candidates", fn:function(){ return true; } },
+  { id:"new", name:"New Resumes", fn:function(c){ return c.status === "New"; } },
+  { id:"review", name:"Needs Review", fn:function(c){ return c.status === "New" || c.status === "Review"; } },
+  { id:"followup", name:"Follow Up Due", fn:function(c){ return followUp(c).label !== ""; } },
+  { id:"overdue", name:"Overdue Follow Up", fn:function(c){ return followUp(c).label === "Overdue"; } },
+  { id:"high", name:"High Priority", fn:function(c){ return c.priority === "High" && c.status !== "Archived"; } },
+  { id:"opportunity", name:"\u2605 Opportunity Hires", fn:function(c){ return c.opportunity === true && c.status !== "Archived"; } },
+  { id:"bystatus", name:"By Status", fn:function(c){ return c.status !== "Archived"; }, group:"status" },
+  { id:"bydisc", name:"By Discipline", fn:function(c){ return c.status !== "Archived"; }, group:"discipline" },
+  { id:"byreq", name:"By Req", fn:function(c){ return c.status !== "Archived"; }, special:"byreq" },
+  { id:"reqs", name:"Open Reqs", fn:function(){ return true; }, special:"reqs" },
+  { id:"priolist", name:"\u2605 Priority List", fn:function(){ return true; }, special:"priolist" },
+  { id:"managers", name:"Hiring Managers", fn:function(){ return true; }, special:"managers" },
+  { id:"forms", name:"Forms Library", fn:function(){ return true; }, special:"forms" },
+  { id:"archive", name:"Archive", fn:function(c){ return c.status === "Archived"; } }
+];
+function activeView(){ for(var i=0;i<VIEWS.length;i++){ if(VIEWS[i].id===ui.view){ return VIEWS[i]; } } return VIEWS[0]; }
+function candHaystack(c){
+  return [fullName(c),c.email,c.phone,c.title,c.company,(c.skills||[]).join(" "),c.location,c.summary,c.resumeText,c.notes,c.source,c.owner,c.discipline,(c.reqs||[]).join(" ")].join(" ").toLowerCase();
+}
+/* Boolean search: supports AND, OR, NOT (and -term), "quoted phrases", parentheses.
+   Plain space-separated words behave as AND (like before). Case-insensitive. */
+function tokenizeQuery(q){
+  var tokens = []; var i = 0; var s = q;
+  while(i < s.length){
+    var ch = s[i];
+    if(ch === " " || ch === "\t"){ i++; continue; }
+    if(ch === "(" || ch === ")"){ tokens.push({t:ch}); i++; continue; }
+    if(ch === '"'){ var j = s.indexOf('"', i+1); if(j === -1){ j = s.length; } tokens.push({t:"term", v:s.slice(i+1, j).toLowerCase().trim()}); i = j+1; continue; }
+    var k = i; while(k < s.length && " \t()".indexOf(s[k]) === -1){ k++; }
+    var word = s.slice(i, k); i = k;
+    var up = word.toUpperCase();
+    if(up === "AND" || up === "OR" || up === "NOT"){ tokens.push({t:up}); }
+    else if(word[0] === "-" && word.length > 1){ tokens.push({t:"NOT"}); tokens.push({t:"term", v:word.slice(1).toLowerCase()}); }
+    else{ tokens.push({t:"term", v:word.toLowerCase()}); }
+  }
+  return tokens;
+}
+function parseQuery(tokens){
+  var pos = {i:0};
+  function peek(){ return tokens[pos.i]; }
+  function next(){ return tokens[pos.i++]; }
+  function parseOr(){
+    var left = parseAnd();
+    while(peek() && peek().t === "OR"){ next(); var right = parseAnd(); left = (function(a,b){ return function(h){ return a(h) || b(h); }; })(left, right); }
+    return left;
+  }
+  function parseAnd(){
+    var left = parseUnary();
+    while(peek() && peek().t !== "OR" && peek().t !== ")"){
+      if(peek().t === "AND"){ next(); }
+      var right = parseUnary(); if(!right){ break; }
+      left = (function(a,b){ return function(h){ return a(h) && b(h); }; })(left, right);
+    }
+    return left;
+  }
+  function parseUnary(){
+    var tk = peek(); if(!tk){ return null; }
+    if(tk.t === "NOT"){ next(); var inner = parseUnary(); return function(h){ return !inner(h); }; }
+    if(tk.t === "("){ next(); var e = parseOr(); if(peek() && peek().t === ")"){ next(); } return e; }
+    if(tk.t === "term"){ next(); var term = tk.v; if(!term){ return function(){ return true; }; } return function(h){ return h.indexOf(term) !== -1; }; }
+    next(); return null;
+  }
+  var fn = parseOr();
+  return fn || function(){ return true; };
+}
+function matchesSearch(c){
+  if(!ui.q || !ui.q.trim()){ return true; }
+  try{ var fn = parseQuery(tokenizeQuery(ui.q)); return fn(candHaystack(c)); }
+  catch(e){ return candHaystack(c).indexOf(ui.q.toLowerCase()) !== -1; }
+}
+function passFilters(c){
+  if(ui.fStatus && c.status !== ui.fStatus){ return false; }
+  if(ui.fDiscipline && c.discipline !== ui.fDiscipline){ return false; }
+  if(ui.fReq && (c.reqs||[]).indexOf(ui.fReq) === -1){ return false; }
+  if(ui.fOwner && c.owner !== ui.fOwner){ return false; }
+  if(ui.fPriority && c.priority !== ui.fPriority){ return false; }
+  return true;
+}
+function currentList(){ var v = activeView(); return state.candidates.filter(function(c){ return v.fn(c) && matchesSearch(c) && passFilters(c); }); }
+
+/* ---------- helpers ---------- */
+function el(tag, cls, txt){ var e = document.createElement(tag); if(cls){ e.className = cls; } if(txt !== undefined && txt !== null){ e.textContent = txt; } return e; }
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function pill(text, varname){ var p = el("span","pill",text); var col = cssVar(varname); p.style.color = col; p.style.borderColor = col; p.style.background = col + "1f"; return p; }
+function toast(msg){ var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); }, 1900); }
+
+/* ---------- sidebar ---------- */
+function renderTabs(){
+  var box = document.getElementById("tabs"); box.innerHTML = "";
+  VIEWS.forEach(function(v){
+    var count;
+    if(v.special === "reqs"){ count = REQS.length; }
+    else if(v.special === "priolist"){ count = REQS.filter(function(r){ return r.rank != null; }).length; }
+    else if(v.special === "forms"){ count = FORMS.length; }
+    else if(v.special === "managers"){
+      var seen = {}; REQS.forEach(function(r){ var n = (r.hm||"").trim(); if(n){ seen[n] = 1; } }); count = Object.keys(seen).length;
+    }
+    else{ count = state.candidates.filter(function(c){ return v.fn(c); }).length; }
+    var b = el("button","vtab" + (v.id===ui.view ? " active" : ""));
+    b.appendChild(el("span", null, v.name)); b.appendChild(el("span","count", String(count)));
+    b.setAttribute("data-view", v.id); box.appendChild(b);
+  });
+}
+function fillSelect(sel, opts, blank){ sel.innerHTML = ""; var o0 = el("option", null, blank); o0.value = ""; sel.appendChild(o0); opts.forEach(function(o){ var op = el("option", null, o); op.value = o; sel.appendChild(op); }); }
+
+/* ---------- list ---------- */
+function renderList(){
+  document.getElementById("viewTitle").textContent = activeView().name;
+  var host = document.getElementById("list"); host.innerHTML = "";
+  var v = activeView();
+  if(v.special === "reqs"){ renderReqs(host); return; }
+  if(v.special === "managers"){ renderManagers(host); return; }
+  if(v.special === "priolist"){ renderPriorityList(host); return; }
+  if(v.special === "forms"){ renderForms(host); return; }
+  var rows = currentList();
+  document.getElementById("viewMeta").textContent = rows.length + (rows.length === 1 ? " candidate" : " candidates");
+  if(rows.length === 0){
+    var em = el("div","empty"); em.appendChild(el("div","big","Nothing here yet"));
+    em.appendChild(el("div", null, VIEW_ONLY ? "No records match this view." : "Add one, bulk add, or import a CSV.")); host.appendChild(em); return;
+  }
+  var table = el("table"); var thead = el("thead"); var htr = el("tr");
+  ["Candidate","Title / Company","Discipline","Status","Target Reqs","Follow Up","Owner"].forEach(function(h){ htr.appendChild(el("th", null, h)); });
+  thead.appendChild(htr); table.appendChild(thead);
+  var tb = el("tbody");
+  if(v.group === "status"){ STATUS.forEach(function(g){ groupBlock(tb, rows.filter(function(c){ return c.status === g; }), g); }); }
+  else if(v.group === "discipline"){ DISCIPLINES.forEach(function(g){ groupBlock(tb, rows.filter(function(c){ return c.discipline === g; }), g); }); groupBlock(tb, rows.filter(function(c){ return !c.discipline; }), "Unassigned Discipline"); }
+  else if(v.special === "byreq"){ REQ_OPTIONS.forEach(function(r){ groupBlock(tb, rows.filter(function(c){ return (c.reqs||[]).indexOf(r) !== -1; }), r); }); groupBlock(tb, rows.filter(function(c){ return !(c.reqs||[]).length; }), "No Req Tagged"); }
+  else{ rows.forEach(function(c){ tb.appendChild(rowFor(c)); }); }
+  table.appendChild(tb); host.appendChild(table);
+}
+function groupBlock(tb, sub, label){
+  if(sub.length === 0){ return; }
+  var gtr = el("tr","grouphdr"); var gtd = el("td", null, label + "  (" + sub.length + ")"); gtd.setAttribute("colspan","7"); gtr.appendChild(gtd); tb.appendChild(gtr);
+  sub.forEach(function(c){ tb.appendChild(rowFor(c)); });
+}
+function rowFor(c){
+  var tr = el("tr","click"); tr.setAttribute("data-id", c.id);
+  var td1 = el("td"); var nmEl = el("div","nm", fullName(c)); if(c.opportunity){ var stEl = el("span", null, "\u2605 "); stEl.style.color = cssVar("--gold"); stEl.title = "Opportunity Hire"; nmEl.insertBefore(stEl, nmEl.firstChild); } td1.appendChild(nmEl); td1.appendChild(el("div","sub2", c.email || c.phone || "")); tr.appendChild(td1);
+  var td2 = el("td"); td2.appendChild(el("div", null, c.title || "")); td2.appendChild(el("div","sub2", c.company || "")); tr.appendChild(td2);
+  tr.appendChild(el("td","sub2", c.discipline || "-"));
+  var td4 = el("td"); td4.appendChild(pill(c.status, STATUS_COLOR[c.status] || "--gray")); tr.appendChild(td4);
+  var td5 = el("td"); var rq = c.reqs || [];
+  if(rq.length){ td5.appendChild(el("span","tag gold", rq[0])); if(rq.length > 1){ td5.appendChild(el("span","tag", "+" + (rq.length-1))); } } else{ td5.appendChild(el("span","sub2","-")); }
+  tr.appendChild(td5);
+  var fu = followUp(c); var td6 = el("td");
+  if(fu.label){ var s = el("span","due", fu.label); s.style.color = cssVar(fu.color); td6.appendChild(s); if(c.nextFollowUp){ td6.appendChild(el("div","sub2", c.nextFollowUp)); } } else{ td6.appendChild(el("span","sub2","-")); }
+  tr.appendChild(td6);
+  tr.appendChild(el("td","sub2", c.owner || "")); return tr;
+}
+function renderManagers(host){
+  // Aggregate unique hiring managers from reqs, with their contact info and the reqs they own.
+  var byName = {};
+  REQS.forEach(function(r){
+    var name = (r.hm || "").trim(); if(!name){ return; }
+    if(!byName[name]){ byName[name] = { name:name, title:r.hmTitle||"", email:r.hmEmail||"", phone:r.hmPhone||"", reqs:[] }; }
+    var m = byName[name];
+    if(!m.title && r.hmTitle){ m.title = r.hmTitle; }
+    if(!m.email && r.hmEmail){ m.email = r.hmEmail; }
+    if(!m.phone && r.hmPhone){ m.phone = r.hmPhone; }
+    m.reqs.push(r.title);
+  });
+  var names = Object.keys(byName).sort();
+  document.getElementById("viewMeta").textContent = names.length + (names.length === 1 ? " hiring manager" : " hiring managers");
+  if(names.length === 0){
+    var em = el("div","empty"); em.appendChild(el("div","big","No hiring managers yet"));
+    em.appendChild(el("div", null, VIEW_ONLY ? "No managers have been added to reqs." : "Add a hiring manager (and their title, email, phone) when you edit a req."));
+    host.appendChild(em); return;
+  }
+  var table = el("table"); var thead = el("thead"); var htr = el("tr");
+  ["Hiring Manager","Title","Email","Phone","Reqs"].forEach(function(h){ htr.appendChild(el("th", null, h)); });
+  thead.appendChild(htr); table.appendChild(thead); var tb = el("tbody");
+  names.forEach(function(n){
+    var m = byName[n]; var tr = el("tr");
+    tr.appendChild(el("td","nm", m.name));
+    tr.appendChild(el("td","sub2", m.title || "-"));
+    var et = el("td"); if(m.email){ var a = el("a","tag gold", m.email); a.href = "mailto:" + m.email; et.appendChild(a); } else { et.appendChild(el("span","sub2","-")); } tr.appendChild(et);
+    var pt = el("td"); if(m.phone){ var pa = el("a","sub2", m.phone); pa.href = "tel:" + m.phone.replace(/[^0-9+]/g,""); pt.appendChild(pa); } else { pt.appendChild(el("span","sub2","-")); } tr.appendChild(pt);
+    var rt = el("td","sub2"); rt.textContent = m.reqs.join(", "); tr.appendChild(rt);
+    tb.appendChild(tr);
+  });
+  table.appendChild(tb); host.appendChild(table);
+}
+function renderReqs(host){
+  document.getElementById("viewMeta").textContent = REQS.length + " open requisitions";
+  if(!VIEW_ONLY){
+    var bar = el("div"); bar.style.marginBottom = "12px";
+    var addb = el("button","btn gold sm","+ Add Req"); addb.setAttribute("data-reqadd","1"); bar.appendChild(addb);
+    host.appendChild(bar);
+  }
+  var table = el("table"); var thead = el("thead"); var htr = el("tr");
+  var cols = ["Title","Location","ID","HM","Discipline","Openings","Urgency","Tagged","JD"];
+  if(!VIEW_ONLY){ cols.push(""); }
+  cols.forEach(function(h){ var th = el("th", null, h); if(h === "ID"){ th.title = "Job ID"; } if(h === "HM"){ th.title = "Hiring Manager"; } htr.appendChild(th); });
+  thead.appendChild(htr); table.appendChild(thead); var tb = el("tbody");
+  REQS.forEach(function(r, i){
+    var label = REQ_OPTIONS[i];
+    var tagged = state.candidates.filter(function(c){ return (c.reqs||[]).indexOf(label) !== -1; }).length;
+    var tr = el("tr"); tr.className = "click"; tr.setAttribute("data-reqview", r.id);
+    tr.appendChild(el("td","nm", r.title)); var locTd = el("td","sub2", r.loc); locTd.style.whiteSpace = "nowrap"; tr.appendChild(locTd);
+    tr.appendChild(el("td","sub2", r.jobId || "-")); tr.appendChild(el("td","sub2", r.hm || "-"));
+    tr.appendChild(el("td","sub2", r.disc)); tr.appendChild(el("td", null, String(r.openings)));
+    var ut = el("td"); ut.appendChild(pill(r.urgency, URG_COLOR[r.urgency] || "--teal")); tr.appendChild(ut);
+    tr.appendChild(el("td", null, String(tagged)));
+    var jdt = el("td");
+    if(r.jdLink){ var a = el("a","tag gold","Open"); a.href = r.jdLink; a.target = "_blank"; a.setAttribute("data-stop","1"); jdt.appendChild(a); }
+    else if(r.jd){ jdt.appendChild(el("span","sub2","text")); } else { jdt.appendChild(el("span","sub2","-")); }
+    tr.appendChild(jdt);
+    if(!VIEW_ONLY){ var dt = el("td"); dt.style.whiteSpace = "nowrap"; var eb = el("button","btn sm","Edit"); eb.setAttribute("data-reqedit", r.id); dt.appendChild(eb); var sb2 = el("button","btn sm","Submit"); sb2.setAttribute("data-submitreq", r.id); sb2.style.marginLeft="6px"; dt.appendChild(sb2); var db = el("button","btn sm danger","Delete"); db.setAttribute("data-reqdel", r.id); db.style.marginLeft="6px"; dt.appendChild(db); tr.appendChild(dt); }
+    tb.appendChild(tr);
+  });
+  table.appendChild(tb); host.appendChild(table);
+}
+
+function reqPrioColor(p){ if(/High/i.test(p)){ return "--red"; } if(/Medium/i.test(p)){ return "--orange"; } if(/Low/i.test(p)){ return "--teal"; } return "--gray"; }
+function reqStatusColor(s){ if(/^Open/i.test(s)){ return "--green"; } if(/Awaiting/i.test(s)){ return "--orange"; } if(/Need to Open/i.test(s)){ return "--yellow"; } if(/Filled|Closed/i.test(s)){ return "--gray"; } return "--gray"; }
+function renderPriorityList(host){
+  var ranked = REQS.slice().sort(function(a,b){ var ra = (a.rank==null?9999:a.rank), rb = (b.rank==null?9999:b.rank); return (ra - rb) || (a.title||"").localeCompare(b.title||""); });
+  var rankedCount = REQS.filter(function(r){ return r.rank != null; }).length;
+  document.getElementById("viewMeta").textContent = rankedCount + " ranked / " + REQS.length + " reqs";
+  if(typeof PROGRAM_NOTES !== "undefined" && PROGRAM_NOTES){
+    var pn = el("details","prognotes"); pn.style.cssText = "border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:10px;padding:0 16px;margin:0 0 16px;background:var(--bg)";
+    var sm = el("summary"); sm.style.cssText = "cursor:pointer;padding:13px 0;font-weight:700;color:var(--gold);font-size:13.5px"; sm.textContent = PROGRAM_NOTES.title; pn.appendChild(sm);
+    var inner = el("div"); inner.style.cssText = "padding:2px 0 14px;color:var(--ink);font-size:13px;line-height:1.6";
+    if(PROGRAM_NOTES.intro){ var ip = el("div", null, PROGRAM_NOTES.intro); ip.style.cssText = "margin:0 0 9px;color:var(--muted)"; inner.appendChild(ip); }
+    var ul = el("ul"); ul.style.cssText = "margin:0;padding:0 0 0 18px;line-height:1.6";
+    (PROGRAM_NOTES.rules||[]).forEach(function(rule){ var li = el("li", null, rule); li.style.marginBottom = "5px"; ul.appendChild(li); });
+    inner.appendChild(ul); pn.appendChild(inner); host.appendChild(pn);
+  }
+  if(!VIEW_ONLY){ var bar = el("div"); bar.style.marginBottom = "12px"; var addb = el("button","btn gold sm","+ Add Req"); addb.setAttribute("data-reqadd","1"); bar.appendChild(addb); host.appendChild(bar); }
+  if(REQS.length === 0){ var emp = el("div","empty"); emp.appendChild(el("div","big","No requisitions yet")); emp.appendChild(el("div", null, "Add a req and set its Rank (1-20), Priority, and Status to build the priority list.")); host.appendChild(emp); return; }
+  var table = el("table"); var thead = el("thead"); var htr = el("tr");
+  ["Rank","Priority","Status","Req ID","Role","Title","Location","Hiring Manager","Desired Start","Contingent"].forEach(function(h){ htr.appendChild(el("th", null, h)); });
+  thead.appendChild(htr); table.appendChild(thead); var tb = el("tbody");
+  ranked.forEach(function(r){
+    var tr = el("tr","click"); tr.setAttribute("data-reqview", r.id);
+    var rt = el("td"); if(r.rank != null){ rt.appendChild(pill("#" + r.rank, "--gold")); } else { rt.appendChild(el("span","sub2","-")); } tr.appendChild(rt);
+    var pt = el("td"); if(r.priority){ pt.appendChild(pill(r.priority, reqPrioColor(r.priority))); } else { pt.appendChild(el("span","sub2","-")); } tr.appendChild(pt);
+    var st = el("td"); if(r.reqStatus){ st.appendChild(pill(r.reqStatus, reqStatusColor(r.reqStatus))); } else { st.appendChild(el("span","sub2","-")); } tr.appendChild(st);
+    tr.appendChild(el("td","sub2", r.jobId || "-"));
+    tr.appendChild(el("td","nm", r.role || "-"));
+    tr.appendChild(el("td","sub2", r.title || "-"));
+    var locTd = el("td","sub2", r.loc || "-"); locTd.style.whiteSpace = "nowrap"; tr.appendChild(locTd);
+    tr.appendChild(el("td","sub2", r.hm || "-"));
+    tr.appendChild(el("td","sub2", r.desiredStart || "-"));
+    tr.appendChild(el("td","sub2", r.contingent || "-"));
+    tb.appendChild(tr);
+  });
+  table.appendChild(tb); host.appendChild(table);
+}
+
+/* ---------- forms library ---------- */
+var FORM_CSS = "*{box-sizing:border-box}body{font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;max-width:780px;margin:0 auto;padding:46px 54px;line-height:1.5}h1{font-size:20px;border-bottom:3px solid #c8a96a;padding-bottom:8px;margin:0 0 4px;letter-spacing:.3px}.sub{color:#666;font-size:11px;margin:0 0 22px;text-transform:uppercase;letter-spacing:.6px}h2{font-size:13.5px;background:#f4efe4;border-left:4px solid #c8a96a;padding:7px 11px;margin:26px 0 12px;color:#1a1a1a}h3{font-size:12.5px;margin:18px 0 7px;color:#333;font-weight:700}.hf{display:flex;align-items:flex-end;gap:8px;margin:0 0 11px;font-size:13px}.hf b{white-space:nowrap}.hf .fill{flex:1;border-bottom:1px solid #888;height:15px}.q{margin:14px 0 3px;font-size:13px}.opts{font-size:13px;margin:2px 0 6px}.opts span{margin-right:30px;white-space:nowrap}.subf{display:flex;align-items:flex-end;gap:8px;margin:4px 0 8px 16px;font-size:12.5px}.subf .fill{flex:1;border-bottom:1px solid #888;height:14px}.line{border-bottom:1px solid #999;height:17px;margin:7px 0}.note{font-size:12.5px;color:#444;margin:0 0 8px}.sig{display:flex;gap:46px;margin-top:22px;font-size:13px}.sig .blk{flex:1}.sig .fill{border-bottom:1px solid #888;height:16px;margin-bottom:5px}.bar{position:sticky;top:0;background:#1a1a1a;padding:10px 14px;text-align:right;margin:-46px -54px 26px}.bar button{background:#c8a96a;color:#1a1a1a;border:0;padding:8px 18px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit}@media print{.bar{display:none}body{padding:0;max-width:100%}}";
+var FORMS = [
+  { type:"render", name:"Elbit Systems of America Candidate Interview & Security Screening Form",
+    desc:"Recruiter / interviewer screening: citizenship and clearance eligibility, technical background, industry experience, culture fit, and overall recommendation.",
+    blocks:[
+      ["hdr","Candidate Name"],["hdr","Position Applied For"],["hdr","Date"],["hdr","Recruiter / Interviewer"],["hdr","Current Location"],["hdr","Phone Number"],["hdr","Email Address"],
+      ["h2","Preliminary Screening Questions"],
+      ["q","1. Are you a United States citizen?"],
+      ["q","2. Are you authorized to work in the United States?"],
+      ["q","3. Were you born outside of the United States of America? If yes, please list the country."],["subf","Country"],
+      ["q","4. Are you a citizen of a country other than the United States? (Includes dual citizenship)"],["subf","Country/Countries"],
+      ["q","5. Will you now or in the future require sponsorship for employment visa status (e.g., H-1B visa)?"],
+      ["q","6. Have you ever been granted and/or currently possess a U.S. government security clearance?"],["subf","Clearance Level"],
+      ["q","7. Have you ever had a U.S. security clearance suspended, denied, or revoked?"],["subf","Explanation"],
+      ["q","8. Is there any reason why you could not obtain and maintain a United States security clearance?"],["subf","Explanation"],
+      ["h2","Elbit Systems of America (ESA) Security Requirements"],
+      ["note","As a defense contractor, Elbit Systems of America (ESA) is subject to legal and contractual requirements designed to ensure that the national security of the United States is not compromised. ESA requires employees to be eligible to obtain and/or maintain a security clearance when required."],
+      ["h2","Technical Background"],["lines",4],
+      ["h2","Relevant Industry Experience"],["lines",4],
+      ["h2","Communication / Culture Fit"],["lines",4],
+      ["h2","Additional Comments"],["lines",4],
+      ["h2","Overall Recommendation"],
+      ["opts","Strong Yes","Yes","Maybe","No"],
+      ["sig"]
+    ] },
+  { type:"render", name:"Elbit Systems of America Hiring Manager Input Form",
+    desc:"Hiring manager / specialist instructions to the recruiter: skills to validate, targeted questions, red flags, and must-have versus nice-to-have experience.",
+    blocks:[
+      ["hdr","Candidate Name"],["hdr","Position Applied For"],["hdr","Hiring Manager"],["hdr","Recruiter / Interviewer"],["hdr","Date"],
+      ["h2","Hiring Manager / Specialist Instructions to Recruiter"],
+      ["note","Use this section to document role-specific focus areas, technical competencies, personality traits, compliance concerns, interview priorities, or targeted questions that should be asked during the screening process."],
+      ["h3","Key Technical Skills / Competencies to Validate"],["lines",4],
+      ["h3","Specific Questions the Recruiter Should Ask"],["lines",4],
+      ["h3","Red Flags / Concerns to Screen For"],["lines",4],
+      ["h3","Must-Have Experience"],["lines",4],
+      ["h3","Nice-to-Have Experience"],["lines",4],
+      ["h3","Additional Hiring Manager Notes"],["lines",4]
+    ] },
+  { type:"file", kind:"pdf", file:"HiARC_Interview_Process_-_NOV_2025.pdf", name:"Hiring Process Overview",
+    desc:"End-to-end hiring process: requisition, strategy kickoff, screening and interviews, debrief, offer, and onboarding, with roles and responsibilities." },
+  { type:"file", kind:"pdf", file:"2026_Elbit_BAAG_Non-Union_Main_v02_LR.pdf", name:"2026 Benefits At A Glance (Non-Union)",
+    desc:"Medical, dental, vision, HSA and FSA, life and disability, and voluntary benefit rates and plan summaries for the 2026 plan year." },
+  { type:"file", kind:"pdf", file:"ESA-HiARC_Addl_Benefits_2026.pdf", name:"Additional Benefit Highlights",
+    desc:"401(k) match, 9/80 schedule, paid holidays, PTO, employee incentive plan, voluntary benefits, and Merrimack on-site services." },
+  { type:"file", kind:"pdf", file:"2026_Elbit_Guide_v06_LR.pdf", name:"2026 Employee Benefits Guide",
+    desc:"Full 2026 benefits guide: eligibility, enrollment, plan details, wellness programs, contacts, and required notices." }
+];
+function renderForms(host){
+  document.getElementById("viewMeta").textContent = FORMS.length + (FORMS.length === 1 ? " item" : " items");
+  var intro = el("div"); intro.style.cssText = "margin:2px 0 16px;color:var(--muted);font-size:13px;line-height:1.5";
+  intro.textContent = "Screening forms and reference documents for this program. Open a form to fill on screen and print, or open a reference document to view or download.";
+  host.appendChild(intro);
+  FORMS.forEach(function(item){
+    var card = el("div"); card.style.cssText = "border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:0 0 12px;background:var(--bg)";
+    var top = el("div"); top.style.cssText = "display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap";
+    var left = el("div"); left.style.flex = "1"; left.style.minWidth = "220px";
+    var nm = el("div", null, item.name); nm.style.cssText = "font-weight:700;font-size:14.5px;color:var(--ink);margin-bottom:4px";
+    var ds = el("div", null, item.desc); ds.style.cssText = "color:var(--muted);font-size:12.5px;line-height:1.5";
+    left.appendChild(nm); left.appendChild(ds); top.appendChild(left);
+    if(item.type === "file"){
+      var a = el("a","btn gold sm", item.kind === "docx" ? "Download" : "View");
+      a.href = item.file; a.style.whiteSpace = "nowrap"; a.style.textDecoration = "none"; a.style.display = "inline-block";
+      if(item.kind === "docx"){ a.setAttribute("download",""); } else { a.target = "_blank"; a.rel = "noopener"; }
+      top.appendChild(a);
+    } else {
+      var ob = el("button","btn gold sm","Open & Print"); ob.style.whiteSpace = "nowrap";
+      ob.addEventListener("click", function(){ openForm(item); });
+      top.appendChild(ob);
+    }
+    card.appendChild(top); host.appendChild(card);
+  });
+}
+function openForm(form){
+  var w = window.open("", "_blank");
+  if(!w){ toast("Allow pop-ups to open the form"); return; }
+  var doc = w.document; doc.open(); doc.write("<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head><body></body></html>"); doc.close();
+  doc.title = form.name;
+  var st = doc.createElement("style"); st.textContent = FORM_CSS; doc.head.appendChild(st);
+  var body = doc.body;
+  function mk(tag, cls, txt){ var e = doc.createElement(tag); if(cls){ e.className = cls; } if(txt != null){ e.textContent = txt; } return e; }
+  var bar = mk("div","bar"); var pb = mk("button", null, "Print / Save as PDF"); pb.addEventListener("click", function(){ w.print(); }); bar.appendChild(pb); body.appendChild(bar);
+  body.appendChild(mk("h1", null, form.name));
+  body.appendChild(mk("div","sub","RPO Talent Acquisition \u2022 Confidential"));
+  form.blocks.forEach(function(b){
+    var t = b[0];
+    if(t === "hdr"){ var r = mk("div","hf"); r.appendChild(mk("b", null, b[1] + ":")); r.appendChild(mk("span","fill")); body.appendChild(r); }
+    else if(t === "h2"){ body.appendChild(mk("h2", null, b[1])); }
+    else if(t === "h3"){ body.appendChild(mk("h3", null, b[1])); }
+    else if(t === "note"){ body.appendChild(mk("div","note", b[1])); }
+    else if(t === "q"){ body.appendChild(mk("div","q", b[1])); var o = mk("div","opts"); o.appendChild(mk("span", null, "\u2610 Yes")); o.appendChild(mk("span", null, "\u2610 No")); body.appendChild(o); }
+    else if(t === "subf"){ var s = mk("div","subf"); s.appendChild(mk("b", null, b[1] + ":")); s.appendChild(mk("span","fill")); body.appendChild(s); }
+    else if(t === "lines"){ for(var i=0;i<b[1];i++){ body.appendChild(mk("div","line")); } }
+    else if(t === "opts"){ var oo = mk("div","opts"); for(var j=1;j<b.length;j++){ oo.appendChild(mk("span", null, "\u2610 " + b[j])); } body.appendChild(oo); }
+    else if(t === "sig"){ var sg = mk("div","sig"); var k1 = mk("div","blk"); k1.appendChild(mk("div","fill")); k1.appendChild(mk("div", null, "Interviewer Signature")); var k2 = mk("div","blk"); k2.appendChild(mk("div","fill")); k2.appendChild(mk("div", null, "Date")); sg.appendChild(k1); sg.appendChild(k2); body.appendChild(sg); }
+  });
+  w.focus();
+}
+
+/* ---------- duplicate detection ---------- */
+function normEmail(e){ return (e||"").trim().toLowerCase(); }
+function normName(f,l){ return ((f||"").trim().toLowerCase() + "|" + (l||"").trim().toLowerCase()); }
+function findDuplicate(cand, ignoreId){
+  // Returns the existing candidate that duplicates `cand`, or null.
+  var em = normEmail(cand.email);
+  var nm = normName(cand.firstName, cand.lastName);
+  for(var i=0;i<state.candidates.length;i++){
+    var x = state.candidates[i];
+    if(ignoreId && x.id === ignoreId){ continue; }
+    if(em && normEmail(x.email) === em){ return x; }
+    if(!em && nm !== "|" && normName(x.firstName, x.lastName) === nm){ return x; }
+  }
+  return null;
+}
+
+/* ---------- detail ---------- */
+function field(label, key, val, type, opts){
+  var f = el("div","fld"); f.appendChild(el("label", null, label)); var input;
+  if(type === "select"){ input = el("select"); opts.forEach(function(o){ var op = el("option", null, o); op.value = o; if(o === val){ op.selected = true; } input.appendChild(op); }); }
+  else if(type === "textarea"){ input = el("textarea"); input.value = val || ""; }
+  else{ input = el("input"); input.type = type || "text"; input.value = val || ""; }
+  input.setAttribute("data-field", key); f.appendChild(input); return f;
+}
+function roField(label, val){ var f = el("div","fld"); f.appendChild(el("label", null, label)); f.appendChild(el("div","roval", (val && String(val).length) ? String(val) : "-")); return f; }
+function newBlank(){ return { id:null, firstName:"", lastName:"", email:"", phone:"", location:"", title:"", company:"", skills:[], source:"Other", status:"New", priority:"Medium", owner:OWNERS[0] || "Unassigned", discipline:"", reqs:[], opportunity:false, summary:"", dateReceived:todayISO(), lastContacted:"", nextFollowUp:"", resumeLink:"", resumeFileName:"", resumePath:"", resumeText:"", linkedin:"", notes:"" }; }
+
+function openDetail(c){
+  openId = c ? c.id : null; var isNew = !c; if(!c){ c = newBlank(); }
+  var m = document.getElementById("modal"); m.className = "modal"; m.innerHTML = "";
+  var head = el("div","mhead"); head.appendChild(el("h2", null, isNew ? "New Candidate" : fullName(c)));
+  var x = el("button","x","\u00d7"); x.setAttribute("data-close","1"); head.appendChild(x); m.appendChild(head);
+  var body = el("div","mbody"); var g = el("div","grid2");
+  if(VIEW_ONLY){
+    var smv = roField("Candidate Summary", c.summary); smv.className = "fld full"; body.appendChild(smv);
+    g.appendChild(roField("Email", c.email)); g.appendChild(roField("Phone", c.phone));
+    g.appendChild(roField("Location", c.location)); g.appendChild(roField("Discipline", c.discipline));
+    g.appendChild(roField("Current Title", c.title)); g.appendChild(roField("Current Company", c.company));
+    g.appendChild(roField("Status", c.status)); g.appendChild(roField("Priority", c.priority));
+    if(c.opportunity){ g.appendChild(roField("Flag", "\u2605 Opportunity Hire")); }
+    g.appendChild(roField("Source", c.source)); g.appendChild(roField("Recruiter", c.owner));
+    g.appendChild(roField("Date Received", c.dateReceived)); g.appendChild(roField("Next Follow Up", c.nextFollowUp));
+    var sk = roField("Skills", (c.skills||[]).join(", ")); sk.className = "fld full"; g.appendChild(sk);
+    var rqv = el("div","fld full"); rqv.appendChild(el("label", null, "Target Reqs")); var rb = el("div");
+    (c.reqs||[]).forEach(function(r){ rb.appendChild(el("span","tag gold", r)); }); if(!(c.reqs||[]).length){ rb.appendChild(el("span","sub2","-")); }
+    rqv.appendChild(rb); g.appendChild(rqv);
+    if(c.resumeLink){ var rl = roField("Resume Link", c.resumeLink); rl.className="fld full"; g.appendChild(rl); }
+    if(c.linkedin){ var li = el("div","fld full"); li.appendChild(el("label", null, "LinkedIn")); var la = el("a","tag gold","Open LinkedIn profile"); la.href = c.linkedin; la.target = "_blank"; li.appendChild(la); g.appendChild(li); }
+    if(c.resumePath){ var rfo = el("div","fld full"); rfo.appendChild(el("label", null, "Resume File")); var ob = el("button","btn sm","Open Resume"); ob.setAttribute("data-resumeopen", c.resumePath); ob.type="button"; rfo.appendChild(ob); g.appendChild(rfo); }
+    var nt = roField("Notes", c.notes); nt.className = "fld full"; g.appendChild(nt); body.appendChild(g);
+  }else{
+    var smF = field("Candidate Summary","summary",c.summary,"textarea"); smF.className = "fld full"; body.appendChild(smF);
+    g.appendChild(field("First Name","firstName",c.firstName)); g.appendChild(field("Last Name","lastName",c.lastName));
+    g.appendChild(field("Email","email",c.email,"email")); g.appendChild(field("Phone","phone",c.phone));
+    g.appendChild(field("Location","location",c.location)); g.appendChild(field("Discipline","discipline",c.discipline,"select",[""].concat(DISCIPLINES)));
+    g.appendChild(field("Current Title","title",c.title)); g.appendChild(field("Current Company","company",c.company));
+    g.appendChild(field("Source","source",c.source,"select",SOURCE)); g.appendChild(field("Status","status",c.status,"select",STATUS));
+    g.appendChild(field("Priority","priority",c.priority,"select",PRIORITY)); g.appendChild(field("Recruiter Owner","owner",c.owner,"select",OWNERS));
+    g.appendChild(field("Date Received","dateReceived",c.dateReceived,"date")); g.appendChild(field("Last Contacted","lastContacted",c.lastContacted,"date"));
+    g.appendChild(field("Next Follow Up","nextFollowUp",c.nextFollowUp,"date"));
+    var skillsF = field("Skills (comma separated)","skills",(c.skills||[]).join(", ")); skillsF.className = "fld full"; g.appendChild(skillsF); body.appendChild(g);
+    var oppWrap = el("div","fld full"); oppWrap.style.marginTop = "12px"; var oppLab = el("label","reqck"); oppLab.style.fontWeight = "600"; var oppCk = el("input"); oppCk.type = "checkbox"; oppCk.setAttribute("data-oppflag","1"); if(c.opportunity){ oppCk.checked = true; } oppLab.appendChild(oppCk); var oppTx = el("span", null, "\u2605 Opportunity Hire \u2013 high potential, no current opening"); oppTx.style.color = cssVar("--gold"); oppLab.appendChild(oppTx); oppWrap.appendChild(oppLab); body.appendChild(oppWrap);
+    var rqWrap = el("div","fld full"); rqWrap.style.marginTop = "12px"; rqWrap.appendChild(el("label", null, "Target Reqs (tag one or more)"));
+    var rg = el("div","reqgrid");
+    REQ_OPTIONS.forEach(function(r){ var lab = el("label","reqck"); var ck = el("input"); ck.type = "checkbox"; ck.setAttribute("data-reqopt", r); if((c.reqs||[]).indexOf(r) !== -1){ ck.checked = true; } lab.appendChild(ck); lab.appendChild(el("span", null, r)); rg.appendChild(lab); });
+    rqWrap.appendChild(rg); body.appendChild(rqWrap);
+    var linkF = field("Resume Link","resumeLink",c.resumeLink,"url"); linkF.className = "fld full"; body.appendChild(linkF);
+    var liF = field("LinkedIn Profile","linkedin",c.linkedin,"url"); liF.className = "fld full"; body.appendChild(liF);
+
+    var upWrap = el("div","fld full");
+    upWrap.appendChild(el("label", null, "Resume File (PDF or Word - auto-fills text, email, phone)"));
+    var upRow = el("div"); upRow.style.display = "flex"; upRow.style.gap = "10px"; upRow.style.alignItems = "center";
+    var upBtn = el("button","btn sm","Choose Resume File"); upBtn.setAttribute("data-resumepick","1"); upBtn.type = "button";
+    upRow.appendChild(upBtn);
+    var upStat = el("span","sub2"); upStat.id = "resumeUpStat"; upStat.textContent = c.resumeFileName ? ("On file: " + c.resumeFileName) : "No file yet";
+    upRow.appendChild(upStat);
+    upWrap.appendChild(upRow);
+    var hiddenIn = el("input"); hiddenIn.type = "file"; hiddenIn.id = "resumeFileIn"; hiddenIn.accept = ".pdf,.doc,.docx"; hiddenIn.style.display = "none";
+    upWrap.appendChild(hiddenIn);
+    if(c.resumePath){ var dl = el("button","btn sm ghost","Open current resume"); dl.setAttribute("data-resumeopen", c.resumePath); dl.type="button"; dl.style.marginLeft="8px"; upRow.appendChild(dl); }
+    body.appendChild(upWrap);
+
+    var rtF = field("Resume Text (paste for search)","resumeText",c.resumeText,"textarea"); rtF.className = "fld full"; body.appendChild(rtF);
+    var notesF = field("Notes","notes",c.notes,"textarea"); notesF.className = "fld full"; body.appendChild(notesF);
+  }
+  if(c.resumeFileName){ body.appendChild(el("div","hint","Resume on file: " + c.resumeFileName)); }
+  if(!isNew){
+    var ah = el("h3", null, "Activity"); ah.style.fontSize = "15px"; ah.style.margin = "18px 0 10px"; body.appendChild(ah);
+    var alist = el("div");
+    var acts = state.activities.filter(function(a){ return a.candidateId === c.id; }).sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); });
+    if(acts.length === 0){ alist.appendChild(el("div","hint","No activity logged yet.")); }
+    acts.forEach(function(a){ var box = el("div","act"); var top = el("div","top"); top.appendChild(el("b", null, a.type)); top.appendChild(el("span", null, (a.date||"") + "  -  " + (a.owner||""))); box.appendChild(top); box.appendChild(el("div","nt", a.notes || "")); alist.appendChild(box); });
+    body.appendChild(alist);
+    if(!VIEW_ONLY){
+      var addAct = el("div","grid2"); addAct.style.marginTop = "10px";
+      addAct.appendChild(field("Type","actType","Call","select",ACT_TYPES)); addAct.appendChild(field("Date","actDate",todayISO(),"date"));
+      var an = field("Note","actNote","","textarea"); an.className="fld full"; addAct.appendChild(an); body.appendChild(addAct);
+      var logBtn = el("button","btn sm","+ Log Activity"); logBtn.setAttribute("data-logact","1"); logBtn.style.marginTop = "6px"; body.appendChild(logBtn);
+    }
+  }
+  m.appendChild(body);
+  var foot = el("div","mfoot"); var left = el("div");
+  if(!isNew && !VIEW_ONLY){ var del = el("button","btn sm danger","Delete"); del.setAttribute("data-del","1"); left.appendChild(del); }
+  foot.appendChild(left); var right = el("div","right");
+  if(!isNew){ var subBtn = el("button","btn","Submit to HM"); subBtn.setAttribute("data-submitcand","1"); right.appendChild(subBtn); }
+  if(VIEW_ONLY){ var cb = el("button","btn gold","Close"); cb.setAttribute("data-close","1"); right.appendChild(cb); }
+  else{ var cancel = el("button","btn ghost","Cancel"); cancel.setAttribute("data-close","1"); var save = el("button","btn gold", isNew ? "Create" : "Save"); save.setAttribute("data-save","1"); right.appendChild(cancel); right.appendChild(save); }
+  foot.appendChild(right); m.appendChild(foot);
+  document.getElementById("scrim").classList.add("open");
+}
+function readModalInto(c){
+  var m = document.getElementById("modal"); var inputs = m.querySelectorAll("[data-field]");
+  for(var i=0;i<inputs.length;i++){ var k = inputs[i].getAttribute("data-field");
+    if(k === "skills"){ c.skills = inputs[i].value.split(",").map(function(s){ return s.trim(); }).filter(Boolean); }
+    else if(k.indexOf("act") !== 0){ c[k] = inputs[i].value; } }
+  var cks = m.querySelectorAll("[data-reqopt]");
+  if(cks.length){ var picked = []; for(var j=0;j<cks.length;j++){ if(cks[j].checked){ picked.push(cks[j].getAttribute("data-reqopt")); } } c.reqs = picked; }
+  var opp = m.querySelector("[data-oppflag]"); if(opp){ c.opportunity = opp.checked; }
+  return c;
+}
+function readActivity(){ var m = document.getElementById("modal"); var t = m.querySelector("[data-field='actType']"); var d = m.querySelector("[data-field='actDate']"); var n = m.querySelector("[data-field='actNote']"); return { type: t ? t.value : "Note", date: d ? d.value : todayISO(), note: n ? n.value : "" }; }
+
+/* ---------- write actions ---------- */
+async function saveCandidate(){
+  var m = document.getElementById("modal");
+  var newPath = m.getAttribute("data-resumepath"); var newFile = m.getAttribute("data-resumefilename");
+  var existing = openId ? state.candidates.filter(function(x){ return x.id === openId; })[0] : null;
+  if(existing){
+    var c = JSON.parse(JSON.stringify(existing)); readModalInto(c);
+    var dupE = findDuplicate(c, c.id);
+    if(dupE){ toast("Duplicate: " + (normEmail(c.email) && normEmail(dupE.email) === normEmail(c.email) ? "email already on " : "name already on ") + fullName(dupE)); return; }
+    if(newPath){ c.resumePath = newPath; c.resumeFileName = newFile || c.resumeFileName; }
+    closeModal(); await run(sb.from("candidates").update(candToRow(c)).eq("id", c.id), "Saved");
+  }
+  else{
+    var n = newBlank(); readModalInto(n);
+    var dup = findDuplicate(n, null);
+    if(dup){ toast("Not added - " + (normEmail(n.email) ? "email" : "name") + " already exists: " + fullName(dup)); return; }
+    if(newPath){ n.resumePath = newPath; n.resumeFileName = newFile || n.resumeFileName; }
+    closeModal(); await run(sb.from("candidates").insert(candToRow(n)), "Created");
+  }
+}
+async function deleteCandidate(){ if(!openId){ return; } var id = openId; closeModal(); await run(sb.from("candidates").delete().eq("id", id), "Deleted"); }
+async function logActivityAction(){
+  var a = readActivity(); if(!openId || !a.note){ return; }
+  var cid = openId;
+  var ins = await sb.from("activities").insert({ org:ORG, candidate_id:cid, type:a.type, date:nz(a.date), notes:a.note, owner:"" });
+  if(ins.error){ toast(ins.error.message); return; }
+  await sb.from("candidates").update({ last_contacted:nz(a.date), updated_at:new Date().toISOString() }).eq("id", cid);
+  await reloadSoft();
+  var cc = state.candidates.filter(function(x){ return x.id === cid; })[0]; if(cc){ openDetail(cc); }
+  toast("Activity logged");
+}
+
+/* ---------- resume upload + extract ---------- */
+function setUpStat(t){ var s = document.getElementById("resumeUpStat"); if(s){ s.textContent = t; } }
+function grabEmail(text){ var m = text.match(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/); return m ? m[0] : ""; }
+function grabPhone(text){ var m = text.match(/(\+?1[\s.\-]?)?\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}/); return m ? m[0].trim() : ""; }
+function grabLinkedin(text){ var m = text.match(/(https?:\/\/)?(www\.)?linkedin\.com\/in\/[A-Za-z0-9_\-]+/i); if(!m){ return ""; } var u = m[0]; if(u.indexOf("http") !== 0){ u = "https://" + u; } return u; }
+async function extractText(file){
+  var name = file.name.toLowerCase();
+  if(/\.pdf$/.test(name) && window.pdfjsLib){
+    try{
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      var buf = await file.arrayBuffer();
+      var pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+      var out = "";
+      for(var p = 1; p <= pdf.numPages; p++){ var page = await pdf.getPage(p); var tc = await page.getTextContent(); out += tc.items.map(function(it){ return it.str; }).join(" ") + "\n"; }
+      return out;
+    }catch(e){ return ""; }
+  }
+  if(/\.docx?$/.test(name) && window.mammoth){
+    try{ var ab = await file.arrayBuffer(); var res = await window.mammoth.extractRawText({ arrayBuffer: ab }); return res.value || ""; }catch(e){ return ""; }
+  }
+  return "";
+}
+async function handleResumeFile(file){
+  if(!file){ return; }
+  setUpStat("Reading " + file.name + " ...");
+  var text = await extractText(file);
+  // fill text field
+  var m = document.getElementById("modal");
+  var rt = m.querySelector("[data-field='resumeText']");
+  if(rt && text){ rt.value = text.slice(0, 60000); }
+  // auto-fill email/phone if empty
+  if(text){
+    var em = m.querySelector("[data-field='email']"); var ph = m.querySelector("[data-field='phone']");
+    if(em && !em.value){ var e2 = grabEmail(text); if(e2){ em.value = e2; } }
+    if(ph && !ph.value){ var p2 = grabPhone(text); if(p2){ ph.value = p2; } }
+    var li = m.querySelector("[data-field='linkedin']");
+    if(li && !li.value){ var l2 = grabLinkedin(text); if(l2){ li.value = l2; } }
+  }
+  // upload to storage
+  setUpStat("Uploading " + file.name + " ...");
+  var path = ORG + "/" + Date.now() + "_" + file.name.replace(/[^A-Za-z0-9._\-]/g, "_");
+  var up = await sb.storage.from("resumes").upload(path, file, { upsert: true });
+  if(up.error){ setUpStat("Upload failed: " + up.error.message); return; }
+  // stash path + filename on a hidden marker so save picks it up
+  m.setAttribute("data-resumepath", path);
+  m.setAttribute("data-resumefilename", file.name);
+  setUpStat("Ready: " + file.name + (text ? " (text extracted)" : " (stored; no text found)"));
+}
+async function openResume(path){
+  var res = await sb.storage.from("resumes").createSignedUrl(path, 3600);
+  if(res.error || !res.data){ toast("Could not open file"); return; }
+  window.open(res.data.signedUrl, "_blank");
+}
+
+/* ---------- manage reqs ---------- */
+var URGENCIES = ["Open","Immediate need","Contract Award","August","July Start","August Start","On Hold","Closed/Filled","Closed Not Filled"];
+var REQ_PRIORITIES = ["","1 - High","2 - Medium","3 - Low"];
+var REQ_STATUSES = ["Open","Need to Open Req","Awaiting HR Approval","Filled","Closed"];
+var DESIRED_STARTS = ["Immediate need","2-Jul","15-Aug","15-Sep","September","October","November"];
+var YESNO = ["No","Yes"];
+var editReqId = null;
+function openReqModal(existing){
+  editReqId = existing ? existing.id : null;
+  var r = existing || { title:"", role:"", loc:"", disc:"Other", urgency:"Open", priority:"", reqStatus:"", rank:null, desiredStart:"", contingent:"No", compMin:"", compMax:"", compTarget:"", openings:1, hm:"", jobId:"", jd:"", jdLink:"" };
+  openId = null; var m = document.getElementById("modal"); m.className = "modal"; m.innerHTML = "";
+  var head = el("div","mhead"); head.appendChild(el("h2", null, existing ? "Edit Requisition" : "Add Requisition"));
+  var x = el("button","x","\u00d7"); x.setAttribute("data-close","1"); head.appendChild(x); m.appendChild(head);
+  var body = el("div","mbody"); var g = el("div","grid2");
+  var tf = field("Title (advertised to public)","reqTitle",r.title); tf.className = "fld full"; g.appendChild(tf);
+  var rolef = field("Role (official / internal)","reqRole",r.role); rolef.className = "fld full"; g.appendChild(rolef);
+  g.appendChild(field("Rank (1\u201320)","reqRank", (r.rank!=null?String(r.rank):""), "number"));
+  g.appendChild(field("Priority","reqPriority", r.priority||"", "select", REQ_PRIORITIES));
+  g.appendChild(field("Status","reqStatus", r.reqStatus||"", "select", REQ_STATUSES));
+  g.appendChild(field("Location","reqLoc",r.loc));
+  g.appendChild(field("Job ID","reqJobId",r.jobId));
+  var hmWrap = el("div","fld"); hmWrap.appendChild(el("label", null, "Hiring Manager"));
+  var hmIn = el("input"); hmIn.type = "text"; hmIn.setAttribute("data-field","reqHM"); hmIn.value = r.hm || "";
+  if(MANAGERS.length){ hmIn.setAttribute("list","hmList"); var dl = el("datalist"); dl.id = "hmList"; MANAGERS.forEach(function(m){ var op = el("option"); op.value = m.name; dl.appendChild(op); }); hmWrap.appendChild(hmIn); hmWrap.appendChild(dl); }
+  else{ hmWrap.appendChild(hmIn); }
+  g.appendChild(hmWrap);
+  hmIn.addEventListener("change", function(){
+    var val = hmIn.value.trim().toLowerCase(); var found = null;
+    for(var i=0;i<MANAGERS.length;i++){ if((MANAGERS[i].name||"").trim().toLowerCase() === val){ found = MANAGERS[i]; break; } }
+    if(!found){ return; }
+    var mm = document.getElementById("modal");
+    var tEl = mm.querySelector("[data-field='reqHMTitle']"); if(tEl && !tEl.value){ tEl.value = found.title || ""; }
+    var eEl = mm.querySelector("[data-field='reqHMEmail']"); if(eEl && !eEl.value){ eEl.value = found.email || ""; }
+    var pEl = mm.querySelector("[data-field='reqHMPhone']"); if(pEl && !pEl.value){ pEl.value = found.phone || ""; }
+  });
+  g.appendChild(field("HM Title","reqHMTitle",r.hmTitle));
+  g.appendChild(field("HM Email","reqHMEmail",r.hmEmail,"email"));
+  g.appendChild(field("HM Phone","reqHMPhone",r.hmPhone));
+  g.appendChild(field("Discipline","reqDisc",r.disc,"select",DISCIPLINES));
+  g.appendChild(field("Urgency","reqUrg",r.urgency,"select",URGENCIES));
+  g.appendChild(field("Openings","reqOpen",String(r.openings),"number"));
+  g.appendChild(field("Min Comp","reqCompMin", r.compMin||""));
+  g.appendChild(field("Max Comp","reqCompMax", r.compMax||""));
+  g.appendChild(field("Target Comp","reqCompTarget", r.compTarget||""));
+  var dsWrap = el("div","fld"); dsWrap.appendChild(el("label", null, "Desired Start Date"));
+  var dsIn = el("input"); dsIn.type = "text"; dsIn.setAttribute("data-field","reqDesiredStart"); dsIn.value = r.desiredStart || "";
+  dsIn.setAttribute("list","dsList"); var dsDl = el("datalist"); dsDl.id = "dsList"; DESIRED_STARTS.forEach(function(o){ var dop = el("option"); dop.value = o; dsDl.appendChild(dop); });
+  dsWrap.appendChild(dsIn); dsWrap.appendChild(dsDl); g.appendChild(dsWrap);
+  g.appendChild(field("Contingent Hire","reqContingent", r.contingent||"No", "select", YESNO));
+  var jlf = field("Job Description Link","reqJdLink",r.jdLink,"url"); jlf.className = "fld full"; g.appendChild(jlf);
+  var jdf = field("Job Description","reqJd",r.jd,"textarea"); jdf.className = "fld full"; g.appendChild(jdf);
+  body.appendChild(g); m.appendChild(body);
+  var foot = el("div","mfoot"); foot.appendChild(el("div")); var right = el("div","right");
+  var cancel = el("button","btn ghost","Cancel"); cancel.setAttribute("data-close","1");
+  var save = el("button","btn gold", existing ? "Save Req" : "Add Req"); save.setAttribute("data-reqsave","1");
+  right.appendChild(cancel); right.appendChild(save); foot.appendChild(right); m.appendChild(foot);
+  document.getElementById("scrim").classList.add("open");
+}
+function renderJD(text){
+  var wrap = el("div"); wrap.style.cssText = "margin-top:4px";
+  var lines = String(text).replace(/\r\n/g,"\n").replace(/\r/g,"\n").split("\n");
+  var ul = null;
+  function closeUl(){ if(ul){ wrap.appendChild(ul); ul = null; } }
+  for(var i=0;i<lines.length;i++){
+    var line = lines[i].trim();
+    if(!line){ closeUl(); continue; }
+    var bm = line.match(/^[-\u2022\u2013*]\s+(.+)$/);
+    if(bm){ if(!ul){ ul = el("ul"); ul.style.cssText = "margin:4px 0 12px 20px;padding:0;line-height:1.55"; } var li = el("li", null, bm[1]); li.style.marginBottom = "3px"; ul.appendChild(li); continue; }
+    closeUl();
+    var lv = line.match(/^([A-Za-z][\w &\/'.-]{0,28}):\s+(\S.*)$/);
+    var isHeading = (line.length <= 60 && !/[.;,]$/.test(line) && line.split(/\s+/).length <= 8 && !lv);
+    if(lv && lv[1].split(/\s+/).length <= 3){
+      var p = el("p"); p.style.cssText = "margin:0 0 3px;line-height:1.5";
+      var b = el("strong", null, lv[1] + ": "); p.appendChild(b); p.appendChild(document.createTextNode(lv[2])); wrap.appendChild(p);
+    } else if(isHeading){
+      var hd = el("div", null, line.replace(/:$/,"")); hd.style.cssText = "font-weight:700;margin:14px 0 5px;font-size:13.5px;color:var(--gold);letter-spacing:.3px"; wrap.appendChild(hd);
+    } else {
+      var pp = el("p", null, line); pp.style.cssText = "margin:0 0 9px;line-height:1.6"; wrap.appendChild(pp);
+    }
+  }
+  closeUl();
+  return wrap;
+}
+function viewReq(r){
+  var m = document.getElementById("modal"); m.className = "modal"; m.innerHTML = "";
+  var head = el("div","mhead"); head.appendChild(el("h2", null, r.title));
+  var x = el("button","x","\u00d7"); x.setAttribute("data-close","1"); head.appendChild(x); m.appendChild(head);
+  var body = el("div","mbody"); var g = el("div","grid2");
+  g.appendChild(roField("Rank", r.rank != null ? ("#" + r.rank) : "-")); g.appendChild(roField("Priority", r.priority || "-"));
+  g.appendChild(roField("Status", r.reqStatus || "-")); g.appendChild(roField("Role (official)", r.role || "-"));
+  g.appendChild(roField("Location", r.loc)); g.appendChild(roField("Job ID", r.jobId));
+  g.appendChild(roField("Hiring Manager", r.hm)); g.appendChild(roField("HM Title", r.hmTitle));
+  g.appendChild(roField("HM Email", r.hmEmail)); g.appendChild(roField("HM Phone", r.hmPhone));
+  g.appendChild(roField("Discipline", r.disc));
+  g.appendChild(roField("Urgency", r.urgency)); g.appendChild(roField("Openings", String(r.openings)));
+  g.appendChild(roField("Min Comp", r.compMin || "-")); g.appendChild(roField("Max Comp", r.compMax || "-")); g.appendChild(roField("Target Comp", r.compTarget || "-"));
+  g.appendChild(roField("Desired Start", r.desiredStart || "-")); g.appendChild(roField("Contingent Hire", r.contingent || "-"));
+  if(r.jdLink){ var lk = el("div","fld full"); lk.appendChild(el("label", null, "Job Description Link")); var a = el("a","tag gold","Open job description"); a.href = r.jdLink; a.target = "_blank"; lk.appendChild(a); g.appendChild(lk); }
+  var jdWrap = el("div","fld full"); jdWrap.appendChild(el("label", null, "Job Description")); if(r.jd && String(r.jd).trim()){ jdWrap.appendChild(renderJD(r.jd)); } else { jdWrap.appendChild(el("div","roval","-")); } g.appendChild(jdWrap);
+  body.appendChild(g); m.appendChild(body);
+  var foot = el("div","mfoot"); foot.appendChild(el("div")); var right = el("div","right");
+  if(!VIEW_ONLY){ var eb = el("button","btn","Edit"); eb.setAttribute("data-reqedit", r.id); right.appendChild(eb); }
+  var cb = el("button","btn gold","Close"); cb.setAttribute("data-close","1"); right.appendChild(cb);
+  foot.appendChild(right); m.appendChild(foot);
+  document.getElementById("scrim").classList.add("open");
+}
+async function saveReq(){
+  var m = document.getElementById("modal");
+  function v(k){ var e = m.querySelector("[data-field='" + k + "']"); return e ? e.value : ""; }
+  var title = v("reqTitle").trim(); if(!title){ toast("Title required"); return; }
+  var row = { org:ORG, title:title, role:v("reqRole").trim(), loc:v("reqLoc").trim(), job_id:v("reqJobId").trim(), hiring_manager:v("reqHM").trim(), hm_title:v("reqHMTitle").trim(), hm_email:v("reqHMEmail").trim(), hm_phone:v("reqHMPhone").trim(), discipline:v("reqDisc"), urgency:v("reqUrg"), priority:v("reqPriority"), req_status:v("reqStatus"), rank:(parseInt(v("reqRank"),10) || null), desired_start:v("reqDesiredStart").trim(), contingent:v("reqContingent"), comp_min:v("reqCompMin").trim(), comp_max:v("reqCompMax").trim(), comp_target:v("reqCompTarget").trim(), openings:parseInt(v("reqOpen"),10) || 1, jd:v("reqJd"), jd_link:v("reqJdLink").trim() };
+  var id = editReqId; closeModal();
+  if(id){ await run(sb.from("reqs").update(row).eq("id", id), "Req updated"); }
+  else{ await run(sb.from("reqs").insert(row), "Req added"); }
+}
+async function deleteReq(id){ await run(sb.from("reqs").delete().eq("id", id), "Req deleted"); }
+
+/* ---------- bulk add ---------- */
+function openBulk(){
+  openId = null; var m = document.getElementById("modal"); m.className = "modal wide"; m.innerHTML = "";
+  var head = el("div","mhead"); head.appendChild(el("h2", null, "Bulk Add")); var x = el("button","x","\u00d7"); x.setAttribute("data-close","1"); head.appendChild(x); m.appendChild(head);
+  var body = el("div","mbody");
+  var drop = el("div","drop"); drop.id = "drop"; drop.appendChild(el("div", null, "Drag resume files here"));
+  drop.appendChild(el("div","hint","One record per file. Name and location read from  LastName_FirstName_Location.  Text files (.txt) also load contents into Resume Text.")); body.appendChild(drop);
+  body.appendChild(el("div","hint","Or paste lines. Each line becomes a candidate:  First Last, Title, Location"));
+  var ta = el("textarea"); ta.id = "bulkText"; ta.style.width = "100%"; ta.style.minHeight = "130px"; ta.style.marginTop = "8px"; ta.style.background = "var(--bg)"; ta.style.color = "var(--ink)"; ta.style.border = "1px solid var(--line)"; ta.style.borderRadius = "8px"; ta.style.padding = "10px";
+  ta.placeholder = "Jane Smith, Sr Systems Engineer, Fort Worth TX\nJohn Doe, Program Manager, Yuma"; body.appendChild(ta);
+  var defRow = el("div","grid2"); defRow.style.marginTop = "12px";
+  defRow.appendChild(field("Default Discipline","bDisc","","select",[""].concat(DISCIPLINES)));
+  defRow.appendChild(field("Default Source","bSource","Resume Database","select",SOURCE));
+  defRow.appendChild(field("Default Owner","bOwner",OWNERS[0] || "Unassigned","select",OWNERS)); body.appendChild(defRow); m.appendChild(body);
+  var foot = el("div","mfoot"); foot.appendChild(el("div")); var right = el("div","right");
+  var cancel = el("button","btn ghost","Cancel"); cancel.setAttribute("data-close","1"); var add = el("button","btn gold","Add Candidates"); add.setAttribute("data-bulkadd","1");
+  right.appendChild(cancel); right.appendChild(add); foot.appendChild(right); m.appendChild(foot);
+  document.getElementById("scrim").classList.add("open"); wireDrop();
+}
+function parseFilename(name){
+  var base = name.replace(/\.[^.]+$/, ""); var parts = base.split("_"); var out = { firstName:"", lastName:"", location:"" };
+  if(parts.length >= 2){ out.lastName = parts[0]; out.firstName = parts[1]; if(parts[2]){ out.location = parts[2].replace(/([a-z])([A-Z])/g, "$1 $2"); } }
+  else{ var sp = base.split(/\s+/); out.firstName = sp[0] || base; out.lastName = sp.slice(1).join(" "); } return out;
+}
+function bulkDefaults(){ var m = document.getElementById("modal"); var dd = m.querySelector("[data-field='bDisc']"); var s = m.querySelector("[data-field='bSource']"); var o = m.querySelector("[data-field='bOwner']"); return { disc: dd ? dd.value : "", source: s ? s.value : "Resume Database", owner: o ? o.value : (OWNERS[0]||"Unassigned") }; }
+function wireDrop(){
+  var drop = document.getElementById("drop"); if(!drop){ return; }
+  ["dragenter","dragover"].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add("hot"); }); });
+  ["dragleave","drop"].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove("hot"); }); });
+  drop.addEventListener("drop", function(e){
+    var files = e.dataTransfer.files; var d = bulkDefaults(); var rows = []; var pending = files.length; if(pending === 0){ return; }
+    for(var i=0;i<files.length;i++){
+      (function(file){
+        var info = parseFilename(file.name); var c = newBlank();
+        c.firstName = info.firstName; c.lastName = info.lastName; c.location = info.location; c.source = d.source; c.owner = d.owner; c.discipline = d.disc; c.resumeFileName = file.name;
+        if(/\.txt$/i.test(file.name)){ var r = new FileReader(); r.onload = function(){ c.resumeText = String(r.result).slice(0,20000); rows.push(candToRow(c)); done(); }; r.onerror = function(){ rows.push(candToRow(c)); done(); }; r.readAsText(file); }
+        else{ rows.push(candToRow(c)); done(); }
+        async function done(){ pending--; if(pending === 0){ closeModal(); await run(sb.from("candidates").insert(rows), rows.length + " candidate(s) added"); } }
+      })(files[i]);
+    }
+  });
+}
+async function bulkFromText(){
+  var ta = document.getElementById("bulkText"); var d = bulkDefaults();
+  var lines = (ta ? ta.value : "").split("\n").map(function(s){ return s.trim(); }).filter(Boolean); var rows = [];
+  lines.forEach(function(line){ var cols = line.split(",").map(function(s){ return s.trim(); }); var np = (cols[0] || "").split(/\s+/);
+    var c = newBlank(); c.firstName = np[0] || ""; c.lastName = np.slice(1).join(" "); c.title = cols[1] || ""; c.location = cols[2] || ""; c.source = d.source; c.owner = d.owner; c.discipline = d.disc; rows.push(candToRow(c)); });
+  if(rows.length === 0){ closeModal(); return; }
+  var seen = {}; var dedup = []; var dropped = 0;
+  rows.forEach(function(row){
+    var cc = { email:row.email, firstName:row.first_name, lastName:row.last_name };
+    var em = normEmail(cc.email); var nm = normName(cc.firstName, cc.lastName); var key = em || nm;
+    if(findDuplicate(cc, null) || seen[key]){ dropped++; return; }
+    seen[key] = 1; dedup.push(row);
+  });
+  if(dedup.length === 0){ closeModal(); toast("All entries were duplicates - nothing added"); return; }
+  closeModal(); await run(sb.from("candidates").insert(dedup), dedup.length + " candidate(s) added" + (dropped ? (" - " + dropped + " duplicate(s) skipped") : ""));
+}
+
+/* ---------- CSV ---------- */
+function parseCSV(text){
+  var rows = []; var row = []; var cur = ""; var q = false;
+  for(var i=0;i<text.length;i++){ var ch = text[i];
+    if(q){ if(ch === '"'){ if(text[i+1] === '"'){ cur += '"'; i++; } else{ q = false; } } else{ cur += ch; } }
+    else{ if(ch === '"'){ q = true; } else if(ch === ","){ row.push(cur); cur = ""; } else if(ch === "\n"){ row.push(cur); rows.push(row); row = []; cur = ""; } else if(ch === "\r"){} else{ cur += ch; } } }
+  if(cur.length > 0 || row.length > 0){ row.push(cur); rows.push(row); } return rows;
+}
+async function importCSV(text){
+  var rows = parseCSV(text).filter(function(r){ return r.join("").trim() !== ""; });
+  if(rows.length < 2){ toast("No rows found"); return; }
+  var head = rows[0].map(function(h){ return h.trim().toLowerCase(); });
+  function idx(n){ return head.indexOf(n.toLowerCase()); }
+  var map = { firstName:idx("first name"), lastName:idx("last name"), full:idx("full name"), email:idx("email"), phone:idx("phone"), location:idx("location"), title:idx("current title"), company:idx("current company"), skills:idx("skills"), source:idx("source"), status:idx("status"), priority:idx("priority"), owner:idx("recruiter owner"), disc:idx("discipline"), recv:idx("date received"), last:idx("last contacted"), next:idx("next follow up"), link:idx("resume link"), linkedin:idx("linkedin"), summary:idx("candidate summary"), notes:idx("notes") };
+  if(map.summary < 0){ map.summary = idx("summary"); }
+  var out = []; var skipped = 0; var seenEmail = {}; var seenName = {};
+  for(var r=1;r<rows.length;r++){ var row = rows[r];
+    function g(i){ return (i>=0 && row[i] !== undefined) ? row[i].trim() : ""; }
+    var fn = g(map.firstName); var ln = g(map.lastName);
+    if(!fn && !ln && map.full >= 0){ var sp = g(map.full).split(/\s+/); fn = sp[0] || ""; ln = sp.slice(1).join(" "); }
+    var c = newBlank(); c.firstName = fn; c.lastName = ln; c.email = g(map.email); c.phone = g(map.phone); c.location = g(map.location); c.title = g(map.title); c.company = g(map.company); c.discipline = g(map.disc);
+    c.skills = g(map.skills) ? g(map.skills).split(",").map(function(s){ return s.trim(); }).filter(Boolean) : [];
+    c.source = g(map.source) || "Other"; c.status = g(map.status) || "New"; c.priority = g(map.priority) || "Medium"; c.owner = g(map.owner) || (OWNERS[0]||"Unassigned");
+    c.dateReceived = g(map.recv) || todayISO(); c.lastContacted = g(map.last); c.nextFollowUp = g(map.next); c.resumeLink = g(map.link); c.linkedin = g(map.linkedin); c.summary = g(map.summary); c.notes = g(map.notes);
+    var em = normEmail(c.email); var nm = normName(c.firstName, c.lastName);
+    // skip if duplicates an existing record, or an earlier row in this same file
+    if(findDuplicate(c, null) || (em && seenEmail[em]) || (!em && nm !== "|" && seenName[nm])){ skipped++; continue; }
+    if(em){ seenEmail[em] = 1; } else if(nm !== "|"){ seenName[nm] = 1; }
+    out.push(candToRow(c));
+  }
+  if(out.length === 0){ toast(skipped ? ("All " + skipped + " row(s) were duplicates - nothing imported") : "No rows found"); return; }
+  var msg = out.length + " candidate(s) imported" + (skipped ? (" - " + skipped + " duplicate(s) skipped") : "");
+  await run(sb.from("candidates").insert(out), msg);
+}
+
+/* ---------- submit to hiring manager (one-pager) ---------- */
+function submHesc(v){ v = (v===undefined||v===null)?"":String(v); return v.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function listJoin(a){ a = (a||[]).filter(Boolean); if(a.length <= 1){ return a.join(""); } if(a.length === 2){ return a[0] + " and " + a[1]; } return a.slice(0,-1).join(", ") + ", and " + a[a.length-1]; }
+function fitParagraph(c, reqLabel){
+  var first = (c.firstName && c.firstName.trim()) ? c.firstName.trim() : ((fullName(c).split(/\s+/)[0]) || "This candidate");
+  var role = reqLabel || ((c.reqs || [])[0] || "");
+  var skills = (c.skills || []).slice(0,4);
+  var seg = [];
+  seg.push(first + " is " + (c.title ? ("a " + c.title) : "a strong candidate") + (c.company ? (" at " + c.company) : "") + (c.location ? (", based in " + c.location) : "") + ".");
+  if(skills.length){ seg.push("Core strengths include " + listJoin(skills) + "."); }
+  if(role){ seg.push("For the " + role + " role, that mix of hands-on expertise and domain knowledge should let " + first + " ramp quickly and contribute from day one."); }
+  else { seg.push("That mix of hands-on expertise and domain knowledge would make " + first + " a valuable addition to our team."); }
+  if(c.discipline){ seg.push("A " + c.discipline + " background aligns well with the work our team is driving."); }
+  return seg.join(" ");
+}
+function buildSubmissionHTML(cands, reqTitle){
+  var today = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+  var navy = "#0e1a2b", panel = "#14233a", gold = "#c8a96a", ink = "#1a2330", muted = "#5d6b80", line = "#d8dee8";
+  var h = "";
+  h += "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Candidate Submission - " + submHesc(CONFIG.company) + "</title>";
+  h += "<style>";
+  h += "*{box-sizing:border-box} body{margin:0;background:#eef1f5;color:" + ink + ";font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5}";
+  h += ".page{max-width:820px;margin:24px auto;background:#fff;box-shadow:0 6px 30px #0002;border-radius:10px;overflow:hidden}";
+  h += ".top{background:" + navy + ";color:#fff;padding:22px 30px;display:flex;justify-content:space-between;align-items:flex-end}";
+  h += ".top h1{font-family:Georgia,serif;font-size:20px;margin:0} .top .b{color:" + gold + "} .top .meta{color:#9db2d2;font-size:12px;text-align:right}";
+  h += ".bar{background:" + gold + ";height:4px}";
+  h += ".body{padding:26px 30px}";
+  h += ".cand{padding:18px 0;border-bottom:1px solid " + line + "} .cand:last-child{border-bottom:0}";
+  h += ".nm{font-family:Georgia,serif;font-size:19px;font-weight:700;margin:0 0 2px}";
+  h += ".tc{color:" + muted + ";font-size:13px;margin-bottom:8px}";
+  h += ".contact{font-size:12px;color:#33405a;margin-bottom:10px} .contact a{color:#1f6feb;text-decoration:none}";
+  h += ".lbl{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:" + gold + ";font-weight:700;margin:10px 0 3px}";
+  h += ".sum{font-size:13.5px;color:#26303f} .sk{font-size:12.5px;color:#33405a}";
+  h += ".foot{padding:18px 30px;border-top:1px solid " + line + ";color:" + muted + ";font-size:12px}";
+  h += ".tools{max-width:820px;margin:14px auto;text-align:right}";
+  h += ".btn{background:" + navy + ";color:#fff;border:0;border-radius:7px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;margin-left:8px} .btn.g{background:" + gold + ";color:#1a1208}";
+  h += "@media print{body{background:#fff} .tools{display:none} .page{box-shadow:none;margin:0;max-width:none}}";
+  h += "</style></head><body>";
+  h += "<div class='tools'><button class='btn g' onclick='window.print()'>Print / Save as PDF</button><button class='btn' id='copyBtn'>Copy as text</button><button class='btn' onclick='window.close()'>Close</button></div>";
+  h += "<div class='page'>";
+  h += "<div class='top'><div><h1>" + submHesc(CONFIG.company) + "<span class='b'>.</span></h1><div style='color:#9db2d2;font-size:12px;margin-top:3px'>Candidate Submission" + (reqTitle ? (" &mdash; " + submHesc(reqTitle)) : "") + "</div></div>";
+  h += "<div class='meta'>Confidential Candidate Submission<br>" + today + "</div></div><div class='bar'></div>";
+  h += "<div class='body'>";
+  var txt = "CANDIDATE SUBMISSION - " + CONFIG.company + (reqTitle ? (" - " + reqTitle) : "") + "\n" + today + "\n\n";
+  cands.forEach(function(c){
+    var name = fullName(c);
+    h += "<div class='cand'>";
+    h += "<div class='nm'>" + submHesc(name) + "</div>";
+    h += "<div class='tc'>" + submHesc((c.title||"") + (c.company ? (" &mdash; " + c.company) : "")) + (c.location ? (" &nbsp;|&nbsp; " + submHesc(c.location)) : "") + "</div>";
+    var contact = [];
+    if(c.email){ contact.push("<a href='mailto:" + submHesc(c.email) + "'>" + submHesc(c.email) + "</a>"); }
+    if(c.phone){ contact.push(submHesc(c.phone)); }
+    if(c.linkedin){ contact.push("<a href='" + submHesc(c.linkedin) + "'>LinkedIn</a>"); }
+    if(contact.length){ h += "<div class='contact'>" + contact.join(" &nbsp;&middot;&nbsp; ") + "</div>"; }
+    var first = (c.firstName && c.firstName.trim()) ? c.firstName.trim() : ((name.split(/\s+/)[0]) || "This candidate");
+    if(c.summary){ h += "<div class='lbl'>Summary</div><div class='sum'>" + submHesc(c.summary) + "</div>"; }
+    var fitTxt = fitParagraph(c, reqTitle || ((c.reqs||[])[0] || ""));
+    h += "<div class='lbl'>Why " + submHesc(first) + " Fits</div><div class='sum'>" + submHesc(fitTxt) + "</div>";
+    if((c.skills||[]).length){ h += "<div class='lbl'>Key Skills</div><div class='sk'>" + submHesc((c.skills||[]).join(" &middot; ")) + "</div>"; }
+    if((c.reqs||[]).length){ h += "<div class='lbl'>Targeted Role</div><div class='sk'>" + submHesc((c.reqs||[]).join("; ")) + "</div>"; }
+    if(c.resumeLink){ h += "<div class='lbl'>Resume</div><div class='sk'><a href='" + submHesc(c.resumeLink) + "'>" + submHesc(c.resumeLink) + "</a></div>"; }
+    else if(c.resumeFileName){ h += "<div class='lbl'>Resume</div><div class='sk'>On file (available on request)</div>"; }
+    h += "</div>";
+    // plain text version
+    txt += name + "\n" + (c.title||"") + (c.company ? (" - " + c.company) : "") + (c.location ? ("  |  " + c.location) : "") + "\n";
+    if(c.email){ txt += "Email: " + c.email + "\n"; }
+    if(c.phone){ txt += "Phone: " + c.phone + "\n"; }
+    if(c.linkedin){ txt += "LinkedIn: " + c.linkedin + "\n"; }
+    if(c.summary){ txt += "\nSummary: " + c.summary + "\n"; }
+    txt += "\nWhy " + first + " Fits: " + fitTxt + "\n";
+    if((c.skills||[]).length){ txt += "Key Skills: " + (c.skills||[]).join(", ") + "\n"; }
+    txt += "\n----------------------------------------\n\n";
+  });
+  h += "</div>";
+  h += "<div class='foot'>" + submHesc(CONFIG.company) + " &nbsp;&middot;&nbsp; Confidential Candidate Submission &nbsp;&middot;&nbsp; " + today + "</div>";
+  h += "</div>";
+  txt += CONFIG.company + " | Confidential Candidate Submission | " + today + "\n";
+  h += "<textarea id='plain' style='position:absolute;left:-9999px'>" + submHesc(txt) + "</textarea>";
+  h += "<scr"+"ipt>document.getElementById('copyBtn').addEventListener('click',function(){var t=document.getElementById('plain');t.select();try{document.execCommand('copy');this.textContent='Copied';}catch(e){if(navigator.clipboard){navigator.clipboard.writeText(t.value);this.textContent='Copied';}}});<\/scr"+"ipt>";
+  h += "</body></html>";
+  return h;
+}
+function openSubmission(cands, reqTitle){
+  if(!cands || cands.length === 0){ toast("No candidates to submit"); return; }
+  var win = window.open("", "_blank");
+  if(!win){ toast("Allow pop-ups to open the submission"); return; }
+  win.document.open(); win.document.write(buildSubmissionHTML(cands, reqTitle)); win.document.close();
+}
+function submitCandidate(){ if(!openId){ return; } var c = state.candidates.filter(function(x){ return x.id === openId; })[0]; if(c){ openSubmission([c], (c.reqs||[])[0] || ""); } }
+function submitReq(reqId){
+  var r = REQS.filter(function(x){ return x.id === reqId; })[0]; if(!r){ return; }
+  var idx = REQS.indexOf(r); var label = REQ_OPTIONS[idx];
+  var cands = state.candidates.filter(function(c){ return (c.reqs||[]).indexOf(label) !== -1; });
+  if(cands.length === 0){ toast("No candidates tagged to this req yet"); return; }
+  openSubmission(cands, r.title + " - " + r.loc);
+}
+
+/* ---------- export ---------- */
+function exportData(){
+  var headers = ["Full Name","First Name","Last Name","Email","Phone","Location","Discipline","Current Title","Current Company","Skills","Target Reqs","Source","Status","Priority","Recruiter Owner","Date Received","Last Contacted","Next Follow Up","Resume Link","LinkedIn","Candidate Summary","Notes"];
+  function esc(v){ v = (v === undefined || v === null) ? "" : String(v); if(/[",\n]/.test(v)){ return '"' + v.replace(/"/g, '""') + '"'; } return v; }
+  var lines = [headers.join(",")];
+  state.candidates.forEach(function(c){ lines.push([fullName(c),c.firstName,c.lastName,c.email,c.phone,c.location,c.discipline,c.title,c.company,(c.skills||[]).join(", "),(c.reqs||[]).join(" | "),c.source,c.status,c.priority,c.owner,c.dateReceived,c.lastContacted,c.nextFollowUp,c.resumeLink,c.linkedin,c.summary,c.notes].map(esc).join(",")); });
+  download(CONFIG.company + "_Candidates_Export.csv", lines.join("\n"), "text/csv");
+  toast("Exported CSV");
+}
+function exportDayforce(){
+  // Standard Dayforce-style applicant import columns. Map to the client's
+  // template if they provide one. Splits Location "City, ST" into City/State.
+  var headers = ["First Name","Last Name","Email","Mobile Phone","Address Line 1","City","State","Country","LinkedIn","Source","Candidate Status","Requisition Title","Current Job Title","Current Employer","Skills","Notes","Date Applied"];
+  function esc(v){ v = (v === undefined || v === null) ? "" : String(v); if(/[",\n]/.test(v)){ return '"' + v.replace(/"/g, '""') + '"'; } return v; }
+  function splitLoc(loc){ loc = loc || ""; var parts = loc.split(","); var city = (parts[0]||"").trim(); var st = (parts[1]||"").trim(); return { city:city, state:st }; }
+  var lines = [headers.join(",")];
+  state.candidates.forEach(function(c){
+    var L = splitLoc(c.location);
+    lines.push([
+      c.firstName, c.lastName, c.email, c.phone, "", L.city, L.state, "USA", c.linkedin,
+      c.source, c.status, (c.reqs||[]).join(" | "), c.title, c.company,
+      (c.skills||[]).join("; "), c.notes, c.dateReceived
+    ].map(esc).join(","));
+  });
+  download(CONFIG.company + "_Dayforce_Import.csv", lines.join("\n"), "text/csv");
+  toast("Dayforce CSV exported");
+}
+function download(name, content, mime){ var blob = new Blob([content], {type: mime}); var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(function(){ URL.revokeObjectURL(a.href); }, 500); }
+
+/* ---------- events ---------- */
+function closeModal(){ document.getElementById("scrim").classList.remove("open"); openId = null; }
+function refresh(){ renderTabs(); renderList(); }
+
+document.getElementById("loginBtn").addEventListener("click", function(){ doLogin(); });
+document.getElementById("loginPass").addEventListener("keydown", function(e){ if(e.key === "Enter"){ doLogin(); } });
+document.getElementById("signoutBtn").addEventListener("click", async function(){ if(sb){ await sb.auth.signOut(); } window.location.reload(); });
+
+document.getElementById("tabs").addEventListener("click", function(e){ var b = e.target.closest("[data-view]"); if(!b){ return; } ui.view = b.getAttribute("data-view"); refresh(); });
+document.getElementById("list").addEventListener("click", function(e){
+  if(e.target.closest("[data-stop]")){ return; }
+  var addr = e.target.closest("[data-reqadd]"); if(addr){ openReqModal(null); return; }
+  var edr = e.target.closest("[data-reqedit]"); if(edr){ var er = REQS.filter(function(x){ return x.id === edr.getAttribute("data-reqedit"); })[0]; if(er){ openReqModal(er); } return; }
+  var subr = e.target.closest("[data-submitreq]"); if(subr){ submitReq(subr.getAttribute("data-submitreq")); return; }
+  var delr = e.target.closest("[data-reqdel]"); if(delr){ deleteReq(delr.getAttribute("data-reqdel")); return; }
+  var vr = e.target.closest("[data-reqview]"); if(vr){ var rr = REQS.filter(function(x){ return x.id === vr.getAttribute("data-reqview"); })[0]; if(rr){ viewReq(rr); } return; }
+  var tr = e.target.closest("tr[data-id]"); if(!tr){ return; } var id = tr.getAttribute("data-id"); var c = state.candidates.filter(function(x){ return x.id === id; })[0]; if(c){ openDetail(c); } });
+document.getElementById("q").addEventListener("input", function(e){ ui.q = e.target.value; renderList(); });
+document.getElementById("fStatus").addEventListener("change", function(e){ ui.fStatus = e.target.value; renderList(); });
+document.getElementById("fDiscipline").addEventListener("change", function(e){ ui.fDiscipline = e.target.value; renderList(); });
+document.getElementById("fReq").addEventListener("change", function(e){ ui.fReq = e.target.value; renderList(); });
+document.getElementById("fOwner").addEventListener("change", function(e){ ui.fOwner = e.target.value; renderList(); });
+document.getElementById("fPriority").addEventListener("change", function(e){ ui.fPriority = e.target.value; renderList(); });
+document.getElementById("addBtn").addEventListener("click", function(){ openDetail(null); });
+document.getElementById("bulkBtn").addEventListener("click", openBulk);
+document.getElementById("exportBtn").addEventListener("click", exportData);
+document.getElementById("dayforceBtn").addEventListener("click", exportDayforce);
+document.getElementById("importBtn").addEventListener("click", function(){ document.getElementById("fileInput").click(); });
+document.getElementById("fileInput").addEventListener("change", function(e){ var f = e.target.files[0]; if(!f){ return; } var r = new FileReader(); r.onload = function(){ importCSV(String(r.result)); }; r.readAsText(f); e.target.value = ""; });
+
+document.getElementById("scrim").addEventListener("click", function(e){
+  if(e.target.id === "scrim"){ closeModal(); return; }
+  if(e.target.closest("[data-close]")){ closeModal(); return; }
+  if(e.target.closest("[data-save]")){ saveCandidate(); return; }
+  if(e.target.closest("[data-del]")){ deleteCandidate(); return; }
+  if(e.target.closest("[data-logact]")){ logActivityAction(); return; }
+  if(e.target.closest("[data-bulkadd]")){ bulkFromText(); return; }
+  if(e.target.closest("[data-submitcand]")){ submitCandidate(); return; }
+  if(e.target.closest("[data-reqsave]")){ saveReq(); return; }
+  var ed = e.target.closest("[data-reqedit]"); if(ed){ var er = REQS.filter(function(x){ return x.id === ed.getAttribute("data-reqedit"); })[0]; if(er){ openReqModal(er); } return; }
+  var pick = e.target.closest("[data-resumepick]"); if(pick){ var fi = document.getElementById("resumeFileIn"); if(fi){ fi.click(); } return; }
+  var openr = e.target.closest("[data-resumeopen]"); if(openr){ openResume(openr.getAttribute("data-resumeopen")); return; }
+});
+document.addEventListener("keydown", function(e){ if(e.key === "Escape"){ closeModal(); } });
+document.addEventListener("change", function(e){ if(e.target && e.target.id === "resumeFileIn"){ var f = e.target.files[0]; if(f){ handleResumeFile(f); } } });
+document.addEventListener("input", function(e){
+  if(e.target && e.target.getAttribute && e.target.getAttribute("data-field") === "reqHM"){
+    var val = e.target.value.trim().toLowerCase();
+    var m = MANAGERS.filter(function(x){ return x.name.toLowerCase() === val; })[0];
+    if(m){
+      var md = document.getElementById("modal");
+      var t = md.querySelector("[data-field='reqHMTitle']"); var em = md.querySelector("[data-field='reqHMEmail']"); var ph = md.querySelector("[data-field='reqHMPhone']");
+      if(t && !t.value){ t.value = m.title || ""; }
+      if(em && !em.value){ em.value = m.email || ""; }
+      if(ph && !ph.value){ ph.value = m.phone || ""; }
+    }
+  }
+});
+
+/* ---------- init ---------- */
+fillSelect(document.getElementById("fStatus"), STATUS, "All Statuses");
+fillSelect(document.getElementById("fDiscipline"), DISCIPLINES, "All Disciplines");
+fillSelect(document.getElementById("fReq"), REQ_OPTIONS, "All Reqs");
+fillSelect(document.getElementById("fOwner"), OWNERS, "All Recruiters");
+fillSelect(document.getElementById("fPriority"), PRIORITY, "All Priorities");
+boot();
+</script>
+</body>
+</html>
