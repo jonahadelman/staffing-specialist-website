@@ -441,7 +441,6 @@ var VIEWS = [
   { id:"bydisc", collapsible:true, name:"By Discipline", fn:function(c){ return c.status !== "Archived"; }, group:"discipline", section:"Reqs" },
   { id:"priolist", collapsible:true, name:"\u2605 Priority List", fn:function(){ return true; }, special:"priolist", section:"Reqs" },
   { id:"managers", collapsible:true, name:"Hiring Managers", fn:function(){ return true; }, special:"managers", section:"People & Reference" },
-  { id:"forms", collapsible:true, name:"Document Library", fn:function(){ return true; }, special:"forms", section:"People & Reference" },
   { id:"tarejected", name:"TA Rejected", fn:function(c){ return c.status === "TA Rejected"; }, section:"Closed", collapsible:true },
   { id:"hmrejected", name:"HM Rejected", fn:function(c){ return c.status === "HM Rejected"; }, section:"Closed", collapsible:true },
   { id:"archive", name:"Archive", fn:function(c){ return c.status === "Archived"; }, section:"Closed", collapsible:true }
@@ -548,7 +547,6 @@ function renderTabs(){
     var count;
     if(v.special === "reqs"){ count = REQS.filter(function(r){ return !r.bench; }).length; }
     else if(v.special === "priolist"){ count = REQS.filter(function(r){ return !r.bench && r.rank != null; }).length; }
-    else if(v.special === "forms"){ count = ""; }
     else if(v.special === "resumecheck"){ count = state.candidates.filter(function(c){ return c.status !== "Archived" && resumeStatus(c) !== "match"; }).length; }
     else if(v.special === "pipeline"){ count = state.candidates.filter(function(c){ return PIPE_STAGES.indexOf(c.status) !== -1; }).length; }
     else if(v.special === "dashboard"){ count = ""; }
@@ -578,7 +576,6 @@ function renderList(){
   if(v.special === "interviewrequests"){ renderInterviewRequests(host); return; }
   if(v.special === "calendar"){ renderCalendar(host); return; }
   if(v.special === "priolist"){ renderPriorityList(host); return; }
-  if(v.special === "forms"){ renderForms(host); return; }
   if(v.special === "board"){ renderBoard(host); return; }
   if(v.special === "pipeline"){ renderPipeline(host); return; }
   if(v.special === "dashboard"){ renderDashboard(host); return; }
@@ -930,7 +927,6 @@ async function deleteProgramNote(id){
 
 /* ---------- forms library ---------- */
 var FORM_CSS = "*{box-sizing:border-box}body{font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;max-width:780px;margin:0 auto;padding:46px 54px;line-height:1.5}h1{font-size:20px;border-bottom:3px solid #c8a96a;padding-bottom:8px;margin:0 0 4px;letter-spacing:.3px}.sub{color:#aeb9cc;font-size:11px;margin:0 0 22px;text-transform:uppercase;letter-spacing:.6px}h2{font-size:13.5px;background:#f4efe4;border-left:4px solid #c8a96a;padding:7px 11px;margin:26px 0 12px;color:#1a1a1a}h3{font-size:12.5px;margin:18px 0 7px;color:#333;font-weight:700}.hf{display:flex;align-items:flex-end;gap:8px;margin:0 0 11px;font-size:13px}.hf b{white-space:nowrap}.hf .fill{flex:1;border-bottom:1px solid #888;height:15px}.q{margin:14px 0 3px;font-size:13px}.opts{font-size:13px;margin:2px 0 6px}.opts span{margin-right:30px;white-space:nowrap}.subf{display:flex;align-items:flex-end;gap:8px;margin:4px 0 8px 16px;font-size:12.5px}.subf .fill{flex:1;border-bottom:1px solid #888;height:14px}.line{border-bottom:1px solid #999;height:17px;margin:7px 0}.note{font-size:12.5px;color:#444;margin:0 0 8px}.sig{display:flex;gap:46px;margin-top:22px;font-size:13px}.sig .blk{flex:1}.sig .fill{border-bottom:1px solid #888;height:16px;margin-bottom:5px}.bar{position:sticky;top:0;background:#1a1a1a;padding:10px 14px;text-align:right;margin:-46px -54px 26px}.bar button{background:#c8a96a;color:#1a1a1a;border:0;padding:8px 18px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit}@media print{.bar{display:none}body{padding:0;max-width:100%}}";
-var FORMS = [
   { type:"render", name:"Elbit Systems of America Candidate Interview & Security Screening Form",
     desc:"Recruiter / interviewer screening: citizenship and clearance eligibility, technical background, industry experience, culture fit, and overall recommendation.",
     blocks:[
@@ -976,288 +972,6 @@ var FORMS = [
   { type:"file", kind:"pdf", el:"doc_guide", mime:"application/pdf", file:"2026_Employee_Benefits_Guide.pdf", name:"2026 Employee Benefits Guide",
     desc:"Full 2026 benefits guide: eligibility, enrollment, plan details, wellness programs, contacts, and required notices." }
 ];
-function renderForms(host){
-  _jdCount = 0; _stratCount = 0; updateDocCount();
-  var intro = el("div"); intro.style.cssText = "margin:2px 0 16px;color:var(--muted);font-size:13px;line-height:1.5";
-  intro.textContent = "Job descriptions, screening forms, and reference documents for this program. Upload a job description to make it downloadable here, open a form to fill on screen and print, or open a reference document to view or download.";
-  host.appendChild(intro);
-
-  /* Uploaded Job Descriptions */
-  var jdSec = el("div"); jdSec.style.cssText = "border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:0 0 22px;background:var(--panel)";
-  var jdHead = el("div"); jdHead.style.cssText = "display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px";
-  var jdTitle = el("div", null, "Job Descriptions"); jdTitle.style.cssText = "font-weight:700;font-size:15px;color:var(--gold)";
-  var upWrap = el("div"); upWrap.style.cssText = "display:flex;align-items:center;gap:10px";
-  var upStat = el("span"); upStat.id = "docUpStat"; upStat.style.cssText = "color:var(--muted);font-size:12px";
-  var upBtn = el("button","btn gold sm","Upload Job Description"); upBtn.style.whiteSpace = "nowrap";
-  var fileIn = el("input"); fileIn.type = "file"; fileIn.accept = ".pdf,.doc,.docx,.txt,.rtf"; fileIn.style.display = "none";
-  fileIn.addEventListener("change", function(){ if(fileIn.files && fileIn.files[0]){ handleDocUpload(fileIn.files[0]); fileIn.value = ""; } });
-  upBtn.addEventListener("click", function(){ fileIn.click(); });
-  upWrap.appendChild(upStat); upWrap.appendChild(upBtn); upWrap.appendChild(fileIn);
-  jdHead.appendChild(jdTitle); jdHead.appendChild(upWrap); jdSec.appendChild(jdHead);
-  var jdList = el("div"); jdList.id = "docList"; jdList.style.cssText = "margin-top:8px";
-  jdList.textContent = "Loading...";
-  jdSec.appendChild(jdList); host.appendChild(jdSec);
-  loadUploadedDocs();
-
-  /* Executive Search Strategy */
-  var stratSec = el("div"); stratSec.style.cssText = "border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:0 0 22px;background:var(--panel)";
-  var stratHead = el("div"); stratHead.style.cssText = "display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px";
-  var stratTitle = el("div", null, "Executive Search Strategy"); stratTitle.style.cssText = "font-weight:700;font-size:15px;color:var(--gold)";
-  var sUpWrap = el("div"); sUpWrap.style.cssText = "display:flex;align-items:center;gap:10px";
-  var sUpStat = el("span"); sUpStat.id = "stratUpStat"; sUpStat.style.cssText = "color:var(--muted);font-size:12px";
-  var sUpBtn = el("button","btn gold sm","Upload Strategy"); sUpBtn.style.whiteSpace = "nowrap";
-  var sFileIn = el("input"); sFileIn.type = "file"; sFileIn.accept = ".pdf,.doc,.docx,.txt,.rtf,.html"; sFileIn.style.display = "none";
-  sFileIn.addEventListener("change", function(){ if(sFileIn.files && sFileIn.files[0]){ handleStratUpload(sFileIn.files[0]); sFileIn.value = ""; } });
-  sUpBtn.addEventListener("click", function(){ sFileIn.click(); });
-  sUpWrap.appendChild(sUpStat); sUpWrap.appendChild(sUpBtn); sUpWrap.appendChild(sFileIn);
-  stratHead.appendChild(stratTitle); stratHead.appendChild(sUpWrap); stratSec.appendChild(stratHead);
-  var stratDesc = el("div", null, "Role-by-role executive search strategy documents, one per role as they are built."); stratDesc.style.cssText = "color:var(--muted);font-size:12px;margin:2px 0 6px";
-  stratSec.appendChild(stratDesc);
-  var stratList = el("div"); stratList.id = "stratList"; stratList.style.cssText = "margin-top:8px";
-  stratList.textContent = "Loading...";
-  stratSec.appendChild(stratList); host.appendChild(stratSec);
-  loadStrategyDocs();
-
-  var formsSec = el("div"); formsSec.style.cssText = "border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:0 0 22px;background:var(--panel)";
-  var formsHead = el("div"); formsHead.style.cssText = "display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px";
-  var formsTitle = el("div", null, "Forms & Reference Documents"); formsTitle.style.cssText = "font-weight:700;font-size:15px;color:var(--gold)";
-  var fUpWrap = el("div"); fUpWrap.style.cssText = "display:flex;align-items:center;gap:10px";
-  var fUpStat = el("span"); fUpStat.id = "formsUpStat"; fUpStat.style.cssText = "color:var(--muted);font-size:12px";
-  var fUpBtn = el("button","btn gold sm","Upload Form"); fUpBtn.style.whiteSpace = "nowrap";
-  var fFileIn = el("input"); fFileIn.type = "file"; fFileIn.accept = ".pdf,.doc,.docx,.txt,.rtf,.xls,.xlsx,.html"; fFileIn.style.display = "none";
-  fFileIn.addEventListener("change", function(){ if(fFileIn.files && fFileIn.files[0]){ handleFormsUpload(fFileIn.files[0]); fFileIn.value = ""; } });
-  fUpBtn.addEventListener("click", function(){ fFileIn.click(); });
-  fUpWrap.appendChild(fUpStat); fUpWrap.appendChild(fUpBtn); fUpWrap.appendChild(fFileIn);
-  formsHead.appendChild(formsTitle); formsHead.appendChild(fUpWrap); formsSec.appendChild(formsHead);
-  var formsDesc = el("div", null, "Screening forms to fill on screen and print, plus reference documents to view or download."); formsDesc.style.cssText = "color:var(--muted);font-size:12px;margin:2px 0 10px";
-  formsSec.appendChild(formsDesc);
-
-  FORMS.forEach(function(item){
-    var card = el("div"); card.style.cssText = "border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:0 0 12px;background:var(--bg)";
-    var top = el("div"); top.style.cssText = "display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap";
-    var left = el("div"); left.style.flex = "1"; left.style.minWidth = "220px";
-    var nm = el("div", null, item.name); nm.style.cssText = "font-weight:700;font-size:14.5px;color:var(--ink);margin-bottom:4px";
-    var ds = el("div", null, item.desc); ds.style.cssText = "color:var(--muted);font-size:12.5px;line-height:1.5";
-    left.appendChild(nm); left.appendChild(ds); top.appendChild(left);
-    if(item.type === "file"){
-      var ob2 = el("button","btn gold sm", item.kind === "docx" ? "Download" : "View"); ob2.style.whiteSpace = "nowrap";
-      ob2.addEventListener("click", function(){ openDoc(item); });
-      top.appendChild(ob2);
-    } else {
-      var ob = el("button","btn gold sm","Open & Print"); ob.style.whiteSpace = "nowrap";
-      ob.addEventListener("click", function(){ openForm(item); });
-      top.appendChild(ob);
-    }
-    card.appendChild(top); formsSec.appendChild(card);
-  });
-  var fUpList = el("div"); fUpList.id = "formsUpList"; fUpList.style.cssText = "margin-top:4px";
-  formsSec.appendChild(fUpList);
-  host.appendChild(formsSec);
-  loadUploadedForms();
-}
-/* ===== AUTO-FIT BOARD: scoring engine + view (deterministic, client-side) =====
-   Reads existing candidates (state.candidates) and open reqs (REQS).
-   Scores each candidate against every req; a candidate appears on the board only
-   if best fit is Moderate or better. No fit, no board. Off-board people stay in
-   the database, just not surfaced here. Click a card to open the full record. */
-var BOARD = (function(){
-  var SIGNALS = [
-    {re:/m109|paladin|\bpim\b|m992/i, label:"M109 Paladin", w:14},
-    {re:/artiller|howitzer|cannon|extended range cannon|\berca\b|fire control|155mm/i, label:"Artillery/Cannon", w:12},
-    {re:/ground (combat )?vehicle|tracked|wheeled vehicle|mrap|stryker|ampv|jltv|abrams|vetronics|combat vehicle/i, label:"Ground Vehicle", w:12},
-    {re:/\bbms\b|battle management|army c2|\bc2\b|victory|cmoss|sosa/i, label:"Army C2/BMS", w:8},
-    {re:/live.?fire|aberdeen|yuma test|white sands|cold regions|firing range/i, label:"Live-fire/Test", w:8},
-    {re:/system.{0,3}integration|integration and test|\bv&v\b|verification and validation|qualification/i, label:"Integration/V&V", w:5},
-    {re:/\bmbse\b|sysml|cameo|magicdraw|\bdoors\b/i, label:"MBSE/Reqs", w:4},
-    {re:/earned value|\bevm\b|\bevms\b|control account|\bcam\b/i, label:"EVM/CAM", w:6},
-    {re:/\bpmp\b|project management professional/i, label:"PMP", w:6},
-    {re:/ts\/sci|top secret|secret clearance|active secret/i, label:"Clearance", w:5},
-    {re:/p&l|profit\/loss|profit and loss|gross profit/i, label:"P&L", w:5}
-  ];
-  var LEVELORD = {mid:1, sr:2, staff:3, principal:4, director:5, pm:2, pm3:3};
-  var LOOSE = /configuration analyst/i;
-
-  function detectFn(txt){
-    var head = txt.slice(0,220);
-    var pmStrong = /program manager|project manager|director of programs|control account manager|\bcam\b|program management (team )?(manager|lead)|program liaison|sustainment (lead|manager|executive)|logistics (lead|manager|officer|executive)|director of maintenance/i;
-    var pmWeak = /p&l|profit\/loss|earned value|evms|proposal|portfolio|acat|life ?cycle sustainment|readiness|budget execution|program management/i;
-    var engStrong = /systems engineer|chief engineer|principal (systems )?engineer|staff (systems )?engineer|\bgnc\b|enterprise architect|mbse lead/i;
-    var engWeak = /engineering|architecture|integration|requirements|\bv&v\b|verification|sysml|doors|cameo/i;
-    var pm=0, eng=0;
-    if(pmStrong.test(head))pm+=4; if(pmStrong.test(txt))pm+=3; if(pmWeak.test(txt))pm+=1;
-    if(engStrong.test(head))eng+=4; if(engStrong.test(txt))eng+=3; if(engWeak.test(txt))eng+=1;
-    if(pm===0 && eng===0) return "UNK";
-    if(pm>=eng+3) return "PM";
-    if(eng>=pm+3) return "ENG";
-    if(pm>=4 && eng>=4) return "BOTH";
-    return pm>eng ? "PM" : "ENG";
-  }
-  function detectLevel(txt){
-    if(/director of programs|sr director|senior director/i.test(txt)) return "director";
-    if(/vice president|\bvp\b|director,? engineering|chief engineer/i.test(txt)) return "director"; var mgrScope=(/manage[ds]?\s+\d{2,}\s+(engineers|people|staff|direct|reports)/i.test(txt) || /\b(2[0-9]|[3-9][0-9])\+?\s*years/i.test(txt) || /senior manager/i.test(txt)); if(/(engineering|technical|systems engineering)\s+manager/i.test(txt) && mgrScope) return "director"; if(/(engineering|technical)\s+manager|senior manager/i.test(txt)) return "principal";
-    if(/principal|sr\.? staff|senior staff|sr staff/i.test(txt)) return "principal";
-    if(/staff (systems )?engineer/i.test(txt)) return "staff";
-    if(/(sr\.?|senior) (systems )?engineer|lead (systems )?engineer|program manager 3|pm3/i.test(txt)) return "sr";
-    if(/program manager|project manager|manager/i.test(txt)) return "sr";
-    return "mid";
-  }
-  function detectLoc(txt){
-    var l=[];
-    if(/fort worth|ft worth|\bftw\b|grand prairie|dallas|midlothian|arlington, tx|wolfe city|\btx\b|texas/i.test(txt)) l.push("FTW");
-    if(/detroit|\bdet\b|michigan|\bmi\b/i.test(txt)) l.push("DET");
-    if(/charleston|north charleston|hanahan|ladson|goose creek|\bchs\b|\bsc\b|south carolina/i.test(txt)) l.push("CHS");
-    if(/yuma|\baz\b|arizona/i.test(txt)) l.push("YUMA");
-    if(/remote/i.test(txt)) l.push("REMOTE");
-    return l;
-  }
-  function domainScore(txt){
-    var on=0, off=0;
-    if(/ground (combat )?vehicle|tracked|wheeled|mrap|stryker|ampv|jltv|abrams|m109|paladin|\bpim\b|m992|vetronics|combat vehicle/i.test(txt)) on+=2;
-    if(/artiller|howitzer|cannon|extended range cannon|\berca\b|fire control|155mm|himars|weapon station|munition|warhead|precision strike/i.test(txt)) on+=2;
-    if(/missile|laser weapon|hel-tvd|ifpc|air and missile defense|pac-3|weapon system/i.test(txt)) on+=1;
-    if(/aircraft|f-35|f-16|f-22|avionics|aerospace|aeronautic/i.test(txt)) on+=1;
-    if(/naval|submarine|shipboard|c4i|nc3|enterprise architect|endpoint|networking|firewall|pacstar|c4isr/i.test(txt)) off+=1;
-    if(/electronic warfare|elint|\bisr\b|emcon|signals intelligence|cryptolog|scenario design/i.test(txt)) off+=2;
-    if(off>=2 && on===0) return "off";
-    if(on>=2) return "on";
-    if(on>=1) return "adjacent";
-    return "thin";
-  }
-  function juniorRead(txt){
-    var m=txt.match(/(\d{1,2})\+?\s*years/i);
-    if(m && parseInt(m[1],10)<6) return true;
-    if(/\b[1-5]\s*years\b/i.test(txt)) return true;
-    if(/\bjunior\b|\bassociate\b|entry.level/i.test(txt)) return true;
-    return false;
-  }
-  function reqFn(title){
-    return /program manager|project manager|director of programs/i.test(title) ? "PM" : "ENG";
-  }
-  function reqLevel(title){
-    if(/director of programs|sr director|senior director/i.test(title)) return "director";
-    if(/director|chief engineer/i.test(title)) return "director";
-    if(/principal|\bprin\b/i.test(title)) return "principal";
-    if(/staff/i.test(title)) return "staff";
-    if(/program manager 3|pm3/i.test(title)) return "pm3";
-    if(/\bsr\b|senior|lead/i.test(title)) return "sr";
-    if(/program manager|project manager/i.test(title)) return "pm";
-    if(/configuration analyst|analyst/i.test(title)) return "mid";
-    return "mid";
-  }
-  function locScore(reqLoc, candLocs){
-    var rl=(reqLoc||"").toUpperCase(), parts=rl.split(/[\/]/), hit=false, remoteReq=/REMOTE/.test(rl);
-    parts.forEach(function(p){
-      p=p.trim();
-      if(p==="FTW"&&candLocs.indexOf("FTW")>=0)hit=true;
-      if(p==="DET"&&candLocs.indexOf("DET")>=0)hit=true;
-      if(p==="CHS"&&candLocs.indexOf("CHS")>=0)hit=true;
-      if(p==="YUMA"&&candLocs.indexOf("YUMA")>=0)hit=true;
-    });
-    if(hit) return {s:20, why:"location match"};
-    if(remoteReq) return {s:14, why:"remote-eligible"};
-    return {s:6, why:"relocation needed"};
-  }
-  function scoreReq(c, req){
-    var reasons=[], s=0;
-    var rfn=reqFn(req.title||""), rlevel=reqLevel(req.title||"");
-    var fnOK = (rfn===c.fn) || (c.fn==="BOTH");
-    if(!fnOK) return {req:req, score:8, verdict:"not", reasons:["function mismatch ("+c.fn+" vs "+rfn+")"]};
-    s+=28; reasons.push("function match");
-    var ls=locScore(req.loc, c.locs); s+=ls.s; reasons.push(ls.why);
-    var want=LEVELORD[rlevel]||2, have=LEVELORD[c.level]||2, d=have-want;
-    if(d===0){s+=18;reasons.push("seniority on-level");}
-    else if(d===1||d===-1){s+=12;reasons.push(d>0?"slightly senior":"slightly junior");}
-    else if(d>=2){s+=8;reasons.push("over-leveled");}
-    else {s+=3;reasons.push("under-leveled");}
-    var sigHits=[];
-    SIGNALS.forEach(function(sig){ if(sig.re.test(c.txt)){ s+=sig.w; sigHits.push(sig.label); } });
-    if(sigHits.length) reasons.push("signals: "+sigHits.slice(0,5).join(", "));
-    if(c.domain==="off"){ s=Math.min(s,33); reasons.push("off-domain cap"); }
-    else if(c.domain==="thin"){ var tc=(LEVELORD[c.level]>=4)?68:55; s=Math.min(s,tc); reasons.push("thin-domain cap"); }
-    if(c.junior){ s=Math.min(s, want>=2?40:50); reasons.push("junior cap"); }
-    if(LOOSE.test(req.title||"") && sigHits.length<2 && c.domain!=="on"){ s-=18; reasons.push("loose-req penalty"); }
-    if(s<0)s=0; if(s>100)s=100;
-    var verdict = s>=72?"strong": s>=52?"moderate": s>=38?"stretch":"not";
-    return {req:req, score:s, verdict:verdict, reasons:reasons};
-  }
-  var _scoreCache = {};
-  function clearScoreCache(){ _scoreCache = {}; }
-  function scoreCandidate(c){
-    if(c && c.id && _scoreCache[c.id]){ return _scoreCache[c.id]; }
-    var txt = candHaystack(c);
-    var cc = {ref:c, txt:txt};
-    cc.fn=detectFn(txt); cc.level=detectLevel(txt); cc.locs=detectLoc(txt);
-    cc.domain=domainScore(txt); cc.junior=juniorRead(txt);
-    var results = REQS.map(function(r){ return scoreReq(cc, r); });
-    results.sort(function(a,b){ return b.score-a.score; });
-    cc.results=results; cc.best=results[0]||{verdict:"not", score:0, req:{title:"(no open reqs)", loc:""}};
-    if(c && c.id){ _scoreCache[c.id] = cc; }
-    return cc;
-  }
-  function vcolor(v){
-    if(v==="strong") return cssVar("--gold");
-    if(v==="moderate") return cssVar("--cyan");
-    if(v==="stretch") return "#e0a85a";
-    return cssVar("--muted");
-  }
-  function render(host){
-    document.getElementById("viewMeta").textContent = "Resumes auto-scored against all open reqs. A candidate appears only with a Moderate or better fit.";
-    if(!REQS || !REQS.length){
-      var none=el("div","empty"); none.appendChild(el("div","big","No open reqs")); 
-      none.appendChild(el("div",null,"Add requisitions under Open Reqs and candidates will be scored against them here.")); 
-      host.appendChild(none); return;
-    }
-    var scored = state.candidates.filter(function(c){ return c.status!=="Archived"; }).map(scoreCandidate);
-    var buckets={strong:[],moderate:[],stretch:[]}, off=0;
-    scored.forEach(function(c){
-      var v=c.best.verdict;
-      if(v==="strong"||v==="moderate"||v==="stretch") buckets[v].push(c); else off++;
-    });
-    ["strong","moderate","stretch"].forEach(function(b){
-      buckets[b].sort(function(a,b2){ return b2.best.score-a.best.score; });
-    });
-    var grid=el("div"); grid.style.cssText="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start";
-    var cols=[["strong","Strong"],["moderate","Moderate"],["stretch","Stretch"]];
-    cols.forEach(function(pair){
-      var key=pair[0], list=buckets[key];
-      var col=el("div"); col.style.cssText="background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;min-height:120px";
-      var head=el("div"); head.style.cssText="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:10px";
-      var ht=el("div",null,pair[1]); ht.style.cssText="font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:700;color:"+vcolor(key);
-      var hc=el("div",null,String(list.length)); hc.style.cssText="font-size:11px;color:var(--muted)";
-      head.appendChild(ht); head.appendChild(hc); col.appendChild(head);
-      if(!list.length){ var e=el("div",null,"None"); e.style.cssText="color:var(--muted);font-size:12px;padding:6px 2px"; col.appendChild(e); }
-      list.forEach(function(c){
-        var card=el("div"); 
-        card.style.cssText="background:var(--bg);border:1px solid var(--line);border-left:3px solid "+vcolor(key)+";border-radius:8px;padding:10px 11px;margin-bottom:9px;cursor:pointer";
-        var top=el("div"); top.style.cssText="display:flex;justify-content:space-between;align-items:baseline";
-        var nm=el("div",null,fullName(c.ref)); nm.style.cssText="font-weight:700;color:var(--ink);font-size:13px";
-        var sc=el("div",null,String(c.best.score)); sc.style.cssText="font-size:11px;font-weight:700;color:"+vcolor(key);
-        top.appendChild(nm); top.appendChild(sc); card.appendChild(top);
-        var role=el("div",null,c.best.req.title+(c.best.req.loc?(" \u00b7 "+c.best.req.loc):"")); role.style.cssText="color:var(--gold);font-size:11.5px;margin-top:3px";
-        card.appendChild(role);
-        var meta=el("div",null,c.fn+" \u00b7 "+c.level+" \u00b7 "+(c.locs.join("/")||"loc?")); meta.style.cssText="color:var(--muted);font-size:10.5px;margin-top:4px";
-        card.appendChild(meta);
-        var sigwrap=el("div"); sigwrap.style.cssText="margin-top:5px";
-        SIGNALS.forEach(function(sig){
-          if(sig.re.test(c.txt)){
-            var pill=el("span",null,sig.label);
-            pill.style.cssText="display:inline-block;font-size:9px;padding:2px 6px;border-radius:3px;border:1px solid var(--gold-dim);color:var(--gold);margin:3px 4px 0 0";
-            sigwrap.appendChild(pill);
-          }
-        });
-        card.appendChild(sigwrap);
-        card.addEventListener("click", (function(ref){ return function(){ openDetail(ref); }; })(c.ref));
-        col.appendChild(card);
-      });
-      grid.appendChild(col);
-    });
-    host.appendChild(grid);
-    var foot=el("div",null,off+" candidate"+(off===1?"":"s")+" scored below Stretch and are not shown here. They remain in the database under All Candidates.");
-    foot.style.cssText="margin-top:16px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:12px";
-    host.appendChild(foot);
-  }
-  return {render:render, scoreCandidate:scoreCandidate, clearScoreCache:clearScoreCache};
-})();
 function renderBoard(host){ BOARD.render(host); }
 
 function renderGuide(host){
@@ -1528,107 +1242,7 @@ function renderGuide(host){
 
   applyRole(activeRole);
 }
-function b64ToBlob(b64, mime){
-  var bin = atob(b64); var len = bin.length; var bytes = new Uint8Array(len);
-  for(var i=0;i<len;i++){ bytes[i] = bin.charCodeAt(i); }
-  return new Blob([bytes], { type: mime });
-}
-function openDoc(item){
-  var node = document.getElementById(item.el);
-  if(!node || !node.textContent.trim()){ toast("Document not available"); return; }
-  var url;
-  try { url = URL.createObjectURL(b64ToBlob(node.textContent.trim(), item.mime)); }
-  catch(e){ toast("Could not open document"); return; }
-  if(item.kind === "docx"){
-    var a = document.createElement("a"); a.href = url; a.download = item.file;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 5000);
-  } else {
-    var w = window.open(url, "_blank");
-    if(!w){ toast("Allow pop-ups to view the document"); }
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
-  }
-}
-function openForm(form){
-  var w = window.open("", "_blank");
-  if(!w){ toast("Allow pop-ups to open the form"); return; }
-  var doc = w.document; doc.open(); doc.write("<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head><body></body></html>"); doc.close();
-  doc.title = form.name;
-  var st = doc.createElement("style"); st.textContent = FORM_CSS; doc.head.appendChild(st);
-  var body = doc.body;
-  function mk(tag, cls, txt){ var e = doc.createElement(tag); if(cls){ e.className = cls; } if(txt != null){ e.textContent = txt; } return e; }
-  var bar = mk("div","bar"); var pb = mk("button", null, "Print / Save as PDF"); pb.addEventListener("click", function(){ w.print(); }); bar.appendChild(pb); body.appendChild(bar);
-  body.appendChild(mk("h1", null, form.name));
-  body.appendChild(mk("div","sub","RPO Talent Acquisition \u2022 Confidential"));
-  form.blocks.forEach(function(b){
-    var t = b[0];
-    if(t === "hdr"){ var r = mk("div","hf"); r.appendChild(mk("b", null, b[1] + ":")); r.appendChild(mk("span","fill")); body.appendChild(r); }
-    else if(t === "h2"){ body.appendChild(mk("h2", null, b[1])); }
-    else if(t === "h3"){ body.appendChild(mk("h3", null, b[1])); }
-    else if(t === "note"){ body.appendChild(mk("div","note", b[1])); }
-    else if(t === "q"){ body.appendChild(mk("div","q", b[1])); var o = mk("div","opts"); o.appendChild(mk("span", null, "\u2610 Yes")); o.appendChild(mk("span", null, "\u2610 No")); body.appendChild(o); }
-    else if(t === "subf"){ var s = mk("div","subf"); s.appendChild(mk("b", null, b[1] + ":")); s.appendChild(mk("span","fill")); body.appendChild(s); }
-    else if(t === "lines"){ for(var i=0;i<b[1];i++){ body.appendChild(mk("div","line")); } }
-    else if(t === "opts"){ var oo = mk("div","opts"); for(var j=1;j<b.length;j++){ oo.appendChild(mk("span", null, "\u2610 " + b[j])); } body.appendChild(oo); }
-    else if(t === "sig"){ var sg = mk("div","sig"); var k1 = mk("div","blk"); k1.appendChild(mk("div","fill")); k1.appendChild(mk("div", null, "Interviewer Signature")); var k2 = mk("div","blk"); k2.appendChild(mk("div","fill")); k2.appendChild(mk("div", null, "Date")); sg.appendChild(k1); sg.appendChild(k2); body.appendChild(sg); }
-  });
-  w.focus();
-}
-
-/* ---------- document library: job description uploads ---------- */
-var DOC_PREFIX = "__documents";
-var _jdCount = 0, _stratCount = 0, _formsUploadCount = 0;
-function updateDocCount(){ var m = document.getElementById("viewMeta"); if(!m){ return; } var total = FORMS.length + _formsUploadCount + _jdCount + _stratCount; m.textContent = total + (total === 1 ? " item" : " items"); }
-function docFolder(){ return ORG + "/" + DOC_PREFIX; }
 function setDocStat(t){ var s = document.getElementById("docUpStat"); if(s){ s.textContent = t; } }
-function docPrettySize(n){ if(n === undefined || n === null){ return ""; } if(n < 1024){ return n + " B"; } if(n < 1048576){ return Math.round(n/1024) + " KB"; } return (n/1048576).toFixed(1) + " MB"; }
-function docCleanName(name){ var i = name.indexOf("_"); if(i > -1 && /^[0-9]+$/.test(name.slice(0,i))){ return name.slice(i+1); } return name; }
-
-async function handleDocUpload(file){
-  if(!file){ return; }
-  if(!sb){ toast("Not connected"); return; }
-  setDocStat("Uploading " + file.name + " ...");
-  var safe = file.name.replace(/[^A-Za-z0-9._\-]/g, "_");
-  var path = docFolder() + "/" + Date.now() + "_" + safe;
-  var up = await sb.storage.from("resumes").upload(path, file, { upsert: true });
-  if(up.error){ setDocStat("Upload failed: " + up.error.message); toast("Upload failed"); return; }
-  setDocStat("");
-  toast("Uploaded " + file.name);
-  loadUploadedDocs();
-}
-
-async function loadUploadedDocs(){
-  var host = document.getElementById("docList");
-  if(!host){ return; }
-  host.textContent = "Loading...";
-  if(!sb){ host.textContent = "Not connected."; return; }
-  var res = await sb.storage.from("resumes").list(docFolder(), { limit: 1000, sortBy: { column: "created_at", order: "desc" } });
-  if(res.error){ host.textContent = "Could not load documents: " + res.error.message; return; }
-  var files = (res.data || []).filter(function(f){ return f.name && f.name.indexOf(".") > -1; });
-  _jdCount = files.length; updateDocCount();
-  host.innerHTML = "";
-  if(!files.length){
-    var empty = el("div", null, "No job descriptions uploaded yet. Click Upload Job Description to add one.");
-    empty.style.cssText = "color:var(--muted);font-size:13px;padding:6px 0";
-    host.appendChild(empty); return;
-  }
-  files.forEach(function(f){
-    var fullPath = docFolder() + "/" + f.name;
-    var row = el("div"); row.style.cssText = "display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:0 0 8px;background:var(--bg)";
-    var left = el("div"); left.style.cssText = "flex:1;min-width:200px";
-    var nm = el("div", null, docCleanName(f.name)); nm.style.cssText = "font-weight:600;font-size:13.5px;color:var(--ink)";
-    left.appendChild(nm);
-    var size = (f.metadata && f.metadata.size !== undefined) ? docPrettySize(f.metadata.size) : "";
-    if(size){ var sub = el("div", null, size); sub.style.cssText = "color:var(--muted);font-size:11.5px;margin-top:2px"; left.appendChild(sub); }
-    var btns = el("div"); btns.style.cssText = "display:flex;gap:8px;flex-wrap:wrap";
-    var vBtn = el("button","btn sm","View"); vBtn.addEventListener("click", function(){ viewDoc(fullPath); });
-    var dBtn = el("button","btn gold sm","Download"); dBtn.addEventListener("click", function(){ downloadDoc(fullPath, docCleanName(f.name)); });
-    var xBtn = el("button","btn sm","Delete"); xBtn.style.color = "var(--red)"; xBtn.addEventListener("click", function(){ deleteDoc(fullPath, docCleanName(f.name)); });
-    btns.appendChild(vBtn); btns.appendChild(dBtn); btns.appendChild(xBtn);
-    row.appendChild(left); row.appendChild(btns); host.appendChild(row);
-  });
-}
-
 async function viewDoc(path){
   if(!sb){ toast("Not connected"); return; }
   var res = await sb.storage.from("resumes").createSignedUrl(path, 3600);
@@ -1651,7 +1265,6 @@ async function deleteDoc(path, filename){
   var res = await sb.storage.from("resumes").remove([path]);
   if(res.error){ toast("Delete failed"); return; }
   toast("Deleted");
-  loadUploadedDocs();
 }
 
 /* ---------- executive search strategy uploads ---------- */
@@ -1680,7 +1293,6 @@ async function loadStrategyDocs(){
   var res = await sb.storage.from("resumes").list(stratFolder(), { limit: 1000, sortBy: { column: "created_at", order: "desc" } });
   if(res.error){ host.textContent = "Could not load strategies: " + res.error.message; return; }
   var files = (res.data || []).filter(function(f){ return f.name && f.name.indexOf(".") > -1; });
-  _stratCount = files.length; updateDocCount();
   host.innerHTML = "";
   if(!files.length){
     var empty = el("div", null, "No search strategies uploaded yet. Click Upload Strategy to add one.");
@@ -1714,59 +1326,13 @@ async function deleteStratDoc(path, filename){
 }
 
 /* ---------- forms & reference document uploads ---------- */
-var FORMS_PREFIX = "__forms";
 function formsUploadFolder(){ return ORG + "/" + FORMS_PREFIX; }
-function setFormsStat(t){ var s = document.getElementById("formsUpStat"); if(s){ s.textContent = t; } }
-
-async function handleFormsUpload(file){
-  if(!file){ return; }
-  if(!sb){ toast("Not connected"); return; }
-  setFormsStat("Uploading " + file.name + " ...");
-  var safe = file.name.replace(/[^A-Za-z0-9._\-]/g, "_");
-  var path = formsUploadFolder() + "/" + Date.now() + "_" + safe;
-  var up = await sb.storage.from("resumes").upload(path, file, { upsert: true });
-  if(up.error){ setFormsStat("Upload failed: " + up.error.message); toast("Upload failed"); return; }
-  setFormsStat("");
-  toast("Uploaded " + file.name);
-  loadUploadedForms();
-}
-
-async function loadUploadedForms(){
-  var host = document.getElementById("formsUpList");
-  if(!host){ return; }
-  if(!sb){ return; }
-  var res = await sb.storage.from("resumes").list(formsUploadFolder(), { limit: 1000, sortBy: { column: "created_at", order: "desc" } });
-  if(res.error){ return; }
-  var files = (res.data || []).filter(function(f){ return f.name && f.name.indexOf(".") > -1; });
-  _formsUploadCount = files.length; updateDocCount();
-  host.innerHTML = "";
-  if(!files.length){ return; }
-  var hdr = el("div", null, "Uploaded reference documents"); hdr.style.cssText = "font-size:12px;color:var(--gold-soft);font-weight:700;margin:6px 0 8px";
-  host.appendChild(hdr);
-  files.forEach(function(f){
-    var fullPath = formsUploadFolder() + "/" + f.name;
-    var row = el("div"); row.style.cssText = "display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:0 0 8px;background:var(--bg)";
-    var left = el("div"); left.style.cssText = "flex:1;min-width:200px";
-    var nm = el("div", null, docCleanName(f.name)); nm.style.cssText = "font-weight:600;font-size:13.5px;color:var(--ink)";
-    left.appendChild(nm);
-    var size = (f.metadata && f.metadata.size !== undefined) ? docPrettySize(f.metadata.size) : "";
-    if(size){ var sub = el("div", null, size); sub.style.cssText = "color:var(--muted);font-size:11.5px;margin-top:2px"; left.appendChild(sub); }
-    var btns = el("div"); btns.style.cssText = "display:flex;gap:8px;flex-wrap:wrap";
-    var vBtn = el("button","btn sm","View"); vBtn.addEventListener("click", function(){ viewDoc(fullPath); });
-    var dBtn = el("button","btn gold sm","Download"); dBtn.addEventListener("click", function(){ downloadDoc(fullPath, docCleanName(f.name)); });
-    var xBtn = el("button","btn sm","Delete"); xBtn.style.color = "var(--red)"; xBtn.addEventListener("click", function(){ deleteFormsDoc(fullPath, docCleanName(f.name)); });
-    btns.appendChild(vBtn); btns.appendChild(dBtn); btns.appendChild(xBtn);
-    row.appendChild(left); row.appendChild(btns); host.appendChild(row);
-  });
-}
-
 async function deleteFormsDoc(path, filename){
   if(!window.confirm("Delete " + (filename || "this document") + "? This cannot be undone.")){ return; }
   if(!sb){ toast("Not connected"); return; }
   var res = await sb.storage.from("resumes").remove([path]);
   if(res.error){ toast("Delete failed"); return; }
   toast("Deleted");
-  loadUploadedForms();
 }
 
 function resumeStatus(c){
