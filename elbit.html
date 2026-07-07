@@ -268,43 +268,14 @@ async function doLogin(){
   if(res.error){ gateMsg(res.error.message, "err"); return; }
   await onAuthed(res.data.user);
 }
-async function fetchProfileWithRetry(userId, attempts){
-  attempts = attempts || 3;
-  for(var i = 0; i < attempts; i++){
-    var prof = await sb.from("profiles").select("role,orgs,email").eq("id", userId).single();
-    if(!prof.error){ return prof; }
-    var msg = (prof.error && prof.error.message) || "";
-    var code = (prof.error && prof.error.code) || "";
-    /* Transient: OOM or network blip -- retry after brief delay */
-    var isTransient = (msg.indexOf("Failed to fetch") !== -1 || msg.indexOf("fetch") !== -1 || msg.indexOf("network") !== -1 || msg.indexOf("OOM") !== -1 || code === "PGRST301" || code === "503" || code === "504");
-    console.error("[TSS] profiles fetch attempt " + (i+1) + " failed:", { userId: userId, code: code, message: msg, hint: (prof.error && prof.error.hint) || "", details: (prof.error && prof.error.details) || "", supabaseError: prof.error });
-    if(!isTransient || i === attempts - 1){ return prof; }
-    await new Promise(function(r){ setTimeout(r, 1200 * (i + 1)); });
-  }
-  return { error: { message: "Profile fetch failed after " + attempts + " attempts." }, data: null };
-}
 async function onAuthed(user){
-  gateMsg("Loading your profile...", "");
-  var prof = await fetchProfileWithRetry(user.id);
-  if(prof.error || !prof.data){
-    var errMsg = (prof.error && prof.error.message) || "Unknown error";
-    var errCode = (prof.error && prof.error.code) || "";
-    console.error("[TSS] onAuthed: profiles load failed", { userId: user.id, code: errCode, message: errMsg, error: prof.error });
-    if(errMsg.indexOf("Failed to fetch") !== -1 || errMsg.indexOf("fetch") !== -1 || errMsg.indexOf("network") !== -1){
-      gateMsg("Connection error loading your profile. The server may be temporarily overloaded. Please wait a moment and try signing in again. (detail: " + errMsg + ")", "err");
-    } else if(errCode === "PGRST116" || errMsg.indexOf("0 rows") !== -1 || errMsg.indexOf("multiple") !== -1){
-      gateMsg("Your account has no access profile yet. Ask the admin to set your role.", "err");
-    } else {
-      gateMsg("Could not load your access profile. Error: " + errMsg + " (code: " + errCode + ")", "err");
-    }
-    return;
-  }
+  var prof = await sb.from("profiles").select("role,orgs,email").eq("id", user.id).single();
+  if(prof.error || !prof.data){ gateMsg("Your account has no access profile yet. Ask the admin to set your role.", "err"); return; }
   var orgs = prof.data.orgs || [];
   if(orgs.indexOf(ORG) === -1){ gateMsg("Your account does not have access to this program.", "err"); return; }
   VIEW_ONLY = prof.data.role !== "editor";
   document.getElementById("whoami").textContent = (function(e){ var n = (e||"").split("@")[0].split(/[._-]+/).filter(Boolean).map(function(w){ return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); }).join(" "); return (n || e) + " (" + (VIEW_ONLY ? "viewer" : "editor") + ")"; })(prof.data.email || user.email);
   CURRENT_USER = { id:user.id, email:(prof.data.email || user.email) };
-  gateMsg("", "");
   document.getElementById("gate").style.display = "none";
   document.getElementById("app").style.display = "block";
   applyViewOnly();
