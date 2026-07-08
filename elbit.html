@@ -778,7 +778,7 @@ function renderManagers(host){
 }
 function abbrevTitle(t){ if(!t){ return t; } var m=[[/\bPrincipal\b/gi,"Prin."],[/\bEngineering\b/gi,"Eng"],[/\bEngineer\b/gi,"Eng"],[/\bManagement\b/gi,"Mgmt"],[/\bManager\b/gi,"Mgr"],[/\bSenior\b/gi,"Sr"],[/\bDevelopment\b/gi,"Dev"],[/\bIntegration\b/gi,"Integ"],[/\bAdministrator\b/gi,"Admin"],[/\bSpecialist\b/gi,"Spec."]]; m.forEach(function(x){ t=t.replace(x[0],x[1]); }); return t; }
 function renderReqs(host){
-  var CLOSED_REQ_STATUSES = ['Filled','Closed','Closed - Not Filled','Cancelled']; var ranked = REQS.filter(function(r){ return !r.bench && CLOSED_REQ_STATUSES.indexOf(r.reqStatus||r.urgency||'') === -1; }).sort(function(a,b){ var ra = (a.rank==null?9999:a.rank), rb = (b.rank==null?9999:b.rank); return (ra - rb) || (a.title||"").localeCompare(b.title||""); });
+  function isClosedReq(r){ var s=(r.reqStatus||r.urgency||'').toLowerCase(); return s.indexOf('filled')!==-1||s.indexOf('closed')!==-1||s.indexOf('cancelled')!==-1; } var ranked = REQS.filter(function(r){ return !r.bench && !isClosedReq(r); }).sort(function(a,b){ var ra = (a.rank==null?9999:a.rank), rb = (b.rank==null?9999:b.rank); return (ra - rb) || (a.title||"").localeCompare(b.title||""); });
   var rankedCount = ranked.filter(function(r){ return r.rank != null; }).length;
   document.getElementById("viewMeta").textContent = rankedCount + " ranked / " + ranked.length + " reqs";
   if(typeof PROGRAM_NOTES !== "undefined" && PROGRAM_NOTES){
@@ -1145,7 +1145,7 @@ function renderGuide(host){
   /* ── live data ── */
   var cands    = state.candidates||[];
   var irs      = state.interviewRequests||[];
-  var CLOSED_ACTIVE=['Filled','Closed','Closed - Not Filled','Cancelled']; var openReqs = REQS.filter(function(r){ return !r.bench && CLOSED_ACTIVE.indexOf(r.reqStatus||r.urgency||'') === -1; });
+  var openReqs = REQS.filter(function(r){ var s=(r.reqStatus||r.urgency||'').toLowerCase(); return !r.bench && s.indexOf('filled')===-1 && s.indexOf('closed')===-1 && s.indexOf('cancelled')===-1; });
   var followUp = [];
   try{ followUp=cands.filter(function(c){ var f=window.followUp?window.followUp(c):null; return f&&f.label; }); }catch(e){}
   var offerP   = cands.filter(function(c){ return c.status==="Offer Pending"; });
