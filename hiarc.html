@@ -2844,7 +2844,7 @@ function viewReq(r){
   var jdWrap = el("div","fld full"); jdWrap.appendChild(el("label", null, "Job Description")); if(r.jd && String(r.jd).trim()){ jdWrap.appendChild(renderJD(r.jd)); } else { jdWrap.appendChild(el("div","roval","-")); } g.appendChild(jdWrap);
   body.appendChild(g); m.appendChild(body);
   var foot = el("div","mfoot"); foot.appendChild(el("div")); var right = el("div","right");
-  if(!VIEW_ONLY){ var eb = el("button","btn","Edit"); eb.setAttribute("data-reqedit", r.id); right.appendChild(eb); }
+  if(!VIEW_ONLY){ var delB = el("button","btn sm danger","Delete Req"); delB.type="button"; delB.addEventListener("click", function(){ if(confirm("Delete this requisition? This cannot be undone.")){ closeModal(); deleteReq(r.id); } }); foot.firstChild.appendChild(delB); var eb = el("button","btn","Edit"); eb.setAttribute("data-reqedit", r.id); right.appendChild(eb); }
   var cb = el("button","btn gold","Close"); cb.setAttribute("data-close","1"); right.appendChild(cb);
   foot.appendChild(right); m.appendChild(foot);
   document.getElementById("scrim").classList.add("open");
