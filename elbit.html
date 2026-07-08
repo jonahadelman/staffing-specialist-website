@@ -920,6 +920,215 @@ async function deleteProgramNote(id){
 /* ---------- forms library ---------- */
 
 
+
+var BOARD = (function(){
+  var SIGNALS = [
+    {re:/medical device|medical instrument|in.?vitro|\bivd\b|diagnostic|clinical (analyzer|instrument)|analytical instrument|biomedical/i, label:"Medical/Dx", w:14},
+    {re:/iec ?62304|iso ?13485|iec ?60601|21 ?cfr ?(part ?)?820|\bfda\b|design control|design history file|\bdhf\b|\bgmp\b/i, label:"Med Reg/Std", w:12},
+    {re:/motion control|fluidic|microfluidic|electro.?optic|\boptics\b|thermal control|robotic|servo|stepper motor/i, label:"Instrument Sys", w:8},
+    {re:/schematic capture|pcb layout|\bpcbas?\b|altium|orcad|cadence allegro|\bkicad\b/i, label:"Schematic/PCB", w:8},
+    {re:/\bsmt\b|reflow|\baoi\b|\baxi\b|\bict\b|boundary.?scan|\bjtag\b|wave solder/i, label:"PCBA Mfg/Test", w:6},
+    {re:/\bfpga\b|\bvhdl\b|verilog|cpld|programmable logic/i, label:"FPGA/HDL", w:5},
+    {re:/\bemc\b|\bemi\b|mixed.?signal|\banalog\b|power distribution|signal integrity/i, label:"Analog/EMC", w:5},
+    {re:/\bhalt\b|\bhass\b|reliability engineering/i, label:"Reliability", w:4},
+    {re:/\bc\+\+|\bc#|embedded (software|firmware)|firmware|\brtos\b/i, label:"Embedded SW", w:8},
+    {re:/unit test|static analysis|code review|continuous integration|\bagile\b|\bspiral\b/i, label:"SW Process", w:3},
+    {re:/design for (manufactur|assembly|test|excellence)|\bdfm\b|\bdfa\b|\bdft\b|\bdfx\b/i, label:"DfX/DFM", w:8},
+    {re:/\bnpi\b|new product introduction|production transfer|manufacturing transfer|pilot (build|production)/i, label:"NPI/Transfer", w:7},
+    {re:/\bgd&t\b|ansi ?y14\.5|geometric dimensioning/i, label:"GD&T", w:4},
+    {re:/process capability|\bcpk\b|\blean\b|\b5s\b|kaizen|six sigma|value stream/i, label:"Lean/Cap", w:4},
+    {re:/\bplm\b|\bmrp\b|\bmes\b|\berp\b|windchill|\bsap\b/i, label:"PLM/ERP", w:3},
+    {re:/systems engineering|system requirements|requirements (management|capture|flowdown)|\bdoors\b|system integration/i, label:"Systems Eng", w:7},
+    {re:/supply chain|supplier qualif|sourcing|procurement|component (selection|reliability)|second source/i, label:"Supply Chain", w:6},
+    {re:/principal|staff engineer|technical lead|\btech lead\b|team lead/i, label:"Tech Lead", w:4},
+    {re:/managed (a team|\d+|engineers|people)|people manager|engineering manager|direct reports/i, label:"People Mgmt", w:5}
+  ];
+  var LEVELORD = {mid:1, sr:2, principal:3, staff:3, manager:3, director:4, vp:5};
+
+  function detectFn(txt){
+    var head = txt.slice(0,240);
+    function score(strong, weak){
+      var s=0;
+      if(strong.test(head)) s+=4;
+      if(strong.test(txt)) s+=3;
+      if(weak.test(txt)) s+=1;
+      return s;
+    }
+    var sw  = score(/software engineer|firmware engineer|embedded software|software developer|principal software/i, /software|firmware|\bc\+\+|\bc#|embedded|\brtos\b|application develop/i);
+    var ee  = score(/electrical (hardware )?engineer|electronics engineer|hardware engineer|electrical design|dfx electrical/i, /electrical|electronic|\bpcb\b|schematic|\bfpga\b|\banalog\b|circuit/i);
+    var se  = score(/systems? engineer|system architect|requirements engineer/i, /systems engineering|requirements|system integration|\bv&v\b|verification and validation/i);
+    var mfg = score(/manufacturing engineer|npi engineer|process engineer|production engineer|industrial engineer/i, /manufacturing|\bnpi\b|\bdfm\b|\bdfx\b|process capability|tooling|fixture|production/i);
+    var sc  = score(/supply chain|procurement|sourcing|commodity manager|supplier quality|\bbuyer\b/i, /supply chain|supplier|sourcing|procurement|commodity/i);
+    var mech= score(/mechanical engineer|mechanical design/i, /mechanical|solidworks|\bgd&t\b|tolerance/i);
+    var arr = [["SW",sw],["EE",ee],["SE",se],["MFG",mfg],["SC",sc],["MECH",mech]];
+    arr.sort(function(a,b){ return b[1]-a[1]; });
+    if(arr[0][1]===0) return {primary:"UNK", set:[]};
+    var top = arr[0][1];
+    var set = arr.filter(function(p){ return p[1]>0 && p[1] >= top-2; }).map(function(p){ return p[0]; });
+    return {primary:arr[0][0], set:set};
+  }
+  function detectLevel(txt){
+    if(/vice president|\bvp\b|\bdirector\b/i.test(txt)) return "director";
+    if(/principal|staff engineer|sr\.? staff|senior staff/i.test(txt)) return "principal";
+    if(/(engineering|electrical|hardware|software|manufacturing|systems|technical|development)\s+manager|people manager|\bmanager,/i.test(txt)) return "manager";
+    if(/(senior|sr\.?)\s+(engineer|software|electrical|systems|hardware|mechanical|manufacturing)|lead engineer|\blead\b/i.test(txt)) return "sr";
+    return "mid";
+  }
+  function detectLoc(txt){
+    var l=[];
+    if(/merrimack|nashua|manchester,? ?nh|bedford,? ?nh|hudson,? ?nh|litchfield|amherst,? ?nh|hooksett|hollis|milford,? ?nh|new hampshire|\bn\.?h\.?\b|03054|03060|salem,? ?nh|londonderry|\bderry\b|\blowell\b|tyngsboro|chelmsford|dracut|tewksbury|billerica|andover,? ?ma|lawrence,? ?ma|haverhill/i.test(txt)) l.push("MRMK");
+    if(/\bremote\b/i.test(txt)) l.push("REMOTE");
+    return l;
+  }
+  function domainScore(txt){
+    var on=0, off=0;
+    if(/medical device|medical instrument|in.?vitro|\bivd\b|diagnostic|analytical instrument|clinical (analyzer|instrument)|iec ?62304|iso ?13485|iec ?60601|21 ?cfr ?(part ?)?820|\bfda\b|biomedical|drug delivery/i.test(txt)) on+=2;
+    if(/motion control|fluidic|electro.?optic|\boptics\b|instrument|robotic|thermal control|analyzer|laboratory|life scien/i.test(txt)) on+=1;
+    if(/aerospace|defen[cs]e|avionic|automotive|iso ?26262|semiconductor|industrial automation|scientific instrument|electro.?mechanical/i.test(txt)) on+=1;
+    if(/\b(front.?end|full.?stack|web develop|mobile app|android develop|ios develop|saas|e.?commerce|website|wordpress|digital marketing|game develop)\b/i.test(txt) && !/medical|instrument|hardware|firmware|\bpcb\b|device|\bfda\b|iso ?13485/i.test(txt)) off+=2;
+    if(/\b(help ?desk|it support|network admin|system admin|sysadmin|database admin|business analyst|accounts payable|retail|sales associate)\b/i.test(txt)) off+=1;
+    if(off>=2 && on===0) return "off";
+    if(on>=2) return "on";
+    if(on>=1) return "adjacent";
+    return "thin";
+  }
+  function juniorRead(txt){
+    var m=txt.match(/(\d{1,2})\+?\s*years/i);
+    if(m && parseInt(m[1],10)<6) return true;
+    if(/\b[1-4]\s*years\b/i.test(txt)) return true;
+    if(/\bjunior\b|\bassociate engineer\b|entry.level|new grad|recent graduate/i.test(txt)) return true;
+    return false;
+  }
+  function reqFn(title){
+    var t=title||"";
+    if(/software|firmware/i.test(t)) return "SW";
+    if(/systems? engineer/i.test(t)) return "SE";
+    if(/supply chain|procurement|sourcing|commodity|\bbuyer\b/i.test(t)) return "SC";
+    if(/manufacturing|\bnpi\b|process engineer|production/i.test(t)) return "MFG";
+    if(/electrical|electronic|hardware|\bee\b|dfx|dfm/i.test(t)) return "EE";
+    if(/mechanical/i.test(t)) return "MECH";
+    return "ANY";
+  }
+  function reqLevel(title){
+    var t=title||"";
+    if(/vice president|sr\.? director|senior director|\bdirector\b/i.test(t)) return "director";
+    if(/principal|\bstaff\b/i.test(t)) return "principal";
+    if(/\bmanager\b|\bmgr\b/i.test(t)) return "manager";
+    if(/\bsr\.?\b|senior|\blead\b/i.test(t)) return "sr";
+    return "mid";
+  }
+  function locScore(reqLoc, candLocs){
+    var rl=(reqLoc||"").toLowerCase();
+    var reqRemote=/remote/.test(rl);
+    var reqNH=/merrimack|nashua|manchester|new hampshire|\bnh\b|03054/.test(rl) || rl.trim()==="";
+    if(candLocs.indexOf("MRMK")>=0 && (reqNH || !reqRemote)) return {s:20, why:"NH/commute match"};
+    if(reqRemote && candLocs.indexOf("REMOTE")>=0) return {s:14, why:"remote-eligible"};
+    if(candLocs.indexOf("REMOTE")>=0) return {s:10, why:"remote candidate"};
+    return {s:6, why:"relocation needed"};
+  }
+  function scoreReq(c, req){
+    var reasons=[], s=0;
+    var rfn=reqFn(req.title||""), rlevel=reqLevel(req.title||"");
+    var fnOK = (rfn==="ANY") || (c.fnset.indexOf(rfn)>=0);
+    if(!fnOK) return {req:req, score:8, verdict:"not", reasons:["discipline mismatch ("+c.fn+" vs "+rfn+")"]};
+    s+=28; reasons.push("discipline match");
+    var ls=locScore(req.loc, c.locs); s+=ls.s; reasons.push(ls.why);
+    var want=LEVELORD[rlevel]||2, have=LEVELORD[c.level]||2, d=have-want;
+    if(d===0){s+=18;reasons.push("seniority on-level");}
+    else if(d===1||d===-1){s+=12;reasons.push(d>0?"slightly senior":"slightly junior");}
+    else if(d>=2){s+=8;reasons.push("over-leveled");}
+    else {s+=3;reasons.push("under-leveled");}
+    var sigHits=[];
+    SIGNALS.forEach(function(sig){ if(sig.re.test(c.txt)){ s+=sig.w; sigHits.push(sig.label); } });
+    if(sigHits.length) reasons.push("signals: "+sigHits.slice(0,5).join(", "));
+    if(c.domain==="off"){ s=Math.min(s,33); reasons.push("off-domain cap"); }
+    else if(c.domain==="thin"){ var tc=(LEVELORD[c.level]>=3)?68:55; s=Math.min(s,tc); reasons.push("thin-domain cap"); }
+    if(c.junior){ s=Math.min(s, want>=2?40:50); reasons.push("junior cap"); }
+    if(s<0)s=0; if(s>100)s=100;
+    var verdict = s>=72?"strong": s>=52?"moderate": s>=38?"stretch":"not";
+    return {req:req, score:s, verdict:verdict, reasons:reasons};
+  }
+  var _scoreCache = {};
+  function clearScoreCache(){ _scoreCache = {}; }
+  function scoreCandidate(c){
+    if(c && c.id && _scoreCache[c.id]){ return _scoreCache[c.id]; }
+    var txt = candHaystack(c);
+    var cc = {ref:c, txt:txt};
+    var f = detectFn(txt);
+    cc.fn=f.primary; cc.fnset=f.set;
+    cc.level=detectLevel(txt); cc.locs=detectLoc(txt);
+    cc.domain=domainScore(txt); cc.junior=juniorRead(txt);
+    var results = REQS.map(function(r){ return scoreReq(cc, r); });
+    results.sort(function(a,b){ return b.score-a.score; });
+    cc.results=results; cc.best=results[0]||{verdict:"not", score:0, req:{title:"(no open reqs)", loc:""}};
+    if(c && c.id){ _scoreCache[c.id] = cc; }
+    return cc;
+  }
+  function vcolor(v){
+    if(v==="strong") return cssVar("--gold");
+    if(v==="moderate") return cssVar("--cyan");
+    if(v==="stretch") return "#e0a85a";
+    return cssVar("--muted");
+  }
+  function render(host){
+    document.getElementById("viewMeta").textContent = "Resumes auto-scored against all open reqs. A candidate appears only with a Moderate or better fit.";
+    if(!REQS || !REQS.length){
+      var none=el("div","empty"); none.appendChild(el("div","big","No open reqs"));
+      none.appendChild(el("div",null,"Add requisitions under Open Reqs and candidates will be scored against them here."));
+      host.appendChild(none); return;
+    }
+    var scored = state.candidates.filter(function(c){ return c.status!=="Archived"; }).map(scoreCandidate);
+    var buckets={strong:[],moderate:[],stretch:[]}, off=0;
+    scored.forEach(function(c){
+      var v=c.best.verdict;
+      if(v==="strong"||v==="moderate"||v==="stretch") buckets[v].push(c); else off++;
+    });
+    ["strong","moderate","stretch"].forEach(function(b){
+      buckets[b].sort(function(a,b2){ return b2.best.score-a.best.score; });
+    });
+    var grid=el("div"); grid.style.cssText="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start";
+    var cols=[["strong","Strong"],["moderate","Moderate"],["stretch","Stretch"]];
+    cols.forEach(function(pair){
+      var key=pair[0], list=buckets[key];
+      var col=el("div"); col.style.cssText="background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;min-height:120px";
+      var head=el("div"); head.style.cssText="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:10px";
+      var ht=el("div",null,pair[1]); ht.style.cssText="font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:700;color:"+vcolor(key);
+      var hc=el("div",null,String(list.length)); hc.style.cssText="font-size:11px;color:var(--muted)";
+      head.appendChild(ht); head.appendChild(hc); col.appendChild(head);
+      if(!list.length){ var e=el("div",null,"None"); e.style.cssText="color:var(--muted);font-size:12px;padding:6px 2px"; col.appendChild(e); }
+      list.forEach(function(c){
+        var card=el("div");
+        card.style.cssText="background:var(--bg);border:1px solid var(--line);border-left:3px solid "+vcolor(key)+";border-radius:8px;padding:10px 11px;margin-bottom:9px;cursor:pointer";
+        var top=el("div"); top.style.cssText="display:flex;justify-content:space-between;align-items:baseline";
+        var nm=el("div",null,fullName(c.ref)); nm.style.cssText="font-weight:700;color:var(--ink);font-size:13px";
+        var sc=el("div",null,String(c.best.score)); sc.style.cssText="font-size:11px;font-weight:700;color:"+vcolor(key);
+        top.appendChild(nm); top.appendChild(sc); card.appendChild(top);
+        var role=el("div",null,c.best.req.title+(c.best.req.loc?(" \u00b7 "+c.best.req.loc):"")); role.style.cssText="color:var(--gold);font-size:11.5px;margin-top:3px";
+        card.appendChild(role);
+        var meta=el("div",null,c.fn+" \u00b7 "+c.level+" \u00b7 "+(c.locs.join("/")||"loc?")); meta.style.cssText="color:var(--muted);font-size:10.5px;margin-top:4px";
+        card.appendChild(meta);
+        var sigwrap=el("div"); sigwrap.style.cssText="margin-top:5px";
+        SIGNALS.forEach(function(sig){
+          if(sig.re.test(c.txt)){
+            var pill=el("span",null,sig.label);
+            pill.style.cssText="display:inline-block;font-size:9px;padding:2px 6px;border-radius:3px;border:1px solid var(--gold-dim);color:var(--gold);margin:3px 4px 0 0";
+            sigwrap.appendChild(pill);
+          }
+        });
+        card.appendChild(sigwrap);
+        card.addEventListener("click", (function(ref){ return function(){ openDetail(ref); }; })(c.ref));
+        col.appendChild(card);
+      });
+      grid.appendChild(col);
+    });
+    host.appendChild(grid);
+    var foot=el("div",null,off+" candidate"+(off===1?"":"s")+" scored below Stretch and are not shown here. They remain in the database under All Candidates.");
+    foot.style.cssText="margin-top:16px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:12px";
+    host.appendChild(foot);
+  }
+  return {render:render, scoreCandidate:scoreCandidate, clearScoreCache:clearScoreCache};
+})();
+
 function renderBoard(host){ BOARD.render(host); }
 
 function renderGuide(host){
