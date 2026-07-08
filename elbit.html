@@ -925,53 +925,7 @@ async function deleteProgramNote(id){
   toast("Note deleted.");
 }
 
-/* ---------- forms library ---------- */
-var FORM_CSS = "*{box-sizing:border-box}body{font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;max-width:780px;margin:0 auto;padding:46px 54px;line-height:1.5}h1{font-size:20px;border-bottom:3px solid #c8a96a;padding-bottom:8px;margin:0 0 4px;letter-spacing:.3px}.sub{color:#aeb9cc;font-size:11px;margin:0 0 22px;text-transform:uppercase;letter-spacing:.6px}h2{font-size:13.5px;background:#f4efe4;border-left:4px solid #c8a96a;padding:7px 11px;margin:26px 0 12px;color:#1a1a1a}h3{font-size:12.5px;margin:18px 0 7px;color:#333;font-weight:700}.hf{display:flex;align-items:flex-end;gap:8px;margin:0 0 11px;font-size:13px}.hf b{white-space:nowrap}.hf .fill{flex:1;border-bottom:1px solid #888;height:15px}.q{margin:14px 0 3px;font-size:13px}.opts{font-size:13px;margin:2px 0 6px}.opts span{margin-right:30px;white-space:nowrap}.subf{display:flex;align-items:flex-end;gap:8px;margin:4px 0 8px 16px;font-size:12.5px}.subf .fill{flex:1;border-bottom:1px solid #888;height:14px}.line{border-bottom:1px solid #999;height:17px;margin:7px 0}.note{font-size:12.5px;color:#444;margin:0 0 8px}.sig{display:flex;gap:46px;margin-top:22px;font-size:13px}.sig .blk{flex:1}.sig .fill{border-bottom:1px solid #888;height:16px;margin-bottom:5px}.bar{position:sticky;top:0;background:#1a1a1a;padding:10px 14px;text-align:right;margin:-46px -54px 26px}.bar button{background:#c8a96a;color:#1a1a1a;border:0;padding:8px 18px;border-radius:6px;font-weight:700;cursor:pointer;font-family:inherit}@media print{.bar{display:none}body{padding:0;max-width:100%}}";
-  { type:"render", name:"Elbit Systems of America Candidate Interview & Security Screening Form",
-    desc:"Recruiter / interviewer screening: citizenship and clearance eligibility, technical background, industry experience, culture fit, and overall recommendation.",
-    blocks:[
-      ["hdr","Candidate Name"],["hdr","Position Applied For"],["hdr","Date"],["hdr","Recruiter / Interviewer"],["hdr","Current Location"],["hdr","Phone Number"],["hdr","Email Address"],
-      ["h2","Preliminary Screening Questions"],
-      ["q","1. Are you a United States citizen?"],
-      ["q","2. Are you authorized to work in the United States?"],
-      ["q","3. Were you born outside of the United States of America? If yes, please list the country."],["subf","Country"],
-      ["q","4. Are you a citizen of a country other than the United States? (Includes dual citizenship)"],["subf","Country/Countries"],
-      ["q","5. Will you now or in the future require sponsorship for employment visa status (e.g., H-1B visa)?"],
-      ["q","6. Have you ever been granted and/or currently possess a U.S. government security clearance?"],["subf","Clearance Level"],
-      ["q","7. Have you ever had a U.S. security clearance suspended, denied, or revoked?"],["subf","Explanation"],
-      ["q","8. Is there any reason why you could not obtain and maintain a United States security clearance?"],["subf","Explanation"],
-      ["h2","Elbit Systems of America (ESA) Security Requirements"],
-      ["note","As a defense contractor, Elbit Systems of America (ESA) is subject to legal and contractual requirements designed to ensure that the national security of the United States is not compromised. ESA requires employees to be eligible to obtain and/or maintain a security clearance when required."],
-      ["h2","Technical Background"],["lines",4],
-      ["h2","Relevant Industry Experience"],["lines",4],
-      ["h2","Communication / Culture Fit"],["lines",4],
-      ["h2","Additional Comments"],["lines",4],
-      ["h2","Overall Recommendation"],
-      ["opts","Strong Yes","Yes","Maybe","No"],
-      ["sig"]
-    ] },
-  { type:"render", name:"Elbit Systems of America Hiring Manager Input Form",
-    desc:"Hiring manager / specialist instructions to the recruiter: skills to validate, targeted questions, red flags, and must-have versus nice-to-have experience.",
-    blocks:[
-      ["hdr","Candidate Name"],["hdr","Position Applied For"],["hdr","Hiring Manager"],["hdr","Recruiter / Interviewer"],["hdr","Date"],
-      ["h2","Hiring Manager / Specialist Instructions to Recruiter"],
-      ["note","Use this section to document role-specific focus areas, technical competencies, personality traits, compliance concerns, interview priorities, or targeted questions that should be asked during the screening process."],
-      ["h3","Key Technical Skills / Competencies to Validate"],["lines",4],
-      ["h3","Specific Questions the Recruiter Should Ask"],["lines",4],
-      ["h3","Red Flags / Concerns to Screen For"],["lines",4],
-      ["h3","Must-Have Experience"],["lines",4],
-      ["h3","Nice-to-Have Experience"],["lines",4],
-      ["h3","Additional Hiring Manager Notes"],["lines",4]
-    ] },
-  { type:"file", kind:"pdf", el:"doc_process", mime:"application/pdf", file:"HiARC_Interview_Process.pdf", name:"Hiring Process Overview",
-    desc:"End-to-end hiring process: requisition, strategy kickoff, screening and interviews, debrief, offer, and onboarding, with roles and responsibilities." },
-  { type:"file", kind:"pdf", el:"doc_baag", mime:"application/pdf", file:"2026_Benefits_At_A_Glance_Non-Union.pdf", name:"2026 Benefits At A Glance (Non-Union)",
-    desc:"Medical, dental, vision, HSA and FSA, life and disability, and voluntary benefit rates and plan summaries for the 2026 plan year." },
-  { type:"file", kind:"pdf", el:"doc_addl", mime:"application/pdf", file:"Additional_Benefit_Highlights_2026.pdf", name:"Additional Benefit Highlights",
-    desc:"401(k) match, 9/80 schedule, paid holidays, PTO, employee incentive plan, voluntary benefits, and Merrimack on-site services." },
-  { type:"file", kind:"pdf", el:"doc_guide", mime:"application/pdf", file:"2026_Employee_Benefits_Guide.pdf", name:"2026 Employee Benefits Guide",
-    desc:"Full 2026 benefits guide: eligibility, enrollment, plan details, wellness programs, contacts, and required notices." }
-];
+
 function renderBoard(host){ BOARD.render(host); }
 
 function renderGuide(host){
