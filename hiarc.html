@@ -2776,6 +2776,7 @@ function openReqModal(existing){
   var cancel = el("button","btn ghost","Cancel"); cancel.setAttribute("data-close","1");
   var save = el("button","btn gold", existing ? "Save Req" : "Add Req"); save.setAttribute("data-reqsave","1");
   right.appendChild(cancel); right.appendChild(save); foot.appendChild(right); m.appendChild(foot);
+  if(existing && !VIEW_ONLY){ var delReqBtn = el("button","btn sm danger","Delete Req"); delReqBtn.type="button"; delReqBtn.addEventListener("click", function(){ if(confirm("Delete this requisition? This cannot be undone.")){ var id=editReqId; closeModal(); deleteReq(id); } }); foot.firstChild.appendChild(delReqBtn); }
   document.getElementById("scrim").classList.add("open");
   draftWireModal("req", (existing && existing.id) || "new"); draftRestore("req", (existing && existing.id) || "new");
 }
