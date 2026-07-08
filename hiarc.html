@@ -1208,7 +1208,7 @@ async function deleteProgramNote(id){
 function abbrevTitle(t){ if(!t){ return t; } var m=[[/\bPrincipal\b/gi,"Prin."],[/\bEngineering\b/gi,"Eng"],[/\bEngineer\b/gi,"Eng"],[/\bManagement\b/gi,"Mgmt"],[/\bManager\b/gi,"Mgr"],[/\bSenior\b/gi,"Sr"],[/\bDevelopment\b/gi,"Dev"],[/\bIntegration\b/gi,"Integ"],[/\bAdministrator\b/gi,"Admin"],[/\bSpecialist\b/gi,"Spec."]]; m.forEach(function(x){ t=t.replace(x[0],x[1]); }); return t; }
 function renderReqs(host){
   function nateRank(r){ var m = (r.urgency||"").match(/^Nate #(\d+)$/); return m ? parseInt(m[1],10) : null; }
-  function isClosedReq(r){ var s=(r.reqStatus||r.urgency||'').toLowerCase(); return s.indexOf('filled')!==-1||s.indexOf('closed')!==-1||s.indexOf('cancelled')!==-1; } var allReqs = REQS.filter(function(r){ return !isClosedReq(r); }).sort(function(a,b){
+  function isClosedReq(r){ var s=(r.reqStatus||'').toLowerCase(); return s.indexOf('filled')!==-1||s.indexOf('closed')!==-1||s.indexOf('cancelled')!==-1; } var allReqs = REQS.filter(function(r){ return !isClosedReq(r); }).sort(function(a,b){
     var ra = nateRank(a), rb = nateRank(b);
     if(ra !== null && rb !== null) return ra - rb;
     if(ra !== null) return -1;
@@ -1229,7 +1229,7 @@ function renderReqs(host){
   if(!VIEW_ONLY){ var bar = el("div"); bar.style.marginBottom = "12px"; var addb = el("button","btn gold sm","+ Add Req"); addb.setAttribute("data-reqadd","1"); bar.appendChild(addb); host.appendChild(bar); }
   if(allReqs.length === 0){ var emp = el("div","empty"); emp.appendChild(el("div","big","No requisitions yet")); emp.appendChild(el("div", null, "Add a req and set its Urgency to Nate #1 through Nate #10 to rank it.")); host.appendChild(emp); return; }
   var table = el("table"); var thead = el("thead"); var htr = el("tr");
-  ["Rank","Status","Req ID","Role / Title","Location","Hiring Manager","Candidates","Target Pay","Urgency","JD"].forEach(function(h){ htr.appendChild(el("th", null, h)); });
+  ["Rank","Status","Req ID","Role / Title","Location","Hiring Manager","Candidates","Target Pay","JD"].forEach(function(h){ htr.appendChild(el("th", null, h)); });
   if(!VIEW_ONLY){ htr.appendChild(el("th", null, "")); }
   thead.appendChild(htr); table.appendChild(thead); var tb = el("tbody");
   allReqs.forEach(function(r){
