@@ -172,8 +172,8 @@
  <div class="brand">
       <div class="brand-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><rect width="32" height="32" rx="7" fill="#3B5BFF"/><rect x="7" y="8" width="18" height="4" rx="2" fill="#F8FAFC"/><rect x="14" y="8" width="4" height="16" rx="2" fill="#F8FAFC"/><circle cx="23" cy="10" r="2.5" fill="#8EA2FF"/></svg></div>
       <div class="brand-text">
-        <span class="brand-name">TalentBase</span>
-        <span class="brand-sub">TES</span>
+        <span class="brand-name">TalentBase TES</span>
+        <span class="brand-sub">Talent Experience System</span>
       </div>
       <span class="vobadge" id="voBadge" style="display:none">View Only</span>
      </div>
@@ -778,7 +778,7 @@ function renderManagers(host){
 }
 function abbrevTitle(t){ if(!t){ return t; } var m=[[/\bPrincipal\b/gi,"Prin."],[/\bEngineering\b/gi,"Eng"],[/\bEngineer\b/gi,"Eng"],[/\bManagement\b/gi,"Mgmt"],[/\bManager\b/gi,"Mgr"],[/\bSenior\b/gi,"Sr"],[/\bDevelopment\b/gi,"Dev"],[/\bIntegration\b/gi,"Integ"],[/\bAdministrator\b/gi,"Admin"],[/\bSpecialist\b/gi,"Spec."]]; m.forEach(function(x){ t=t.replace(x[0],x[1]); }); return t; }
 function renderReqs(host){
-  var ranked = REQS.filter(function(r){ return !r.bench; }).sort(function(a,b){ var ra = (a.rank==null?9999:a.rank), rb = (b.rank==null?9999:b.rank); return (ra - rb) || (a.title||"").localeCompare(b.title||""); });
+  var CLOSED_REQ_STATUSES = ['Filled','Closed','Closed - Not Filled','Cancelled']; var ranked = REQS.filter(function(r){ return !r.bench && CLOSED_REQ_STATUSES.indexOf(r.reqStatus||r.urgency||'') === -1; }).sort(function(a,b){ var ra = (a.rank==null?9999:a.rank), rb = (b.rank==null?9999:b.rank); return (ra - rb) || (a.title||"").localeCompare(b.title||""); });
   var rankedCount = ranked.filter(function(r){ return r.rank != null; }).length;
   document.getElementById("viewMeta").textContent = rankedCount + " ranked / " + ranked.length + " reqs";
   if(typeof PROGRAM_NOTES !== "undefined" && PROGRAM_NOTES){
@@ -794,7 +794,7 @@ function renderReqs(host){
   if(!VIEW_ONLY){ var bar = el("div"); bar.style.marginBottom = "12px"; var addb = el("button","btn gold sm","+ Add Req"); addb.setAttribute("data-reqadd","1"); bar.appendChild(addb); host.appendChild(bar); }
   if(REQS.length === 0){ var emp = el("div","empty"); emp.appendChild(el("div","big","No requisitions yet")); emp.appendChild(el("div", null, "Add a req and set its Rank, Priority, and Status to build the work queue.")); host.appendChild(emp); return; }
   var table = el("table"); var thead = el("thead"); var htr = el("tr");
-  ["Rank","Status","Req ID","Role / Title","Location","Hiring Manager","Candidates","Urgency","JD"].forEach(function(h){ htr.appendChild(el("th", null, h)); });
+  ["Rank","Status","Req ID","Role / Title","Location","Hiring Manager","Candidates","JD"].forEach(function(h){ htr.appendChild(el("th", null, h)); });
   if(!VIEW_ONLY){ htr.appendChild(el("th", null, "")); }
   thead.appendChild(htr); table.appendChild(thead); var tb = el("tbody");
   ranked.forEach(function(r){
@@ -808,7 +808,7 @@ function renderReqs(host){
     var labelP = REQ_OPTIONS[REQS.indexOf(r)];
     var taggedP = state.candidates.filter(function(c){ return (c.reqs||[]).indexOf(labelP) !== -1; }).length;
     tr.appendChild(el("td", null, String(taggedP)));
-    var ut = el("td"); ut.appendChild(pill(r.urgency || "-", URG_COLOR[r.urgency] || "--gray")); tr.appendChild(ut);
+    
     var jdt = el("td");
     if(r.jdLink){ var a = el("a","tag gold","Open"); a.href = r.jdLink; a.target = "_blank"; a.setAttribute("data-stop","1"); jdt.appendChild(a); }
     else if(r.jd){ jdt.appendChild(el("span","sub2","text")); } else { jdt.appendChild(el("span","sub2","-")); }
@@ -819,7 +819,7 @@ function renderReqs(host){
   table.appendChild(tb); host.appendChild(table);
 }
 function reqPrioColor(p){ if(/High/i.test(p)){ return "--red"; } if(/Medium/i.test(p)){ return "--orange"; } if(/Low/i.test(p)){ return "--gray"; } return "--gray"; }
-function reqStatusColor(s){ if(/^Open/i.test(s)){ return "--green"; } if(/Awaiting|Need to Open/i.test(s)){ return "--orange"; } if(/Filled|Closed/i.test(s)){ return "--gray"; } return "--gray"; }
+function reqStatusColor(s){ if(!s) return "--gray"; var sl=s.toLowerCase(); if(sl.indexOf("immediate")!==-1) return "--red"; if(sl.indexOf("high priority")!==-1) return "--orange"; if(sl.indexOf("on hold")!==-1) return "--yellow"; if(/^open/i.test(s)) return "--green"; if(sl.indexOf("pipeline")!==-1) return "--teal"; if(sl.indexOf("july")!==-1||sl.indexOf("august")!==-1) return "--blue"; if(sl.indexOf("awaiting")!==-1||sl.indexOf("need to open")!==-1) return "--purple"; if(sl.indexOf("filled")!==-1||sl.indexOf("closed")!==-1||sl.indexOf("cancelled")!==-1) return "--gray"; return "--gray"; }
 
 function fmtWhen(iso){
   if(!iso){ return ""; }
@@ -1145,7 +1145,7 @@ function renderGuide(host){
   /* ── live data ── */
   var cands    = state.candidates||[];
   var irs      = state.interviewRequests||[];
-  var openReqs = REQS.filter(function(r){ return !r.bench; });
+  var CLOSED_ACTIVE=['Filled','Closed','Closed - Not Filled','Cancelled']; var openReqs = REQS.filter(function(r){ return !r.bench && CLOSED_ACTIVE.indexOf(r.reqStatus||r.urgency||'') === -1; });
   var followUp = [];
   try{ followUp=cands.filter(function(c){ var f=window.followUp?window.followUp(c):null; return f&&f.label; }); }catch(e){}
   var offerP   = cands.filter(function(c){ return c.status==="Offer Pending"; });
@@ -3062,9 +3062,10 @@ async function openResume(path){
 }
 
 /* ---------- manage reqs ---------- */
-var URGENCIES = ["Open","Immediate need","Contract Award","August","July Start","August Start","On Hold","Closed/Filled","Closed Not Filled"];
+var REQ_STATUSES = ["Open", "Immediate Need", "High Priority", "July Start", "August Start", "Pipeline", "On Hold", "Need to Open Req", "Awaiting HR Approval", "Filled", "Closed", "Closed - Not Filled", "Cancelled"];
+var URGENCIES = REQ_STATUSES;
 var REQ_PRIORITIES = ["","1 - High","2 - Medium","3 - Low"];
-var REQ_STATUSES = ["Open","Need to Open Req","Awaiting HR Approval","Filled","Closed","Closed - Not Filled","Cancelled"];
+
 var DESIRED_STARTS = ["Immediate need","2-Jul","15-Aug","15-Sep","September","October","November"];
 var YESNO = ["No","Yes"];
 var editReqId = null;
