@@ -1444,7 +1444,7 @@ function renderGuide(host){
   /* ══ 2. TODAY'S WORK ══ */
   var twWrap=d("margin-bottom:32px;");
   twWrap.appendChild(sh("Today's Work"));
-  var twGrid=d("display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:12px;");
+  var twGrid=d("display:grid;grid-template-columns:repeat(5,1fr);gap:12px;");
 
   function workCard(val,label,sub,viewId,color,action){
     var c=d("background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:22px 18px 16px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;");
@@ -1475,7 +1475,7 @@ function renderGuide(host){
   /* ══ 3. RECRUITING SNAPSHOT ══ */
   var snapWrap=d("margin-bottom:32px;");
   snapWrap.appendChild(sh("Recruiting Snapshot"));
-  var snapGrid=d("display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px;");
+  var snapGrid=d("display:grid;grid-template-columns:repeat(6,1fr);gap:12px;");
 
   function snapCard(val,label,viewId,color){
     var c=card("padding:16px 14px;cursor:pointer;");
