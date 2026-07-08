@@ -1922,6 +1922,218 @@ var BOARD = (function(){
 })();
 function renderBoard(host){ BOARD.render(host); }
 
+/* ── TALENTBENCH ANALYTICS CARD ─────────────────────────────
+   Loads tb_reviews from Supabase and renders:
+   1. Summary KPIs (submitted, accepted, rejected, NMI, rate)
+   2. By Recruiter scorecard
+   3. By Requisition breakdown
+   All async — card renders a loading state then fills in.
+──────────────────────────────────────────────────────────── */
+async function renderTBAnalytics(host){
+  /* ── container card ── */
+  var wrap = el("div");
+  wrap.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px";
+  var hdr = el("div","TalentBench Sourcing Analytics");
+  hdr.style.cssText = "font-size:11.5px;font-weight:700;color:var(--gold);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px";
+  hdr.textContent = "TalentBench Sourcing Analytics";
+  wrap.appendChild(hdr);
+
+  var loading = el("div",null,"Loading sourcing data\u2026");
+  loading.style.cssText = "font-size:12px;color:var(--muted);padding:8px 0";
+  wrap.appendChild(loading);
+  host.appendChild(wrap);
+
+  /* ── fetch tb_reviews ── */
+  var res = await sb.from("tb_reviews")
+    .select("*")
+    .eq("org", ORG)
+    .order("created_at", { ascending: true });
+
+  loading.remove();
+
+  if(res.error){
+    var err = el("div",null,"Could not load TalentBench data: " + (res.error.message||"unknown error"));
+    err.style.cssText = "font-size:12px;color:var(--red);padding:8px 0";
+    wrap.appendChild(err); return;
+  }
+
+  var rows = res.data || [];
+
+  if(!rows.length){
+    var empty = el("div",null,"No TalentBench reviews yet. Reviews will appear here once sourced candidates are accepted, rejected, or moved through the review workflow.");
+    empty.style.cssText = "font-size:12px;color:var(--muted);padding:8px 0;line-height:1.5";
+    wrap.appendChild(empty); return;
+  }
+
+  /* ── compute per-candidate latest status ── */
+  /* For each candidate, use their LATEST review action */
+  var latestByCand = {};
+  rows.forEach(function(r){
+    if(!latestByCand[r.candidate_id] || r.created_at > latestByCand[r.candidate_id].created_at){
+      latestByCand[r.candidate_id] = r;
+    }
+  });
+  var latestRows = Object.keys(latestByCand).map(function(k){ return latestByCand[k]; });
+
+  var totalSubmitted  = latestRows.length;
+  var totalAccepted   = latestRows.filter(function(r){ return r.new_status === "Accepted"; }).length;
+  var totalRejected   = latestRows.filter(function(r){ return r.new_status === "Rejected"; }).length;
+  var totalNMI        = latestRows.filter(function(r){ return r.new_status === "Needs More Information"; }).length;
+  var totalIR         = latestRows.filter(function(r){ return r.new_status === "Interview Requested"; }).length;
+  var acceptRate      = totalSubmitted ? Math.round((totalAccepted / totalSubmitted) * 100) : 0;
+
+  /* ── KPI tiles ── */
+  function kpi(label, value, color){
+    var t = el("div");
+    t.style.cssText = "flex:1;min-width:100px;background:var(--bg);border:1px solid var(--line);border-top:3px solid var("+color+");border-radius:8px;padding:10px 12px";
+    var v = el("div",null,String(value));
+    v.style.cssText = "font-size:22px;font-weight:700;color:var(--ink);line-height:1";
+    var l = el("div",null,label);
+    l.style.cssText = "font-size:10.5px;color:var(--muted);margin-top:5px;line-height:1.25";
+    t.appendChild(v); t.appendChild(l); return t;
+  }
+  var kpiRow = el("div");
+  kpiRow.style.cssText = "display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px";
+  kpiRow.appendChild(kpi("Candidates Reviewed",  totalSubmitted, "--blue"));
+  kpiRow.appendChild(kpi("Accepted",             totalAccepted,  "--green"));
+  kpiRow.appendChild(kpi("Rejected",             totalRejected,  "--red"));
+  kpiRow.appendChild(kpi("Needs More Info",       totalNMI,       "--orange"));
+  kpiRow.appendChild(kpi("Interview Requested",  totalIR,        "--teal"));
+  kpiRow.appendChild(kpi("Acceptance Rate",      acceptRate + "%","--gold"));
+  wrap.appendChild(kpiRow);
+
+  /* ── By Recruiter scorecard ── */
+  var recHdr = el("div",null,"By Recruiter");
+  recHdr.style.cssText = "font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray);margin-bottom:8px";
+  wrap.appendChild(recHdr);
+
+  /* Group by reviewer_email — use reviewer as proxy for recruiter for now */
+  /* Also group submitted candidates by the recruiter who submitted them   */
+  /* We approximate: tb_reviews first action per candidate = submission    */
+  var firstByCand = {};
+  rows.forEach(function(r){
+    if(!firstByCand[r.candidate_id]){
+      firstByCand[r.candidate_id] = r; /* earliest = submission */
+    }
+  });
+
+  /* Build per-reviewer stats */
+  var reviewerMap = {};
+  Object.keys(latestByCand).forEach(function(candId){
+    var latest = latestByCand[candId];
+    var first  = firstByCand[candId];
+    var who = first ? first.reviewer_email : latest.reviewer_email;
+    if(!reviewerMap[who]){ reviewerMap[who] = { submitted:0, accepted:0, rejected:0, nmi:0, ir:0 }; }
+    reviewerMap[who].submitted++;
+    if(latest.new_status === "Accepted")                  reviewerMap[who].accepted++;
+    else if(latest.new_status === "Rejected")             reviewerMap[who].rejected++;
+    else if(latest.new_status === "Needs More Information") reviewerMap[who].nmi++;
+    else if(latest.new_status === "Interview Requested")  reviewerMap[who].ir++;
+  });
+
+  var recTable = el("div");
+  recTable.style.cssText = "display:flex;flex-direction:column;gap:5px;margin-bottom:16px";
+
+  /* Header row */
+  var recHead = el("div");
+  recHead.style.cssText = "display:grid;grid-template-columns:1fr 60px 60px 60px 60px 70px;gap:0 8px;padding:5px 10px;font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.06em";
+  ["Reviewer","Submitted","Accepted","Rejected","NMI","Accept %"].forEach(function(h){
+    recHead.appendChild(el("div",null,h));
+  });
+  recTable.appendChild(recHead);
+
+  Object.keys(reviewerMap).sort().forEach(function(email){
+    var s = reviewerMap[email];
+    var rate = s.submitted ? Math.round((s.accepted/s.submitted)*100) : 0;
+    var shortEmail = email.split("@")[0];
+    var row = el("div");
+    row.style.cssText = "display:grid;grid-template-columns:1fr 60px 60px 60px 60px 70px;gap:0 8px;padding:7px 10px;background:var(--bg);border:1px solid var(--line);border-radius:7px;font-size:12px;align-items:center";
+    var nameEl = el("div",null,shortEmail); nameEl.style.cssText = "font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"; nameEl.title = email;
+    var subEl  = el("div",null,String(s.submitted));  subEl.style.cssText  = "color:var(--blue);font-weight:700;text-align:center";
+    var accEl  = el("div",null,String(s.accepted));   accEl.style.cssText  = "color:var(--green);font-weight:700;text-align:center";
+    var rejEl  = el("div",null,String(s.rejected));   rejEl.style.cssText  = "color:var(--red);font-weight:700;text-align:center";
+    var nmiEl  = el("div",null,String(s.nmi));        nmiEl.style.cssText  = "color:var(--orange);font-weight:700;text-align:center";
+    var rateEl = el("div",null,rate + "%");
+    rateEl.style.cssText = "font-weight:700;text-align:center;color:" + (rate >= 70 ? "var(--green)" : rate >= 40 ? "var(--gold)" : "var(--red)");
+    [nameEl,subEl,accEl,rejEl,nmiEl,rateEl].forEach(function(e){ row.appendChild(e); });
+    recTable.appendChild(row);
+  });
+  wrap.appendChild(recTable);
+
+  /* ── By Requisition breakdown ── */
+  var reqHdrEl = el("div",null,"By Requisition");
+  reqHdrEl.style.cssText = "font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray);margin-bottom:8px";
+  wrap.appendChild(reqHdrEl);
+
+  /* Group latest status by req_id */
+  var reqMap = {};
+  Object.keys(latestByCand).forEach(function(candId){
+    var latest = latestByCand[candId];
+    var first  = firstByCand[candId];
+    var reqId  = (first && first.req_id) ? first.req_id : "unassigned";
+    if(!reqMap[reqId]){ reqMap[reqId] = { submitted:0, accepted:0, rejected:0, nmi:0, ir:0 }; }
+    reqMap[reqId].submitted++;
+    if(latest.new_status === "Accepted")                    reqMap[reqId].accepted++;
+    else if(latest.new_status === "Rejected")               reqMap[reqId].rejected++;
+    else if(latest.new_status === "Needs More Information") reqMap[reqId].nmi++;
+    else if(latest.new_status === "Interview Requested")    reqMap[reqId].ir++;
+  });
+
+  /* Resolve req IDs to titles */
+  var reqTable = el("div");
+  reqTable.style.cssText = "display:flex;flex-direction:column;gap:5px";
+
+  var reqHead = el("div");
+  reqHead.style.cssText = "display:grid;grid-template-columns:1fr 60px 60px 60px 70px;gap:0 8px;padding:5px 10px;font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.06em";
+  ["Requisition","Submitted","Accepted","Rejected","Accept %"].forEach(function(h){
+    reqHead.appendChild(el("div",null,h));
+  });
+  reqTable.appendChild(reqHead);
+
+  Object.keys(reqMap).sort(function(a,b){
+    return reqMap[b].submitted - reqMap[a].submitted;
+  }).forEach(function(reqId){
+    var s = reqMap[reqId];
+    var rate = s.submitted ? Math.round((s.accepted/s.submitted)*100) : 0;
+    /* Try to resolve req title from REQS */
+    var reqObj = (REQS||[]).filter(function(r){ return r.id === reqId; })[0];
+    var reqLabel = reqObj ? (reqObj.title || reqId) : (reqId === "unassigned" ? "Unassigned" : reqId.slice(0,8)+"…");
+    var row = el("div");
+    row.style.cssText = "display:grid;grid-template-columns:1fr 60px 60px 60px 70px;gap:0 8px;padding:7px 10px;background:var(--bg);border:1px solid var(--line);border-radius:7px;font-size:12px;align-items:center";
+    var nameEl = el("div",null,reqLabel); nameEl.style.cssText = "font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"; nameEl.title = reqLabel;
+    var subEl  = el("div",null,String(s.submitted)); subEl.style.cssText  = "color:var(--blue);font-weight:700;text-align:center";
+    var accEl  = el("div",null,String(s.accepted));  accEl.style.cssText  = "color:var(--green);font-weight:700;text-align:center";
+    var rejEl  = el("div",null,String(s.rejected));  rejEl.style.cssText  = "color:var(--red);font-weight:700;text-align:center";
+    var rateEl = el("div",null,rate + "%");
+    rateEl.style.cssText = "font-weight:700;text-align:center;color:" + (rate >= 70 ? "var(--green)" : rate >= 40 ? "var(--gold)" : "var(--red)");
+    [nameEl,subEl,accEl,rejEl,rateEl].forEach(function(e){ row.appendChild(e); });
+    reqTable.appendChild(row);
+  });
+  wrap.appendChild(reqTable);
+
+  /* ── Rejection reasons breakdown ── */
+  var rejRows = rows.filter(function(r){ return r.action === "Rejected" && r.reason; });
+  if(rejRows.length){
+    var rejHdr = el("div",null,"Rejection Reasons");
+    rejHdr.style.cssText = "font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray);margin:16px 0 8px";
+    wrap.appendChild(rejHdr);
+    var reasonMap = {};
+    rejRows.forEach(function(r){ reasonMap[r.reason] = (reasonMap[r.reason]||0) + 1; });
+    var chips = el("div"); chips.style.cssText = "display:flex;flex-wrap:wrap;gap:6px";
+    Object.keys(reasonMap).sort(function(a,b){ return reasonMap[b]-reasonMap[a]; }).forEach(function(k){
+      var chip = el("div"); chip.style.cssText = "font-size:11px;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:4px 10px;color:var(--ink)";
+      chip.textContent = k + ": " + reasonMap[k];
+      chips.appendChild(chip);
+    });
+    wrap.appendChild(chips);
+  }
+
+  /* ── footnote ── */
+  var note = el("div",null,"Acceptance rate = Accepted \xf7 total reviewed candidates (latest status). Data updates in real time from TalentBench review actions.");
+  note.style.cssText = "font-size:10.5px;color:var(--muted);margin-top:14px;line-height:1.5";
+  wrap.appendChild(note);
+}
+
 function renderDashboard(host){
   host.innerHTML = "";
   var cs = state.candidates || [];
@@ -2098,12 +2310,7 @@ function renderDashboard(host){
   }
   host.appendChild(c5);
 
-  var c6 = card("Coming with stage_history");
-  var ul = el("div"); ul.style.cssText = "font-size:12px;color:var(--muted);line-height:1.7";
-  ["Time in each stage and where candidates stall","Time to submit, time to offer, time to hire","True stage to stage conversion over time","Aging flags for candidates sitting too long at a stage","HM feedback turnaround from the feedback activity types"].forEach(function(t){ ul.appendChild(el("div", null, "\u2022   " + t)); });
-  c6.appendChild(ul);
-  var note6 = el("div", null, "Run stage_history.sql, then I wire transition logging into the candidate save path and these turn on."); note6.style.cssText = "font-size:11px;color:var(--gold);margin-top:10px"; c6.appendChild(note6);
-  host.appendChild(c6);
+  renderTBAnalytics(host);
 }
 
 function renderPipeline(host){
