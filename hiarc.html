@@ -360,7 +360,7 @@ function candToRow(c){
     ta_reject_reason:c.taRejectReason||"", ta_reject_date:nz(c.taRejectDate), hm_reject_reason:c.hmRejectReason||"", hm_reject_date:nz(c.hmRejectDate),
     updated_at:new Date().toISOString() };
 }
-function rowToReq(r){ return { id:r.id, title:r.title||"", loc:r.loc||"", disc:r.discipline||"Other", urgency:r.urgency||"Open", compMin:r.comp_min||"", compMax:r.comp_max||"", compTarget:r.comp_target||"", openings:r.openings||1, hm:r.hiring_manager||"", hmTitle:r.hm_title||"", hmEmail:r.hm_email||"", hmPhone:r.hm_phone||"", jobId:r.job_id||"", jd:r.jd||"", jdLink:r.jd_link||"" }; }
+function rowToReq(r){ return { id:r.id, title:r.title||"", role:r.role||"", loc:r.loc||"", disc:r.discipline||"Other", urgency:r.urgency||"Open", priority:r.priority||"", reqStatus:r.req_status||"", rank:(r.rank!=null?r.rank:null), desiredStart:r.desired_start||"", contingent:r.contingent||"No", eicp:r.eicp||"", compMin:r.comp_min||"", compMax:r.comp_max||"", compTarget:r.comp_target||"", openings:r.openings||1, hm:r.hiring_manager||"", hmTitle:r.hm_title||"", hmEmail:r.hm_email||"", hmPhone:r.hm_phone||"", jobId:r.job_id||"", jd:r.jd||"", jdLink:r.jd_link||"" }; }
 function setReqs(arr){
   REQS = arr;
   REQ_OPTIONS = arr.map(function(r){ return r.title + " \u2013 " + r.loc; });
@@ -2744,15 +2744,23 @@ async function bulkAttachConfirm(){
 
 /* ---------- manage reqs ---------- */
 var URGENCIES = ["Open","Immediate need","Contract Award","August","July Start","August Start","Nate #1","Nate #2","Nate #3","Nate #4","Nate #5","Nate #6","Nate #7","Nate #8","Nate #9","Nate #10","On Hold","Closed/Filled","Closed Not Filled"];
+var REQ_STATUSES = ["Open","Need to Open Req","Awaiting HR Approval","Filled","Closed","Closed - Not Filled","Cancelled"];
+var REQ_PRIORITIES = ["","1 - High","2 - Medium","3 - Low"];
+var DESIRED_STARTS = ["Immediate need","2-Jul","15-Aug","15-Sep","September","October","November"];
+var YESNO = ["No","Yes"];
 var editReqId = null;
 function openReqModal(existing){
   editReqId = existing ? existing.id : null;
-  var r = existing || { title:"", loc:"", disc:"Other", urgency:"Open", compMin:"", compMax:"", compTarget:"", openings:1, hm:"", jobId:"", jd:"", jdLink:"" };
+  var r = existing || { title:"", role:"", loc:"", disc:"Other", urgency:"Open", priority:"", reqStatus:"", rank:null, desiredStart:"", contingent:"No", compMin:"", compMax:"", compTarget:"", eicp:"", openings:1, hm:"", jobId:"", jd:"", jdLink:"" };
   openId = null; var m = document.getElementById("modal"); m.className = "modal"; m.innerHTML = "";
   var head = el("div","mhead"); head.appendChild(el("h2", null, existing ? "Edit Requisition" : "Add Requisition"));
-  var x = el("button","x","\u00d7"); x.setAttribute("data-close","1"); head.appendChild(x); m.appendChild(head);
+  var x = el("button","x","×"); x.setAttribute("data-close","1"); head.appendChild(x); m.appendChild(head);
   var body = el("div","mbody"); var g = el("div","grid2");
-  var tf = field("Title","reqTitle",r.title); tf.className = "fld full"; g.appendChild(tf);
+  var tf = field("Role (official / internal)","reqTitle",r.title); tf.className = "fld full"; g.appendChild(tf);
+  var rolef = field("Title (advertised to public)","reqRole",r.role); rolef.className = "fld full"; g.appendChild(rolef);
+  g.appendChild(field("Rank (1–20)","reqRank", (r.rank!=null?String(r.rank):""), "number"));
+  g.appendChild(field("Priority","reqPriority", r.priority||"", "select", REQ_PRIORITIES));
+  g.appendChild(field("Status","reqStatus", r.reqStatus||"", "select", REQ_STATUSES));
   g.appendChild(field("Location","reqLoc",r.loc));
   g.appendChild(field("Job ID","reqJobId",r.jobId));
   var hmWrap = el("div","fld"); hmWrap.appendChild(el("label", null, "Hiring Manager"));
@@ -2760,6 +2768,15 @@ function openReqModal(existing){
   if(MANAGERS.length){ hmIn.setAttribute("list","hmList"); var dl = el("datalist"); dl.id = "hmList"; MANAGERS.forEach(function(m){ var op = el("option"); op.value = m.name; dl.appendChild(op); }); hmWrap.appendChild(hmIn); hmWrap.appendChild(dl); }
   else{ hmWrap.appendChild(hmIn); }
   g.appendChild(hmWrap);
+  hmIn.addEventListener("change", function(){
+    var val = hmIn.value.trim().toLowerCase(); var found = null;
+    for(var i=0;i<MANAGERS.length;i++){ if((MANAGERS[i].name||"").trim().toLowerCase() === val){ found = MANAGERS[i]; break; } }
+    if(!found){ return; }
+    var mm = document.getElementById("modal");
+    var tEl = mm.querySelector("[data-field='reqHMTitle']"); if(tEl && !tEl.value){ tEl.value = found.title || ""; }
+    var eEl = mm.querySelector("[data-field='reqHMEmail']"); if(eEl && !eEl.value){ eEl.value = found.email || ""; }
+    var pEl = mm.querySelector("[data-field='reqHMPhone']"); if(pEl && !pEl.value){ pEl.value = found.phone || ""; }
+  });
   g.appendChild(field("HM Title","reqHMTitle",r.hmTitle));
   g.appendChild(field("HM Email","reqHMEmail",r.hmEmail,"email"));
   g.appendChild(field("HM Phone","reqHMPhone",r.hmPhone));
@@ -2769,6 +2786,12 @@ function openReqModal(existing){
   g.appendChild(field("Min Comp","reqCompMin", r.compMin||""));
   g.appendChild(field("Max Comp","reqCompMax", r.compMax||""));
   g.appendChild(field("Target Comp","reqCompTarget", r.compTarget||""));
+  g.appendChild(field("EICP Eligible (Annual Bonus)","reqEicp", r.eicp||""));
+  var dsWrap = el("div","fld"); dsWrap.appendChild(el("label", null, "Desired Start Date"));
+  var dsIn = el("input"); dsIn.type = "text"; dsIn.setAttribute("data-field","reqDesiredStart"); dsIn.value = r.desiredStart || "";
+  dsIn.setAttribute("list","dsList"); var dsDl = el("datalist"); dsDl.id = "dsList"; DESIRED_STARTS.forEach(function(o){ var dop = el("option"); dop.value = o; dsDl.appendChild(dop); });
+  dsWrap.appendChild(dsIn); dsWrap.appendChild(dsDl); g.appendChild(dsWrap);
+  g.appendChild(field("Contingent Hire","reqContingent", r.contingent||"No", "select", YESNO));
   var jlf = field("Job Description Link","reqJdLink",r.jdLink,"url"); jlf.className = "fld full"; g.appendChild(jlf);
   var jdf = field("Job Description","reqJd",r.jd,"textarea"); jdf.className = "fld full"; g.appendChild(jdf);
   body.appendChild(g); m.appendChild(body);
@@ -2829,7 +2852,7 @@ async function saveReq(){
   var m = document.getElementById("modal");
   function v(k){ var e = m.querySelector("[data-field='" + k + "']"); return e ? e.value : ""; }
   var title = v("reqTitle").trim(); if(!title){ toast("Title required"); return; }
-  var row = { org:ORG, title:title, loc:v("reqLoc").trim(), job_id:v("reqJobId").trim(), hiring_manager:v("reqHM").trim(), hm_title:v("reqHMTitle").trim(), hm_email:v("reqHMEmail").trim(), hm_phone:v("reqHMPhone").trim(), discipline:v("reqDisc"), urgency:v("reqUrg"), comp_min:v("reqCompMin").trim(), comp_max:v("reqCompMax").trim(), comp_target:v("reqCompTarget").trim(), openings:parseInt(v("reqOpen"),10) || 1, jd:v("reqJd"), jd_link:v("reqJdLink").trim() };
+  var role=v("reqRole").trim(); var rankVal=v("reqRank").trim(); var row = { org:ORG, title:title, role:role||null, loc:v("reqLoc").trim(), job_id:v("reqJobId").trim(), hiring_manager:v("reqHM").trim(), hm_title:v("reqHMTitle").trim(), hm_email:v("reqHMEmail").trim(), hm_phone:v("reqHMPhone").trim(), discipline:v("reqDisc"), urgency:v("reqUrg"), priority:v("reqPriority")||null, req_status:v("reqStatus")||null, rank:rankVal?parseInt(rankVal,10):null, desired_start:v("reqDesiredStart").trim()||null, contingent:v("reqContingent")||"No", eicp:v("reqEicp").trim()||null, comp_min:v("reqCompMin").trim(), comp_max:v("reqCompMax").trim(), comp_target:v("reqCompTarget").trim(), openings:parseInt(v("reqOpen"),10) || 1, jd:v("reqJd"), jd_link:v("reqJdLink").trim() };
   var id = editReqId; closeModal();
   if(id){ await run(sb.from("reqs").update(row).eq("id", id), "Req updated"); }
   else{ await run(sb.from("reqs").insert(row), "Req added"); }
