@@ -10,8 +10,8 @@
 <style>
   :root{
     --bg:#f4f5f9;--panel:#ffffff;--panel2:#f0f1f6;--line:#e2e5ef;
-    --ink:#111318;--muted:#52576b;--gold:#3b54e8;--gold-dim:#e8ebfd;
-    --blue:#3b54e8;--cyan:#0891b2;--teal:#0e9e7a;--yellow:#b45309;
+    --ink:#111318;--muted:#52576b;--gold:#3B5BFF;--gold-dim:#eaedff;
+    --blue:#3B5BFF;--cyan:#0891b2;--teal:#0e9e7a;--yellow:#b45309;
     --orange:#c2410c;--purple:#7c3aed;--gray:#8b90a8;--red:#dc2626;--green:#15803d;
   }
   *{box-sizing:border-box}
@@ -19,13 +19,15 @@
   h1,h2,h3{font-family:inherit;font-weight:700;margin:0}
   button{font-family:inherit;cursor:pointer}
   input,select,textarea{font-family:inherit;font-size:14px}
-  .wrap{max-width:1380px;margin:0 auto;padding:0 20px}
-  header{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-  .topbar{display:flex;align-items:center;gap:10px;padding:13px 0;flex-wrap:wrap}
-  .brand{display:flex;align-items:baseline;gap:10px}
-  .brand h1{font-size:20px;letter-spacing:.2px;color:var(--ink);font-weight:700}
-  .brand .dot{color:var(--gold)}
-  .brand .sub{color:var(--gold);font-size:11px;letter-spacing:1.5px;text-transform:lowercase;font-weight:700}
+  .wrap{max-width:1420px;margin:0 auto;padding:0 22px}
+  /* ── HEADER ── */
+  header{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .topbar{display:flex;align-items:center;gap:10px;padding:10px 0;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand-logo{width:32px;height:32px;flex-shrink:0}
+  .brand-text{display:flex;flex-direction:column;gap:0px}
+  .brand-text .brand-name{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.3px;line-height:1.1}
+  .brand-text .brand-sub{font-size:9px;color:var(--muted);font-weight:500;letter-spacing:.2px}
   .vobadge{background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold);border-radius:20px;padding:3px 11px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
   .grow{flex:1}
   .userbox{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
@@ -33,57 +35,67 @@
   .search input{background:transparent;border:0;color:var(--ink);width:100%;outline:none}
   .search input::placeholder{color:var(--gray)}
   .search svg{flex:0 0 auto;opacity:.5}
-  .btn{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;transition:.15s}
+  /* ── BUTTONS ── */
+  .btn{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;transition:all .14s;display:inline-flex;align-items:center;gap:5px}
   .btn:hover{border-color:var(--gold);color:var(--gold)}
-  .btn.gold{background:var(--gold);color:#fff;border-color:var(--gold)}
+  .btn.gold{background:var(--gold);color:#fff;border-color:var(--gold);box-shadow:0 2px 8px rgba(59,91,255,.22)}
   .btn.gold:hover{filter:brightness(1.08)}
   .btn.ghost{background:transparent}
   .btn.ghost:hover{background:var(--panel2)}
   .btn.sm{padding:5px 10px;font-size:12px}
   .btn.danger:hover{border-color:var(--red);color:var(--red)}
-  .btn.block{width:100%;padding:11px;font-size:14px}
-  .layout{display:grid;grid-template-columns:224px 1fr;gap:20px;padding:18px 0 60px}
-  .side{position:sticky;top:62px;align-self:start;max-height:calc(100vh - 80px);overflow-y:auto}
-  .side h3{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:var(--gray);margin:18px 0 6px;font-family:inherit;font-weight:700}
-  .side h3:first-child{margin-top:0}
-  .vtab{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:transparent;border:0;color:var(--muted);padding:7px 10px;border-radius:7px;font-size:13px;font-weight:500}
-  .vtab:hover{background:var(--panel2);color:var(--ink)}
-  .vtab.active{background:var(--gold-dim);color:var(--gold);font-weight:700;box-shadow:inset 3px 0 0 var(--gold)}
+  .btn.block{width:100%;padding:11px;font-size:14px;justify-content:center}
+  /* ── LAYOUT ── */
+  .layout{display:grid;grid-template-columns:242px 1fr;gap:0;padding:0}
+  /* ── SIDEBAR ── */
+  .side{position:sticky;top:53px;align-self:start;max-height:calc(100vh - 53px);overflow-y:auto;border-right:1px solid var(--line);background:var(--panel);padding:16px 0 32px;width:242px}
+  .side h3{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:var(--gray);margin:20px 0 5px;font-family:inherit;font-weight:700;padding:0 16px}
+  .side h3:first-child{margin-top:8px}
+  .vtab{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:transparent;border:0;color:var(--muted);padding:8px 16px;border-radius:0;font-size:13px;font-weight:500;transition:background .1s,color .1s;position:relative}
+  .vtab:hover{background:var(--bg);color:var(--ink)}
+  .vtab.active{background:var(--gold-dim);color:var(--gold);font-weight:700}
+  .vtab.active::before{content:"";position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--gold);border-radius:0 3px 3px 0}
   .vtab .count{background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:0 7px;font-size:11px;color:var(--gray)}
   .vtab.active .count{color:var(--gold);border-color:var(--gold);background:#fff}
-  .side h3.sech{margin:16px 0 6px}
+  .side h3.sech{margin:20px 0 5px}
   .side h3.toggle{cursor:pointer;user-select:none}
   .side h3.toggle:hover{color:var(--ink)}
-  .vtab.fu-amber:not(.active){color:var(--yellow);box-shadow:inset 3px 0 0 var(--yellow)}
-  .vtab.fu-red:not(.active){color:var(--red);box-shadow:inset 3px 0 0 var(--red)}
+  .vtab.fu-amber:not(.active){color:var(--yellow)}
+  .vtab.fu-amber:not(.active)::before{content:"";position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--yellow);border-radius:0 3px 3px 0}
+  .vtab.fu-red:not(.active){color:var(--red)}
+  .vtab.fu-red:not(.active)::before{content:"";position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--red);border-radius:0 3px 3px 0}
   .vtab.fu-amber .count{color:var(--yellow);border-color:var(--yellow)}
   .vtab.fu-red .count{color:var(--red);border-color:var(--red)}
-  .filterbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:6px}
+  .filterbox{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;margin:6px 10px 0}
   .filterbox label{display:block;font-size:11px;color:var(--gray);margin:8px 0 4px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
   .filterbox label:first-child{margin-top:0}
   select.fil{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
-  .main{min-width:0}
+  /* ── MAIN ── */
+  .main{min-width:0;padding:20px 24px 60px}
   .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
   .toolbar .title{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.2px}
   .toolbar .meta{color:var(--muted);font-size:12px}
-  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
-  thead th{text-align:left;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--gray);padding:11px 13px;border-bottom:1px solid var(--line);font-weight:700;background:var(--panel2);vertical-align:bottom;white-space:nowrap}
-  tbody td{padding:11px 13px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:top}
+  /* ── TABLES ── */
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+  thead th{text-align:left;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--gray);padding:11px 14px;border-bottom:1px solid var(--line);font-weight:700;background:var(--panel2);vertical-align:bottom;white-space:nowrap}
+  tbody td{padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:top}
   tbody tr:last-child td{border-bottom:0}
   tbody tr.click:hover td{background:var(--panel2);cursor:pointer}
   .pill{border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;border:1px solid transparent;display:inline-block}
+  /* ── GATE (login) ── */
   .gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999}
-  .gate .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:40px;width:380px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
-  .gate h1{font-size:24px;color:var(--ink);margin-bottom:4px;font-weight:700}
-  .gate .dot{color:var(--gold)}
-  .gate .sub{color:var(--muted);font-size:13px;margin-bottom:28px;display:block}
+  .gate .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:44px;width:400px;box-shadow:0 4px 28px rgba(0,0,0,.09)}
+  .gate-brand{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+  .gate-brand-text .gate-name{font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-.4px;line-height:1.1}
+  .gate-brand-text .gate-sub{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.2px;margin-top:3px}
   .gate label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin:14px 0 5px;text-transform:uppercase;letter-spacing:.5px}
-  .gate input{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--ink);font-size:14px;outline:none}
+  .gate input{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--ink);font-size:14px;outline:none;transition:border-color .12s}
   .gate input:focus{border-color:var(--gold)}
   .msg{font-size:13px;margin-top:10px;min-height:18px}
   .msg.err{color:var(--red)}
   .msg.ok{color:var(--green)}
   #app{display:none}
+  /* ── MODAL ── */
   .scrim{position:fixed;inset:0;background:rgba(10,12,24,.5);display:none;align-items:center;justify-content:center;z-index:500;padding:16px}
   .scrim.open{display:flex}
   .modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:100%;max-width:860px;max-height:calc(100vh - 32px);overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.14)}
@@ -93,12 +105,12 @@
   .mfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:16px 22px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--panel)}
   .fld{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
   .fld label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
-  .fld input,.fld select,.fld textarea{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink);outline:none}
+  .fld input,.fld select,.fld textarea{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink);outline:none;transition:border-color .12s}
   .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--gold)}
   .fld textarea{min-height:80px;resize:vertical}
   .fld.full{grid-column:1/-1}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
-  .x{background:transparent;border:0;color:var(--gray);font-size:22px;line-height:1;cursor:pointer;padding:0 4px;border-radius:6px}
+  .x{background:transparent;border:0;color:var(--gray);font-size:22px;line-height:1;cursor:pointer;padding:0 4px;border-radius:6px;transition:all .12s}
   .x:hover{color:var(--ink);background:var(--panel2)}
   .click{cursor:pointer;transition:background .12s}
   .click:hover{background:var(--panel2)}
@@ -115,7 +127,7 @@
   .reqck{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--ink)}
   .hot{border-color:var(--gold)!important;color:var(--gold)!important;background:var(--gold-dim)!important}
   .due{font-size:12px;font-weight:700;color:var(--yellow)}
-  .grouphdr td{background:var(--panel2);color:var(--gold);font-weight:700;letter-spacing:1px;text-transform:uppercase;font-size:11px;border-top:2px solid var(--line);padding:10px 13px}
+  .grouphdr td{background:var(--panel2);color:var(--gold);font-weight:700;letter-spacing:1px;text-transform:uppercase;font-size:11px;border-top:2px solid var(--line);padding:10px 14px}
   .richtext{white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.6}
   .richul{margin:4px 0;padding-left:20px}
   .nt{margin-top:4px}
@@ -127,7 +139,7 @@
   .toast.show{opacity:1}
   .empty{text-align:center;padding:40px;color:var(--gray);font-size:14px}
   .sect{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gray);margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
-  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar{width:5px;height:5px}
   ::-webkit-scrollbar-track{background:transparent}
   ::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
 </style>
@@ -135,31 +147,36 @@
 <body>
 
 <div class="gate" id="gate">
-  <div class="card">
-    <h1>TalentBase<span class="dot">.</span></h1>
-    <div class="sub" style="font-size:12px;letter-spacing:.5px;color:var(--muted);margin-bottom:28px;display:block;">Talent Experience Systems</div>
-    <div id="gateForm">
-      <label>Email</label>
-      <input id="loginEmail" type="email" autocomplete="username" placeholder="you@company.com">
-      <label>Password</label>
-      <input id="loginPass" type="password" autocomplete="current-password" placeholder="Your password">
-      <div style="margin-top:18px"><button class="btn gold block" id="loginBtn">Sign In</button></div>
-      <div class="msg" id="loginMsg"></div>
-    </div>
+ <div class="card">
+  <div class="gate-brand">
+   <div style="width:48px;height:48px;flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48"><rect width="48" height="48" rx="11" fill="#3B5BFF"/><rect x="10" y="12" width="28" height="5.5" rx="2.75" fill="#F8FAFC"/><rect x="21.25" y="12" width="5.5" height="24" rx="2.75" fill="#F8FAFC"/><circle cx="35" cy="15" r="3.5" fill="#8EA2FF"/></svg></div>
+   <div class="gate-brand-text">
+    <div class="gate-name">TalentBase</div>
+    <div class="gate-sub">Talent Experience Systems</div>
+   </div>
   </div>
+  <div id="gateForm">
+   <label>Email</label>
+   <input id="loginEmail" type="email" autocomplete="username" placeholder="you@company.com">
+   <label>Password</label>
+   <input id="loginPass" type="password" autocomplete="current-password" placeholder="Your password">
+   <div style="margin-top:20px"><button class="btn gold block" id="loginBtn">Sign In</button></div>
+   <div class="msg" id="loginMsg"></div>
+  </div>
+ </div>
 </div>
 
 <div id="app">
 <header>
   <div class="wrap topbar">
     <div class="brand">
-      <div style="display:flex;flex-direction:column;gap:1px;">
-        <span style="font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.2px;">TalentBase</span>
-        <span style="font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.3px;">Recruitment Operating System</span>
-        <span style="font-size:10px;color:var(--gold);font-weight:600;letter-spacing:.2px;">HiARC Workspace</span>
+      <div class="brand-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><rect width="32" height="32" rx="7" fill="#3B5BFF"/><rect x="7" y="8" width="18" height="4" rx="2" fill="#F8FAFC"/><rect x="14" y="8" width="4" height="16" rx="2" fill="#F8FAFC"/><circle cx="23" cy="10" r="2.5" fill="#8EA2FF"/></svg></div>
+      <div class="brand-text">
+        <span class="brand-name">TalentBase</span>
+        <span class="brand-sub">Recruitment OS</span>
       </div>
       <span class="vobadge" id="voBadge" style="display:none">View Only</span>
-    </div>
+     </div>
     <div class="grow"></div>
     <div class="search">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
@@ -1288,259 +1305,261 @@ function renderGuide(host){
   document.getElementById("viewMeta").textContent = "";
   var _vt = document.getElementById("viewTitle"); if(_vt) _vt.textContent = "";
 
-  function nav(viewId){ ui.view = viewId; refresh(); }
+  function nav(v){ ui.view=v; refresh(); }
 
   /* ── live data ── */
-  var cands    = state.candidates || [];
-  var irs      = state.interviewRequests || [];
+  var cands    = state.candidates||[];
+  var irs      = state.interviewRequests||[];
   var openReqs = REQS.filter(function(r){ return !r.bench; });
   var followUp = [];
-  try { followUp = cands.filter(function(c){ var f=window.followUp?window.followUp(c):null; return f&&f.label; }); } catch(e){}
+  try{ followUp=cands.filter(function(c){ var f=window.followUp?window.followUp(c):null; return f&&f.label; }); }catch(e){}
   var offerP   = cands.filter(function(c){ return c.status==="Offer Pending"; });
-  var submitted = cands.filter(function(c){ return c.status==="Submitted"; });
+  var submitted= cands.filter(function(c){ return c.status==="Submitted"; });
   var irsWeek  = irs.filter(function(ir){
     if(!ir.interviewDate) return false;
-    var d=new Date(ir.interviewDate), now=new Date();
+    var d=new Date(ir.interviewDate),now=new Date();
     var s=new Date(now); s.setDate(now.getDate()-now.getDay());
     var e=new Date(s); e.setDate(s.getDate()+7);
     return d>=s&&d<=e;
   });
-  var activeCands = cands.filter(function(c){ return c.status!=="Archived"&&c.status!=="Offer Accepted - Hired"; });
-  var interviewing = cands.filter(function(c){ return ["Interviewing Stage 1","Interviewing Stage 2","Interviewing Stage 3","Panel / Final Interview","Interviewing"].indexOf(c.status)!==-1; });
-  var isHiarc  = ORG==="hiarc";
+  var activeCands=cands.filter(function(c){ return c.status!=="Archived"&&c.status!=="Offer Accepted - Hired"; });
+  var interviewing=cands.filter(function(c){ return ["Interviewing Stage 1","Interviewing Stage 2","Interviewing Stage 3","Panel / Final Interview","Interviewing"].indexOf(c.status)!==-1; });
+  var isHiarc=ORG==="hiarc";
 
-  /* ── DOM helpers ── */
-  function div(css){ var e=document.createElement("div"); if(css) e.style.cssText=css; return e; }
-  function txt(tag,t,css){ var e=document.createElement(tag); e.textContent=t; if(css) e.style.cssText=css; return e; }
-  function btn(label, viewId, primary){
+  /* ── shared design system helpers ── */
+  function d(css){ var e=document.createElement("div"); if(css)e.style.cssText=css; return e; }
+  function t(tag,tx,css){ var e=document.createElement(tag); e.textContent=tx; if(css)e.style.cssText=css; return e; }
+
+  /* TB_CARD — shared card base */
+  function card(css){
+    var c=d("background:var(--panel);border:1px solid var(--line);border-radius:14px;"+(css||""));
+    c.addEventListener("mouseenter",function(){ this.style.boxShadow="0 4px 20px rgba(0,0,0,.09)"; this.style.transform="translateY(-2px)"; });
+    c.addEventListener("mouseleave",function(){ this.style.boxShadow=""; this.style.transform=""; });
+    c.style.transition="all .15s";
+    return c;
+  }
+
+  /* TB_BTN — shared button */
+  function btn(label,viewId,primary,small){
     var b=document.createElement("button"); b.textContent=label;
-    b.style.cssText = primary
-      ? "background:var(--gold);color:#fff;border:none;border-radius:8px;padding:11px 24px;font-size:13px;font-weight:600;cursor:pointer;transition:all .14s;letter-spacing:-.1px;"
-      : "background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:11px 24px;font-size:13px;font-weight:600;cursor:pointer;transition:all .14s;";
-    b.addEventListener("click",function(){ nav(viewId); });
+    var pad=small?"6px 14px":"11px 26px";
+    var fs=small?"11px":"13px";
+    b.style.cssText=primary
+      ? "background:var(--gold);color:#fff;border:none;border-radius:8px;padding:"+pad+";font-size:"+fs+";font-weight:600;cursor:pointer;transition:all .14s;letter-spacing:-.1px;box-shadow:0 2px 8px rgba(59,91,255,.22);"
+      : "background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:"+pad+";font-size:"+fs+";font-weight:600;cursor:pointer;transition:all .14s;";
+    b.addEventListener("click",function(e){ e.stopPropagation(); nav(viewId); });
     b.addEventListener("mouseenter",function(){ this.style.opacity=".88"; this.style.transform="translateY(-1px)"; });
     b.addEventListener("mouseleave",function(){ this.style.opacity="1"; this.style.transform=""; });
     return b;
   }
-  function smallBtn(label, viewId){
-    var b=document.createElement("button"); b.textContent=label;
-    b.style.cssText="background:transparent;color:var(--gold);border:1px solid var(--gold-dim);border-radius:6px;padding:4px 11px;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s;";
-    b.addEventListener("click",function(e){ e.stopPropagation(); nav(viewId); });
-    b.addEventListener("mouseenter",function(){ this.style.background="var(--gold-dim)"; });
-    b.addEventListener("mouseleave",function(){ this.style.background="transparent"; });
-    return b;
-  }
-  function svgIcon(paths, size){
+
+  /* TB_ICON — shared icon wrapper */
+  function iconWrap(svgPath,size){
     var ns="http://www.w3.org/2000/svg";
-    var v=document.createElementNS(ns,"svg");
-    v.setAttribute("viewBox","0 0 24 24"); v.setAttribute("fill","none");
-    v.setAttribute("width",size||"20"); v.setAttribute("height",size||"20");
-    v.setAttribute("stroke","currentColor"); v.setAttribute("stroke-width","1.8");
-    v.setAttribute("stroke-linecap","round"); v.setAttribute("stroke-linejoin","round");
-    (Array.isArray(paths)?paths:[paths]).forEach(function(d){ var p=document.createElementNS(ns,"path"); p.setAttribute("d",d); v.appendChild(p); });
-    return v;
+    var w=d("width:46px;height:46px;background:var(--gold-dim);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0;");
+    var svg=document.createElementNS(ns,"svg");
+    svg.setAttribute("viewBox","0 0 24 24"); svg.setAttribute("fill","none");
+    svg.setAttribute("width",size||"22"); svg.setAttribute("height",size||"22");
+    svg.setAttribute("stroke","currentColor"); svg.setAttribute("stroke-width","1.75");
+    svg.setAttribute("stroke-linecap","round"); svg.setAttribute("stroke-linejoin","round");
+    (Array.isArray(svgPath)?svgPath:[svgPath]).forEach(function(p){ var el=document.createElementNS(ns,"path"); el.setAttribute("d",p); svg.appendChild(el); });
+    w.appendChild(svg); return w;
   }
 
-  /* ── section header ── */
-  function sectionHead(title, isTop){
-    var h=txt("h2",title,"font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--gray);margin:0 0 "+(isTop?"12px":"16px")+";");
-    return h;
+  /* TB_SECTION_HEAD */
+  function sh(title){
+    return t("div",title,"font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:var(--gray);margin:0 0 14px;");
   }
 
-  /* ════ PAGE WRAP ════ */
-  var wrap=div("max-width:940px;margin:0 auto;padding:0 0 64px;");
+  /* ════ PAGE ════ */
+  var wrap=d("max-width:960px;margin:0 auto;padding:0 0 64px;");
 
-  /* ══════════════════════════════════════════
-     1. HERO
-  ══════════════════════════════════════════ */
-  var hero=div("background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:44px 48px;margin-bottom:10px;position:relative;overflow:hidden;display:grid;grid-template-columns:1fr 200px;gap:32px;align-items:center;box-shadow:0 2px 12px rgba(0,0,0,.04);");
+  /* ══ 1. HERO ══ */
+  var hero=d("background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:52px 52px 48px;margin-bottom:8px;position:relative;overflow:hidden;display:grid;grid-template-columns:1fr 180px;gap:40px;align-items:center;box-shadow:0 2px 16px rgba(0,0,0,.05);");
 
-  /* subtle bg accents */
-  var bg1=div("position:absolute;top:-60px;right:-60px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,var(--gold-dim) 0%,transparent 70%);pointer-events:none;opacity:.6;");
-  var bg2=div("position:absolute;bottom:-40px;left:200px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,var(--accent-dim,#e8ebfd) 0%,transparent 70%);pointer-events:none;opacity:.4;");
-  hero.appendChild(bg1); hero.appendChild(bg2);
+  /* radial glow accents */
+  var g1=d("position:absolute;top:-80px;right:-80px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(59,91,255,.08) 0%,transparent 70%);pointer-events:none;");
+  var g2=d("position:absolute;bottom:-60px;left:120px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(59,91,255,.05) 0%,transparent 70%);pointer-events:none;");
+  hero.appendChild(g1); hero.appendChild(g2);
 
-  /* left */
-  var hLeft=div("position:relative;z-index:1;");
-  var hEye=txt("div","TALENTBASE","font-size:10px;font-weight:700;letter-spacing:3px;color:var(--gold);margin-bottom:8px;");
-  var hTitle=txt("h1","Recruitment Operating System","font-size:30px;font-weight:800;color:var(--ink);margin:0 0 12px;line-height:1.15;letter-spacing:-.5px;");
-  var hSub=txt("p","One platform that connects sourcing, recruiting, interviewing, and hiring.","font-size:14px;color:var(--muted);margin:0 0 28px;line-height:1.6;max-width:400px;");
-  var hBtns=div("display:flex;gap:10px;flex-wrap:wrap;");
-  if(!VIEW_ONLY){ hBtns.appendChild(btn("+ New Candidate","all",true)); }
-  hBtns.appendChild(btn("Open Requisitions","reqs",VIEW_ONLY));
-  hLeft.appendChild(hEye); hLeft.appendChild(hTitle); hLeft.appendChild(hSub); hLeft.appendChild(hBtns);
+  var hL=d("position:relative;z-index:1;");
 
-  /* right: geometric illustration */
-  var hRight=div("position:relative;z-index:1;display:flex;align-items:center;justify-content:center;");
-  var ns2="http://www.w3.org/2000/svg";
-  var illus=document.createElementNS(ns2,"svg");
+  /* logo mark + wordmark */
+  var brandRow=d("display:flex;align-items:center;gap:12px;margin-bottom:22px;");
+  var logoMark=d("width:40px;height:40px;flex-shrink:0;");
+  logoMark.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40"><rect width="40" height="40" rx="9" fill="#3B5BFF"/><rect x="9" y="10" width="22" height="4.5" rx="2.25" fill="#F8FAFC"/><rect x="17.75" y="10" width="4.5" height="20" rx="2.25" fill="#F8FAFC"/><circle cx="29" cy="12.5" r="3" fill="#8EA2FF"/></svg>';
+  var wordmark=d("display:flex;flex-direction:column;gap:1px;");
+  wordmark.appendChild(t("span","TalentBase","font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.3px;line-height:1;"));
+  wordmark.appendChild(t("span","Recruitment Operating System","font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.2px;margin-top:2px;"));
+  brandRow.appendChild(logoMark); brandRow.appendChild(wordmark);
+  hL.appendChild(brandRow);
+
+  hL.appendChild(t("h1","One platform that connects sourcing, recruiting, interviewing, and hiring.","font-size:22px;font-weight:700;color:var(--ink);margin:0 0 28px;line-height:1.45;letter-spacing:-.2px;max-width:440px;"));
+
+  var hBtns=d("display:flex;gap:10px;flex-wrap:wrap;");
+  if(!VIEW_ONLY){ hBtns.appendChild(btn("+ New Candidate","all",true,false)); }
+  hBtns.appendChild(btn("Open Requisitions","reqs",VIEW_ONLY,false));
+  hL.appendChild(hBtns);
+
+  /* right illustration */
+  var hR=d("position:relative;z-index:1;display:flex;align-items:center;justify-content:center;");
+  var ns3="http://www.w3.org/2000/svg";
+  var illus=document.createElementNS(ns3,"svg");
   illus.setAttribute("viewBox","0 0 180 140"); illus.setAttribute("width","180"); illus.setAttribute("height","140"); illus.setAttribute("fill","none");
-  var shapes=[
-    ["circle","cx:90,cy:70,r:50,stroke:var(--gold),stroke-width:1,stroke-dasharray:6 3,opacity:.2"],
-    ["circle","cx:90,cy:70,r:34,stroke:var(--gold),stroke-width:1.5,opacity:.3"],
-    ["circle","cx:90,cy:70,r:16,fill:var(--gold),opacity:.1"],
-    ["circle","cx:90,cy:70,r:5,fill:var(--gold),opacity:.6"],
-    ["circle","cx:44,cy:35,r:7,fill:var(--gold),opacity:.2"],
-    ["circle","cx:136,cy:35,r:7,fill:var(--gold),opacity:.2"],
-    ["circle","cx:44,cy:105,r:7,fill:var(--gold),opacity:.2"],
-    ["circle","cx:136,cy:105,r:7,fill:var(--gold),opacity:.2"],
-    ["circle","cx:16,cy:70,r:5,fill:var(--gold),opacity:.15"],
-    ["circle","cx:164,cy:70,r:5,fill:var(--gold),opacity:.15"],
-    ["line","x1:44,y1:35,x2:85,y2:65,stroke:var(--gold),stroke-width:1,opacity:.2"],
-    ["line","x1:136,y1:35,x2:95,y2:65,stroke:var(--gold),stroke-width:1,opacity:.2"],
-    ["line","x1:44,y1:105,x2:85,y2:75,stroke:var(--gold),stroke-width:1,opacity:.2"],
-    ["line","x1:136,y1:105,x2:95,y2:75,stroke:var(--gold),stroke-width:1,opacity:.2"],
-    ["rect","x:36,y:27,width:16,height:12,rx:3,stroke:var(--gold),stroke-width:1.2,opacity:.4"],
-    ["rect","x:128,y:27,width:16,height:12,rx:3,stroke:var(--gold),stroke-width:1.2,opacity:.4"],
-    ["rect","x:36,y:99,width:16,height:12,rx:3,stroke:var(--gold),stroke-width:1.2,opacity:.4"],
-    ["rect","x:128,y:99,width:16,height:12,rx:3,stroke:var(--gold),stroke-width:1.2,opacity:.4"],
-  ];
-  shapes.forEach(function(sh){
-    var node=document.createElementNS(ns2,sh[0]);
-    sh[1].split(",").forEach(function(pair){ var kv=pair.split(":"); var k=kv[0].trim(); var v=kv.slice(1).join(":").trim(); node.setAttribute(k.replace(/([A-Z])/g,function(m){ return "-"+m.toLowerCase(); }),v); });
+  [["circle","cx:90,cy:70,r:52,stroke:#3B5BFF,stroke-width:1,stroke-dasharray:6 3,opacity:.15"],
+   ["circle","cx:90,cy:70,r:36,stroke:#3B5BFF,stroke-width:1.4,opacity:.22"],
+   ["circle","cx:90,cy:70,r:18,fill:#3B5BFF,opacity:.08"],
+   ["circle","cx:90,cy:70,r:5,fill:#3B5BFF,opacity:.5"],
+   ["circle","cx:42,cy:33,r:7,fill:#3B5BFF,opacity:.18"],
+   ["circle","cx:138,cy:33,r:7,fill:#3B5BFF,opacity:.18"],
+   ["circle","cx:42,cy:107,r:7,fill:#3B5BFF,opacity:.18"],
+   ["circle","cx:138,cy:107,r:7,fill:#3B5BFF,opacity:.18"],
+   ["circle","cx:15,cy:70,r:4,fill:#8EA2FF,opacity:.25"],
+   ["circle","cx:165,cy:70,r:4,fill:#8EA2FF,opacity:.25"],
+   ["line","x1:42,y1:33,x2:84,y2:65,stroke:#3B5BFF,stroke-width:.9,opacity:.18"],
+   ["line","x1:138,y1:33,x2:96,y2:65,stroke:#3B5BFF,stroke-width:.9,opacity:.18"],
+   ["line","x1:42,y1:107,x2:84,y2:75,stroke:#3B5BFF,stroke-width:.9,opacity:.18"],
+   ["line","x1:138,y1:107,x2:96,y2:75,stroke:#3B5BFF,stroke-width:.9,opacity:.18"],
+   ["rect","x:33,y:25,width:18,height:13,rx:3,stroke:#3B5BFF,stroke-width:1.2,opacity:.35"],
+   ["rect","x:129,y:25,width:18,height:13,rx:3,stroke:#3B5BFF,stroke-width:1.2,opacity:.35"],
+   ["rect","x:33,y:102,width:18,height:13,rx:3,stroke:#3B5BFF,stroke-width:1.2,opacity:.35"],
+   ["rect","x:129,y:102,width:18,height:13,rx:3,stroke:#3B5BFF,stroke-width:1.2,opacity:.35"],
+  ].forEach(function(sh){
+    var node=document.createElementNS(ns3,sh[0]);
+    sh[1].split(",").forEach(function(pair){ var kv=pair.split(":"); node.setAttribute(kv[0].trim().replace(/([A-Z])/g,function(m){ return "-"+m.toLowerCase(); }),kv.slice(1).join(":").trim()); });
     illus.appendChild(node);
   });
-  hRight.appendChild(illus);
-  hero.appendChild(hLeft); hero.appendChild(hRight);
+  hR.appendChild(illus);
+  hero.appendChild(hL); hero.appendChild(hR);
   wrap.appendChild(hero);
 
   /* workspace badge */
-  var wsBadge=txt("div",(isHiarc?"HiARC":"Elbit")+" Workspace","font-size:11px;color:var(--muted);font-weight:500;margin:6px 0 28px 2px;");
-  wrap.appendChild(wsBadge);
+  wrap.appendChild(t("div",(isHiarc?"HiARC":"Elbit")+" Workspace","font-size:11px;color:var(--muted);font-weight:500;margin:6px 0 30px 2px;"));
 
-  /* ══════════════════════════════════════════
-     2. TODAY'S WORK  (most prominent section)
-  ══════════════════════════════════════════ */
-  var todayWrap=div("margin-bottom:32px;");
-  todayWrap.appendChild(sectionHead("Today's Work", true));
-  var todayGrid=div("display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:12px;");
+  /* ══ 2. TODAY'S WORK ══ */
+  var twWrap=d("margin-bottom:32px;");
+  twWrap.appendChild(sh("Today's Work"));
+  var twGrid=d("display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:12px;");
 
-  function workCard(value, label, sub, viewId, color, actionLabel){
-    var card=div("background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 18px 16px;cursor:pointer;transition:all .14s;display:flex;flex-direction:column;gap:0;");
-    card.addEventListener("mouseenter",function(){ this.style.boxShadow="0 4px 18px rgba(0,0,0,.09)"; this.style.borderColor="var(--gold)"; this.style.transform="translateY(-2px)"; });
-    card.addEventListener("mouseleave",function(){ this.style.boxShadow=""; this.style.borderColor="var(--line)"; this.style.transform=""; });
-    card.addEventListener("click",function(){ nav(viewId); });
-    var num=txt("div",String(value),"font-size:34px;font-weight:800;color:"+(color||"var(--ink)")+";line-height:1;margin-bottom:5px;");
-    var lbl=txt("div",label,"font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px;");
-    var sublbl=txt("div",sub,"font-size:11px;color:var(--muted);line-height:1.4;margin-bottom:12px;flex:1;");
-    var ab=smallBtn(actionLabel||"Open",viewId);
-    card.appendChild(num); card.appendChild(lbl); card.appendChild(sublbl); card.appendChild(ab);
-    return card;
+  function workCard(val,label,sub,viewId,color,action){
+    var c=d("background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:22px 18px 16px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;");
+    c.addEventListener("mouseenter",function(){ this.style.boxShadow="0 6px 22px rgba(0,0,0,.1)"; this.style.borderColor=color||"var(--gold)"; this.style.transform="translateY(-2px)"; });
+    c.addEventListener("mouseleave",function(){ this.style.boxShadow=""; this.style.borderColor="var(--line)"; this.style.transform=""; });
+    c.addEventListener("click",function(){ nav(viewId); });
+    c.appendChild(t("div",String(val),"font-size:36px;font-weight:800;color:"+(color||"var(--ink)")+";line-height:1;margin-bottom:5px;"));
+    c.appendChild(t("div",label,"font-size:13px;font-weight:700;color:var(--ink);margin-bottom:3px;"));
+    c.appendChild(t("div",sub,"font-size:11px;color:var(--muted);line-height:1.4;margin-bottom:14px;flex:1;"));
+    var ab=document.createElement("button"); ab.textContent=action;
+    ab.style.cssText="background:transparent;color:var(--gold);border:1px solid var(--gold-dim);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;align-self:flex-start;transition:background .12s;";
+    ab.addEventListener("click",function(e){ e.stopPropagation(); nav(viewId); });
+    ab.addEventListener("mouseenter",function(){ this.style.background="var(--gold-dim)"; });
+    ab.addEventListener("mouseleave",function(){ this.style.background="transparent"; });
+    c.appendChild(ab);
+    return c;
   }
 
-  [
-    [followUp.length,  "Follow-Ups Due",      "Candidates needing action",    "followup",     "var(--red)",    "Review"],
-    [offerP.length,    "Offers Pending",       "Awaiting acceptance",          "offerpending", "var(--yellow)", "Open"],
-    [irsWeek.length,   "Interviews This Week", "Scheduled requests",           "calendar",     "var(--gold)",   "View"],
-    [openReqs.length,  "Open Requisitions",    "Active hiring priorities",     "reqs",         "var(--teal)",   "Open"],
-    [submitted.length, "Pending HM Review",    "Awaiting HM feedback",         "submitted",    "var(--purple)", "Review"],
-  ].forEach(function(a){ todayGrid.appendChild(workCard(a[0],a[1],a[2],a[3],a[4],a[5])); });
-  todayWrap.appendChild(todayGrid);
-  wrap.appendChild(todayWrap);
+  [[followUp.length,"Follow-Ups Due","Candidates needing action","followup","var(--red)","Review"],
+   [offerP.length,"Offers Pending","Awaiting acceptance","offerpending","var(--yellow)","Open"],
+   [irsWeek.length,"Interviews This Week","Scheduled requests","calendar","var(--gold)","Open"],
+   [openReqs.length,"Open Requisitions","Active hiring priorities","reqs","var(--teal)","Open"],
+   [submitted.length,"Pending HM Review","Awaiting HM feedback","submitted","var(--purple)","Review"],
+  ].forEach(function(a){ twGrid.appendChild(workCard(a[0],a[1],a[2],a[3],a[4],a[5])); });
+  twWrap.appendChild(twGrid);
+  wrap.appendChild(twWrap);
 
-  /* ══════════════════════════════════════════
-     3. RECRUITING SNAPSHOT
-  ══════════════════════════════════════════ */
-  var snapWrap=div("margin-bottom:32px;");
-  snapWrap.appendChild(sectionHead("Recruiting Snapshot"));
-  var snapGrid=div("display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;");
+  /* ══ 3. RECRUITING SNAPSHOT ══ */
+  var snapWrap=d("margin-bottom:32px;");
+  snapWrap.appendChild(sh("Recruiting Snapshot"));
+  var snapGrid=d("display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px;");
 
-  function snapCard(value, label, viewId, color){
-    var card=div("background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 14px;cursor:pointer;transition:all .14s;");
-    card.addEventListener("mouseenter",function(){ this.style.boxShadow="0 3px 12px rgba(0,0,0,.07)"; this.style.transform="translateY(-1px)"; });
-    card.addEventListener("mouseleave",function(){ this.style.boxShadow=""; this.style.transform=""; });
-    if(viewId) card.addEventListener("click",function(){ nav(viewId); });
-    card.appendChild(txt("div",String(value),"font-size:24px;font-weight:800;color:"+(color||"var(--ink)")+";line-height:1;margin-bottom:4px;"));
-    card.appendChild(txt("div",label,"font-size:11px;color:var(--muted);font-weight:500;line-height:1.4;"));
-    return card;
+  function snapCard(val,label,viewId,color){
+    var c=card("padding:16px 14px;cursor:pointer;");
+    if(viewId) c.addEventListener("click",function(){ nav(viewId); });
+    c.appendChild(t("div",String(val),"font-size:26px;font-weight:800;color:"+(color||"var(--ink)")+";line-height:1;margin-bottom:4px;"));
+    c.appendChild(t("div",label,"font-size:11px;color:var(--muted);font-weight:500;line-height:1.4;"));
+    return c;
   }
 
   [[activeCands.length,"Active Candidates","all","var(--ink)"],[openReqs.length,"Open Reqs","reqs","var(--gold)"],[interviewing.length,"Interviewing","interviewing","var(--teal)"],[offerP.length,"Offers Pending","offerpending","var(--yellow)"],[followUp.length,"Follow-Up Due","followup","var(--red)"],[irsWeek.length,"This Week","calendar","var(--gold)"]].forEach(function(a){ snapGrid.appendChild(snapCard(a[0],a[1],a[2],a[3])); });
   snapWrap.appendChild(snapGrid);
   wrap.appendChild(snapWrap);
 
-  /* ══════════════════════════════════════════
-     4. CORE WORKSPACES
-  ══════════════════════════════════════════ */
-  var wsWrap=div("margin-bottom:32px;");
-  wsWrap.appendChild(sectionHead("Core Workspaces"));
-  var wsGrid=div("display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:14px;");
+  /* ══ 4. CORE WORKSPACES ══ */
+  var wsWrap=d("margin-bottom:32px;");
+  wsWrap.appendChild(sh("Core Workspaces"));
+  var wsGrid=d("display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;");
 
-  function wsCard(iconPaths, title, desc, btnLabel, viewId){
-    var card=div("background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px 22px 20px;display:flex;flex-direction:column;gap:11px;transition:all .16s;position:relative;overflow:hidden;");
-    var shine=div("position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),rgba(61,90,232,.2));opacity:0;transition:opacity .16s;");
-    card.appendChild(shine);
-    card.addEventListener("mouseenter",function(){ this.style.boxShadow="0 6px 24px rgba(0,0,0,.09)"; this.style.transform="translateY(-2px)"; shine.style.opacity="1"; });
-    card.addEventListener("mouseleave",function(){ this.style.boxShadow=""; this.style.transform=""; shine.style.opacity="0"; });
-    var iw=div("width:42px;height:42px;background:var(--gold-dim);border-radius:11px;display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0;");
-    iw.appendChild(svgIcon(iconPaths,"20"));
-    card.appendChild(iw);
-    card.appendChild(txt("div",title,"font-size:15px;font-weight:700;color:var(--ink);"));
-    card.appendChild(txt("div",desc,"font-size:13px;color:var(--muted);line-height:1.6;flex:1;"));
-    var b=btn(btnLabel,viewId,false);
+  function wsCard(paths,title,desc,btnLabel,viewId,highlight){
+    var c=d("background:var(--panel);border:1px solid "+(highlight?"var(--gold)":"var(--line)")+";border-radius:16px;padding:26px 24px 22px;display:flex;flex-direction:column;gap:12px;transition:all .16s;position:relative;overflow:hidden;"+(highlight?"box-shadow:0 0 0 1px var(--gold-dim);":""));
+    var shine=d("position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent);opacity:"+(highlight?"0.6":"0")+";transition:opacity .16s;");
+    c.appendChild(shine);
+    c.addEventListener("mouseenter",function(){ this.style.boxShadow="0 8px 28px rgba(0,0,0,.1)"; this.style.transform="translateY(-3px)"; shine.style.opacity="1"; });
+    c.addEventListener("mouseleave",function(){ this.style.boxShadow=highlight?"0 0 0 1px var(--gold-dim)":""; this.style.transform=""; shine.style.opacity=highlight?"0.6":"0"; });
+    c.appendChild(iconWrap(paths,"22"));
+    c.appendChild(t("div",title,"font-size:15px;font-weight:700;color:var(--ink);"));
+    c.appendChild(t("div",desc,"font-size:13px;color:var(--muted);line-height:1.6;flex:1;"));
+    var b=btn(btnLabel,viewId,false,false);
     b.style.cssText+="align-self:flex-start;font-size:12px;padding:8px 18px;margin-top:4px;";
-    card.appendChild(b);
-    return card;
+    c.appendChild(b);
+    if(highlight){
+      var badge=t("span","Primary","font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--gold);background:var(--gold-dim);border-radius:4px;padding:2px 6px;position:absolute;top:14px;right:14px;");
+      c.appendChild(badge);
+    }
+    return c;
   }
 
-  var wCards=[
-    [["M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"],"Manage Requisitions","Manage active requisitions, priorities, and hiring manager alignment.","Open Reqs","reqs"],
-    [["M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"],"Candidate Pipeline","Manage every candidate from first contact through hire.","Open Candidates","all"],
-    [isHiarc?["M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"]:["M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"],isHiarc?"Opportunity Hires":"TalentBench",isHiarc?"Review opportunity hire submissions.":"Review sourced candidates and track sourcing performance.",isHiarc?"Open Opportunities":"Open TalentBench",isHiarc?"opportunity":"talentbench"],
-    [["M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"],"Interview Workflow","Track interview requests, scheduling, and candidate progress.","Open Interviews","interviewrequests"],
-    [["M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"],"Executive Dashboard","Monitor hiring activity, recruiter performance, and pipeline health.","Open Dashboard","dashboard"],
-    [["M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"],"Hiring Managers","Access manager profiles, contact info, and requisition ownership.","View Managers","managers"],
-  ];
-  wCards.forEach(function(a){ wsGrid.appendChild(wsCard(a[0],a[1],a[2],a[3],a[4])); });
+  [
+    [["M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"],"Manage Requisitions","Manage active requisitions, priorities, and hiring manager alignment.","Open Requisitions","reqs",false],
+    [["M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"],"Candidate Pipeline","Manage every candidate from first contact through hire.","Open Candidates","all",false],
+    [isHiarc?["M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"]:["M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"],isHiarc?"Opportunity Hires":"TalentBench",isHiarc?"Review opportunity hire submissions and manage the sourcing pipeline.":"Review sourced candidates and track sourcing performance.",isHiarc?"Open Opportunities":"Open TalentBench",isHiarc?"opportunity":"talentbench",!isHiarc],
+    [["M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"],"Interview Workflow","Track interview requests, scheduling, and candidate progress.","Open Interviews","interviewrequests",false],
+    [["M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"],"Executive Dashboard","Monitor hiring activity, recruiter performance, and pipeline health.","Open Dashboard","dashboard",false],
+    [["M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"],"Hiring Managers","Access manager profiles, contact info, and requisition ownership.","Open Managers","managers",false],
+  ].forEach(function(a){ wsGrid.appendChild(wsCard(a[0],a[1],a[2],a[3],a[4],a[5])); });
   wsWrap.appendChild(wsGrid);
   wrap.appendChild(wsWrap);
 
-  /* ══════════════════════════════════════════
-     5. WHAT'S NEW + QUICK TIPS (side by side)
-  ══════════════════════════════════════════ */
-  var wnRow=div("display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;");
+  /* ══ 5. WHAT'S NEW + QUICK TIPS ══ */
+  var wnRow=d("display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;");
 
-  var wnCard=div("background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px;");
-  wnCard.appendChild(sectionHead("What's New"));
+  var wnCard=card("padding:22px 24px;");
+  wnCard.removeEventListener("mouseenter",null); wnCard.style.transition="";
+  wnCard.appendChild(sh("What's New"));
   [["Open Requisitions consolidated — unified work queue","NEW"],["Getting Started — redesigned home page","NEW"],["Light enterprise theme — premium visual refresh","NEW"],["HiARC and Elbit on shared design system","UPDATE"],["Forms Library removed — improved load time","UPDATE"]].forEach(function(pair){
-    var row=div("display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);");
-    var badge=txt("span",pair[1],"font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0;");
-    badge.style.background = pair[1]==="NEW" ? "var(--gold-dim)" : "var(--panel2)";
-    badge.style.color      = pair[1]==="NEW" ? "var(--gold)"     : "var(--muted)";
-    row.appendChild(badge);
-    row.appendChild(txt("span",pair[0],"font-size:13px;color:var(--ink);"));
+    var row=d("display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);");
+    var badge=t("span",pair[1],"font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.6px;flex-shrink:0;");
+    badge.style.background=pair[1]==="NEW"?"var(--gold-dim)":"var(--panel2)";
+    badge.style.color=pair[1]==="NEW"?"var(--gold)":"var(--muted)";
+    row.appendChild(badge); row.appendChild(t("span",pair[0],"font-size:13px;color:var(--ink);"));
     wnCard.appendChild(row);
   });
 
-  var tipsCard=div("background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px;");
-  tipsCard.appendChild(sectionHead("Quick Tips"));
-  var tipsGrid=div("display:grid;grid-template-columns:1fr 1fr;gap:8px;");
-  ["Keep candidate status current","Log interview feedback same day","Follow up on overdue candidates daily","Use TalentBench for sourcing reviews","Close filled requisitions promptly","Upload resumes before interviews","Keep hiring manager info current","Review the pipeline every morning"].forEach(function(tip){
-    var c=div("background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px 12px;");
+  var tipsCard=card("padding:22px 24px;");
+  tipsCard.appendChild(sh("Quick Tips"));
+  var tg=d("display:grid;grid-template-columns:1fr 1fr;gap:8px;");
+  ["Keep candidate status current","Log interview feedback same day","Follow up on overdue candidates","Use TalentBench for sourcing reviews","Close filled requisitions promptly","Upload resumes before interviews","Keep hiring manager info current","Review the pipeline every morning"].forEach(function(tip){
+    var c=d("background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:12px;color:var(--muted);line-height:1.5;");
     var dot=document.createElement("span"); dot.textContent="· "; dot.style.cssText="color:var(--gold);font-weight:700;";
     c.appendChild(dot); c.appendChild(document.createTextNode(tip));
-    c.style.cssText+="font-size:12px;color:var(--muted);line-height:1.5;";
-    tipsGrid.appendChild(c);
+    tg.appendChild(c);
   });
-  tipsCard.appendChild(tipsGrid);
+  tipsCard.appendChild(tg);
   wnRow.appendChild(wnCard); wnRow.appendChild(tipsCard);
   wrap.appendChild(wnRow);
 
-  /* ══════════════════════════════════════════
-     6. RESOURCES
-  ══════════════════════════════════════════ */
-  var resWrap=div("background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px;");
-  resWrap.appendChild(sectionHead("Resources"));
-  var resGrid=div("display:grid;grid-template-columns:repeat(auto-fill,minmax(188px,1fr));gap:12px;");
+  /* ══ 6. RESOURCES ══ */
+  var resWrap=card("padding:22px 24px;");
+  resWrap.appendChild(sh("Resources"));
+  var rg=d("display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;");
   [["Release Notes","New features released regularly. See What's New above."],["Support","Contact your TSS team lead for technical issues."],["Training","Request a platform walkthrough from your administrator."],["Contact Administrator","Jonah Adelman · jonah@thestaffingspecialist.com · 603.401.2901"]].forEach(function(pair){
-    var c=div("background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:16px;transition:box-shadow .14s;");
+    var c=d("background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:16px;transition:box-shadow .14s;");
     c.addEventListener("mouseenter",function(){ this.style.boxShadow="0 2px 10px rgba(0,0,0,.06)"; });
     c.addEventListener("mouseleave",function(){ this.style.boxShadow=""; });
-    c.appendChild(txt("div",pair[0],"font-size:13px;font-weight:700;color:var(--ink);margin-bottom:5px;"));
-    c.appendChild(txt("div",pair[1],"font-size:12px;color:var(--muted);line-height:1.5;"));
-    resGrid.appendChild(c);
+    c.appendChild(t("div",pair[0],"font-size:13px;font-weight:700;color:var(--ink);margin-bottom:5px;"));
+    c.appendChild(t("div",pair[1],"font-size:12px;color:var(--muted);line-height:1.5;"));
+    rg.appendChild(c);
   });
-  resWrap.appendChild(resGrid);
+  resWrap.appendChild(rg);
   wrap.appendChild(resWrap);
 
   host.appendChild(wrap);
