@@ -2784,7 +2784,7 @@ function openReqModal(existing){
   g.appendChild(field("HM Email","reqHMEmail",r.hmEmail,"email"));
   g.appendChild(field("HM Phone","reqHMPhone",r.hmPhone));
   g.appendChild(field("Discipline","reqDisc",r.disc,"select",DISCIPLINES));
-  g.appendChild(field("Urgency","reqUrg",r.urgency,"select",URGENCIES));
+  
   g.appendChild(field("Openings","reqOpen",String(r.openings),"number"));
   g.appendChild(field("Min Comp","reqCompMin", r.compMin||""));
   g.appendChild(field("Max Comp","reqCompMax", r.compMax||""));
@@ -2855,7 +2855,7 @@ async function saveReq(){
   var m = document.getElementById("modal");
   function v(k){ var e = m.querySelector("[data-field='" + k + "']"); return e ? e.value : ""; }
   var title = v("reqTitle").trim(); if(!title){ toast("Title required"); return; }
-  var role=v("reqRole").trim(); var rankVal=v("reqRank").trim(); var row = { org:ORG, title:title, role:role||null, loc:v("reqLoc").trim(), job_id:v("reqJobId").trim(), hiring_manager:v("reqHM").trim(), hm_title:v("reqHMTitle").trim(), hm_email:v("reqHMEmail").trim(), hm_phone:v("reqHMPhone").trim(), discipline:v("reqDisc"), urgency:v("reqUrg"), priority:v("reqPriority")||null, req_status:v("reqStatus")||null, rank:rankVal?parseInt(rankVal,10):null, desired_start:v("reqDesiredStart").trim()||null, contingent:v("reqContingent")||"No", eicp:v("reqEicp").trim()||null, comp_min:v("reqCompMin").trim(), comp_max:v("reqCompMax").trim(), comp_target:v("reqCompTarget").trim(), openings:parseInt(v("reqOpen"),10) || 1, jd:v("reqJd"), jd_link:v("reqJdLink").trim() };
+  var role=v("reqRole").trim(); var rankVal=v("reqRank").trim(); var row = { org:ORG, title:title, role:role||null, loc:v("reqLoc").trim(), job_id:v("reqJobId").trim(), hiring_manager:v("reqHM").trim(), hm_title:v("reqHMTitle").trim(), hm_email:v("reqHMEmail").trim(), hm_phone:v("reqHMPhone").trim(), discipline:v("reqDisc"), urgency:v("reqStatus"), priority:v("reqPriority")||null, req_status:v("reqStatus")||null, rank:rankVal?parseInt(rankVal,10):null, desired_start:v("reqDesiredStart").trim()||null, contingent:v("reqContingent")||"No", eicp:v("reqEicp").trim()||null, comp_min:v("reqCompMin").trim(), comp_max:v("reqCompMax").trim(), comp_target:v("reqCompTarget").trim(), openings:parseInt(v("reqOpen"),10) || 1, jd:v("reqJd"), jd_link:v("reqJdLink").trim() };
   var id = editReqId; closeModal();
   if(id){ await run(sb.from("reqs").update(row).eq("id", id), "Req updated"); }
   else{ await run(sb.from("reqs").insert(row), "Req added"); }
