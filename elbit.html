@@ -3507,7 +3507,7 @@ function viewReq(r){
   body.appendChild(g); m.appendChild(body);
   var foot = el("div","mfoot"); foot.appendChild(el("div")); var right = el("div","right");
   if(!VIEW_ONLY && r.bench){ var db = el("button","btn","Delete Req"); db.style.cssText = "color:var(--red,#e55);border-color:var(--red,#e55)"; db.setAttribute("data-benchdel", r.id); right.appendChild(db); var ebn = el("button","btn","Edit"); ebn.setAttribute("data-reqedit", r.id); right.appendChild(ebn); }
-  if(!VIEW_ONLY && !r.bench){ var eb = el("button","btn","Edit"); eb.setAttribute("data-reqedit", r.id); right.appendChild(eb); }
+  if(!VIEW_ONLY && !r.bench){ var delB = el("button","btn sm danger","Delete Req"); delB.type="button"; delB.style.marginRight="8px"; delB.addEventListener("click", function(){ if(confirm("Delete this requisition? This cannot be undone.")){ closeModal(); deleteReq(r.id); } }); foot.firstChild.appendChild(delB); var eb = el("button","btn","Edit"); eb.setAttribute("data-reqedit", r.id); right.appendChild(eb); }
   var cb = el("button","btn gold","Close"); cb.setAttribute("data-close","1"); right.appendChild(cb);
   foot.appendChild(right); m.appendChild(foot);
   document.getElementById("scrim").classList.add("open");
