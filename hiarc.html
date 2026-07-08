@@ -172,8 +172,8 @@
     <div class="brand">
       <div class="brand-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><rect width="32" height="32" rx="7" fill="#3B5BFF"/><rect x="7" y="8" width="18" height="4" rx="2" fill="#F8FAFC"/><rect x="14" y="8" width="4" height="16" rx="2" fill="#F8FAFC"/><circle cx="23" cy="10" r="2.5" fill="#8EA2FF"/></svg></div>
       <div class="brand-text">
-        <span class="brand-name">TalentBase</span>
-        <span class="brand-sub">TES</span>
+        <span class="brand-name">TalentBase TES</span>
+        <span class="brand-sub">Talent Experience System</span>
       </div>
       <span class="vobadge" id="voBadge" style="display:none">View Only</span>
      </div>
@@ -1208,7 +1208,7 @@ async function deleteProgramNote(id){
 function abbrevTitle(t){ if(!t){ return t; } var m=[[/\bPrincipal\b/gi,"Prin."],[/\bEngineering\b/gi,"Eng"],[/\bEngineer\b/gi,"Eng"],[/\bManagement\b/gi,"Mgmt"],[/\bManager\b/gi,"Mgr"],[/\bSenior\b/gi,"Sr"],[/\bDevelopment\b/gi,"Dev"],[/\bIntegration\b/gi,"Integ"],[/\bAdministrator\b/gi,"Admin"],[/\bSpecialist\b/gi,"Spec."]]; m.forEach(function(x){ t=t.replace(x[0],x[1]); }); return t; }
 function renderReqs(host){
   function nateRank(r){ var m = (r.urgency||"").match(/^Nate #(\d+)$/); return m ? parseInt(m[1],10) : null; }
-  var allReqs = REQS.slice().sort(function(a,b){
+  var CLOSED_REQ_STATUSES = ['Filled','Closed','Closed - Not Filled','Cancelled']; var allReqs = REQS.filter(function(r){ return CLOSED_REQ_STATUSES.indexOf(r.reqStatus||r.urgency||'') === -1; }).sort(function(a,b){
     var ra = nateRank(a), rb = nateRank(b);
     if(ra !== null && rb !== null) return ra - rb;
     if(ra !== null) return -1;
@@ -1245,7 +1245,7 @@ function renderReqs(host){
     tr.appendChild(el("td","sub2", r.hm || "-"));
     tr.appendChild(el("td", null, String(tagged)));
     tr.appendChild(el("td","sub2", r.compTarget || "-"));
-    var ut = el("td"); ut.appendChild(pill(r.urgency || "-", URG_COLOR[r.urgency] || "--gray")); tr.appendChild(ut);
+    
     var jdt = el("td");
     if(r.jdLink){ var a = el("a","tag gold","Open"); a.href = r.jdLink; a.target = "_blank"; a.setAttribute("data-stop","1"); jdt.appendChild(a); }
     else if(r.jd){ jdt.appendChild(el("span","sub2","text")); } else { jdt.appendChild(el("span","sub2","-")); }
@@ -1316,7 +1316,7 @@ function renderGuide(host){
   /* ── live data ── */
   var cands    = state.candidates||[];
   var irs      = state.interviewRequests||[];
-  var openReqs = REQS.filter(function(r){ return !r.bench; });
+  var CLOSED_ACTIVE=['Filled','Closed','Closed - Not Filled','Cancelled']; var openReqs = REQS.filter(function(r){ return !r.bench && CLOSED_ACTIVE.indexOf(r.reqStatus||r.urgency||'') === -1; });
   var followUp = [];
   try{ followUp=cands.filter(function(c){ var f=window.followUp?window.followUp(c):null; return f&&f.label; }); }catch(e){}
   var offerP   = cands.filter(function(c){ return c.status==="Offer Pending"; });
@@ -2743,8 +2743,9 @@ async function bulkAttachConfirm(){
 
 
 /* ---------- manage reqs ---------- */
-var URGENCIES = ["Open","Immediate need","Contract Award","August","July Start","August Start","Nate #1","Nate #2","Nate #3","Nate #4","Nate #5","Nate #6","Nate #7","Nate #8","Nate #9","Nate #10","On Hold","Closed/Filled","Closed Not Filled"];
-var REQ_STATUSES = ["Open","Need to Open Req","Awaiting HR Approval","Filled","Closed","Closed - Not Filled","Cancelled"];
+var REQ_STATUSES = ["Open", "Immediate Need", "High Priority", "July Start", "August Start", "Pipeline", "On Hold", "Need to Open Req", "Awaiting HR Approval", "Filled", "Closed", "Closed - Not Filled", "Cancelled"];
+var URGENCIES = REQ_STATUSES;
+
 var REQ_PRIORITIES = ["","1 - High","2 - Medium","3 - Low"];
 var DESIRED_STARTS = ["Immediate need","2-Jul","15-Aug","15-Sep","September","October","November"];
 var YESNO = ["No","Yes"];
