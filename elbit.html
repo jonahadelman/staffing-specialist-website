@@ -813,7 +813,7 @@ function renderReqs(host){
     if(r.jdLink){ var a = el("a","tag gold","Open"); a.href = r.jdLink; a.target = "_blank"; a.setAttribute("data-stop","1"); jdt.appendChild(a); }
     else if(r.jd){ jdt.appendChild(el("span","sub2","text")); } else { jdt.appendChild(el("span","sub2","-")); }
     tr.appendChild(jdt);
-    if(!VIEW_ONLY){ var dt = el("td"); dt.style.whiteSpace = "nowrap"; var eb = el("button","btn sm","Edit"); eb.setAttribute("data-reqedit", r.id); eb.setAttribute("data-stop","1"); dt.appendChild(eb); tr.appendChild(dt); }
+    if(!VIEW_ONLY){ var dt = el("td"); dt.style.whiteSpace = "nowrap"; var eb = el("button","btn sm","Edit"); eb.setAttribute("data-reqedit", r.id); dt.appendChild(eb); tr.appendChild(dt); }
     tb.appendChild(tr);
   });
   table.appendChild(tb); host.appendChild(table);
@@ -3064,7 +3064,7 @@ async function openResume(path){
 /* ---------- manage reqs ---------- */
 var URGENCIES = ["Open","Immediate need","Contract Award","August","July Start","August Start","On Hold","Closed/Filled","Closed Not Filled"];
 var REQ_PRIORITIES = ["","1 - High","2 - Medium","3 - Low"];
-var REQ_STATUSES = ["Open","Need to Open Req","Awaiting HR Approval","Filled","Closed"];
+var REQ_STATUSES = ["Open","Need to Open Req","Awaiting HR Approval","Filled","Closed","Closed - Not Filled","Cancelled"];
 var DESIRED_STARTS = ["Immediate need","2-Jul","15-Aug","15-Sep","September","October","November"];
 var YESNO = ["No","Yes"];
 var editReqId = null;
@@ -3118,6 +3118,7 @@ function openReqModal(existing){
   var cancel = el("button","btn ghost","Cancel"); cancel.setAttribute("data-close","1");
   var save = el("button","btn gold", existing ? "Save Req" : "Add Req"); save.setAttribute("data-reqsave","1");
   right.appendChild(cancel); right.appendChild(save); foot.appendChild(right); m.appendChild(foot);
+  if(existing && !VIEW_ONLY){ var delReqBtn = el("button","btn sm danger","Delete Req"); delReqBtn.type="button"; delReqBtn.addEventListener("click", function(){ if(confirm("Delete this requisition? This cannot be undone.")){ var id=editReqId; closeModal(); deleteReq(id); } }); foot.firstChild.appendChild(delReqBtn); }
   document.getElementById("scrim").classList.add("open");
 }
 var editMgrId = null;
@@ -4070,7 +4071,7 @@ document.getElementById("list").addEventListener("click", function(e){
   var irvwr = e.target.closest("[data-irview]"); if(irvwr){ var irv = (state.interviewRequests||[]).filter(function(x){ return x.id === irvwr.getAttribute("data-irview"); })[0]; if(irv){ openInterviewRequestDetail(irv); } return; }
   var iredr = e.target.closest("[data-iredit]"); if(iredr){ var irx = (state.interviewRequests||[]).filter(function(x){ return x.id === iredr.getAttribute("data-iredit"); })[0]; if(irx){ openInterviewRequestModal(irx); } return; }
   var irdelr = e.target.closest("[data-irdel]"); if(irdelr){ deleteInterviewRequest(irdelr.getAttribute("data-irdel")); return; }
-  var edr = e.target.closest("[data-reqedit]"); if(edr){ var er = REQS.filter(function(x){ return x.id === edr.getAttribute("data-reqedit"); })[0]; if(er){ openReqModal(er); } return; }
+  var edr = e.target.closest("[data-reqedit]"); if(edr){ e.stopPropagation(); var er = REQS.filter(function(x){ return x.id === edr.getAttribute("data-reqedit"); })[0]; if(er){ openReqModal(er); } return; }
   var subr = e.target.closest("[data-submitreq]"); if(subr){ submitReq(subr.getAttribute("data-submitreq")); return; }
   var delr = e.target.closest("[data-reqdel]"); if(delr){ deleteReq(delr.getAttribute("data-reqdel")); return; }
   var vr = e.target.closest("[data-reqview]"); if(vr){ var vrId = vr.getAttribute("data-reqview"); var rr = REQS.filter(function(x){ return x.id === vrId; })[0] || (state.reqs || []).filter(function(x){ return x.id === vrId; })[0]; if(rr){ viewReq(rr); } return; }
