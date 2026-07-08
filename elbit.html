@@ -1297,7 +1297,7 @@ function renderGuide(host){
    [irs.length,"Interview Requests","All active requests","interviewrequests","var(--gold)","Open"],
    [irsWeek.length,"Interviews This Week","Scheduled requests","calendar","var(--gold)","Open"],
    [submitted.length,"Candidates Pending HM Review","Awaiting hiring manager feedback","submitted","var(--purple)","Review"],
-   [offerP.length,"Offers Pending","Awaiting acceptance","offerpending","var(--orange)","Open"]].forEach(function(a){ twGrid.appendChild(workCard(a[0],a[1],a[2],a[3],a[4],a[5])); });
+   [followUp.length,"Follow-Ups Due","Candidates needing action","followup","var(--red)","Review"]].forEach(function(a){ twGrid.appendChild(workCard(a[0],a[1],a[2],a[3],a[4],a[5])); });
   twWrap.appendChild(twGrid);
   wrap.appendChild(twWrap);
 
@@ -1314,7 +1314,7 @@ function renderGuide(host){
     return c;
   }
 
-  [[activeCands.length,"Active Candidates","all","var(--ink)"],[openReqs.length,"Open Reqs","reqs","var(--gold)"],[interviewing.length,"Interviewing","interviewing","var(--teal)"],[offerP.length,"Offers Pending","offerpending","var(--yellow)"],[followUp.length,"Follow-Up Due","followup","var(--red)"],[irsWeek.length,"This Week","calendar","var(--gold)"]].forEach(function(a){ snapGrid.appendChild(snapCard(a[0],a[1],a[2],a[3])); });
+  [[activeCands.length,"Active Candidates","all","var(--ink)"],[openReqs.length,"Open Reqs","reqs","var(--gold)"],[interviewing.length,"Interviewing","interviewing","var(--teal)"],[offerP.length,"Offers Pending","offerpending","var(--yellow)"]].forEach(function(a){ snapGrid.appendChild(snapCard(a[0],a[1],a[2],a[3])); });
   snapWrap.appendChild(snapGrid);
   wrap.appendChild(snapWrap);
 
