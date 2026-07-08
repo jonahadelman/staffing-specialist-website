@@ -432,8 +432,7 @@ var VIEWS = [
   { id:"reqs", collapsible:true, name:"Open Requisitions", fn:function(){ return true; }, special:"reqs", section:"Reqs" },
   { id:"byreq", collapsible:true, name:"By Req", fn:function(c){ return c.status !== "Archived"; }, special:"byreq", section:"Reqs" },
   { id:"bydisc", collapsible:true, name:"By Discipline", fn:function(c){ return c.status !== "Archived"; }, group:"discipline", section:"Reqs" },
-  { id:"managers", collapsible:true, name:"Hiring Managers", fn:function(){ return true; }, special:"managers", section:"People & Reference" },
-  { id:"forms", collapsible:true, name:"Document Library", fn:function(){ return true; }, special:"forms", section:"People & Reference" },
+  { id:"managers", collapsible:true, name:"Hiring Managers", fn:function(){ return true; }, special:"managers", section:"People & Reference" }
   { id:"tarejected", name:"TA Rejected", fn:function(c){ return c.status === "TA Rejected"; }, section:"Closed", collapsible:true },
   { id:"hmrejected", name:"HM Rejected", fn:function(c){ return c.status === "HM Rejected"; }, section:"Closed", collapsible:true },
   { id:"archive", name:"Archive", fn:function(c){ return c.status === "Archived"; }, section:"Closed", collapsible:true }
@@ -540,8 +539,6 @@ function renderTabs(){
     var count;
     if(v.special === "guide"){ count = null; }
     else if(v.special === "reqs"){ count = REQS.length; }
-    else if(v.special === "natetop10"){ count = REQS.filter(function(r){ return /^Nate #/.test(r.urgency); }).length; }
-    else if(v.special === "forms"){ count = null; }
     else if(v.special === "resumecheck"){ count = state.candidates.filter(function(c){ return c.status !== "Archived" && resumeStatus(c) !== "match"; }).length; }
     else if(v.special === "pipeline"){ count = state.candidates.filter(function(c){ return PIPE_STAGES.indexOf(c.status) !== -1; }).length; }
     else if(v.special === "dashboard"){ count = ""; }
@@ -569,8 +566,6 @@ function renderList(){
   if(v.special === "managers"){ renderManagers(host); return; }
   if(v.special === "interviewrequests"){ renderInterviewRequests(host); return; }
   if(v.special === "calendar"){ renderCalendar(host); return; }
-  if(v.special === "natetop10"){ renderNateTop10(host); return; }
-  if(v.special === "forms"){ renderForms(host); return; }
   if(v.special === "board"){ renderBoard(host); return; }
   if(v.special === "pipeline"){ renderPipeline(host); return; }
   if(v.special === "dashboard"){ renderDashboard(host); return; }
@@ -1233,67 +1228,8 @@ function renderReqs(host){
   });
   table.appendChild(tb); host.appendChild(table);
 }
-function renderNateTop10(host){ renderReqs(host); }
-function renderForms(host){
-  document.getElementById("viewMeta").textContent = FORMS.length + (FORMS.length === 1 ? " item" : " items");
-  var intro = el("div"); intro.style.cssText = "margin:2px 0 16px;color:var(--muted);font-size:13px;line-height:1.5";
-  intro.textContent = "Job descriptions, screening forms, and reference documents for this program. Upload a job description to make it downloadable here, open a form to fill on screen and print, or open a reference document to view or download.";
-  host.appendChild(intro);
 
-  /* Uploaded Job Descriptions */
-  var jdSec = el("div"); jdSec.style.cssText = "border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:0 0 22px;background:var(--panel)";
-  var jdHead = el("div"); jdHead.style.cssText = "display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px";
-  var jdTitle = el("div", null, "Job Descriptions"); jdTitle.style.cssText = "font-weight:700;font-size:15px;color:var(--gold)";
-  var upWrap = el("div"); upWrap.style.cssText = "display:flex;align-items:center;gap:10px";
-  var upStat = el("span"); upStat.id = "docUpStat"; upStat.style.cssText = "color:var(--muted);font-size:12px";
-  var upBtn = el("button","btn gold sm","Upload Job Description"); upBtn.style.whiteSpace = "nowrap";
-  var fileIn = el("input"); fileIn.type = "file"; fileIn.accept = ".pdf,.doc,.docx,.txt,.rtf"; fileIn.style.display = "none";
-  fileIn.addEventListener("change", function(){ if(fileIn.files && fileIn.files[0]){ handleDocUpload(fileIn.files[0]); fileIn.value = ""; } });
-  upBtn.addEventListener("click", function(){ fileIn.click(); });
-  upWrap.appendChild(upStat); upWrap.appendChild(upBtn); upWrap.appendChild(fileIn);
-  jdHead.appendChild(jdTitle); jdHead.appendChild(upWrap); jdSec.appendChild(jdHead);
-  var jdList = el("div"); jdList.id = "docList"; jdList.style.cssText = "margin-top:8px";
-  jdList.textContent = "Loading...";
-  jdSec.appendChild(jdList); host.appendChild(jdSec);
-  loadUploadedDocs();
 
-  var formsSec = el("div"); formsSec.style.cssText = "border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:0 0 22px;background:var(--panel)";
-  var formsHd = el("div"); formsHd.style.cssText = "display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px";
-  var formsTitle = el("div", null, "Forms & Reference Documents"); formsTitle.style.cssText = "font-weight:700;font-size:15px;color:var(--gold)";
-  var fUpWrap = el("div"); fUpWrap.style.cssText = "display:flex;align-items:center;gap:10px";
-  var fUpStat = el("span"); fUpStat.id = "formsUpStat"; fUpStat.style.cssText = "color:var(--muted);font-size:12px";
-  var fUpBtn = el("button","btn gold sm","Upload Form"); fUpBtn.style.whiteSpace = "nowrap";
-  var fFileIn = el("input"); fFileIn.type = "file"; fFileIn.accept = ".pdf,.doc,.docx,.txt,.rtf,.xls,.xlsx,.html"; fFileIn.style.display = "none";
-  fFileIn.addEventListener("change", function(){ if(fFileIn.files && fFileIn.files[0]){ handleFormsUpload(fFileIn.files[0]); fFileIn.value = ""; } });
-  fUpBtn.addEventListener("click", function(){ fFileIn.click(); });
-  fUpWrap.appendChild(fUpStat); fUpWrap.appendChild(fUpBtn); fUpWrap.appendChild(fFileIn);
-  formsHd.appendChild(formsTitle); formsHd.appendChild(fUpWrap); formsSec.appendChild(formsHd);
-  var formsDesc = el("div", null, "Screening forms to fill on screen and print, plus reference documents to view or download. Upload your own to add them here."); formsDesc.style.cssText = "color:var(--muted);font-size:12px;margin:2px 0 10px";
-  formsSec.appendChild(formsDesc);
-
-  FORMS.forEach(function(item){
-    var card = el("div"); card.style.cssText = "border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:0 0 12px;background:var(--bg)";
-    var top = el("div"); top.style.cssText = "display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap";
-    var left = el("div"); left.style.flex = "1"; left.style.minWidth = "220px";
-    var nm = el("div", null, item.name); nm.style.cssText = "font-weight:700;font-size:14.5px;color:var(--ink);margin-bottom:4px";
-    var ds = el("div", null, item.desc); ds.style.cssText = "color:var(--muted);font-size:12.5px;line-height:1.5";
-    left.appendChild(nm); left.appendChild(ds); top.appendChild(left);
-    if(item.type === "file"){
-      var ob2 = el("button","btn gold sm", item.kind === "docx" ? "Download" : "View"); ob2.style.whiteSpace = "nowrap";
-      ob2.addEventListener("click", function(){ openDoc(item); });
-      top.appendChild(ob2);
-    } else {
-      var ob = el("button","btn gold sm","Open & Print"); ob.style.whiteSpace = "nowrap";
-      ob.addEventListener("click", function(){ openForm(item); });
-      top.appendChild(ob);
-    }
-    card.appendChild(top); formsSec.appendChild(card);
-  });
-  var fUpList = el("div"); fUpList.id = "formsUpList"; fUpList.style.cssText = "margin-top:4px";
-  formsSec.appendChild(fUpList);
-  host.appendChild(formsSec);
-  loadUploadedForms();
-}
 function b64ToBlob(b64, mime){
   var bin = atob(b64); var len = bin.length; var bytes = new Uint8Array(len);
   for(var i=0;i<len;i++){ bytes[i] = bin.charCodeAt(i); }
