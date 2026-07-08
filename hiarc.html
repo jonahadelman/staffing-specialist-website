@@ -2329,6 +2329,7 @@ function openDetail(c){
       var logBtn = el("button","btn sm","+ Log Activity"); logBtn.setAttribute("data-logact","1"); logBtn.style.marginTop = "6px"; body.appendChild(logBtn);
     }
   }
+  if(!isNew){ tbrBuildSection(c, body); }
   m.appendChild(body);
   var foot = el("div","mfoot"); var left = el("div");
   if(!isNew && !VIEW_ONLY){ var del = el("button","btn sm danger","Delete"); del.setAttribute("data-del","1"); left.appendChild(del); }
@@ -2838,7 +2839,7 @@ function viewReq(r){
   g.appendChild(roField("Hiring Manager", r.hm)); g.appendChild(roField("HM Title", r.hmTitle));
   g.appendChild(roField("HM Email", r.hmEmail)); g.appendChild(roField("HM Phone", r.hmPhone));
   g.appendChild(roField("Discipline", r.disc));
-  g.appendChild(roField("Urgency", r.urgency)); g.appendChild(roField("Openings", String(r.openings)));
+  g.appendChild(roField("Status", r.reqStatus || r.urgency || "-")); g.appendChild(roField("Openings", String(r.openings)));
   g.appendChild(roField("Min Comp", r.compMin || "-")); g.appendChild(roField("Max Comp", r.compMax || "-")); g.appendChild(roField("Target Comp", r.compTarget || "-"));
   if(r.jdLink){ var lk = el("div","fld full"); lk.appendChild(el("label", null, "Job Description Link")); var a = el("a","tag gold","Open job description"); a.href = r.jdLink; a.target = "_blank"; lk.appendChild(a); g.appendChild(lk); }
   var jdWrap = el("div","fld full"); jdWrap.appendChild(el("label", null, "Job Description")); if(r.jd && String(r.jd).trim()){ jdWrap.appendChild(renderJD(r.jd)); } else { jdWrap.appendChild(el("div","roval","-")); } g.appendChild(jdWrap);
