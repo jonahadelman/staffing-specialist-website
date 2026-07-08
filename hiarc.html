@@ -1206,6 +1206,7 @@ async function deleteProgramNote(id){
   toast("Note deleted.");
 }
 function abbrevTitle(t){ if(!t){ return t; } var m=[[/\bPrincipal\b/gi,"Prin."],[/\bEngineering\b/gi,"Eng"],[/\bEngineer\b/gi,"Eng"],[/\bManagement\b/gi,"Mgmt"],[/\bManager\b/gi,"Mgr"],[/\bSenior\b/gi,"Sr"],[/\bDevelopment\b/gi,"Dev"],[/\bIntegration\b/gi,"Integ"],[/\bAdministrator\b/gi,"Admin"],[/\bSpecialist\b/gi,"Spec."]]; m.forEach(function(x){ t=t.replace(x[0],x[1]); }); return t; }
+function reqStatusColor(s){ if(!s) return "--gray"; var sl=s.toLowerCase(); if(sl.indexOf("immediate")!==-1) return "--red"; if(sl.indexOf("high priority")!==-1) return "--orange"; if(sl.indexOf("on hold")!==-1) return "--yellow"; if(/^open/i.test(s)) return "--green"; if(sl.indexOf("pipeline")!==-1) return "--teal"; if(sl.indexOf("july")!==-1||sl.indexOf("august")!==-1) return "--blue"; if(sl.indexOf("awaiting")!==-1||sl.indexOf("need to open")!==-1) return "--purple"; if(sl.indexOf("filled")!==-1||sl.indexOf("closed")!==-1||sl.indexOf("cancelled")!==-1) return "--gray"; return "--gray"; }
 function renderReqs(host){
   function nateRank(r){ var m = (r.urgency||"").match(/^Nate #(\d+)$/); return m ? parseInt(m[1],10) : null; }
   function isClosedReq(r){ var s=(r.reqStatus||'').toLowerCase(); return s.indexOf('filled')!==-1||s.indexOf('closed')!==-1||s.indexOf('cancelled')!==-1; } var allReqs = REQS.filter(function(r){ return !isClosedReq(r); }).sort(function(a,b){
