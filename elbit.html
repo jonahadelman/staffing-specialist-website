@@ -1296,9 +1296,8 @@ function renderGuide(host){
   [[openReqs.length,"Open Requisitions","Active hiring priorities","reqs","var(--teal)","Open"],
    [irs.length,"Interview Requests","All active requests","interviewrequests","var(--gold)","Open"],
    [irsWeek.length,"Interviews This Week","Scheduled requests","calendar","var(--gold)","Open"],
-   [submitted.length,"Pending HM Review","Awaiting HM feedback","submitted","var(--purple)","Review"],
-   [offerP.length,"Offers Pending","Awaiting acceptance","offerpending","var(--orange)","Open"],
-   [followUp.length,"Follow-Ups Due","Candidates needing action","followup","var(--red)","Review"]].forEach(function(a){ twGrid.appendChild(workCard(a[0],a[1],a[2],a[3],a[4],a[5])); });
+   [submitted.length,"Candidates Pending HM Review","Awaiting hiring manager feedback","submitted","var(--purple)","Review"],
+   [offerP.length,"Offers Pending","Awaiting acceptance","offerpending","var(--orange)","Open"]].forEach(function(a){ twGrid.appendChild(workCard(a[0],a[1],a[2],a[3],a[4],a[5])); });
   twWrap.appendChild(twGrid);
   wrap.appendChild(twWrap);
 
