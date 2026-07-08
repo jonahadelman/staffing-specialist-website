@@ -330,7 +330,7 @@ async function onAuthed(user){
   if(orgs.indexOf(ORG) === -1){ gateMsg("Your account does not have access to this program.", "err"); return; }
   VIEW_ONLY = prof.data.role !== "editor";
   document.getElementById("whoami").textContent = (function(e){ var n = (e||"").split("@")[0].split(/[._-]+/).filter(Boolean).map(function(w){ return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); }).join(" "); return (n || e) + " (" + (VIEW_ONLY ? "viewer" : "editor") + ")"; })(prof.data.email || user.email);
-  CURRENT_USER = { id:user.id, email:(prof.data.email || user.email) };
+  CURRENT_USER = { id:user.id, email:(prof.data.email || user.email), role:(prof.data.role||"viewer") };
   gateMsg("", "");
   document.getElementById("gate").style.display = "none";
   document.getElementById("app").style.display = "block";
@@ -349,7 +349,7 @@ function nz(v){ return (v && String(v).length) ? v : null; }
 function rowToCand(r){
   return { id:r.id, firstName:r.first_name||"", lastName:r.last_name||"", email:r.email||"", phone:r.phone||"",
     location:r.location||"", relocate:r.relocate||"", title:r.title||"", company:r.company||"", skills:r.skills||[], discipline:r.discipline||"",
-    reqs:r.reqs||[], opportunity:r.opportunity === true, dayforceBadge:r.dayforce_badge === true, source:r.source||"Other", status:r.status||"New", priority:r.priority||"Medium", owner:r.owner||"Unassigned",
+    reqs:r.reqs||[], opportunity:r.opportunity === true, dayforceBadge:r.dayforce_badge === true, source:r.source||"Other", tbStatus:r.tb_status||null, status:r.status||"New", priority:r.priority||"Medium", owner:r.owner||"Unassigned",
     summary:r.summary||"",
     dateReceived:r.date_received||"", lastContacted:r.last_contacted||"", nextFollowUp:r.next_follow_up||"",
     resumeLink:r.resume_link||"", resumeFileName:r.resume_file_name||"", resumePath:r.resume_path||"", resumeText:r.resume_text||"", linkedin:r.linkedin||"", notes:r.notes||"",
@@ -360,7 +360,7 @@ function rowToAct(r){ return { id:r.id, candidateId:r.candidate_id, type:r.type|
 function candToRow(c){
   return { org:ORG, first_name:c.firstName||"", last_name:c.lastName||"", email:c.email||"", phone:c.phone||"",
     location:c.location||"", relocate:c.relocate||"", title:c.title||"", company:c.company||"", skills:c.skills||[], discipline:c.discipline||"",
-    reqs:c.reqs||[], opportunity:c.opportunity === true, dayforce_badge:c.dayforceBadge === true, source:c.source||"Other", status:c.status||"New", priority:c.priority||"Medium", owner:c.owner||"Unassigned",
+    reqs:c.reqs||[], opportunity:c.opportunity === true, dayforce_badge:c.dayforceBadge === true, tb_status:c.tbStatus||null, source:c.source||"Other", status:c.status||"New", priority:c.priority||"Medium", owner:c.owner||"Unassigned",
     summary:c.summary||"",
     date_received:nz(c.dateReceived), last_contacted:nz(c.lastContacted), next_follow_up:nz(c.nextFollowUp),
     resume_link:c.resumeLink||"", resume_file_name:c.resumeFileName||"", resume_path:c.resumePath||"", resume_text:c.resumeText||"", linkedin:c.linkedin||"", notes:c.notes||"",
@@ -2037,6 +2037,305 @@ function closeBenchStatusPicker(){
   var p = document.getElementById("benchStatusPop");
   if(p){ p.remove(); }
 }
+
+/* ============================================================
+   TALENTBENCH REVIEW — Phase 2
+   All functions prefixed tbr_ to avoid collisions.
+   Writes to: candidates.tb_status, tb_reviews (audit table)
+   Reads from: state.candidates (tb_status already in rowToCand)
+   ============================================================ */
+
+var TBR_STATUSES = ['Submitted','Under Review','Needs More Information','Accepted','Rejected','Interview Requested','Closed'];
+var TBR_REASONS  = ['Skills mismatch','Compensation','Location','Clearance','Duplicate','Experience','Hiring Manager Feedback','Other'];
+
+/* Check if current user can review */
+function tbrCanReview(){
+  if(!CURRENT_USER || !CURRENT_USER.role) return false;
+  return CURRENT_USER.role === 'editor' || CURRENT_USER.role === 'tb_reviewer';
+}
+
+/* Is candidate in any TalentBench req? */
+function tbrIsBenchCand(c){
+  if(!c || !c.reqs || !c.reqs.length) return false;
+  var benchLabels = getBenchReqs().map(function(r){ return (r.title||'') + ' \u2013 ' + (r.loc||''); });
+  var benchLabelsAlt = getBenchReqs().map(function(r){ return (r.title||'') + ' - ' + (r.loc||''); });
+  return c.reqs.some(function(label){ return benchLabels.indexOf(label) !== -1 || benchLabelsAlt.indexOf(label) !== -1; });
+}
+
+/* Status pill for TalentBench review status */
+function tbrStatusPill(status){
+  var colors = {
+    'Submitted':             '--blue',
+    'Under Review':          '--yellow',
+    'Needs More Information':'--orange',
+    'Accepted':              '--green',
+    'Rejected':              '--red',
+    'Interview Requested':   '--teal',
+    'Closed':                '--gray'
+  };
+  var colorVar = colors[status] || '--gray';
+  var p = el('span','pill', status || 'No Status');
+  var col = cssVar(colorVar);
+  p.style.color = col;
+  p.style.background = col + '22';
+  p.style.border = '1px solid ' + col + '55';
+  return p;
+}
+
+/* Load tb_reviews for a candidate */
+async function tbrLoadHistory(candidateId){
+  var res = await sb.from('tb_reviews')
+    .select('*')
+    .eq('candidate_id', candidateId)
+    .order('created_at', { ascending: false });
+  if(res.error){ console.error('tbr load:', res.error); return []; }
+  return res.data || [];
+}
+
+/* Write a review action */
+async function tbrWriteReview(candidateId, candidateName, action, prevStatus, newStatus, reason, comments, reqId){
+  var insertRes = await sb.from('tb_reviews').insert({
+    org:            ORG,
+    candidate_id:   candidateId,
+    candidate_name: candidateName,
+    req_id:         reqId || null,
+    reviewer_id:    CURRENT_USER.id,
+    reviewer_email: CURRENT_USER.email,
+    action:         action,
+    prev_status:    prevStatus || null,
+    new_status:     newStatus,
+    reason:         reason || null,
+    comments:       comments || null
+  });
+  if(insertRes.error){ toast('Review save failed: ' + (insertRes.error.message || 'unknown error')); return false; }
+
+  /* Update tb_status on candidate */
+  var updateRes = await sb.from('candidates').update({ tb_status: newStatus }).eq('id', candidateId);
+  if(updateRes.error){ toast('Status update failed: ' + (updateRes.error.message || 'unknown error')); return false; }
+
+  /* Update local state */
+  var cIdx = state.candidates.findIndex(function(x){ return x.id === candidateId; });
+  if(cIdx !== -1){ state.candidates[cIdx].tbStatus = newStatus; }
+
+  return true;
+}
+
+/* Build the TalentBench Review section inside openDetail */
+async function tbrBuildSection(c, body){
+  if(!tbrIsBenchCand(c)) return; /* not a bench candidate — show nothing */
+
+  var section = el('div');
+  section.style.cssText = 'margin-top:24px;padding-top:20px;border-top:2px solid var(--line);';
+
+  /* Header row */
+  var hdr = el('div');
+  hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;';
+  var hdrLeft = el('div');
+  hdrLeft.style.cssText = 'display:flex;align-items:center;gap:10px;';
+  var hdrTitle = el('h3', null, 'TalentBench Review');
+  hdrTitle.style.cssText = 'font-size:15px;font-weight:700;color:var(--ink);margin:0;';
+  hdrLeft.appendChild(hdrTitle);
+  hdrLeft.appendChild(tbrStatusPill(c.tbStatus));
+  hdr.appendChild(hdrLeft);
+  section.appendChild(hdr);
+
+  /* Action buttons — only for authorized users */
+  if(tbrCanReview() && c.id){
+    var actions = el('div');
+    actions.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;';
+
+    function makeActionBtn(label, cls, action, newStatus){
+      var b = el('button', 'btn sm ' + (cls||''), label);
+      b.type = 'button';
+      b.addEventListener('click', function(){
+        tbrOpenActionDialog(c, action, newStatus, section);
+      });
+      return b;
+    }
+
+    actions.appendChild(makeActionBtn('Accept',               'gold',         'Accepted',              'Accepted'));
+    actions.appendChild(makeActionBtn('Reject',               'danger',       'Rejected',              'Rejected'));
+    actions.appendChild(makeActionBtn('Needs More Info',      '',             'Needs More Information','Needs More Information'));
+    actions.appendChild(makeActionBtn('Mark Under Review',    'ghost',        'Under Review',          'Under Review'));
+    actions.appendChild(makeActionBtn('Request Interview',    '',             'Interview Requested',   'Interview Requested'));
+
+    section.appendChild(actions);
+  }
+
+  /* Review history */
+  var histWrap = el('div');
+  histWrap.style.cssText = 'opacity:.7;font-size:12px;color:var(--muted);margin-bottom:8px;';
+  histWrap.textContent = 'Loading review history\u2026';
+  section.appendChild(histWrap);
+
+  body.appendChild(section);
+
+  /* Load history async */
+  var history = await tbrLoadHistory(c.id);
+  histWrap.innerHTML = '';
+
+  if(!history.length){
+    histWrap.style.cssText = 'font-size:12px;color:var(--muted);';
+    histWrap.textContent = 'No review activity yet.';
+    return;
+  }
+
+  var histTitle = el('div', null, 'Review History');
+  histTitle.style.cssText = 'font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray);margin-bottom:8px;';
+  histWrap.appendChild(histTitle);
+  histWrap.style.cssText = '';
+
+  history.forEach(function(row){
+    var entry = el('div');
+    entry.style.cssText = 'border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--panel2);';
+
+    var entryTop = el('div');
+    entryTop.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;';
+    entryTop.appendChild(tbrStatusPill(row.new_status));
+
+    var who = el('span', null, row.reviewer_email);
+    who.style.cssText = 'font-size:11px;color:var(--muted);';
+    entryTop.appendChild(who);
+
+    var when = el('span', null, row.created_at ? new Date(row.created_at).toLocaleDateString() : '');
+    when.style.cssText = 'font-size:11px;color:var(--gray);margin-left:auto;';
+    entryTop.appendChild(when);
+
+    entry.appendChild(entryTop);
+
+    if(row.reason){
+      var reasonEl = el('div', null, 'Reason: ' + row.reason);
+      reasonEl.style.cssText = 'font-size:12px;color:var(--ink);margin-bottom:3px;';
+      entry.appendChild(reasonEl);
+    }
+    if(row.comments){
+      var commEl = el('div', null, row.comments);
+      commEl.style.cssText = 'font-size:13px;color:var(--ink);line-height:1.5;padding:6px 8px;background:var(--panel);border-radius:6px;border:1px solid var(--line);margin-top:4px;';
+      entry.appendChild(commEl);
+    }
+
+    histWrap.appendChild(entry);
+  });
+}
+
+/* Action dialog — inline below the buttons */
+function tbrOpenActionDialog(c, action, newStatus, parentSection){
+  /* Remove any existing dialog */
+  var existing = parentSection.querySelector('[data-tbr-dialog]');
+  if(existing){ existing.remove(); }
+
+  var needsReason   = (action === 'Rejected');
+  var needsComments = (action === 'Needs More Information' || action === 'Rejected');
+
+  var dialog = el('div');
+  dialog.setAttribute('data-tbr-dialog','1');
+  dialog.style.cssText = 'background:var(--panel);border:1.5px solid var(--gold);border-radius:10px;padding:16px;margin-bottom:14px;';
+
+  var dlgTitle = el('div', null, action);
+  dlgTitle.style.cssText = 'font-size:13px;font-weight:700;color:var(--ink);margin-bottom:12px;';
+  dialog.appendChild(dlgTitle);
+
+  var reasonSel = null;
+  if(needsReason){
+    var reasonFld = el('div','fld full');
+    var rl = el('label', null, 'Reason *');
+    reasonSel = document.createElement('select');
+    reasonSel.style.cssText = 'width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink);';
+    var emptyOpt = el('option', null, '— Select a reason —'); emptyOpt.value = ''; reasonSel.appendChild(emptyOpt);
+    TBR_REASONS.forEach(function(r){ var o = el('option',null,r); o.value=r; reasonSel.appendChild(o); });
+    reasonFld.appendChild(rl); reasonFld.appendChild(reasonSel);
+    dialog.appendChild(reasonFld);
+  }
+
+  var commentsTa = null;
+  var commentsFld = el('div','fld full');
+  var cl = el('label', null, needsComments ? 'Comments' + (needsReason ? ' (required if Other)' : ' *') : 'Comments (optional)');
+  commentsTa = document.createElement('textarea');
+  commentsTa.style.cssText = 'width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink);min-height:70px;resize:vertical;font-family:inherit;font-size:13px;';
+  commentsTa.placeholder = needsComments ? 'Explain your decision\u2026' : 'Optional notes\u2026';
+  commentsFld.appendChild(cl); commentsFld.appendChild(commentsTa);
+  dialog.appendChild(commentsFld);
+
+  var dlgBtns = el('div');
+  dlgBtns.style.cssText = 'display:flex;gap:8px;margin-top:8px;';
+
+  var confirmBtn = el('button','btn gold','Confirm ' + action); confirmBtn.type='button';
+  var cancelBtn  = el('button','btn ghost','Cancel');            cancelBtn.type='button';
+
+  cancelBtn.addEventListener('click', function(){ dialog.remove(); });
+
+  confirmBtn.addEventListener('click', async function(){
+    var reason   = reasonSel   ? reasonSel.value.trim()   : null;
+    var comments = commentsTa  ? commentsTa.value.trim()  : null;
+
+    /* Validate */
+    if(needsReason && !reason){
+      toast('Please select a rejection reason'); return;
+    }
+    if(reason === 'Other' && !comments){
+      toast('Comments are required when reason is Other'); return;
+    }
+    if(action === 'Needs More Information' && !comments){
+      toast('Please explain what additional information is needed'); return;
+    }
+
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Saving\u2026';
+
+    /* Find req_id if candidate is tagged to a bench req */
+    var benchReqs = getBenchReqs();
+    var matchedReq = null;
+    if(c.reqs && c.reqs.length && benchReqs.length){
+      benchReqs.forEach(function(r){
+        var lbl    = (r.title||'') + ' \u2013 ' + (r.loc||'');
+        var lblAlt = (r.title||'') + ' - '       + (r.loc||'');
+        if(c.reqs.indexOf(lbl) !== -1 || c.reqs.indexOf(lblAlt) !== -1){ matchedReq = r; }
+      });
+    }
+
+    var ok = await tbrWriteReview(
+      c.id,
+      fullName(c),
+      action,
+      c.tbStatus || null,
+      newStatus,
+      reason   || null,
+      comments || null,
+      matchedReq ? matchedReq.id : null
+    );
+
+    if(ok){
+      toast(action + ' saved');
+      dialog.remove();
+      /* Update the candidate object in memory and re-render the section */
+      c.tbStatus = newStatus;
+      var existingSection = parentSection;
+      /* Re-render history in place */
+      var histWrap = existingSection.querySelector('[data-tbr-history]');
+      /* Refresh full modal */
+      closeModal();
+      var updatedCand = (state.candidates || []).find(function(x){ return x.id === c.id; });
+      if(updatedCand){ setTimeout(function(){ openDetail(updatedCand); }, 100); }
+    } else {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Confirm ' + action;
+    }
+  });
+
+  dlgBtns.appendChild(cancelBtn);
+  dlgBtns.appendChild(confirmBtn);
+  dialog.appendChild(dlgBtns);
+
+  /* Insert dialog at top of parent section, after the action buttons */
+  var actionBtns = parentSection.querySelector('[style*="flex-wrap"]');
+  if(actionBtns && actionBtns.nextSibling){
+    parentSection.insertBefore(dialog, actionBtns.nextSibling);
+  } else {
+    parentSection.appendChild(dialog);
+  }
+}
+
+
 function renderTalentBench(host){
   var benchReqs = getBenchReqs();
   var partners = Array.from(new Set(benchReqs.map(function(r){ return r.partner || "Unassigned"; }))).sort();
@@ -2493,6 +2792,7 @@ function openDetail(c){
       var logBtn = el("button","btn sm","+ Log Activity"); logBtn.setAttribute("data-logact","1"); logBtn.style.marginTop = "6px"; body.appendChild(logBtn);
     }
   }
+  if(!isNew){ tbrBuildSection(c, body); }
   m.appendChild(body);
   var foot = el("div","mfoot"); var left = el("div");
   if(!isNew && !VIEW_ONLY){ var del = el("button","btn sm danger","Delete"); del.setAttribute("data-del","1"); left.appendChild(del); }
