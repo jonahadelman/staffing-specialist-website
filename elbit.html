@@ -153,7 +153,11 @@
 <header>
  <div class="wrap topbar">
  <div class="brand">
- <h1>TalentBase</h1>
+ <div style="display:flex;flex-direction:column;gap:1px;">
+  <span style="font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.2px;">TalentBase</span>
+  <span style="font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.3px;">Recruitment Operating System</span>
+  <span style="font-size:10px;color:var(--gold);font-weight:600;letter-spacing:.2px;">Elbit Workspace</span>
+ </div>
  <span class="vobadge" id="voBadge" style="display:none">View Only</span>
  </div>
  <div class="grow"></div>
@@ -902,229 +906,230 @@ async function deleteProgramNote(id){
 function renderBoard(host){ BOARD.render(host); }
 
 function renderGuide(host){
-  document.getElementById("viewMeta").textContent = "";
+  document.getElementById("viewMeta").textContent = ""; var _vt = document.getElementById("viewTitle"); if(_vt) _vt.textContent = "";
 
-  function nav(viewId){
-    ui.view = viewId;
-    refresh();
-  }
+  function nav(viewId){ ui.view = viewId; refresh(); }
 
   /* ── live data ── */
   var cands       = state.candidates || [];
   var irs         = state.interviewRequests || [];
   var openReqs    = REQS.filter(function(r){ return !r.bench; });
-  var followUp    = cands.filter(function(c){ return followUp ? false : false; }); // use existing helper below
+  var followUp    = [];
   try { followUp  = cands.filter(function(c){ var f=window.followUp?window.followUp(c):null; return f && f.label; }); } catch(e){}
   var offerP      = cands.filter(function(c){ return c.status === "Offer Pending"; });
   var irsThisWeek = irs.filter(function(ir){
     if(!ir.interviewDate) return false;
     var d = new Date(ir.interviewDate), now = new Date();
-    var startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - now.getDay());
-    var endOfWeek   = new Date(startOfWeek); endOfWeek.setDate(startOfWeek.getDate() + 7);
-    return d >= startOfWeek && d <= endOfWeek;
+    var s = new Date(now); s.setDate(now.getDate() - now.getDay());
+    var e2 = new Date(s); e2.setDate(s.getDate() + 7);
+    return d >= s && d <= e2;
   });
-  var tbCands     = cands.filter(function(c){ return c.status !== "Archived" && c.status !== "Offer Accepted - Hired"; });
-  var userName    = (CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email.split("@")[0].split(/[._-]+/).map(function(w){ return w.charAt(0).toUpperCase()+w.slice(1); }).join(" ") : "there";
+  var workspace   = (CONFIG && CONFIG.brand) ? CONFIG.brand + " Workspace" : (ORG === "hiarc" ? "HiARC Workspace" : "Elbit Workspace");
+  var isHiarc     = ORG === "hiarc";
 
-  /* ── style helpers ── */
-  function s(el_, css){ el_.style.cssText = css; return el_; }
-  function div(css, cls){ var e = document.createElement("div"); if(cls) e.className = cls; if(css) e.style.cssText = css; return e; }
-  function txt(tag, text, css){ var e = document.createElement(tag); e.textContent = text; if(css) e.style.cssText = css; return e; }
-  function svg(path, size){ 
+  /* ── helpers ── */
+  function div(css, cls){ var e = document.createElement("div"); if(cls) e.className=cls; if(css) e.style.cssText=css; return e; }
+  function txt(tag, text, css){ var e = document.createElement(tag); e.textContent=text; if(css) e.style.cssText=css; return e; }
+  function svgEl(path, size, extra){
     var ns = "http://www.w3.org/2000/svg";
-    var v = document.createElementNS(ns,"svg"); 
+    var v = document.createElementNS(ns,"svg");
     v.setAttribute("viewBox","0 0 24 24"); v.setAttribute("fill","none");
-    v.setAttribute("width", size||"22"); v.setAttribute("height", size||"22");
+    v.setAttribute("width",size||"22"); v.setAttribute("height",size||"22");
     v.setAttribute("stroke","currentColor"); v.setAttribute("stroke-width","1.8");
     v.setAttribute("stroke-linecap","round"); v.setAttribute("stroke-linejoin","round");
-    var p = document.createElementNS(ns,"path"); p.setAttribute("d", path); v.appendChild(p); 
-    return v; 
+    var paths = Array.isArray(path) ? path : [path];
+    paths.forEach(function(d){ var p = document.createElementNS(ns,"path"); p.setAttribute("d",d); v.appendChild(p); });
+    if(extra){ extra.forEach(function(ex){ var el2 = document.createElementNS(ns, ex[0]); Object.keys(ex[1]).forEach(function(k){ el2.setAttribute(k,ex[1][k]); }); v.appendChild(el2); }); }
+    return v;
   }
-
-  /* ── reusable components ── */
   function actionBtn(label, viewId, isPrimary){
     var b = document.createElement("button");
     b.textContent = label;
     b.style.cssText = isPrimary
-      ? "background:var(--gold);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap;"
-      : "background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap;";
+      ? "background:var(--gold);color:#fff;border:none;border-radius:9px;padding:10px 22px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:0 2px 8px rgba(61,90,232,.25);"
+      : "background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 22px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;";
     b.addEventListener("click", function(){ nav(viewId); });
-    b.addEventListener("mouseenter", function(){ this.style.opacity=".85"; });
-    b.addEventListener("mouseleave", function(){ this.style.opacity="1"; });
+    b.addEventListener("mouseenter", function(){ this.style.transform="translateY(-1px)"; this.style.boxShadow=isPrimary?"0 4px 14px rgba(61,90,232,.35)":"0 2px 8px rgba(0,0,0,.08)"; });
+    b.addEventListener("mouseleave", function(){ this.style.transform=""; this.style.boxShadow=isPrimary?"0 2px 8px rgba(61,90,232,.25)":""; });
     return b;
   }
 
-  function kpiCard(value, label, viewId, color){
-    var card = div("background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;cursor:pointer;transition:box-shadow .15s;min-width:0;");
-    card.addEventListener("mouseenter", function(){ this.style.boxShadow="0 4px 14px rgba(0,0,0,.08)"; });
-    card.addEventListener("mouseleave", function(){ this.style.boxShadow="none"; });
+  function kpiCard(value, label, sub, viewId, color){
+    var card = div("background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;cursor:pointer;transition:all .15s;");
+    card.addEventListener("mouseenter", function(){ this.style.boxShadow="0 4px 16px rgba(0,0,0,.09)"; this.style.transform="translateY(-2px)"; });
+    card.addEventListener("mouseleave", function(){ this.style.boxShadow="none"; this.style.transform=""; });
     if(viewId) card.addEventListener("click", function(){ nav(viewId); });
-    var val = txt("div", String(value), "font-size:28px;font-weight:700;color:"+(color||"var(--ink)")+";line-height:1;margin-bottom:5px;");
-    var lbl = txt("div", label, "font-size:12px;color:var(--muted);font-weight:500;");
-    card.appendChild(val); card.appendChild(lbl);
+    var val = txt("div", String(value), "font-size:32px;font-weight:800;color:"+(color||"var(--ink)")+";line-height:1;margin-bottom:4px;");
+    var lbl = txt("div", label, "font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px;");
+    var sublbl = txt("div", sub||"", "font-size:11px;color:var(--muted);line-height:1.4;");
+    card.appendChild(val); card.appendChild(lbl); card.appendChild(sublbl);
     return card;
   }
 
-  function capCard(icon, title, desc, btnLabel, viewId){
-    var card = div("background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 22px 18px;display:flex;flex-direction:column;gap:10px;transition:box-shadow .15s;");
-    card.addEventListener("mouseenter", function(){ this.style.boxShadow="0 4px 18px rgba(0,0,0,.07)"; });
-    card.addEventListener("mouseleave", function(){ this.style.boxShadow="none"; });
-    var iconWrap = div("width:38px;height:38px;background:var(--gold-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0;");
-    iconWrap.appendChild(svg(icon));
-    var titleEl = txt("div", title, "font-size:14px;font-weight:700;color:var(--ink);");
-    var descEl  = txt("div", desc,  "font-size:13px;color:var(--muted);line-height:1.5;flex:1;");
+  function workspaceCard(icon, iconExtra, title, desc, btnLabel, viewId){
+    var card = div("background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px 24px 22px;display:flex;flex-direction:column;gap:12px;transition:all .18s;position:relative;overflow:hidden;");
+    var shimmer = div("position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),transparent);opacity:0;transition:opacity .18s;");
+    card.appendChild(shimmer);
+    card.addEventListener("mouseenter", function(){ this.style.boxShadow="0 8px 28px rgba(0,0,0,.1)"; this.style.transform="translateY(-3px)"; shimmer.style.opacity="1"; });
+    card.addEventListener("mouseleave", function(){ this.style.boxShadow="none"; this.style.transform=""; shimmer.style.opacity="0"; });
+    var iconWrap = div("width:44px;height:44px;background:var(--gold-dim);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0;");
+    iconWrap.appendChild(svgEl(icon, "22", iconExtra));
+    var titleEl = txt("div", title, "font-size:15px;font-weight:700;color:var(--ink);");
+    var descEl  = txt("div", desc,  "font-size:13px;color:var(--muted);line-height:1.6;flex:1;");
     var btn = actionBtn(btnLabel, viewId, false);
-    btn.style.cssText += "align-self:flex-start;margin-top:4px;";
+    btn.style.cssText += "align-self:flex-start;margin-top:6px;font-size:12px;padding:8px 18px;";
     card.appendChild(iconWrap); card.appendChild(titleEl); card.appendChild(descEl); card.appendChild(btn);
     return card;
   }
 
-  function tipCard(text){
-    var c = div("background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--muted);line-height:1.5;");
-    var dot = txt("span", "· ", "color:var(--gold);font-weight:700;");
-    c.appendChild(dot); c.appendChild(document.createTextNode(text));
-    return c;
-  }
-
   function chip(label){
-    var c = txt("span", label, "display:inline-block;background:var(--gold-dim);color:var(--gold);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:3px;");
-    return c;
+    return txt("span", label, "display:inline-block;background:var(--gold-dim);color:var(--gold);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;margin:3px;");
   }
 
   function whatsNewItem(label, tag, tagColor){
-    var row = div("display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);");
-    var badge = txt("span", tag, "font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:"+(tagColor||"var(--gold-dim)")+";color:"+(tagColor==="var(--green)"?"var(--panel)":"var(--gold)")+";flex-shrink:0;text-transform:uppercase;letter-spacing:.4px;");
-    var lbl = txt("span", label, "font-size:13px;color:var(--ink);");
-    row.appendChild(badge); row.appendChild(lbl);
+    var row = div("display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);");
+    var badge = txt("span", tag, "font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:"+(tagColor||"var(--gold-dim)")+";color:var(--gold);flex-shrink:0;text-transform:uppercase;letter-spacing:.4px;");
+    if(tag==="UPDATE"){ badge.style.background="var(--panel2)"; badge.style.color="var(--muted)"; }
+    row.appendChild(badge);
+    row.appendChild(txt("span", label, "font-size:13px;color:var(--ink);"));
     return row;
   }
 
-  /* ════════════════════════════════════════════
-     BUILD THE PAGE
-  ════════════════════════════════════════════ */
-  var wrap = div("max-width:960px;margin:0 auto;padding:0 0 60px;");
+  /* ════════════════════════════════
+     PAGE
+  ════════════════════════════════ */
+  var wrap = div("max-width:980px;margin:0 auto;padding:0 0 60px;");
+
+  /* ── SIDEBAR BRANDING (header patch via CSS, done separately) ── */
 
   /* ── HERO ── */
-  var hero = div("background:linear-gradient(135deg,var(--gold-dim) 0%,var(--panel2) 100%);border:1px solid var(--line);border-radius:16px;padding:36px 40px;margin-bottom:24px;position:relative;overflow:hidden;");
-  var heroAccent = div("position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:var(--gold);opacity:.06;pointer-events:none;");
-  hero.appendChild(heroAccent);
-  var eyebrow = txt("div","WELCOME TO TALENTBASE","font-size:11px;font-weight:700;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:6px;");
-  var heroTitle = txt("h1","Recruitment Operating System","font-size:26px;font-weight:800;color:var(--ink);margin:0 0 10px;letter-spacing:-.3px;");
-  var heroSub = txt("p","Manage every stage of recruiting from sourcing through hire in one centralized platform designed for enterprise talent acquisition teams.","font-size:14px;color:var(--muted);line-height:1.6;margin:0 0 6px;max-width:560px;");
-  var heroTagline = txt("p","One platform. Every requisition. Every candidate. Every hire.","font-size:13px;color:var(--gold);font-weight:600;margin:0 0 24px;");
-  
-  /* Quick action buttons */
-  var qaRow = div("display:flex;gap:10px;flex-wrap:wrap;");
-  [
-    [VIEW_ONLY ? null : "+ New Candidate", "all"],
-    [VIEW_ONLY ? null : "+ New Requisition", "reqs"],
-    ["TalentBench", "talentbench"],
-    ["Dashboard", "dashboard"],
-  ].forEach(function(pair){
-    if(!pair[0]) return;
-    var isPrimary = pair[0].indexOf("+") === 0;
-    qaRow.appendChild(actionBtn(pair[0], pair[1], isPrimary));
-  });
+  var hero = div("background:linear-gradient(135deg,var(--gold-dim) 0%,#f0f4ff 100%);border:1px solid var(--line);border-radius:18px;padding:40px 44px;margin-bottom:26px;position:relative;overflow:hidden;display:flex;align-items:center;gap:40px;");
 
-  hero.appendChild(eyebrow); hero.appendChild(heroTitle); hero.appendChild(heroSub);
-  hero.appendChild(heroTagline); hero.appendChild(qaRow);
+  /* Left content */
+  var heroLeft = div("flex:1;min-width:0;position:relative;z-index:1;");
+  var eyebrow = txt("div","RECRUITMENT OPERATING SYSTEM","font-size:10px;font-weight:700;letter-spacing:2.5px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;");
+  var heroTitle = txt("h1","TalentBase centralizes sourcing, recruiting, interviewing, hiring, and recruiting analytics into one enterprise platform.","font-size:17px;font-weight:500;color:var(--ink);margin:0 0 14px;line-height:1.6;max-width:480px;");
+  var heroTagline = div("display:flex;flex-direction:column;gap:3px;margin-bottom:26px;");
+  ["One platform.","Every requisition.","Every candidate.","Every hire."].forEach(function(line){
+    heroTagline.appendChild(txt("div", line, "font-size:13px;color:var(--gold);font-weight:700;"));
+  });
+  var qaRow = div("display:flex;gap:10px;flex-wrap:wrap;");
+  [[VIEW_ONLY?null:"+ New Candidate","all"],[VIEW_ONLY?null:"+ New Requisition","reqs"],["TalentBench","talentbench"],["Dashboard","dashboard"]].forEach(function(pair){
+    if(!pair[0]) return;
+    qaRow.appendChild(actionBtn(pair[0], pair[1], pair[0].indexOf("+")===0));
+  });
+  heroLeft.appendChild(eyebrow); heroLeft.appendChild(heroTitle); heroLeft.appendChild(heroTagline); heroLeft.appendChild(qaRow);
+
+  /* Right: abstract illustration */
+  var heroRight = div("flex-shrink:0;width:220px;height:160px;position:relative;display:flex;align-items:center;justify-content:center;");
+  var ns = "http://www.w3.org/2000/svg";
+  var illustSvg = document.createElementNS(ns,"svg");
+  illustSvg.setAttribute("viewBox","0 0 220 160"); illustSvg.setAttribute("width","220"); illustSvg.setAttribute("height","160");
+  illustSvg.setAttribute("fill","none"); illustSvg.style.cssText = "opacity:.55;";
+  var illustHTML = [
+    ['circle',{cx:"110",cy:"80",r:"60",stroke:"var(--gold)",strokeWidth:"1","stroke-dasharray":"8 4",opacity:".3"}],
+    ['circle',{cx:"110",cy:"80",r:"40",stroke:"var(--gold)",strokeWidth:"1.5",opacity:".4"}],
+    ['circle',{cx:"110",cy:"80",r:"20",fill:"var(--gold)",opacity:".12"}],
+    ['circle',{cx:"110",cy:"80",r:"6",fill:"var(--gold)",opacity:".7"}],
+    ['circle',{cx:"56",cy:"46",r:"8",fill:"var(--gold)",opacity:".25"}],
+    ['circle',{cx:"164",cy:"46",r:"8",fill:"var(--gold)",opacity:".25"}],
+    ['circle',{cx:"56",cy:"114",r:"8",fill:"var(--gold)",opacity:".25"}],
+    ['circle',{cx:"164",cy:"114",r:"8",fill:"var(--gold)",opacity:".25"}],
+    ['line',{x1:"56",y1:"46",x2:"104",y2:"74",stroke:"var(--gold)",strokeWidth:"1",opacity:".3"}],
+    ['line',{x1:"164",y1:"46",x2:"116",y2:"74",stroke:"var(--gold)",strokeWidth:"1",opacity:".3"}],
+    ['line',{x1:"56",y1:"114",x2:"104",y2:"86",stroke:"var(--gold)",strokeWidth:"1",opacity:".3"}],
+    ['line',{x1:"164",y1:"114",x2:"116",y2:"86",stroke:"var(--gold)",strokeWidth:"1",opacity:".3"}],
+    ['rect',{x:"46",y:"38",width:"20",height:"16",rx:"4",fill:"none",stroke:"var(--gold)",strokeWidth:"1.2",opacity:".5"}],
+    ['rect',{x:"154",y:"38",width:"20",height:"16",rx:"4",fill:"none",stroke:"var(--gold)",strokeWidth:"1.2",opacity:".5"}],
+    ['rect',{x:"46",y:"106",width:"20",height:"16",rx:"4",fill:"none",stroke:"var(--gold)",strokeWidth:"1.2",opacity:".5"}],
+    ['rect',{x:"154",y:"106",width:"20",height:"16",rx:"4",fill:"none",stroke:"var(--gold)",strokeWidth:"1.2",opacity:".5"}],
+  ];
+  illustHTML.forEach(function(el2){
+    var node = document.createElementNS(ns, el2[0]);
+    Object.keys(el2[1]).forEach(function(k){ node.setAttribute(k===k.toLowerCase()?k:k.replace(/([A-Z])/g,'-$1').toLowerCase(), el2[1][k]); });
+    illustSvg.appendChild(node);
+  });
+  heroRight.appendChild(illustSvg);
+
+  hero.appendChild(heroLeft); hero.appendChild(heroRight);
   wrap.appendChild(hero);
 
   /* ── TODAY'S WORK ── */
   var todaySection = div("margin-bottom:28px;");
-  todaySection.appendChild(txt("h2","Today's Work","font-size:16px;font-weight:700;color:var(--ink);margin:0 0 14px;"));
-  var todayGrid = div("display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;");
+  todaySection.appendChild(txt("h2","Today's Work","font-size:15px;font-weight:700;color:var(--ink);margin:0 0 14px;letter-spacing:-.1px;"));
+  var todayGrid = div("display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;");
   [
-    [followUp.length,    "Follow-Up Due",     "followup",  "var(--red)"],
-    [offerP.length,      "Offers Pending",     "offerpending","var(--yellow)"],
-    [irsThisWeek.length, "Interviews This Week","calendar", "var(--gold)"],
-    [openReqs.length,    "Open Requisitions",  "reqs",      "var(--teal)"],
-    [cands.filter(function(c){ return c.status==="Submitted"; }).length, "Pending HM Review", "submitted", "var(--purple)"],
+    [followUp.length,    "Follow-Ups Due",       "Candidates needing action today",      "followup",     "var(--red)"],
+    [offerP.length,      "Offers Pending",        "Awaiting candidate acceptance",        "offerpending", "var(--yellow)"],
+    [irsThisWeek.length, "Interviews This Week",  "Scheduled interview requests",         "calendar",     "var(--gold)"],
+    [openReqs.length,    "Open Requisitions",     "Active hiring priorities",             "reqs",         "var(--teal)"],
+    [cands.filter(function(c){ return c.status==="Submitted"; }).length, "Pending HM Review", "Awaiting hiring manager feedback", "submitted", "var(--purple)"],
   ].forEach(function(args){ todayGrid.appendChild(kpiCard.apply(null, args)); });
   todaySection.appendChild(todayGrid);
   wrap.appendChild(todaySection);
 
-  /* ── CAPABILITY CARDS ── */
+  /* ── WORKSPACES ── */
   var capSection = div("margin-bottom:28px;");
-  capSection.appendChild(txt("h2","Platform Capabilities","font-size:16px;font-weight:700;color:var(--ink);margin:0 0 14px;"));
-  var capGrid = div("display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;");
-  [
-    ["M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2","Manage Requisitions","Manage active requisitions, priorities, and hiring manager alignment.","Open Reqs","reqs"],
-    ["M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0","Candidate Pipeline","Manage every candidate from first contact through hire.","Open Candidates","all"],
-    ["M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z","Sourcing Review","Review sourced candidates, accept or reject submissions, and track performance.","Open TalentBench","talentbench"],
-    ["M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z","Interview Workflow","Track interview requests, scheduling activity, and candidate progress.","Open Interviews","interviewrequests"],
-    ["M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z","Executive Dashboard","Monitor hiring activity, recruiter performance, and pipeline health.","Open Dashboard","dashboard"],
-    ["M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z","Hiring Managers","Access hiring manager profiles, contact info, and requisition ownership.","View Managers","managers"],
-  ].forEach(function(args){ capGrid.appendChild(capCard.apply(null, args)); });
+  capSection.appendChild(txt("h2","Workspaces","font-size:15px;font-weight:700;color:var(--ink);margin:0 0 14px;letter-spacing:-.1px;"));
+  var capGrid = div("display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;");
+  var cards = [
+    ["M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",null,"Manage Requisitions","Manage active requisitions, priorities, and hiring manager alignment.","Open Reqs","reqs"],
+    ["M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0",null,"Candidate Pipeline","Manage every candidate from first contact through hire.","Open Candidates","all"],
+    ["M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",null,isHiarc?"Opportunity Hires":"TalentBench Sourcing",isHiarc?"Review opportunity hire submissions and manage the sourcing pipeline.":"Review sourced candidates, accept or reject submissions, and track performance.",isHiarc?"Open Opportunities":"Open TalentBench",isHiarc?"opportunity":"talentbench"],
+    ["M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",null,"Interview Workflow","Track interview requests, scheduling activity, and candidate progress.","Open Interviews","interviewrequests"],
+    ["M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",null,"Executive Dashboard","Monitor hiring activity, recruiter performance, and pipeline health.","Open Dashboard","dashboard"],
+    ["M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z",null,"Hiring Managers","Access hiring manager profiles, contact info, and requisition ownership.","View Managers","managers"],
+  ];
+  cards.forEach(function(args){ capGrid.appendChild(workspaceCard.apply(null, args)); });
   capSection.appendChild(capGrid);
   wrap.appendChild(capSection);
 
-  /* ── KPIs ── */
+  /* ── RECRUITING SNAPSHOT ── */
   var kpiSection = div("margin-bottom:28px;");
-  kpiSection.appendChild(txt("h2","Recruiting Snapshot","font-size:16px;font-weight:700;color:var(--ink);margin:0 0 14px;"));
+  kpiSection.appendChild(txt("h2","Recruiting Snapshot","font-size:15px;font-weight:700;color:var(--ink);margin:0 0 14px;letter-spacing:-.1px;"));
   var kpiGrid = div("display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;");
-  var activeCands = cands.filter(function(c){ return c.status !== "Archived" && c.status !== "Offer Accepted - Hired"; });
-  var interviewing = cands.filter(function(c){ return ["Interviewing Stage 1","Interviewing Stage 2","Interviewing Stage 3","Panel / Final Interview","Interviewing"].indexOf(c.status) !== -1; });
-  [
-    [activeCands.length,   "Active Candidates",    "all",         "var(--ink)"],
-    [openReqs.length,      "Open Requisitions",    "reqs",        "var(--gold)"],
-    [interviewing.length,  "In Interviews",        "interviewing","var(--teal)"],
-    [offerP.length,        "Offers Pending",       "offerpending","var(--yellow)"],
-    [followUp.length,      "Follow-Up Overdue",    "followup",    "var(--red)"],
-    [irsThisWeek.length,   "Interviews This Week", "calendar",    "var(--gold)"],
-  ].forEach(function(args){ kpiGrid.appendChild(kpiCard.apply(null, args)); });
+  var activeCands = cands.filter(function(c){ return c.status!=="Archived"&&c.status!=="Offer Accepted - Hired"; });
+  var interviewing = cands.filter(function(c){ return ["Interviewing Stage 1","Interviewing Stage 2","Interviewing Stage 3","Panel / Final Interview","Interviewing"].indexOf(c.status)!==-1; });
+  [[activeCands.length,"Active Candidates","","all","var(--ink)"],[openReqs.length,"Open Requisitions","","reqs","var(--gold)"],[interviewing.length,"In Interviews","","interviewing","var(--teal)"],[offerP.length,"Offers Pending","","offerpending","var(--yellow)"],[followUp.length,"Follow-Up Overdue","","followup","var(--red)"],[irsThisWeek.length,"Interviews This Week","","calendar","var(--gold)"]].forEach(function(args){ kpiGrid.appendChild(kpiCard.apply(null, args)); });
   kpiSection.appendChild(kpiGrid);
   wrap.appendChild(kpiSection);
 
   /* ── PLATFORM HIGHLIGHTS ── */
   var hilightSection = div("margin-bottom:28px;");
-  hilightSection.appendChild(txt("h2","Platform Highlights","font-size:16px;font-weight:700;color:var(--ink);margin:0 0 12px;"));
+  hilightSection.appendChild(txt("h2","Platform Highlights","font-size:15px;font-weight:700;color:var(--ink);margin:0 0 12px;letter-spacing:-.1px;"));
   var chipWrap = div("display:flex;flex-wrap:wrap;gap:2px;");
-  ["Enterprise Recruiting","AI Resume Matching","TalentBench Sourcing","Hiring Manager Collaboration",
-   "Dayforce Integration","Interview Management","Offer Tracking","Real-Time Analytics",
-   "Follow-Up Intelligence","Multi-Org Support"].forEach(function(label){ chipWrap.appendChild(chip(label)); });
+  ["Enterprise Recruiting","AI Resume Matching","TalentBench Sourcing","Hiring Manager Collaboration","Dayforce Integration","Interview Management","Offer Tracking","Real-Time Analytics","Follow-Up Intelligence","Multi-Org Support"].forEach(function(l){ chipWrap.appendChild(chip(l)); });
   hilightSection.appendChild(chipWrap);
   wrap.appendChild(hilightSection);
 
-  /* ── WHAT'S NEW ── */
+  /* ── WHAT'S NEW + QUICK TIPS ── */
   var wnSection = div("margin-bottom:28px;display:grid;grid-template-columns:1fr 1fr;gap:20px;");
-  
-  var wnCard = div("background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;");
+  var wnCard = div("background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px;");
   wnCard.appendChild(txt("h3","What's New","font-size:14px;font-weight:700;color:var(--ink);margin:0 0 14px;"));
-  [
-    ["Open Requisitions consolidated — one unified work queue","NEW"],
-    ["Getting Started — redesigned home page","NEW"],
-    ["Light enterprise theme — premium visual refresh","NEW"],
-    ["HiARC and Elbit on shared design system","UPDATE"],
-    ["Forms Library removed — reduced load time","UPDATE"],
-  ].forEach(function(pair){ wnCard.appendChild(whatsNewItem(pair[0], pair[1], pair[1]==="NEW" ? "var(--gold-dim)" : "var(--panel2)")); });
-
-  var tipsCard = div("background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;");
+  [["Open Requisitions consolidated — one unified work queue","NEW"],["Getting Started — redesigned home page","NEW"],["Light enterprise theme — premium visual refresh","NEW"],["HiARC and Elbit on shared design system","UPDATE"],["Forms Library removed — reduced load time","UPDATE"]].forEach(function(pair){ wnCard.appendChild(whatsNewItem(pair[0],pair[1])); });
+  var tipsCard = div("background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px;");
   tipsCard.appendChild(txt("h3","Quick Tips","font-size:14px;font-weight:700;color:var(--ink);margin:0 0 14px;"));
   var tipsGrid = div("display:grid;grid-template-columns:1fr 1fr;gap:8px;");
-  ["Keep candidate status current","Log interview feedback immediately",
-   "Follow up on overdue candidates daily","Use TalentBench for sourcing reviews",
-   "Close filled requisitions promptly","Upload resumes before interviews",
-   "Keep hiring manager info up to date","Review the pipeline every morning"].forEach(function(tip){ tipsGrid.appendChild(tipCard(tip)); });
+  ["Keep candidate status current","Log interview feedback immediately","Follow up on overdue candidates daily","Use TalentBench for sourcing reviews","Close filled requisitions promptly","Upload resumes before interviews","Keep hiring manager info up to date","Review the pipeline every morning"].forEach(function(tip){
+    var c = div("background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:12px;color:var(--muted);line-height:1.5;");
+    var dot = document.createElement("span"); dot.textContent="· "; dot.style.cssText="color:var(--gold);font-weight:700;";
+    c.appendChild(dot); c.appendChild(document.createTextNode(tip));
+    tipsGrid.appendChild(c);
+  });
   tipsCard.appendChild(tipsGrid);
-
-  wnSection.appendChild(wnCard);
-  wnSection.appendChild(tipsCard);
+  wnSection.appendChild(wnCard); wnSection.appendChild(tipsCard);
   wrap.appendChild(wnSection);
 
   /* ── RESOURCES ── */
-  var resSection = div("background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:8px;");
+  var resSection = div("background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px;");
   resSection.appendChild(txt("h3","Resources","font-size:14px;font-weight:700;color:var(--ink);margin:0 0 14px;"));
-  var resGrid = div("display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;");
-  [
-    ["Training","Contact your administrator for a platform walkthrough or onboarding session."],
-    ["Support","Reach your TSS team lead for any technical issues or access problems."],
-    ["Release Notes","New features are released regularly. Check What's New above for the latest."],
-    ["Administrator","Contact Jonah Adelman · jonah@thestaffingspecialist.com · 603.401.2901"],
-  ].forEach(function(pair){
-    var c = div("background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px;");
-    c.appendChild(txt("div", pair[0], "font-size:13px;font-weight:700;color:var(--ink);margin-bottom:5px;"));
-    c.appendChild(txt("div", pair[1], "font-size:12px;color:var(--muted);line-height:1.5;"));
+  var resGrid = div("display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;");
+  [["Release Notes","New features are released regularly. Check What's New above for the latest."],["Support","Reach your TSS team lead for any technical issues or access problems."],["Training","Contact your administrator for a platform walkthrough or onboarding session."],["Contact Administrator","Jonah Adelman · jonah@thestaffingspecialist.com · 603.401.2901"]].forEach(function(pair){
+    var c = div("background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:16px;transition:box-shadow .15s;cursor:default;");
+    c.addEventListener("mouseenter",function(){ this.style.boxShadow="0 2px 10px rgba(0,0,0,.06)"; });
+    c.addEventListener("mouseleave",function(){ this.style.boxShadow="none"; });
+    c.appendChild(txt("div",pair[0],"font-size:13px;font-weight:700;color:var(--ink);margin-bottom:6px;"));
+    c.appendChild(txt("div",pair[1],"font-size:12px;color:var(--muted);line-height:1.5;"));
     resGrid.appendChild(c);
   });
   resSection.appendChild(resGrid);
