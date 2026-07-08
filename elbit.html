@@ -902,273 +902,237 @@ async function deleteProgramNote(id){
 function renderBoard(host){ BOARD.render(host); }
 
 function renderGuide(host){
-  document.getElementById("viewMeta").textContent = "How to use this tracker";
-  var roleSections = [];
-  var activeRole = VIEW_ONLY ? "view" : "edit";
+  document.getElementById("viewMeta").textContent = "";
 
-  function kick(t){ var e = el("div", null, t); e.style.cssText = "font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-top:20px"; return e; }
-  function h2(t){ var e = el("h2", null, t); e.style.cssText = "font-size:18px;font-weight:700;color:var(--ink);margin:0 0 8px;letter-spacing:-.2px"; return e; }
-  function h3(t){ var e = el("h3", null, t); e.style.cssText = "font-size:14px;font-weight:700;color:var(--ink);margin:16px 0 6px;padding-bottom:5px;border-bottom:1px solid var(--line)"; return e; }
-  function p(t){ var e = el("div", null, t); e.style.cssText = "margin:8px 0;color:var(--ink);font-size:13.5px;line-height:1.6"; return e; }
-  function muted(t){ var e = el("div", null, t); e.style.cssText = "margin:6px 0;color:var(--muted);font-size:13px;line-height:1.6"; return e; }
-  function card(){ var e = el("div"); e.style.cssText = "border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;background:var(--panel);padding:18px 20px;margin:12px 0;box-shadow:0 1px 4px rgba(0,0,0,.04)"; return e; }
-  function tip(t){ var e = el("div", null, t); e.style.cssText = "border-left:3px solid var(--gold);background:var(--gold-dim);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0;font-size:13px;color:var(--ink)"; return e; }
-  function badge(txt, bg, fg, bd){ var e = el("span", null, txt); e.style.cssText = "display:inline-block;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:" + bg + ";color:" + fg + ";border:1px solid " + bd + ";margin-left:7px;vertical-align:middle"; return e; }
-  function bView(){ return badge("View Only", "var(--gold-dim)", cssVar("--gold"), "var(--gold)"); }
-  function bEdit(){ return badge("Editor", "#dcfce7", "#166534", "#bbf7d0"); }
-  function bBoth(t){ return badge(t || "Everyone", "#e0f2fe", "#0369a1", "#bae6fd"); }
-  function ulist(items){ var u = el("ul"); u.style.cssText = "margin:8px 0;padding-left:20px;font-size:13.5px;line-height:1.6"; items.forEach(function(it){ var li = el("li", null, it); li.style.margin = "5px 0"; u.appendChild(li); }); return u; }
-  function tbl(headers, rows){
-    var t = el("table"); t.style.cssText = "width:100%;border-collapse:collapse;margin:10px 0;font-size:13px";
-    var thead = el("thead"); var htr = el("tr");
-    headers.forEach(function(h){ var th = el("th", null, h); th.style.cssText = "text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);color:var(--muted);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;font-weight:700"; htr.appendChild(th); });
-    thead.appendChild(htr); t.appendChild(thead);
-    var tb = el("tbody");
-    rows.forEach(function(r){ var tr = el("tr"); r.forEach(function(cell, ci){ var td = el("td", null, cell); td.style.cssText = "padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink)"; if(ci === 0){ td.style.fontWeight = "700"; td.style.whiteSpace = "nowrap"; } tr.appendChild(td); }); tb.appendChild(tr); });
-    t.appendChild(tb); return t;
+  function nav(viewId){
+    ui.view = viewId;
+    refresh();
   }
-  function colorPill(text, varname){ var pl = el("span", null, text); pl.style.cssText = "display:inline-block;border-radius:20px;padding:2px 11px;font-size:12px;font-weight:700;margin:3px 6px 3px 0;color:#ffffff;background:" + cssVar(varname); return pl; }
-  function block(role){ var d = el("div"); d.setAttribute("data-grole", role); roleSections.push(d); return d; }
 
-  var intro = p("A short walkthrough of what you are looking at, and what you can do once you are in. Use the buttons below to filter this guide to your role.");
-  host.appendChild(intro);
-  var who = muted("Your role shows at the top right of the tracker as (viewer) or (editor). Viewers also see a gold View Only badge. Your role is set by the admin.");
-  host.appendChild(who);
-
-  var bar = el("div"); bar.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 6px";
-  var toggles = [["all","Everyone"],["view","Viewer"],["edit","Editor"]];
-  var btns = {};
-  toggles.forEach(function(pair){
-    var b = el("button","btn sm", pair[1]); b.setAttribute("data-grbtn", pair[0]); btns[pair[0]] = b;
-    b.addEventListener("click", function(){ applyRole(pair[0]); });
-    bar.appendChild(b);
+  /* ── live data ── */
+  var cands       = state.candidates || [];
+  var irs         = state.interviewRequests || [];
+  var openReqs    = REQS.filter(function(r){ return !r.bench; });
+  var followUp    = cands.filter(function(c){ return followUp ? false : false; }); // use existing helper below
+  try { followUp  = cands.filter(function(c){ var f=window.followUp?window.followUp(c):null; return f && f.label; }); } catch(e){}
+  var offerP      = cands.filter(function(c){ return c.status === "Offer Pending"; });
+  var irsThisWeek = irs.filter(function(ir){
+    if(!ir.interviewDate) return false;
+    var d = new Date(ir.interviewDate), now = new Date();
+    var startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - now.getDay());
+    var endOfWeek   = new Date(startOfWeek); endOfWeek.setDate(startOfWeek.getDate() + 7);
+    return d >= startOfWeek && d <= endOfWeek;
   });
-  host.appendChild(bar);
+  var tbCands     = cands.filter(function(c){ return c.status !== "Archived" && c.status !== "Offer Accepted - Hired"; });
+  var userName    = (CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email.split("@")[0].split(/[._-]+/).map(function(w){ return w.charAt(0).toUpperCase()+w.slice(1); }).join(" ") : "there";
 
-  function applyRole(role){
-    activeRole = role;
-    roleSections.forEach(function(s){ var r = s.getAttribute("data-grole"); var show = (role === "all") || (r === "all") || (r === role); s.style.display = show ? "" : "none"; });
-    Object.keys(btns).forEach(function(k){ var on = (k === role); btns[k].className = "btn sm" + (on ? " gold" : ""); });
+  /* ── style helpers ── */
+  function s(el_, css){ el_.style.cssText = css; return el_; }
+  function div(css, cls){ var e = document.createElement("div"); if(cls) e.className = cls; if(css) e.style.cssText = css; return e; }
+  function txt(tag, text, css){ var e = document.createElement(tag); e.textContent = text; if(css) e.style.cssText = css; return e; }
+  function svg(path, size){ 
+    var ns = "http://www.w3.org/2000/svg";
+    var v = document.createElementNS(ns,"svg"); 
+    v.setAttribute("viewBox","0 0 24 24"); v.setAttribute("fill","none");
+    v.setAttribute("width", size||"22"); v.setAttribute("height", size||"22");
+    v.setAttribute("stroke","currentColor"); v.setAttribute("stroke-width","1.8");
+    v.setAttribute("stroke-linecap","round"); v.setAttribute("stroke-linejoin","round");
+    var p = document.createElementNS(ns,"path"); p.setAttribute("d", path); v.appendChild(p); 
+    return v; 
   }
 
-  var s1 = block("all");
-  s1.appendChild(kick("Step 1"));
-  s1.appendChild(h2("Getting in"));
-  s1.appendChild(p("Sign in with your work email and password. Your access level is tied to your account, so you do not pick a role at login."));
-  s1.appendChild(ulist([
-    "Viewer: you can see everything and read, but the tools that change data are hidden for you.",
-    "Editor: you have the full toolbar and can add, change, and remove records."
-  ]));
-  s1.appendChild(p("The tracker opens straight to the Priority List so you land on the active, ranked roles first. Sign Out is at the top right."));
-  host.appendChild(s1);
+  /* ── reusable components ── */
+  function actionBtn(label, viewId, isPrimary){
+    var b = document.createElement("button");
+    b.textContent = label;
+    b.style.cssText = isPrimary
+      ? "background:var(--gold);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap;"
+      : "background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap;";
+    b.addEventListener("click", function(){ nav(viewId); });
+    b.addEventListener("mouseenter", function(){ this.style.opacity=".85"; });
+    b.addEventListener("mouseleave", function(){ this.style.opacity="1"; });
+    return b;
+  }
 
-  var s2 = block("all");
-  s2.appendChild(kick("Orientation"));
-  s2.appendChild(h2("The screen, top to bottom"));
-  var c1 = card(); c1.appendChild(h3("Top bar")); c1.appendChild(p("Product name on the left, a search box in the middle, action buttons, and your account with Sign Out on the right. Editors see the full button set. Viewers see only Export.")); s2.appendChild(c1);
-  var c2 = card(); c2.appendChild(h3("Left sidebar")); c2.appendChild(p("The views are grouped into sections so the pipeline reads top to bottom. Action sits at the top (Follow Up Due, which turns amber when something is due and red when anything is overdue), then Pipeline (Submitted through Offer Accepted), then Sourcing and Review, Reqs, People and Reference, and a collapsed Closed group at the bottom for rejected and archived records. Click the Closed heading to open or close it. Filters below the views narrow whatever view you are in by Status, Discipline, Target Req, Recruiter, and Priority.")); s2.appendChild(c2);
-  var c3 = card(); c3.appendChild(h3("Main panel")); c3.appendChild(p("The big area on the right. The title tells you which view you are in, and the small grey text next to it is a live count.")); s2.appendChild(c3);
-  host.appendChild(s2);
+  function kpiCard(value, label, viewId, color){
+    var card = div("background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;cursor:pointer;transition:box-shadow .15s;min-width:0;");
+    card.addEventListener("mouseenter", function(){ this.style.boxShadow="0 4px 14px rgba(0,0,0,.08)"; });
+    card.addEventListener("mouseleave", function(){ this.style.boxShadow="none"; });
+    if(viewId) card.addEventListener("click", function(){ nav(viewId); });
+    var val = txt("div", String(value), "font-size:28px;font-weight:700;color:"+(color||"var(--ink)")+";line-height:1;margin-bottom:5px;");
+    var lbl = txt("div", label, "font-size:12px;color:var(--muted);font-weight:500;");
+    card.appendChild(val); card.appendChild(lbl);
+    return card;
+  }
 
-  var s3 = block("all");
-  s3.appendChild(kick("The sidebar"));
-  s3.appendChild(h2("What each view shows you"));
-  s3.appendChild(tbl(["View","What you are looking at"], [
-    ["All Candidates","Every active candidate in the pipeline."],
-    ["Follow Up Due","Anyone with a follow up that is upcoming, due today, or overdue. Pinned near the top; the row and its count turn amber when items are due and red when anything is overdue."],
-    ["\u2630 Hiring Pipeline","A live snapshot of where every active candidate stands by stage: a funnel strip across the stages, then a column per stage with cards you can open. New is tracked but not shown as a column; the footer carries the New, on hold, rejected, and archived counts."],
-    ["\u25A6 Dashboard","Reporting overview from live data: funnel counts, a conversion snapshot, coverage by req with thin roles flagged, candidates and submissions by recruiter, and activity volume. Time in stage and turnaround metrics turn on once stage_history is recording."],
-    ["Submitted to HM","Candidates you have submitted to a hiring manager (anyone at Submitted status)."],
-    ["Interview Requests","The structured log of interview rounds requested by hiring managers. Use this instead of tracking interview asks in candidate notes."],
-    ["Currently Interviewing","Candidates currently interviewing (anyone at Interviewing status)."],
-    ["Offer Pending","Candidates with an offer extended and a decision still pending (anyone at Offer Pending status)."],
-    ["Offer Accepted - Hired","Candidates who accepted and are hired (anyone at Offer Accepted - Hired status)."],
-    ["\u2605 Auto-Fit Board","Candidates auto-scored against every open req. Only Moderate or better fits appear; no fit, no board. Click a card to open the record."],
-    ["Resume Check","Lists every active candidate. Flags any with no resume attached (Missing) and any whose attached file name does not contain the candidate name (Check)."],
-    ["\u2605 TalentBench","Your best recruiter just got a team. A lightweight sourcing board for partner recruiters. Add sourcing reqs, attach candidates, and hand off to your recruiting partner to take it from there."],
-    ["\u2605 Dayforce Badged","Candidates who confirmed they applied on the company careers site (Dayforce); they show a green star next to their name."],
-    ["Open Reqs","Open requisitions, listed in the same order as the Priority List."],
-    ["By Req","Candidates grouped under the requisition they are tagged to."],
-    ["By Discipline","Grouped by job family."],
-    ["\u2605 Priority List","The ranked roles with program notes on top. Your home screen."],
-    ["Hiring Managers","An editable directory of hiring managers. Add, edit, or delete entries, and one-click add any manager who is on a req but not yet in the directory."],
-    ["Document Library","Job descriptions, screening forms, and reference documents."],
-    ["TA Rejected","Candidates you screened out before they reached a hiring manager."],
-    ["HM Rejected","Candidates a hiring manager passed on. Worth reviewing for calibration."],
-    ["Archive","Candidates archived out of the active pipeline."]
-  ]));
-  host.appendChild(s3); var sB = block("all"); sB.appendChild(kick("Matching")); sB.appendChild(h2("\u2605 Auto-Fit Board")); sB.appendChild(p("When a candidate is added, their resume is automatically scored against every open requisition. Each candidate lands in the column for their best fit across all reqs.")); sB.appendChild(tbl(["Column","What it means"], [ ["Strong","Best-fit req is a strong match on function, location, seniority, and program signals."], ["Moderate","A solid fit with one or two gaps, often location, level, or domain."], ["Stretch","A long shot worth a look, usually a domain or seniority stretch."] ])); sB.appendChild(p("The score uses function (engineering vs program management), location and relocation, seniority alignment, and program signals such as M109 Paladin, ground vehicle, artillery and cannon, Army C2 and BMS, and live-fire testing.")); sB.appendChild(tip("No fit, no board. A candidate whose best fit across all open reqs is below Stretch does not appear on the board. They stay in the database under All Candidates and appear automatically if a matching req is added later.")); sB.appendChild(muted("Click any card to open that candidate record. The board recalculates whenever candidates or reqs change.")); host.appendChild(sB); 
+  function capCard(icon, title, desc, btnLabel, viewId){
+    var card = div("background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 22px 18px;display:flex;flex-direction:column;gap:10px;transition:box-shadow .15s;");
+    card.addEventListener("mouseenter", function(){ this.style.boxShadow="0 4px 18px rgba(0,0,0,.07)"; });
+    card.addEventListener("mouseleave", function(){ this.style.boxShadow="none"; });
+    var iconWrap = div("width:38px;height:38px;background:var(--gold-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0;");
+    iconWrap.appendChild(svg(icon));
+    var titleEl = txt("div", title, "font-size:14px;font-weight:700;color:var(--ink);");
+    var descEl  = txt("div", desc,  "font-size:13px;color:var(--muted);line-height:1.5;flex:1;");
+    var btn = actionBtn(btnLabel, viewId, false);
+    btn.style.cssText += "align-self:flex-start;margin-top:4px;";
+    card.appendChild(iconWrap); card.appendChild(titleEl); card.appendChild(descEl); card.appendChild(btn);
+    return card;
+  }
 
-  var s4 = block("all");
-  s4.appendChild(kick("How to read it"));
-  s4.appendChild(h2("Reading the main tables"));
-  s4.appendChild(h3("Priority List (your home screen)"));
-  s4.appendChild(p("Roles sorted by Rank, most important first."));
-  s4.appendChild(tbl(["Column","Meaning"], [
-    ["Rank","The priority order, shown as a gold number."],
-    ["Priority","High, Medium, or Low."],
-    ["Status","Where the req stands."],
-    ["Req ID","The job ID, or a note like Need HRBP Approval."],
-    ["Role / Title","The advertised role and the official internal title."],
-    ["Location","Site or sites for the role."],
-    ["Hiring Manager","Who owns the req."],
-    ["Tagged","How many candidates are currently linked to this req."],
-    ["Desired Start / Contingent","Target start and whether the role depends on a contract award."]
-  ]));
-  s4.appendChild(muted("Click any row to open the full requisition detail."));
-  s4.appendChild(h3("Candidate lists"));
-  s4.appendChild(p("Each row shows name (a gold star means Opportunity Hire), title and company, discipline, status, tagged reqs, follow up state, and the recruiter who owns them. Click a row to open the full profile."));
-  var fu = tip("The Follow Up column is color coded:");
-  fu.appendChild(el("div")); fu.appendChild(colorPill("Upcoming","--green")); fu.appendChild(colorPill("Due Today","--yellow")); var od = colorPill("Overdue","--red"); od.style.color = "#fff"; fu.appendChild(od);
-  s4.appendChild(fu);
-  host.appendChild(s4);
+  function tipCard(text){
+    var c = div("background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--muted);line-height:1.5;");
+    var dot = txt("span", "· ", "color:var(--gold);font-weight:700;");
+    c.appendChild(dot); c.appendChild(document.createTextNode(text));
+    return c;
+  }
 
-  var sIR = block("all");
-  sIR.appendChild(kick("Interviews and offers"));
-  sIR.appendChild(h2("Interview Requests and the offer stages"));
-  sIR.appendChild(p("When a hiring manager asks to interview someone, log it in the Interview Requests view instead of burying it in candidate notes. Each entry is one interview round, so a first round and an onsite are two separate entries."));
-  sIR.appendChild(p("Open the Interview Requests view from the sidebar to see every requested round in one table: the candidate, the requesting hiring manager, the role or req, the format (Teams, Onsite, or Phone), the panel for onsites, the length in minutes, whether a presentation is required and its topic, and the date and time."));
-  sIR.appendChild(h3("Moving a candidate through interviews and offers"));
-  sIR.appendChild(p("As things progress, move the candidate status forward so the pipeline views stay accurate:"));
-  sIR.appendChild(ulist([
-    "Interview stages: move the candidate through TA Interview, then Interviewing Stage 1, 2, and 3, and Panel / Final Interview as the rounds progress. Every interview stage shows under Currently Interviewing.",
-    "Offer Pending: an offer is out and you are waiting on a decision. They show under Offer Pending.",
-    "Offer Accepted - Hired: the candidate accepted and is hired. They show under Offer Accepted - Hired."
-  ]));
-  sIR.appendChild(muted("Offer Pending shows in gold and Offer Accepted - Hired in green, so the late stage candidates are easy to pick out."));
-  sIR.appendChild(h3("Dayforce: confirm the candidate applied"));
-  sIR.appendChild(p("Once a hiring manager requests an interview, the candidate must formally apply to that role on the company careers site (Dayforce). When they confirm they have applied, open their profile and check Applied to Dayforce, and a green star appears next to their name in every list."));
-  sIR.appendChild(p("If you see someone under Currently Interviewing without the green star, call them right away and have them apply on the careers site, then check the box. The Dayforce Badged view in the sidebar lists everyone who has confirmed, so you can spot who is still missing it at a glance."));
-  host.appendChild(sIR);
+  function chip(label){
+    var c = txt("span", label, "display:inline-block;background:var(--gold-dim);color:var(--gold);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin:3px;");
+    return c;
+  }
 
-  var s5 = block("all");
-  s5.appendChild(kick("Collaboration"));
-  s5.appendChild(h2("Program Notes and Team Notes"));
-  s5.appendChild(p("At the top of the Priority List there is an expandable panel. Click the gold heading to open or close it. It has two parts."));
-  var pn = card(); var pnh = h3("Program Notes"); pnh.appendChild(bBoth("Read")); pn.appendChild(pnh);
-  pn.appendChild(p("The standing ground rules for the program: where to send resumes for each role type, location preferences, and meeting cadence. Read it first so you work the roles the way the client expects.")); s5.appendChild(pn);
-  var tn = card(); var tnh = h3("Team Notes"); tnh.appendChild(bBoth("Everyone can post")); tn.appendChild(tnh);
-  tn.appendChild(p("The running conversation for the group. It is the place to leave a note for the team and to answer one. Both viewers and editors can post here."));
-  tn.appendChild(ulist([
-    "Type in the box at the bottom and click Post note, or press Cmd or Ctrl plus Enter.",
-    "Each note shows who posted it and when. If you change one, it gets marked edited.",
-    "You can edit or delete your own notes. You cannot change someone else's."
-  ]));
-  s5.appendChild(tn);
-  host.appendChild(s5);
+  function whatsNewItem(label, tag, tagColor){
+    var row = div("display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);");
+    var badge = txt("span", tag, "font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:"+(tagColor||"var(--gold-dim)")+";color:"+(tagColor==="var(--green)"?"var(--panel)":"var(--gold)")+";flex-shrink:0;text-transform:uppercase;letter-spacing:.4px;");
+    var lbl = txt("span", label, "font-size:13px;color:var(--ink);");
+    row.appendChild(badge); row.appendChild(lbl);
+    return row;
+  }
 
-  var s6 = block("all");
-  s6.appendChild(kick("Documents"));
-  s6.appendChild(h2("Document Library"));
-  s6.appendChild(p("Open the Document Library view. It has two sections."));
-  var l1 = card(); l1.appendChild(h3("Job Descriptions")); l1.appendChild(p("The shared store of JDs. Each one has View to open it in a new tab and Download to save it. Use Upload Job Description to add one (PDF, Word, txt, or rtf).")); s6.appendChild(l1); var lS = card(); lS.appendChild(h3("Executive Search Strategy")); lS.appendChild(p("Role-by-role search strategy documents, separate from the JDs. Use Upload Strategy to add one per role (PDF preferred). Each has View and Download.")); s6.appendChild(lS);
-  var l2 = card(); l2.appendChild(h3("Forms and Reference Documents"));
-  l2.appendChild(ulist([
-    "Screening and hiring forms: click Open and Print to fill them on screen and print or save as PDF.",
-    "Reference PDFs such as the hiring process overview and the 2026 benefits documents: click View to read or download."
-  ]));
-  s6.appendChild(l2);
-  s6.appendChild(tip("If a document does not open, allow pop ups for the site. Documents open in a new tab."));
-  host.appendChild(s6);
+  /* ════════════════════════════════════════════
+     BUILD THE PAGE
+  ════════════════════════════════════════════ */
+  var wrap = div("max-width:960px;margin:0 auto;padding:0 0 60px;");
 
-  var s7 = block("view");
-  s7.appendChild(kick("Your role"));
-  var vh = h2("What you can do as a Viewer"); vh.appendChild(bView()); s7.appendChild(vh);
-  s7.appendChild(p("You have full read access to the whole pipeline. Nothing you do can change a candidate or a req, so you can click around freely."));
-  s7.appendChild(ulist([
-    "Browse every view and use the search box and filters.",
-    "Open any candidate to read the full profile, activity history, and resume.",
-    "Open and print the screening and hiring forms.",
-    "View and download anything in the Document Library.",
-    "Read Program Notes and take part in Team Notes: post, answer, and edit or delete your own.",
-    "Use Export to pull the pipeline to a spreadsheet."
-  ]));
-  s7.appendChild(muted("The buttons for adding and editing records are hidden for you on purpose. If you need a change made, post it in Team Notes or ask an editor."));
-  host.appendChild(s7);
+  /* ── HERO ── */
+  var hero = div("background:linear-gradient(135deg,var(--gold-dim) 0%,var(--panel2) 100%);border:1px solid var(--line);border-radius:16px;padding:36px 40px;margin-bottom:24px;position:relative;overflow:hidden;");
+  var heroAccent = div("position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:var(--gold);opacity:.06;pointer-events:none;");
+  hero.appendChild(heroAccent);
+  var eyebrow = txt("div","WELCOME TO TALENTBASE","font-size:11px;font-weight:700;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:6px;");
+  var heroTitle = txt("h1","Recruitment Operating System","font-size:26px;font-weight:800;color:var(--ink);margin:0 0 10px;letter-spacing:-.3px;");
+  var heroSub = txt("p","Manage every stage of recruiting from sourcing through hire in one centralized platform designed for enterprise talent acquisition teams.","font-size:14px;color:var(--muted);line-height:1.6;margin:0 0 6px;max-width:560px;");
+  var heroTagline = txt("p","One platform. Every requisition. Every candidate. Every hire.","font-size:13px;color:var(--gold);font-weight:600;margin:0 0 24px;");
+  
+  /* Quick action buttons */
+  var qaRow = div("display:flex;gap:10px;flex-wrap:wrap;");
+  [
+    [VIEW_ONLY ? null : "+ New Candidate", "all"],
+    [VIEW_ONLY ? null : "+ New Requisition", "reqs"],
+    ["TalentBench", "talentbench"],
+    ["Dashboard", "dashboard"],
+  ].forEach(function(pair){
+    if(!pair[0]) return;
+    var isPrimary = pair[0].indexOf("+") === 0;
+    qaRow.appendChild(actionBtn(pair[0], pair[1], isPrimary));
+  });
 
-  var s8 = block("edit");
-  s8.appendChild(kick("Your role"));
-  var eh = h2("What you can do as an Editor"); eh.appendChild(bEdit()); s8.appendChild(eh);
-  s8.appendChild(p("You can do everything a viewer can, plus everything below."));
-  s8.appendChild(h3("Add a candidate"));
-  s8.appendChild(ulist([
-    "Click + Candidate in the top bar.",
-    "Fill in the fields. Uploading a resume file auto fills resume text, email, and phone where it can.",
-    "Tag one or more Target Reqs with the checkboxes so the candidate shows against the right roles.",
-    "Set Status, Priority, Recruiter Owner, and a Next Follow Up date, then click Create."
-  ]));
-  s8.appendChild(h3("Attaching resumes vs adding people"));
-  s8.appendChild(p("Two buttons touch resumes and they do opposite things. Pick the right one or you will create duplicate records."));
-  s8.appendChild(ulist([
-    "Bulk Upload Resumes (gold button at the top of the Resume Check view): use this when the people are already in the tracker and just need their resume files. Select all the files at once. The tracker uploads each, matches it to the candidate whose name is in the filename, and shows a review screen with the matches preselected. Fix any match in the dropdown, then Attach selected resumes. The file lands on the existing record and no new candidate is created.",
-    "Bulk Add (top bar): this creates brand new candidate records, it does not attach resumes to people who already exist. The paste box turns lines of text into new candidates. The drag resume files here zone makes one new record per file from the filename. Dropping resumes for people already in the tracker here will create duplicates.",
-    "From Resume (top bar): for one-off adds. Drop a single PDF or Word resume, or click to browse. The tracker reads the file content, creates a new candidate, and pre-fills name, email, phone, location, LinkedIn, and resume text. Review the fields and click Create. Unlike Bulk Add, it reads the resume content, not just the filename."
-  ]));
-  s8.appendChild(tip("Rule of thumb: person is already in the tracker and just missing a file, use Bulk Upload Resumes in Resume Check. Loading brand new people in volume, use Bulk Add."));
-  s8.appendChild(h3("Edit a candidate and log activity"));
-  s8.appendChild(p("Open any candidate, change the fields, then Save. In the same window you can Log Activity (call, email, interview, status change, plus HM, Candidate, and TA Interview Feedback) with a date and note. You can also Delete a candidate from the bottom left."));
-  s8.appendChild(h3("Submit a candidate to a hiring manager"));
-  s8.appendChild(p("Open the candidate and click Submit to HM, or use the Submit button on a req row in Open Reqs."));
-  s8.appendChild(h3("Log an interview request"));
-  s8.appendChild(p("Open the Interview Requests view and click + Add Interview Request. Pick the candidate, the requesting hiring manager, and the role from the dropdowns, then set the format, length, panel members, date and time, and the presentation topic if one is required. Save it, and add one entry per round. Use Edit to update a round and Delete to remove one."));
-  s8.appendChild(h3("Manage requisitions"));
-  s8.appendChild(p("In Open Reqs or Priority List, use Add Req to create one, or Edit on a row to change its rank, priority, status, hiring manager, comp target, and JD. Setting the Rank is what moves a role up or down the Priority List. Delete removes a req."));
-  s8.appendChild(h3("Bring data in and out"));
-  s8.appendChild(ulist([
-    "Import CSV and Bulk Add to load new candidates in volume. Bulk Add creates new records, it does not attach resumes to existing people.",
-    "Bulk Upload Resumes (in Resume Check) attaches resume files to people already in the tracker. See the section above.",
-    "Dayforce CSV for the Dayforce specific format.",
-    "Export to pull everything back out to a spreadsheet."
-  ]));
-  s8.appendChild(h3("Document Library"));
-  s8.appendChild(p("Upload new job descriptions, and remove outdated ones with Delete. Deletes cannot be undone, so it asks you to confirm first."));
-  s8.appendChild(h3("Naming new documents"));
-  s8.appendChild(p("When you upload a new document, name it with the convention below so the library stays sortable and easy to scan. Leave existing files as they are, this is for new uploads only."));
-  s8.appendChild(ulist([
-    "Job descriptions: JD_MTC_[Discipline]_[Level]_[Specialty]_ESA[ReqNumber]_YYYYMMDD_v01. Discipline is SE, SWE, PM, or CE.",
-    "Search strategies: STRAT_MTC_[RoleFamily]_YYYYMMDD_v01.",
-    "Templates: TPL_Elbit_[UseCase]_v01. SOPs: SOP_Elbit_HiArc_[Topic]_v01. Trackers: TRK_MTC_[Topic]_v01.",
-    "Every file: no spaces, underscores between words, dates written as YYYYMMDD, and a v01 version tag at the end."
-  ]));
-  s8.appendChild(tip("Example: a Staff Systems Engineer JD for req ESA336 becomes JD_MTC_SE_Staff_ESA336_20260614_v01.pdf."));
-  s8.appendChild(tip("Anything you save is shared with the whole team in real time. Deletes are permanent, so double check first."));
-  host.appendChild(s8);
+  hero.appendChild(eyebrow); hero.appendChild(heroTitle); hero.appendChild(heroSub);
+  hero.appendChild(heroTagline); hero.appendChild(qaRow);
+  wrap.appendChild(hero);
 
-  var sSC = block("all");
-  sSC.appendChild(kick("Interviews"));
-  sSC.appendChild(h2("Interview Scorecard"));
-  sSC.appendChild(p("The Interview Scorecard lets any panel member record structured feedback on a candidate directly inside the tracker. It saves to the candidate activity history as a Panel Interview Scorecard entry so the whole team can see the feedback without a separate form."));
-  sSC.appendChild(p("To open it: open any existing candidate profile, then click Interview Scorecard at the bottom of the right panel. The button is not available on unsaved records."));
-  var scCard = card(); scCard.appendChild(h3("How it works"));
-  scCard.appendChild(ulist([
-    "1. Role and interviewer: pick the req being evaluated from the live req list and enter the interviewer name. The role drives which rubric loads automatically.",
-    "2. Hard gates: pass / fail checkboxes for the must-have requirements of that role family. Examples: US citizenship, active Secret clearance, GCV program experience. Any failing gate is flagged and carries through to the recommendation.",
-    "3. Competency scores: rate each competency 1 to 5. The rubric is tuned to the role family: PM, Systems Engineering, Software Engineering, or Configuration.",
-    "4. Bottom line: overall recommendation (Strong, Stretch, On Hold, or No Match), a summary comment, an optional date, and an optional Notify HM checkbox."
-  ]));
-  sSC.appendChild(scCard);
-  sSC.appendChild(p("Drafts auto-save as you fill them out. Save Scorecard posts the completed form as an activity on the candidate. Cancel discards the draft."));
-  sSC.appendChild(muted("Viewers and editors both have access to the scorecard button. The save writes to the candidate activity stream using the same open-to-any-org-member path as Team Notes."));
-  host.appendChild(sSC);
+  /* ── TODAY'S WORK ── */
+  var todaySection = div("margin-bottom:28px;");
+  todaySection.appendChild(txt("h2","Today's Work","font-size:16px;font-weight:700;color:var(--ink);margin:0 0 14px;"));
+  var todayGrid = div("display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;");
+  [
+    [followUp.length,    "Follow-Up Due",     "followup",  "var(--red)"],
+    [offerP.length,      "Offers Pending",     "offerpending","var(--yellow)"],
+    [irsThisWeek.length, "Interviews This Week","calendar", "var(--gold)"],
+    [openReqs.length,    "Open Requisitions",  "reqs",      "var(--teal)"],
+    [cands.filter(function(c){ return c.status==="Submitted"; }).length, "Pending HM Review", "submitted", "var(--purple)"],
+  ].forEach(function(args){ todayGrid.appendChild(kpiCard.apply(null, args)); });
+  todaySection.appendChild(todayGrid);
+  wrap.appendChild(todaySection);
 
-  var s9 = block("all");
-  s9.appendChild(kick("Reference"));
-  s9.appendChild(h2("Colors and search"));
-  s9.appendChild(h3("Candidate status"));
-  var sl = el("div"); sl.style.margin = "8px 0";
-  STATUS.map(function(s){ return [s, STATUS_COLOR[s] || "--gray"]; }).forEach(function(pr){ sl.appendChild(colorPill(pr[0], pr[1])); });
-  s9.appendChild(sl);
-  s9.appendChild(h3("Priority"));
-  var plw = el("div"); plw.style.margin = "8px 0";
-  var hi = colorPill("High","--red"); hi.style.color = "#fff"; plw.appendChild(hi); plw.appendChild(colorPill("Medium","--orange")); plw.appendChild(colorPill("Low","--teal"));
-  s9.appendChild(plw);
-  s9.appendChild(h3("Search tips"));
-  s9.appendChild(p("The search box understands simple logic. Combine terms with AND, OR, and NOT, and wrap exact phrases in quotes. For example: java AND \"rtos\" NOT intern"));
-  s9.appendChild(muted("It searches names, titles, companies, skills, locations, summaries, resume text, and notes. Combine it with the sidebar filters to narrow fast."));
-  host.appendChild(s9);
+  /* ── CAPABILITY CARDS ── */
+  var capSection = div("margin-bottom:28px;");
+  capSection.appendChild(txt("h2","Platform Capabilities","font-size:16px;font-weight:700;color:var(--ink);margin:0 0 14px;"));
+  var capGrid = div("display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;");
+  [
+    ["M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2","Manage Requisitions","Manage active requisitions, priorities, and hiring manager alignment.","Open Reqs","reqs"],
+    ["M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0","Candidate Pipeline","Manage every candidate from first contact through hire.","Open Candidates","all"],
+    ["M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z","Sourcing Review","Review sourced candidates, accept or reject submissions, and track performance.","Open TalentBench","talentbench"],
+    ["M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z","Interview Workflow","Track interview requests, scheduling activity, and candidate progress.","Open Interviews","interviewrequests"],
+    ["M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z","Executive Dashboard","Monitor hiring activity, recruiter performance, and pipeline health.","Open Dashboard","dashboard"],
+    ["M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z","Hiring Managers","Access hiring manager profiles, contact info, and requisition ownership.","View Managers","managers"],
+  ].forEach(function(args){ capGrid.appendChild(capCard.apply(null, args)); });
+  capSection.appendChild(capGrid);
+  wrap.appendChild(capSection);
 
-  applyRole(activeRole);
+  /* ── KPIs ── */
+  var kpiSection = div("margin-bottom:28px;");
+  kpiSection.appendChild(txt("h2","Recruiting Snapshot","font-size:16px;font-weight:700;color:var(--ink);margin:0 0 14px;"));
+  var kpiGrid = div("display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;");
+  var activeCands = cands.filter(function(c){ return c.status !== "Archived" && c.status !== "Offer Accepted - Hired"; });
+  var interviewing = cands.filter(function(c){ return ["Interviewing Stage 1","Interviewing Stage 2","Interviewing Stage 3","Panel / Final Interview","Interviewing"].indexOf(c.status) !== -1; });
+  [
+    [activeCands.length,   "Active Candidates",    "all",         "var(--ink)"],
+    [openReqs.length,      "Open Requisitions",    "reqs",        "var(--gold)"],
+    [interviewing.length,  "In Interviews",        "interviewing","var(--teal)"],
+    [offerP.length,        "Offers Pending",       "offerpending","var(--yellow)"],
+    [followUp.length,      "Follow-Up Overdue",    "followup",    "var(--red)"],
+    [irsThisWeek.length,   "Interviews This Week", "calendar",    "var(--gold)"],
+  ].forEach(function(args){ kpiGrid.appendChild(kpiCard.apply(null, args)); });
+  kpiSection.appendChild(kpiGrid);
+  wrap.appendChild(kpiSection);
+
+  /* ── PLATFORM HIGHLIGHTS ── */
+  var hilightSection = div("margin-bottom:28px;");
+  hilightSection.appendChild(txt("h2","Platform Highlights","font-size:16px;font-weight:700;color:var(--ink);margin:0 0 12px;"));
+  var chipWrap = div("display:flex;flex-wrap:wrap;gap:2px;");
+  ["Enterprise Recruiting","AI Resume Matching","TalentBench Sourcing","Hiring Manager Collaboration",
+   "Dayforce Integration","Interview Management","Offer Tracking","Real-Time Analytics",
+   "Follow-Up Intelligence","Multi-Org Support"].forEach(function(label){ chipWrap.appendChild(chip(label)); });
+  hilightSection.appendChild(chipWrap);
+  wrap.appendChild(hilightSection);
+
+  /* ── WHAT'S NEW ── */
+  var wnSection = div("margin-bottom:28px;display:grid;grid-template-columns:1fr 1fr;gap:20px;");
+  
+  var wnCard = div("background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;");
+  wnCard.appendChild(txt("h3","What's New","font-size:14px;font-weight:700;color:var(--ink);margin:0 0 14px;"));
+  [
+    ["Open Requisitions consolidated — one unified work queue","NEW"],
+    ["Getting Started — redesigned home page","NEW"],
+    ["Light enterprise theme — premium visual refresh","NEW"],
+    ["HiARC and Elbit on shared design system","UPDATE"],
+    ["Forms Library removed — reduced load time","UPDATE"],
+  ].forEach(function(pair){ wnCard.appendChild(whatsNewItem(pair[0], pair[1], pair[1]==="NEW" ? "var(--gold-dim)" : "var(--panel2)")); });
+
+  var tipsCard = div("background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;");
+  tipsCard.appendChild(txt("h3","Quick Tips","font-size:14px;font-weight:700;color:var(--ink);margin:0 0 14px;"));
+  var tipsGrid = div("display:grid;grid-template-columns:1fr 1fr;gap:8px;");
+  ["Keep candidate status current","Log interview feedback immediately",
+   "Follow up on overdue candidates daily","Use TalentBench for sourcing reviews",
+   "Close filled requisitions promptly","Upload resumes before interviews",
+   "Keep hiring manager info up to date","Review the pipeline every morning"].forEach(function(tip){ tipsGrid.appendChild(tipCard(tip)); });
+  tipsCard.appendChild(tipsGrid);
+
+  wnSection.appendChild(wnCard);
+  wnSection.appendChild(tipsCard);
+  wrap.appendChild(wnSection);
+
+  /* ── RESOURCES ── */
+  var resSection = div("background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:8px;");
+  resSection.appendChild(txt("h3","Resources","font-size:14px;font-weight:700;color:var(--ink);margin:0 0 14px;"));
+  var resGrid = div("display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;");
+  [
+    ["Training","Contact your administrator for a platform walkthrough or onboarding session."],
+    ["Support","Reach your TSS team lead for any technical issues or access problems."],
+    ["Release Notes","New features are released regularly. Check What's New above for the latest."],
+    ["Administrator","Contact Jonah Adelman · jonah@thestaffingspecialist.com · 603.401.2901"],
+  ].forEach(function(pair){
+    var c = div("background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px;");
+    c.appendChild(txt("div", pair[0], "font-size:13px;font-weight:700;color:var(--ink);margin-bottom:5px;"));
+    c.appendChild(txt("div", pair[1], "font-size:12px;color:var(--muted);line-height:1.5;"));
+    resGrid.appendChild(c);
+  });
+  resSection.appendChild(resGrid);
+  wrap.appendChild(resSection);
+
+  host.appendChild(wrap);
 }
+
 function b64ToBlob(b64, mime){
   var bin = atob(b64); var len = bin.length; var bytes = new Uint8Array(len);
   for(var i=0;i<len;i++){ bytes[i] = bin.charCodeAt(i); }
