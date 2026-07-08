@@ -195,7 +195,12 @@
   <aside class="side">
     <h3>Views</h3>
     <div id="tabs"></div>
-    <h3>Filters</h3>
+   
+ <div style="margin:14px 10px 0;padding:8px 10px;background:#f0f1f6;border-radius:8px;border:1px solid #e2e5ef;">
+  <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#8b90a8;margin-bottom:3px;">Workspace</div>
+  <div style="font-size:12px;font-weight:600;color:#111318;">🟩 HiARC</div>
+ </div>
+ <h3>Filters</h3>
     <div class="filterbox">
       <label>Status</label><select class="fil" id="fStatus"></select>
       <label>Discipline</label><select class="fil" id="fDiscipline"></select>
@@ -1394,7 +1399,7 @@ function renderGuide(host){
   brandRow.appendChild(logoMark); brandRow.appendChild(wordmark);
   hL.appendChild(brandRow);
 
-  hL.appendChild(t("h1","One platform that connects sourcing, recruiting, interviewing, and hiring.","font-size:22px;font-weight:700;color:var(--ink);margin:0 0 28px;line-height:1.45;letter-spacing:-.2px;max-width:440px;"));
+  hL.appendChild(t("h1","Source. Recruit. Interview. Hire. Measure.","font-size:22px;font-weight:700;color:var(--ink);margin:0 0 28px;line-height:1.45;letter-spacing:-.2px;max-width:440px;"));
 
   var hBtns=d("display:flex;gap:10px;flex-wrap:wrap;");
   if(!VIEW_ONLY){ hBtns.appendChild(btn("+ New Candidate","all",true,false)); }
@@ -1405,7 +1410,7 @@ function renderGuide(host){
   var hR=d("position:relative;z-index:1;display:flex;align-items:center;justify-content:center;");
   var ns3="http://www.w3.org/2000/svg";
   var illus=document.createElementNS(ns3,"svg");
-  illus.setAttribute("viewBox","0 0 180 140"); illus.setAttribute("width","180"); illus.setAttribute("height","140"); illus.setAttribute("fill","none");
+  illus.setAttribute("viewBox","0 0 180 140"); illus.setAttribute("width","155"); illus.setAttribute("height","120"); illus.setAttribute("fill","none");
   [["circle","cx:90,cy:70,r:52,stroke:#3B5BFF,stroke-width:1,stroke-dasharray:6 3,opacity:.15"],
    ["circle","cx:90,cy:70,r:36,stroke:#3B5BFF,stroke-width:1.4,opacity:.22"],
    ["circle","cx:90,cy:70,r:18,fill:#3B5BFF,opacity:.08"],
@@ -1459,7 +1464,7 @@ function renderGuide(host){
   }
 
   [[followUp.length,"Follow-Ups Due","Candidates needing action","followup","var(--red)","Review"],
-   [offerP.length,"Offers Pending","Awaiting acceptance","offerpending","var(--yellow)","Open"],
+   [offerP.length,"Offers Pending","Awaiting acceptance","offerpending","var(--orange)","Open"],
    [irsWeek.length,"Interviews This Week","Scheduled requests","calendar","var(--gold)","Open"],
    [openReqs.length,"Open Requisitions","Active hiring priorities","reqs","var(--teal)","Open"],
    [submitted.length,"Pending HM Review","Awaiting HM feedback","submitted","var(--purple)","Review"],
@@ -1486,7 +1491,7 @@ function renderGuide(host){
 
   /* ══ 4. CORE WORKSPACES ══ */
   var wsWrap=d("margin-bottom:32px;");
-  wsWrap.appendChild(sh("Core Workspaces"));
+  wsWrap.appendChild(sh("Recruiting Workspace"));
   var wsGrid=d("display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;");
 
   function wsCard(paths,title,desc,btnLabel,viewId,highlight){
