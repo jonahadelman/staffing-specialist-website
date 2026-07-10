@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Staffing Specialist | Built by Jonah Adelman, Elite RPO Recruiting for High-Growth Companies</title>
+  <meta name="description" content="Elite RPO and Talent Acquisition partner. Build world‑class teams with speed, precision, and accountability. The Staffing Specialist delivers outcomes, not excuses." />
+  <meta property="og:title" content="The Staffing Specialist, Elite RPO & Talent Acquisition" />
+  <meta property="og:description" content="Build world‑class teams with speed, precision, and accountability." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#0b1020" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E🦁%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#111831;
+      --muted:#b6c1da;
+      --text:#e8f0ff;
+      --teal:#1aada3;
+      --aqua:#5ab8d4;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.5;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      text-rendering:optimizeLegibility;
+    }
+    a{color:var(--teal);text-decoration:none}
+    a:hover{opacity:.85}
+    .container{max-width:1200px;margin:0 auto;padding:0 24px}
+    header{position:relative;top:0;z-index:50;background:linear-gradient(to bottom, rgba(11,16,32,.85), rgba(11,16,32,.55));border-bottom:1px solid rgba(255,255,255,.06)}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+    .brand{display:flex;align-items:center;gap:14px}
+    .logo{width:42px;height:42px;filter: drop-shadow(0 6px 18px rgba(26,173,163,.25))}
+    .brand h1{font-size:21px;margin:0;font-weight:800;letter-spacing:-.3px;background:linear-gradient(90deg,#ffffff 60%,#1aada3);-webkit-background-clip:text;background-clip:text;color:transparent;}
+    .nav a{
+  margin-left:2px;
+  font-size:12px;
+  font-weight:700;
+  color:#ffffff;
+  transition:all .18s;
+  text-decoration:none;
+  padding:7px 13px;
+  border-radius:8px;
+  letter-spacing:.02em;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.05);
+}
+.nav a:hover{
+  color:#c6e6f4 !important;
+  background:rgba(168,216,234,.04) !important;
+  border-color:rgba(168,216,234,.25) !important;
+  opacity:1;
+  transform:translateY(-1px);
+}
+    .btn{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.07));color:#f3f7ff;padding:12px 24px;border-radius:999px;font-weight:700;border:1px solid rgba(255,255,255,.22);cursor:pointer;font-size:14px;}
+    .btn.secondary{background:rgba(255,255,255,.05);color:#e4eaf5;border:1px solid rgba(255,255,255,.15)}
+    .btn.btn-black { color: #031a13 !important; background: #00c9a7 !important; border:none !important; font-weight:800 !important; letter-spacing:.01em; }
+    header .btn.btn-black:hover { color: #05201a !important; opacity:.9; transform:translateY(-1px);  }
+    /* hero */
+    .hero{padding:86px 0 48px;position:relative;overflow:hidden}
+    .hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:36px;align-items:center}
+    .kicker{color:#7eb8d4;font-weight:800;letter-spacing:.18em;text-transform:uppercase;font-size:12px}
+    .hero h2{font-size:46px;line-height:1.05;margin:.4rem 0 1rem;font-weight:900}
+    .hero p{font-size:18px;color:#dde5ff;max-width:680px}
+    .statbar{display:flex;gap:18px;flex-wrap:wrap;margin:26px 0;justify-content:center;}
+    .stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);padding:16px 24px;border-radius:12px;text-align:center;}
+    .stat strong{font-size:20px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.045));border:1px solid rgba(255,255,255,.17);border-radius:var(--radius);box-shadow:0 14px 36px rgba(0,0,0,.34)}
+    section{padding:72px 0}
+    .grid{display:grid;gap:20px}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    .grid.cols-2{grid-template-columns:repeat(2,1fr)}
+    @media (max-width: 900px){
+      .hero-grid{grid-template-columns:1fr}
+      .grid.cols-3{grid-template-columns:1fr}
+      .grid.cols-2{grid-template-columns:1fr}
+      .hero h2{font-size:36px}
+      .talentbase-grid{grid-template-columns:1fr !important}
+      .founder-wrap{grid-template-columns:1fr}
+      .founder-title{font-size:28px}
+    }
+    h3{font-size:28px;margin:0 0 16px}
+    h4{font-size:16px;font-weight:700;color:#ffffff;margin:0 0 12px;letter-spacing:.01em;}
+    .muted{color:var(--muted)}
+    .icn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,rgba(26,173,163,.04),rgba(24,227,255,.04));border:1px solid rgba(255,255,255,.08)}
+    .quote{font-size:16.5px;color:#eef3fb;line-height:1.85;font-weight:450;}
+    .quote footer{margin-top:10px;color:#aab6cc;font-size:12.5px;font-weight:500;}
+    /* === TALENTBASE SECTION === */
+    .talentbase-band{position:relative;background:radial-gradient(800px 300px at 80% 50%, rgba(124,106,247,.04), transparent 60%),radial-gradient(600px 250px at 10% 80%, rgba(26,173,163,.03), transparent 60%),linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);padding:80px 0;}
+    .talentbase-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;}
+    .talentbase-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.3);padding:5px 14px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#a89dff;margin-bottom:16px;}
+    .talentbase-headline{font-size:36px;font-weight:900;line-height:1.1;margin:0 0 16px;}
+    .talentbase-sub{font-size:17px;color:#dbe4ff;margin-bottom:24px;line-height:1.65;}
+    .talentbase-features{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;}
+    .tb-feature{display:flex;align-items:flex-start;gap:10px;font-size:14.5px;color:#d9e2f6;line-height:1.55;}
+    .tb-check{width:18px;height:18px;border-radius:50%;background:rgba(26,173,163,.15);border:1px solid rgba(26,173,163,.3);display:grid;place-items:center;flex-shrink:0;margin-top:2px;font-size:10px;color:var(--teal);}
+    .tb-launch-btn{display:inline-flex;align-items:center;gap:12px;background:rgba(124,106,247,.18);color:#c4b8ff;padding:14px 24px;border-radius:999px;font-weight:700;font-size:15px;border:1px solid rgba(124,106,247,.35);cursor:pointer;text-decoration:none;transition:all .2s;}
+    .tb-launch-btn:hover{background:rgba(124,106,247,.28);border-color:rgba(124,106,247,.55);transform:translateY(-1px);}
+    .tb-launch-btn svg{width:16px;height:16px;}
+    .tb-note{font-size:12px;color:var(--muted);margin-top:10px;}
+    .talentbase-mockup{background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));border:1px solid rgba(124,106,247,.25);border-radius:20px;overflow:hidden;}
+    .tb-mock-bar{background:rgba(124,106,247,.04);border-bottom:1px solid rgba(124,106,247,.2);padding:10px 16px;display:flex;align-items:center;gap:8px;}
+    .tb-mock-dot{width:8px;height:8px;border-radius:50%;}
+    .tb-mock-title{font-size:12px;color:#a89dff;font-weight:600;margin-left:4px;}
+    .tb-mock-body{padding:16px;}
+    .tb-mock-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+    .tb-mock-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;}
+    .tb-mock-stat-label{font-size:11px;color:#a8a8c8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+    .tb-mock-stat-val{font-size:18px;font-weight:700;letter-spacing:-1px;}
+    .tb-mock-row{display:flex;align-items:center;gap:8px;padding:7px 8px;background:rgba(255,255,255,.03);border-radius:7px;margin-bottom:5px;}
+    .tb-mock-av{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0;}
+    .tb-mock-name{font-size:11px;font-weight:500;flex:1;}
+    .tb-mock-badge{font-size:11px;padding:2px 6px;border-radius:8px;white-space:nowrap;}
+    .tb-mock-score{font-size:11px;font-weight:700;font-family:monospace;margin-left:4px;}
+    /* founder */
+    .founder-band{position:relative;background:radial-gradient(600px 220px at 10% 10%, rgba(24,227,255,.03), transparent 60%),radial-gradient(700px 260px at 90% 40%, rgba(26,173,163,.03), transparent 65%),linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);padding:80px 0;}
+    .founder-wrap{display:grid;grid-template-columns:1.2fr .8fr;gap:32px;align-items:center;}
+    .founder-eyebrow{color:var(--teal);font-weight:800;letter-spacing:.18em;text-transform:uppercase;font-size:12px;}
+    .founder-title{font-size:34px;line-height:1.15;margin:.35rem 0 1rem;font-weight:900;}
+    .founder-sub{color:#dde5ff;font-size:18px;margin:0 0 18px;line-height:1.7;}
+    .founder-card{background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;}
+    .founder-badges{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:14px 0 4px;text-align:center;}
+    .badge{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);padding:8px 12px;border-radius:999px;font-size:12px;color:#dfe7ff;}
+    .founder-cta{display:inline-flex;align-items:center;gap:10px;background:transparent;border:1px solid rgba(255,255,255,.18);padding:12px 16px;border-radius:999px;font-weight:700;}
+    .founder-cta:hover{opacity:.9}
+    .founder-side{text-align:center;}
+    .founder-avatar{width:120px;height:120px;border-radius:50%;border:1px solid rgba(255,255,255,.15);display:inline-grid;place-items:center;background:linear-gradient(135deg, rgba(26,173,163,.04), rgba(24,227,255,.04));margin-bottom:14px;box-shadow:0 12px 36px rgba(0,0,0,.25);overflow:hidden;}
+    .founder-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+    .founder-quote{font-size:16px;color:#e6ecff;margin-top:8px}
+    form{display:grid;gap:12px}
+    input,select,textarea{background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 14px;color:var(--text);outline:none;font-family:inherit;font-size:14px}
+    input::placeholder,textarea::placeholder{color:#7f8db2}
+    textarea{min-height:120px;resize:vertical}
+    .footer{padding:32px 0;border-top:1px solid rgba(255,255,255,.08);color:#dae1ff}
+    [data-animate]{opacity:0;transform:translateY(16px);transition:all .7s ease}
+    [data-animate].in{opacity:1;transform:none}
+    /* ══════════════════════════════════════════════════════
+       HERO COPY STYLES
+       ══════════════════════════════════════════════════════ */
+    .hero-brand {
+      font-size:13px;
+      font-weight:800;
+      color:#a89dff;
+      letter-spacing:.2em;
+      text-transform:uppercase;
+      margin-bottom:6px;
+    }
+    .hero-headline {
+      font-size:52px;
+      line-height:1.0;
+      font-weight:900;
+      margin:.2rem 0 .5rem;
+      color:#e8f0ff;
+      letter-spacing:-.5px;
+    }
+    .hero-headline-accent {
+      color:#ffffff;
+      display:block;
+    }
+    .hero-position {
+      font-size:17px;
+      color:#e2e9ff;
+      font-weight:600;
+      margin:0 0 6px;
+    }
+    .hero-quote {
+      font-size:13.5px;
+      color:#9bb0d4;
+      font-style:italic;
+      font-weight:500;
+      margin:0 0 16px;
+    }
+    /* ══════════════════════════════════════════════════════
+       MOBILE NAV
+       ══════════════════════════════════════════════════════ */
+    .hamburger {
+      display:none;
+      flex-direction:column;
+      gap:5px;
+      cursor:pointer;
+      padding:4px;
+      background:none;
+      border:none;
+    }
+    .hamburger span {
+      display:block;
+      width:22px;
+      height:2px;
+      background:var(--text);
+      border-radius:2px;
+      transition:all .3s;
+    }
+    .mob-nav {
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(11,16,32,.98);
+      z-index:200;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
+    .mob-nav.open { display:flex; }
+    .mob-nav a {
+      font-size:28px;
+      font-weight:700;
+      color:var(--text);
+      text-decoration:none;
+      padding:10px 0;
+      letter-spacing:-.5px;
+    }
+    .mob-nav a:hover { color:var(--teal); }
+    .mob-nav .mob-cta { margin-top:16px; }
+    .mob-close {
+      position:absolute;
+      top:20px;
+      right:24px;
+      font-size:28px;
+      color:var(--muted);
+      cursor:pointer;
+      background:none;
+      border:none;
+    }
+    /* ══════════════════════════════════════════════════════
+       RESPONSIVE
+       ══════════════════════════════════════════════════════ */
+    @media (max-width:900px) {
+      .hero-grid { grid-template-columns:1fr; }
+      .grid.cols-3 { grid-template-columns:1fr; }
+      .grid.cols-2 { grid-template-columns:1fr; }
+      .hero-headline { font-size:38px; }
+      .talentbase-grid { grid-template-columns:1fr; }
+      .founder-title { font-size:28px; }
+    }
+    @media (max-width:768px) {
+      /* Nav */
+      .nav { padding:10px 0; }
+      nav.desktop-nav { display:none !important; }
+      .hamburger { display:flex; }
+      .brand { gap:8px; }
+      .brand h1 { font-size:16px; }
+      /* Hero */
+      .hero { padding:32px 0 24px; }
+      .hero-grid { grid-template-columns:1fr; gap:24px; }
+      .hero-headline { font-size:28px; line-height:1.05; }
+      .hero-brand { font-size:10px; }
+      .hero-position { font-size:14px; }
+      /* Stat bar */
+      .statbar { gap:10px; }
+      .statbar .stat { padding:10px 12px; flex:1 1 calc(50% - 10px); min-width:0; }
+      .statbar .stat strong { font-size:16px; }
+      /* CTA row */
+      .hero-cta-row { flex-direction:column; align-items:stretch; gap:10px; }
+      .hero-cta-row a { text-align:center; justify-content:center; }
+      /* Hero preview */
+      .hero-preview-box { max-width:100%; }
+      /* Sections */
+      section { padding:40px 0; }
+      .talentbase-band { padding:48px 0; }
+      .founder-band { padding:48px 0; }
+      /* Grids, class-based (!important overrides inline grid styles on mobile) */
+      .grid.cols-3 { grid-template-columns:1fr !important; }
+      .grid.cols-2 { grid-template-columns:1fr !important; }
+      .grid-2col { grid-template-columns:1fr !important; }
+      .grid-3col { grid-template-columns:1fr !important; }
+      .grid-4col-stats { grid-template-columns:1fr 1fr !important; }
+      .grid-proof-stats { grid-template-columns:1fr !important; }
+      /* Happy Hunting */
+      #happyhunting .grid-2col { gap:24px; }
+      #happyhunting h2 { font-size:26px; }
+      /* TalentBase section */
+      .talentbase-grid { grid-template-columns:1fr; gap:24px; }
+      .talentbase-headline { font-size:26px; }
+      .talentbase-mockup { display:none; }
+      /* Telephone section */
+      .telephone-flow { display:flex !important; flex-direction:column; gap:16px; grid-template-columns:none !important; }
+      .telephone-arrow { display:none; }
+      .telephone-cta { padding:28px 20px; }
+      #telephone h2 { font-size:28px; }
+      /* Founder story */
+      .founder-story-body { padding:0; }
+      #founder-story h2 { font-size:26px; }
+      #founder-story h3 { font-size:20px; }
+      /* Banner */
+      .hero-banner-wrap { max-height:220px; min-height:140px; }
+      .hero-banner-img { object-position:center 20%; }
+      /* Buttons */
+      .btn { padding:10px 16px; font-size:13px; }
+      /* Footer */
+      .footer .container { flex-direction:column; gap:8px; text-align:center; }
+      /* Comp bubble */
+      #cw-bubble { bottom:14px; right:14px; padding:10px 14px; }
+      h3 { font-size:22px; }
+    }
+    @keyframes pulseGlow {
+  0%   { box-shadow: 0 6px 30px rgba(59,130,246,.4); }
+  50%  { box-shadow: 0 8px 40px rgba(59,130,246,.7); }
+  100% { box-shadow: 0 6px 30px rgba(59,130,246,.4); }
+}
+</style>
+</head>
+<body>
+  <!-- Mobile Nav -->
+  <div class="mob-nav" id="mob-nav">
+    <button class="mob-close" onclick="closeMobNav()">✕</button>
+    <a href="#services" onclick="closeMobNav()">Services</a>
+    <a href="#process" onclick="closeMobNav()">Process</a>
+    <a href="#results" onclick="closeMobNav()">Results</a>
+    <a href="#talentbase" onclick="closeMobNav()">TalentBase TES</a>
+    <a href="#rpo-vs-bench" onclick="closeMobNav()">TalentBench</a>
+    <a href="#testimonials" onclick="closeMobNav()">Testimonials</a>
+    <a href="#recruiting-engine" onclick="closeMobNav()">Meet the Team</a>
+    <a href="javascript:void(0)" onclick="closeMobNav();cwOpen();" style="color:#1aada3;font-weight:700;">💰 Comp Intel</a>
+    <a href="#contact" class="btn mob-cta" onclick="closeMobNav()">Get Talent Now</a>
+  </div>
+  <header>
+    <div class="container nav">
+      <div class="brand" style="flex-direction:column;align-items:flex-start;gap:3px;">
+        <h1>The Staffing Specialist</h1>
+        <div style="display:flex;align-items:center;gap:7px;">
+          <span style="font-size:10px;color:var(--teal);font-weight:700;letter-spacing:.04em;">&ldquo;Recruitment Perfected.&rdquo;</span>
+          <span style="font-size:10px;color:#bcc8de;letter-spacing:.04em;font-weight:500;">Jack &amp; Suzy Welch</span>
+        </div>
+      </div>
+      <!-- FIX 1: hamburger now calls openMobNav() -->
+      <button class="hamburger" onclick="openMobNav()" aria-label="Open navigation menu">
+        <span></span><span></span><span></span>
+      </button>
+      <!-- FIX 2: nav has class="desktop-nav" so media query hides it on mobile -->
+      <nav class="desktop-nav" style="display:flex;flex-direction:column;align-items:flex-end;gap:7px;">
+        <!-- Top row: site pages -->
+        <div style="display:flex;align-items:center;gap:4px;">
+          <a href="#services" style="padding:7px 16px;">Services</a>
+          <a href="#process" style="padding:7px 16px;">Process</a>
+          <a href="#testimonials" style="padding:7px 16px;">Testimonials</a>
+          <a href="#recruiting-engine" style="padding:7px 16px;">Meet the Team</a>
+          <a href="#contact" class="btn btn-black">Get Talent Now</a>
+        </div>
+        <!-- Tool buttons row -->
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 20px;flex-wrap:wrap;">
+          <!-- TB-LINK-1: header tool button, removed public access 2026-04 -->
+          <a href="#contact" onclick="tbAccessModal(event)" style="padding:5px 14px;border-radius:7px;border:1px solid rgba(140,120,255,.55);background:rgba(124,106,247,.2);font-size:11px;font-weight:700;color:#ccc0ff;white-space:nowrap;text-decoration:none;">&#9889; TalentBase TES</a>
+          <a href="#rpo-vs-bench" style="padding:5px 14px;border-radius:7px;border:1px solid rgba(67,192,122,.5);background:rgba(67,192,122,.16);font-size:11px;font-weight:700;color:#5fd39a;white-space:nowrap;text-decoration:none;">&#129681; TalentBench</a>
+          <a href="#telephone" style="padding:5px 14px;border-radius:7px;border:1px solid rgba(26,173,163,.45);background:rgba(26,173,163,.14);font-size:11px;font-weight:700;color:#1aada3;white-space:nowrap;text-decoration:none;">&#128225; Job Amplifier</a>
+          <a href="javascript:void(0)" onclick="cwOpen()" style="padding:5px 14px;border-radius:7px;border:1px solid rgba(26,173,163,.4);background:rgba(26,173,163,.12);font-size:11px;font-weight:700;color:#1aada3;white-space:nowrap;text-decoration:none;">&#128176; Comp Intel</a>
+        </div>
+      </nav>
+    </div>
+    <!-- HERO BANNER IMAGE -->
+    <style>
+      @keyframes bannerDrift {
+        0%   { transform: scale(1.08) translateX(12px); opacity: 0; }
+        30%  { opacity: 1; }
+        100% { transform: scale(1.0) translateX(0px); opacity: 1; }
+      }
+      @keyframes bannerFadeIn {
+        0%   { opacity: 0; }
+        100% { opacity: 1; }
+      }
+      .hero-banner-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 30%;
+        display: block;
+        animation: bannerDrift 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        filter: contrast(1.06) saturate(1.08);
+      }
+      .hero-banner-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, transparent 35%, rgba(5,8,20,.97) 100%);
+        animation: bannerFadeIn 1.8s ease forwards;
+      }
+    </style>
+    <div class="hero-banner-wrap" style="width:100%;overflow:hidden;position:relative;max-height:400px;min-height:280px;">
+      <img src="/hero-banner.png" alt="Jonah Adelman, The Staffing Specialist" class="hero-banner-img"
+        onerror="console.error('[hero-banner] Failed to load: ' + this.src);"/>
+      <div class="hero-banner-overlay"></div>
+    </div>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="kicker">performance system · not another ats</div>
+          <div class="hero-brand">TalentBase TES</div>
+          <h2 class="hero-headline">the recruiting engine that<br><span class="hero-headline-accent">outperforms entire teams.</span></h2>
+          <p class="hero-position">The first Talent Experience System.</p>
+          <p class="hero-quote">&ldquo;Because hiring isn&rsquo;t a process. It&rsquo;s a journey.&rdquo;</p>
+          <div style="margin-top:18px;">
+            <div style="font-size:20px;font-weight:800;color:#e8f0ff;">See Your Hiring System</div>
+            <div style="font-size:20px;font-weight:900;color:#7eb8d4;margin-top:2px;">Running Live, Right Now</div>
+          </div>
+          <div class="statbar">
+            <div class="stat card"><strong style="color:#e8f0ff;">1,500+</strong><div class="muted">Hires delivered</div></div>
+            <div class="stat card"><strong style="color:#e8f0ff;">200</strong><div class="muted">Roles · 1 Year · Team of 4</div></div>
+            <div class="stat card"><strong style="color:#e8f0ff;">$10M+</strong><div class="muted">Saved vs. agencies</div></div>
+          </div>
+          <div class="hero-cta-row" style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:24px;">
+            <!-- TB-LINK-2: hero Watch Live Demo, removed public access 2026-04 -->
+            <a href="#contact" onclick="tbAccessModal(event)"
+               style="display:inline-block;padding:16px 34px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border-radius:12px;font-size:16px;font-weight:900;text-decoration:none;box-shadow:0 6px 30px rgba(59,130,246,.5);transition:transform .15s;animation:pulseGlow 2.5s infinite;"
+               onmouseover="this.style.transform='translateY(-2px)'"
+               onmouseout="this.style.transform='translateY(0px)'">
+              ▶ Watch Live Demo
+            </a>
+            <a href="#contact" class="btn" style="font-size:15px;padding:14px 28px;">Get Access →</a>
+            <a href="#proof" class="btn secondary">See The Proof</a>
+          </div>
+          <p style="margin-top:12px;font-size:13px;color:#bcc8de;text-align:center;">What most firms hide, we show, live.</p>
+          <div class="hero-preview-box" style="margin-top:28px;padding:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;max-width:520px;margin-left:auto;margin-right:auto;text-align:left;">
+            <div style="font-size:11px;color:#7eb8d4;text-transform:uppercase;font-weight:700;margin-bottom:6px;">Live System Preview</div>
+            <div style="font-size:14px;color:#e6ecff;line-height:1.8;">
+              • 7 candidates in pipeline<br>
+              • 2 need follow-up today<br>
+              • 1 offer ready to send
+            </div>
+          </div>
+          <p style="margin-top:10px;font-size:12px;color:#acb8d3;text-align:center;">Takes 60 seconds &nbsp;·&nbsp; No login required &nbsp;·&nbsp; Real system, not a demo video</p>
+        </div>
+        <div class="card" style="padding:22px">
+          <h3 style="margin-top:0">Immediate Hiring Needs?</h3>
+          <p class="muted" style="margin-top:6px">Tell us your roles and timeline, we'll propose a plan within 24 hours.</p>
+          <form id="quickform">
+            <input name="name" placeholder="Your name" required />
+            <input name="email" placeholder="Work email" type="email" required />
+            <input name="company" placeholder="Company" />
+            <textarea name="roles" placeholder="Roles to fill &amp; target start dates" required></textarea>
+            <button class="btn" type="submit" style="background:rgba(255,255,255,.1);color:#e8f0ff;border:1px solid rgba(255,255,255,.2);width:100%;">Request Proposal</button>
+            <div id="form-msg" class="muted" style="margin-top:8px"></div>
+          </form>
+        </div>
+      </div>
+    </section>
+    <!-- BUILT IN THE FIELD, PROOF -->
+    <section id="proof" style="padding:80px 0;background:linear-gradient(180deg,rgba(26,173,163,.03),transparent);border-top:1px solid rgba(255,255,255,.08);">
+      <div class="container">
+        <div style="text-align:center;margin-bottom:48px;">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);padding:5px 16px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7eb8d4;margin-bottom:14px;">Built In The Field, Not In Theory</div>
+          <h2 style="font-size:42px;font-weight:900;letter-spacing:-.5px;margin:0;">This is what sells.<br><span style="color:#e8f0ff;">Not features. Results.</span></h2>
+        </div>
+        <div class="grid-proof-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);border-radius:20px;overflow:hidden;margin-bottom:48px;">
+          <div style="background:rgba(5,8,20,.8);padding:36px 28px;text-align:center;">
+            <div style="font-size:52px;font-weight:900;color:#e8f0ff;letter-spacing:-3px;line-height:1;margin-bottom:10px;">1,500+</div>
+            <div style="font-size:14px;color:#e8f0ff;font-weight:700;margin-bottom:4px;">Hires Delivered</div>
+            <div style="font-size:12px;color:#c8d1e2;">7 years embedded at a global medical diagnostics company</div>
+          </div>
+          <div style="background:rgba(5,8,20,.8);padding:36px 28px;text-align:center;">
+            <div style="font-size:52px;font-weight:900;color:#e8f0ff;letter-spacing:-3px;line-height:1;margin-bottom:10px;">$10M+</div>
+            <div style="font-size:14px;color:#e8f0ff;font-weight:700;margin-bottom:4px;">Saved vs. Agencies</div>
+            <div style="font-size:12px;color:#c8d1e2;">Real dollars back in the business</div>
+          </div>
+          <div style="background:rgba(5,8,20,.8);padding:36px 28px;text-align:center;">
+            <div style="font-size:52px;font-weight:900;color:#e8f0ff;letter-spacing:-3px;line-height:1;margin-bottom:10px;">200</div>
+            <div style="font-size:14px;color:#e8f0ff;font-weight:700;margin-bottom:4px;">Roles · 1 Year · Team of 4</div>
+            <div style="font-size:12px;color:#c8d1e2;">Not luck. Not volume. System.</div>
+          </div>
+          <div style="background:rgba(5,8,20,.8);padding:36px 28px;text-align:center;">
+            <div style="font-size:52px;font-weight:900;color:#e8f0ff;letter-spacing:-3px;line-height:1;margin-bottom:10px;">92%</div>
+            <div style="font-size:14px;color:#e8f0ff;font-weight:700;margin-bottom:4px;">Offer Acceptance Rate</div>
+            <div style="font-size:12px;color:#c8d1e2;">Because we close, not just present</div>
+          </div>
+        </div>
+        <!-- WHY DIFFERENT -->
+        <div class="grid-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+          <div style="background:rgba(26,173,163,.04);border:1px solid rgba(26,173,163,.15);border-radius:18px;padding:32px;">
+            <div style="font-size:13px;font-weight:800;color:#7eb8d4;text-transform:uppercase;letter-spacing:.1em;margin-bottom:20px;">⚡ Why This Is Different</div>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+              <div style="display:flex;gap:12px;align-items:flex-start;"><div style="width:6px;height:6px;border-radius:50%;background:#7eb8d4;margin-top:7px;flex-shrink:0;"></div><div style="font-size:15px;color:#e6ecff;line-height:1.6;">You don't start from zero. <span style="color:#e8f0ff;font-weight:600;">I show up with pipeline.</span></div></div>
+              <div style="display:flex;gap:12px;align-items:flex-start;"><div style="width:6px;height:6px;border-radius:50%;background:#7eb8d4;margin-top:7px;flex-shrink:0;"></div><div style="font-size:15px;color:#e6ecff;line-height:1.6;">You don't wait. <span style="color:#e8f0ff;font-weight:600;">I build before you ask.</span></div></div>
+              <div style="display:flex;gap:12px;align-items:flex-start;"><div style="width:6px;height:6px;border-radius:50%;background:#7eb8d4;margin-top:7px;flex-shrink:0;"></div><div style="font-size:15px;color:#e6ecff;line-height:1.6;">You don't post and pray. <span style="color:#e8f0ff;font-weight:600;">I go where the market actually is.</span></div></div>
+              <div style="display:flex;gap:12px;align-items:flex-start;"><div style="width:6px;height:6px;border-radius:50%;background:#7eb8d4;margin-top:7px;flex-shrink:0;"></div><div style="font-size:15px;color:#e6ecff;line-height:1.6;">You don't get a vendor. <span style="color:#e8f0ff;font-weight:600;">You get me. Embedded. Accountable. Relentless.</span></div></div>
+            </div>
+          </div>
+          <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:18px;padding:32px;">
+            <div style="font-size:13px;font-weight:800;color:#e8f0ff;text-transform:uppercase;letter-spacing:.1em;margin-bottom:20px;">💣 My Favorite Validation</div>
+            <p style="font-size:16px;color:#e6ecff;line-height:1.8;margin-bottom:16px;font-style:italic;">"When a company hires another firm... and they come back with candidates I already spoke to 6 months ago."</p>
+            <p style="font-size:13px;color:#d2dbec;">That happens more than you think. I remember everything, wins, losses, misses. It all fuels me.</p>
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.06);font-size:12px;color:#c8d1e2;font-weight:600;font-style:italic;">Jonah Adelman, The Staffing Specialist</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- THE SYSTEM, WEAPONS SECTION -->
+    <section style="padding:80px 0;border-top:1px solid rgba(255,255,255,.06);">
+      <div class="container">
+        <div style="text-align:center;margin-bottom:48px;">
+          <h2 style="font-size:42px;font-weight:900;letter-spacing:-.5px;margin:0 0 12px;">The Complete Toolkit.<br><span style="color:#e8f0ff;">Where the power comes from.</span></h2>
+          <p style="font-size:16px;color:#e4eaf5;max-width:560px;margin:0 auto;">The engineering behind it. Built from 25 years in the field. Each one does something no other tool on the market does.</p>
+        </div>
+        <div class="grid-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div style="background:linear-gradient(135deg,rgba(67,192,122,.08),rgba(67,192,122,.03));border:1px solid rgba(67,192,122,.22);border-radius:20px;padding:32px;position:relative;overflow:hidden;">
+            <div style="font-size:11px;font-weight:700;color:#43c07a;text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;">🪑 TalentBench</div>
+            <div style="font-size:22px;font-weight:900;color:#e8f0ff;margin-bottom:10px;">Vetted Talent,<br>Delivered On Demand</div>
+            <p style="font-size:14px;color:#d9e2f6;line-height:1.6;">Our sourcing team and AI build a bench of pre-vetted, matched candidates and hand them straight to your TA team, so they spend their time on interviews and decisions, not screening.</p>
+            <a href="#rpo-vs-bench" style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-size:13px;font-weight:700;color:#43c07a;">See How It Works →</a>
+          </div>
+          <div style="background:linear-gradient(135deg,rgba(124,106,247,.08),rgba(124,106,247,.03));border:1px solid rgba(124,106,247,.2);border-radius:20px;padding:32px;position:relative;overflow:hidden;">
+            <div style="font-size:11px;font-weight:700;color:#a89dff;text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;">⚡ TalentBase</div>
+            <div style="font-size:22px;font-weight:900;color:#e8f0ff;margin-bottom:10px;">Your Recruiting<br>Command Center</div>
+            <p style="font-size:14px;color:#e4eaf5;line-height:1.6;">AI matching. Boolean search. Resume parsing. Offer builder. Interview scorecards. Headcount planning. Submission emails. The TES that thinks like a recruiter, not a database admin.</p>
+            <!-- TB-LINK-3: toolkit Get Access, removed public access 2026-04 -->
+            <a href="#contact" onclick="tbAccessModal(event)" style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-size:13px;font-weight:700;color:#a89dff;">Get Access →</a>
+          </div>
+          <div style="background:linear-gradient(135deg,rgba(26,173,163,.06),rgba(26,173,163,.02));border:1px solid rgba(26,173,163,.15);border-radius:20px;padding:32px;position:relative;overflow:hidden;">
+            <div style="font-size:11px;font-weight:700;color:#7eb8d4;text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;">📡 Job Amplifier</div>
+            <div style="font-size:22px;font-weight:900;color:#e8f0ff;margin-bottom:10px;">Turn One Job Into<br>10x Candidates</div>
+            <p style="font-size:14px;color:#e4eaf5;line-height:1.6;">Post a role with The Staffing Specialist. We send it viral through our exclusive talent network. 5–10x the applicants directed straight to your careers page. You own every candidate. Zero placement fees.</p>
+            <a href="#telephone" style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-size:13px;font-weight:700;color:#7eb8d4;">Learn More →</a>
+          </div>
+          <div style="background:linear-gradient(135deg,rgba(201,168,76,.06),rgba(201,168,76,.02));border:1px solid rgba(201,168,76,.15);border-radius:20px;padding:32px;position:relative;overflow:hidden;">
+            <div style="font-size:11px;font-weight:700;color:#c9a84c;text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;">💰 Compensation Intelligence</div>
+            <div style="font-size:22px;font-weight:900;color:#e8f0ff;margin-bottom:10px;">Know The Market Before<br>You Compete In It</div>
+            <p style="font-size:14px;color:#e4eaf5;line-height:1.6;">Paste any resume or job description. Get instant market analysis, floor, target, ceiling salary. Know Your Worth. Know What The Market Pays. Like Kelley Blue Book for talent.</p>
+            <a href="javascript:void(0)" onclick="cwOpen()" style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-size:13px;font-weight:700;color:#c9a84c;">Try Free →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- SERVICES -->
+    <section id="services">
+      <div class="container">
+        <h3>What We Do</h3>
+        <p class="muted">Full‑stack recruitment services engineered for outcomes.</p>
+        <div class="grid cols-3" style="margin-top:18px">
+          <div class="card" style="padding:20px"><div class="icn">🔎</div><h4>Embedded RPO</h4><p class="muted">Plug‑in talent ops: req intake, sourcing, interview design, slate reviews, close strategy, fully embedded with your team.</p></div>
+          <div class="card" style="padding:20px"><div class="icn">🎯</div><h4>Executive &amp; Niche Search</h4><p class="muted">Precision hunts for leadership and hard‑to‑fill roles in med‑device, biotech, software, and GTM.</p></div>
+          <div class="card" style="padding:20px"><div class="icn">⚙️</div><h4>Systems &amp; Playbooks</h4><p class="muted">ATS calibration, interview training, scorecards, compensation alignment, and offer frameworks that convert.</p></div>
+        </div>
+      </div>
+    </section>
+    <!-- PROCESS -->
+    <section id="process">
+      <div class="container">
+        <h3>How We Win</h3>
+        <div class="grid cols-3" style="margin-top:18px">
+          <div class="card" style="padding:20px"><h4>01 • Discovery</h4><p class="muted">Deep intake with hiring leaders. Success profile, competencies, and narrative set on day one.</p></div>
+          <div class="card" style="padding:20px"><h4>02 • Sourcing Engine</h4><p class="muted">Outbound, referrals, and programmatic reach. We build warmed slates, not cold lists.</p></div>
+          <div class="card" style="padding:20px"><h4>03 • Selection</h4><p class="muted">Structured interviews, scorecards, and working sessions to predict performance, not just pedigree.</p></div>
+          <div class="card" style="padding:20px"><h4>04 • Closing</h4><p class="muted">Comp strategy, stakeholder alignment, and candidate commitment, 92% offer acceptance.</p></div>
+          <div class="card" style="padding:20px"><h4>05 • Onboarding</h4><p class="muted">30‑60‑90 plans tied to measurable outcomes. No handoffs, only hands‑on delivery.</p></div>
+          <div class="card" style="padding:20px"><h4>06 • Reporting</h4><p class="muted">Weekly dashboards: funnel health, cycle time, and risk flags. Radical transparency.</p></div>
+        </div>
+      </div>
+    </section>
+    <!-- RESULTS -->
+    <section id="results">
+      <div class="container">
+        <h3 style='font-size:32px;font-weight:900;color:#ffffff;'>What They're Saying</h3>
+        <p style="color:#e6ecf5;margin-bottom:8px;font-size:16px;">Unsolicited. Unfiltered. Real.</p>
+        <div class="grid-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0 20px;">
+          <div class="card" style="padding:22px;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.07);"><div style="font-size:11px;color:#ffffff;text-transform:uppercase;letter-spacing:.12em;font-weight:800;margin-bottom:10px;">Jack &amp; Suzy Welch</div><div class="quote" style="font-size:22px;font-weight:800;color:#ffffff;">&ldquo;Recruitment Perfected.&rdquo;</div><div style="margin-top:8px;font-size:12px;color:var(--muted);">Jack &amp; Suzy Welch, Legendary Business Leaders</div></div>
+          <div class="card" style="padding:22px;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.07);"><div style="font-size:11px;color:#ffffff;text-transform:uppercase;letter-spacing:.12em;font-weight:800;margin-bottom:10px;">Glassdoor Review, Director of Benefits Candidate</div><div class="quote" style="font-size:15px;">&ldquo;The lead recruiter Jonah was so passionate about his company when he recruited me that I had to at least check it out&hellip; when my son finishes his MBA, Jonah will be getting his resume. Thank you for such a great experience!&rdquo;</div><div style="margin-top:8px;font-size:12px;color:var(--muted);">Director of Benefits Candidate, Glassdoor</div></div>
+        </div>
+        <div class="grid-4col-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;">
+          <div class="stat card" style="text-align:center;"><strong style="font-size:22px;color:#e8f0ff;">$10M+</strong><div class="muted" style="font-size:11px;margin-top:4px;">Saved vs. agency fees</div></div>
+          <div class="stat card" style="text-align:center;"><strong style="font-size:22px;color:#e8f0ff;">1,500+</strong><div class="muted" style="font-size:11px;margin-top:4px;">Hires delivered, single global client</div></div>
+          <div class="stat card" style="text-align:center;"><strong style="font-size:22px;color:#e8f0ff;">&lt;35 days</strong><div class="muted" style="font-size:11px;margin-top:4px;">Avg. time-to-fill · 25-year career</div></div>
+          <div class="stat card" style="text-align:center;"><strong style="font-size:22px;color:#e8f0ff;">~$4,500</strong><div class="muted" style="font-size:11px;margin-top:4px;">Cost per hire vs. $15K+ industry avg</div></div>
+        </div>
+        <div id="testimonials"></div>
+        <div class="grid cols-3" style="margin-top:8px;">
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Vice President of Finance</div><div class="quote">&ldquo;You said you&rsquo;ll impress me, and you really did. Thanks!&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Vice President &amp; General Counsel</div><div class="quote">&ldquo;A quick note to thank you for all your extraordinary efforts here on the recruiting front. To say that you&rsquo;ve been an immense help to us here in Legal would be an understatement. Ed and I are both very grateful.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Senior Director of Service &amp; Support</div><div class="quote">&ldquo;I look forward to seeing the great work of you and your army of talented staff. Bar is high&hellip; I can&rsquo;t thank you enough. What you have done is well recognized.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">R&amp;D Manager</div><div class="quote">&ldquo;One thing I have really enjoyed about moving into this role is the close collaboration with you. Our team is and will continue to be, all the better for your insights and partnership.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Director, WW Communications</div><div class="quote">&ldquo;Two happy dances in two weeks! WOW! Congratulations Jonah and THANK YOU, THANK YOU, for ALL your very hard work!&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Senior Director of Hardware Engineering</div><div class="quote">&ldquo;Thank you for all your support this year helping to build the HWE team. Love your positivity, you are a pleasure to work with!&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Human Resources Business Partner</div><div class="quote">&ldquo;The best Recruiter I have ever worked with!&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Principal Engineer</div><div class="quote">&ldquo;Started here this week and just wanted to reach out one more time and thank you for finding me a few months ago! Awesome people &amp; projects here.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Candidate, Unsolicited Feedback</div><div class="quote">&ldquo;Regardless of outcome, this was a great candidate experience so far. Quick, informative, &amp; responsive. The process was obviously designed!&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Director, R&amp;D Reagents</div><div class="quote">&ldquo;You and I are 100% on the same page which is great and really rewarding from the collaboration standpoint.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Senior Buyer</div><div class="quote">&ldquo;I cannot thank you enough for all the effort you have placed in getting this done. I am extremely excited to be joining you!&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Senior Program Manager</div><div class="quote">&ldquo;We interviewed the candidate, and all liked him, and I would like to make him an offer. Great job, Jonah! You need to get him!&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Vice President of Marketing</div><div class="quote">&ldquo;You should be proud of what you do! You earned my respect long ago when we first started collaborating. But over the past few weeks, that respect has grown even more. You&rsquo;ve shown your true colors through the way you&rsquo;ve supported and uplifted me during this time of change, and I truly appreciate it.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Senior Director of Service, North America</div><div class="quote">&ldquo;You are THE best recruiter! We are lucky to have you and very thankful for all of the efforts you put in to supporting us!&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Vice President, Quality &amp; Regulatory Affairs</div><div class="quote">&ldquo;I am grateful for your passion and enthusiasm to help us grow the team into a killer squad. Keep on keeping on.&rdquo;</div></div>
+          <div class="card" style="padding:22px;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.07);"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Chief Executive Officer</div><div class="quote">&ldquo;I appreciate all your comments and suggestions very much. I don&rsquo;t know if my career is impressive, but you can be sure I try to bring my best every day and make the people close to me feel listened, supported and empowered. Everybody has to feel that what they do is very important.&rdquo;</div></div>
+          <div class="card" style="padding:22px;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.07);"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Follow-up, Chief Executive Officer</div><div class="quote">&ldquo;It was a nice surprise to hear from you. I remember those meetings and that period fondly, your insights, ideas, and support for those important projects were very helpful. Thank you for that.&rdquo;</div></div>
+          <div class="card" style="padding:22px;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.07);"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Handwritten Note, Vice President of Human Resources</div><div class="quote">&ldquo;You have been such an incredible part of our success in hiring talented people here at our company the past several years. I am confident you will continue to be a valued member of the HR team and the company family.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Manager, Customer Education Marketing</div><div class="quote">&ldquo;You never stop recruiting, you&rsquo;re truly the best. We&rsquo;re incredibly fortunate to have someone like you who genuinely cares about finding and placing the right person.&rdquo;</div></div>
+          <div class="card" style="padding:22px;"><div style="font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:10px;">Vice President of Human Resources</div><div class="quote">&ldquo;It&rsquo;s been a great pleasure having you as part of the HR team the past several years. Time has flown by. I know you will continue to be successful here or wherever your adventures may take you.&rdquo;</div></div>
+        </div>
+      </div>
+    </section>
+    <!-- ENGAGEMENT MODELS -->
+    <section>
+      <div class="container">
+        <h3>Engagement Models</h3>
+        <div class="grid cols-3" style="margin-top:18px">
+          <div class="card" style="padding:20px"><h4>Embedded RPO</h4><p class="muted">Monthly retainer. Owns reqs end‑to‑end. Perfect for scale‑ups and transformations.</p></div>
+          <div class="card" style="padding:20px"><h4>Executive Search</h4><p class="muted">C‑suite and Director+ with milestone‑based fees and guaranteed delivery.</p></div>
+          <div class="card" style="padding:20px"><h4>Project Sprints</h4><p class="muted">30/60‑day blitz to build pipeline, clean process, and land critical hires fast.</p></div>
+        </div>
+      </div>
+    </section>
+    <!-- TALENTBASE SECTION -->
+    <section id="talentbase" class="talentbase-band">
+      <div class="container">
+        <div class="talentbase-grid">
+          <div>
+ <div class="talentbase-eyebrow"><span>⚡</span> TalentBase</div>
+<h2 class="talentbase-headline">
+  Introducing the first Talent Experience System (TES).
+  <span style="color:#a89dff;">Not an ATS. Others track applicants; we manage the experience.</span>
+</h2>
+<p class="talentbase-sub">
+  TalentBase is built around one thing: the experience,
+  for both the candidate and the company.
+  <br><br>
+  From job posting to application,
+  to interview to decision,
+  everything moves forward in a single, seamless flow.
+  <br><br>
+  No bottlenecks. No breakdowns.
+  <br><br>
+  A straight line from job to hire.
+</p>
+<div class="talentbase-features">
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>AI Match</strong>: rank every candidate by fit score with pros, cons, and skill gaps</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>AI Sourcing</strong>: describe who you need in plain English, AI scores your entire database instantly</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>Resume Parsing</strong>: drop a PDF and AI auto-fills the full profile in seconds</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>Boolean Search + Advanced Filters</strong>: 8 filters including work auth, YOE range, source, and skills</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>Offer Builder</strong>: select a candidate and role, AI generates a complete offer letter</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>Interview Scorecards</strong>: weighted criteria, required questions, structured evaluation per role</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>Campaigns</strong>: Always-On Pipeline, fill a role, warm up pipeline, reactivate candidates</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>Gmail Integration</strong>: one click opens Gmail pre-filled with outreach, follow-up, or offer</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>Library</strong>: 20 SHRM-compliant templates: offer letters, call scripts, scorecards, playbooks</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>Headcount Planning</strong>: track approved reqs, budgets, priorities, and target start dates</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>Kanban Pipeline + Analytics</strong>: full funnel visibility, source of hire, time-to-fill</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>CSV Import / Export</strong>: works with iCIMS, Greenhouse, Excel. Your data, always portable.</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>Sourcing Intelligence</strong>: every job auto-generates LinkedIn boolean strings, a candidate DM, and 2 follow-up email sequences</div></div>
+              <div class="tb-feature"><div class="tb-check">✓</div><div><strong>Prompt Library</strong>: 100 AI recruiting prompts built in: BD outreach, candidate DMs, objection handling, call prep, and the $1M Recruiter Prompt</div></div>
+            </div>
+            <div style="margin-top:20px;padding:14px 16px;background:rgba(124,106,247,.08);border:1px solid rgba(124,106,247,.2);border-radius:8px;font-size:12px;color:#e4eaf5;line-height:1.7;"><strong style="color:#a89dff;">There is nothing else like this.</strong> TalentBase is not software built in a boardroom. It was built by one recruiter who used it to fill 200 roles in one year, and it keeps getting better.</div>
+            <div style="margin-top:24px;">
+              <p style="font-size:18px;font-weight:700;color:#f1f5f9;margin:0 0 6px;letter-spacing:-.2px;">See Your Hiring System Live in 60 Seconds</p>
+              <p style="font-size:13px;color:#bac6d8;margin:0 0 16px;line-height:1.6;">Real-time visibility into hiring, pipeline, and execution, no login required.</p>
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <!-- TB-LINK-4: talentbase section Watch Live Demo, removed public access 2026-04 -->
+                <a href="#contact" onclick="tbAccessModal(event)" style="display:inline-flex;align-items:center;gap:7px;padding:11px 22px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;letter-spacing:.01em;box-shadow:0 2px 16px rgba(59,130,246,.35);transition:all .18s ease;">▶ Watch Live Demo</a>
+                <!-- TB-LINK-5: talentbase section Access button, removed public access 2026-04 -->
+                <a href="#contact" onclick="tbAccessModal(event)" class="tb-launch-btn" style="margin:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Request Access</a>
+              </div>
+              <p style="margin-top:10px;font-size:12px;color:#9fabbf;">What most firms hide, we show, live.</p>
+              <div class="tb-note" style="margin-top:10px;">Free to use. Bring your own Anthropic API key to unlock AI features (~$5 gets you hundreds of searches).</div>
+            </div>
+          </div>
+          <div class="talentbase-mockup">
+            <div class="tb-mock-bar"><div class="tb-mock-dot" style="background:#ff5f57;"></div><div class="tb-mock-dot" style="background:#febc2e;"></div><div class="tb-mock-dot" style="background:#28c840;"></div><div class="tb-mock-title">TalentBase TES, The Staffing Specialist</div></div>
+            <!-- Real TalentBase TES app hero -->
+            <div style="position:relative;padding:18px 18px 16px;background:linear-gradient(115deg,#0f1836 0%,#243456 40%,#5a5238 76%,#7c5c2e 100%);overflow:hidden;">
+              <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,16,32,.12),rgba(11,16,32,.55));"></div>
+              <div style="position:relative;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#4f6bff,#3b5bfd);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:18px;box-shadow:0 4px 12px rgba(59,91,253,.5);">T</div>
+                    <div><div style="font-size:14px;font-weight:800;color:#fff;line-height:1.1;">TalentBase TES</div><div style="font-size:10px;color:#dbe2f2;font-weight:600;">Talent Experience System</div></div>
+                  </div>
+                  <div style="width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.6);background:linear-gradient(135deg,#2a3550,#4a5570);"></div>
+                </div>
+                <div style="margin-top:14px;font-size:19px;font-weight:800;color:#fff;letter-spacing:-.02em;">Good afternoon, Jonah</div>
+                <div style="font-size:12px;color:#eaeff8;font-weight:600;margin-top:3px;">Source. Recruit. Interview. Hire. Measure.</div>
+                <div style="display:flex;gap:8px;margin-top:14px;">
+                  <div style="background:linear-gradient(135deg,#4f6bff,#3b5bfd);color:#fff;font-size:11px;font-weight:800;padding:8px 14px;border-radius:9px;box-shadow:0 4px 14px rgba(59,91,253,.45);">+ New Candidate</div>
+                  <div style="background:#fff;color:#12183a;font-size:11px;font-weight:800;padding:8px 14px;border-radius:9px;">Open Requisitions</div>
+                </div>
+                <div style="font-size:10px;color:#dbe2f2;font-weight:600;margin-top:12px;">HiARC Workspace</div>
+              </div>
+            </div>
+            <div class="tb-mock-body">
+              <div class="tb-mock-stat-row"><div class="tb-mock-stat"><div class="tb-mock-stat-label">Candidates</div><div class="tb-mock-stat-val" style="color:#9d8fff;">24</div></div><div class="tb-mock-stat"><div class="tb-mock-stat-label">Open Jobs</div><div class="tb-mock-stat-val" style="color:#e8f0ff;">6</div></div><div class="tb-mock-stat"><div class="tb-mock-stat-label">Interviewing</div><div class="tb-mock-stat-val" style="color:#f5a623;">8</div></div></div>
+              <div style="font-size:11px;color:#a8a8c8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-weight:600;">AI Match Results, Sr. Program Manager</div>
+              <div class="tb-mock-row"><div style="font-size:10px;color:#7c6af7;font-weight:700;width:16px;">1</div><div class="tb-mock-av" style="background:#5a4db520;color:#9d8fff;">SJ</div><div class="tb-mock-name">Sarah Johnson</div><div class="tb-mock-badge" style="background:#22d47a12;color:#22d47a;border:1px solid #22d47a30;">Strong Fit</div><div class="tb-mock-score" style="color:#22d47a;">94</div></div>
+              <div class="tb-mock-row"><div style="font-size:10px;color:#22d47a;font-weight:700;width:16px;">2</div><div class="tb-mock-av" style="background:#14d4c412;color:#14d4c4;">JC</div><div class="tb-mock-name">James Carter</div><div class="tb-mock-badge" style="background:#22d47a12;color:#22d47a;border:1px solid #22d47a30;">Strong Fit</div><div class="tb-mock-score" style="color:#22d47a;">88</div></div>
+              <div class="tb-mock-row"><div style="font-size:10px;color:#14d4c4;font-weight:700;width:16px;">3</div><div class="tb-mock-av" style="background:#f5a62312;color:#f5a623;">RT</div><div class="tb-mock-name">Rachel Torres</div><div class="tb-mock-badge" style="background:#14d4c412;color:#14d4c4;border:1px solid #14d4c430;">Good Fit</div><div class="tb-mock-score" style="color:#14d4c4;">76</div></div>
+              <div style="margin-top:10px;padding:8px 10px;background:rgba(124,106,247,.08);border:1px solid rgba(124,106,247,.2);border-radius:8px;font-size:10px;color:#a89dff;">✦ Boolean: "Program Manager" AND ("FDA" OR "IVD") AND "NPI"</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= RPO vs TalentBench (self-contained) ================= -->
+<!-- RVB:START -->
+<section class="rvb" id="rpo-vs-bench" aria-labelledby="rvb-title">
+  <style>
+  .rvb,.rvb *{box-sizing:border-box}
+  .rvb{--bg:#0b1020;--panel:#141a2e;--panel2:#1a2237;--line:#242c44;--ink:#f5f7fb;--muted:#b9c1d9;
+       --rpo:#5b8cff;--rpo-deep:#1b2a5b;--bench:#43c07a;--bench-deep:#173a2a;
+       background:var(--bg);color:var(--ink);padding:92px 24px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  .rvb-wrap{max-width:1180px;margin:0 auto}
+  .rvb-head{text-align:center;margin-bottom:44px}
+  .rvb-eyebrow{color:var(--muted);font-size:12.5px;font-weight:700;letter-spacing:2.4px;text-transform:uppercase;margin:0 0 12px}
+  .rvb-title{font-size:clamp(28px,4.2vw,44px);font-weight:800;letter-spacing:-.02em;margin:0 0 10px;line-height:1.08}
+  .rvb-title .b{color:var(--rpo)}.rvb-title .g{color:var(--bench)}
+  .rvb-sub{color:var(--muted);font-weight:500;font-size:18px;margin:0 auto;max-width:620px;line-height:1.55}
+
+  /* lane */
+  .rvb-lane{display:grid;grid-template-columns:230px 1fr;gap:0;border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:26px;background:var(--panel)}
+  .rvb-side{padding:32px 26px;display:flex;flex-direction:column;justify-content:center}
+  .rvb-rpo .rvb-side{background:linear-gradient(160deg,var(--rpo-deep),#0f1836);border-right:1px solid var(--line)}
+  .rvb-bench .rvb-side{background:linear-gradient(160deg,var(--bench-deep),#0f2018);border-right:1px solid var(--line)}
+  .rvb-side-ico{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px}
+  .rvb-rpo .rvb-side-ico{background:rgba(91,140,255,.16);border:1px solid rgba(91,140,255,.4)}
+  .rvb-bench .rvb-side-ico{background:rgba(67,192,122,.16);border:1px solid rgba(67,192,122,.4)}
+  .rvb-side-title{font-size:23px;font-weight:800;letter-spacing:-.01em;margin:0 0 10px;line-height:1.1}
+  .rvb-side-desc{color:#dbe2f4;font-size:14.5px;font-weight:500;line-height:1.55;margin:0}
+
+  .rvb-body{padding:26px 26px 22px}
+  .rvb-kicker{font-size:12.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;margin:0 0 18px}
+  .rvb-rpo .rvb-kicker{color:var(--rpo)}.rvb-bench .rvb-kicker{color:var(--bench)}
+
+  .rvb-flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:9px}
+  .rvb-step{flex:1 1 128px;min-width:120px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 13px}
+  .rvb-ico{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:10px}
+  .rvb-rpo .rvb-ico{background:rgba(91,140,255,.14);border:1px solid rgba(91,140,255,.34)}
+  .rvb-bench .rvb-ico{background:rgba(67,192,122,.14);border:1px solid rgba(67,192,122,.34)}
+  .rvb-sn{font-size:13px;font-weight:800;letter-spacing:.2px;margin:0 0 5px;line-height:1.2}
+  .rvb-rpo .rvb-sn{color:#cfe0e8}.rvb-bench .rvb-sn{color:#cfe8d8}
+  .rvb-sd{font-size:12px;font-weight:500;color:var(--muted);line-height:1.45;margin:0}
+  .rvb-arrow{display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex:0 0 auto}
+  .rvb-rpo .rvb-arrow{color:var(--rpo)}.rvb-bench .rvb-arrow{color:var(--bench)}
+  .rvb-result{flex:1 1 150px;min-width:140px;border-radius:12px;padding:16px 14px;display:flex;flex-direction:column;justify-content:center}
+  .rvb-rpo .rvb-result{background:rgba(91,140,255,.12);border:1px solid rgba(91,140,255,.4)}
+  .rvb-bench .rvb-result{background:rgba(67,192,122,.12);border:1px solid rgba(67,192,122,.4)}
+  .rvb-result .rvb-ico{margin-bottom:10px}
+  .rvb-rt{font-size:15px;font-weight:800;line-height:1.25;letter-spacing:-.01em}
+  .rvb-rpo .rvb-rt{color:#dbe6ff}.rvb-bench .rvb-rt{color:#d6f2e2}
+
+  .rvb-trust{display:flex;flex-wrap:wrap;gap:8px 10px;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+  .rvb-trust span{font-size:12px;font-weight:700;letter-spacing:.2px;border-radius:20px;padding:6px 13px}
+  .rvb-rpo .rvb-trust span{color:#cdd9ff;background:rgba(91,140,255,.1);border:1px solid rgba(91,140,255,.3)}
+  .rvb-bench .rvb-trust span{color:#c6ecd4;background:rgba(67,192,122,.1);border:1px solid rgba(67,192,122,.3)}
+
+  /* bottom summary */
+  .rvb-sum{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:stretch;margin-top:8px}
+  .rvb-scard{border:1px solid var(--line);border-radius:16px;padding:22px 22px}
+  .rvb-scard.rpo{background:linear-gradient(160deg,rgba(91,140,255,.12),rgba(91,140,255,.03));border-color:rgba(91,140,255,.32)}
+  .rvb-scard.bench{background:linear-gradient(160deg,rgba(67,192,122,.12),rgba(67,192,122,.03));border-color:rgba(67,192,122,.32)}
+  .rvb-scard .lbl{font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;margin:0 0 4px}
+  .rvb-scard.rpo .lbl{color:var(--rpo)}.rvb-scard.bench .lbl{color:var(--bench)}
+  .rvb-scard .run{font-size:18px;font-weight:800;margin:0 0 8px}
+  .rvb-scard .txt{font-size:13.5px;font-weight:500;color:var(--muted);line-height:1.55;margin:0}
+  .rvb-vs{display:flex;align-items:center;justify-content:center}
+  .rvb-vs span{width:46px;height:46px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--muted)}
+  .rvb-both{margin-top:26px;text-align:center;border:1px solid var(--line);border-radius:16px;padding:24px;background:rgba(20,26,46,.55)}
+  .rvb-both h4{font-size:14px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;margin:0 0 8px;background:linear-gradient(90deg,var(--rpo),var(--bench));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .rvb-both p{font-size:15px;font-weight:600;color:var(--ink);margin:0}
+  .rvb-both p .m{color:var(--muted);font-weight:500}
+
+  @media (max-width:860px){
+    .rvb-lane{grid-template-columns:1fr}
+    .rvb-rpo .rvb-side,.rvb-bench .rvb-side{border-right:0;border-bottom:1px solid var(--line)}
+    .rvb-side{padding:24px 22px;text-align:center;align-items:center}
+  }
+  @media (max-width:680px){
+    .rvb{padding:60px 16px}
+    .rvb-arrow{display:none}
+    .rvb-step,.rvb-result{flex:1 1 100%}
+    .rvb-sum{grid-template-columns:1fr}
+    .rvb-vs{transform:rotate(90deg)}
+    .rvb-vs span{width:40px;height:40px}
+  }
+  </style>
+
+  <div class="rvb-wrap">
+    <header class="rvb-head">
+      <p class="rvb-eyebrow">TalentBase RPO vs. TalentBench</p>
+      <h2 class="rvb-title" id="rvb-title"><span class="b">TalentBase RPO</span> vs. <span class="g">TalentBench</span></h2>
+      <p class="rvb-sub">Two solutions. One goal: better hires, faster.</p>
+    </header>
+
+    <!-- LANE 1: RPO -->
+    <div class="rvb-lane rvb-rpo">
+      <div class="rvb-side">
+        <div class="rvb-side-ico">👥</div>
+        <h3 class="rvb-side-title">TalentBase RPO</h3>
+        <p class="rvb-side-desc">We act as your TA team and run recruitment end to end.</p>
+      </div>
+      <div class="rvb-body">
+        <p class="rvb-kicker">Full-Cycle Recruitment Partnership</p>
+        <div class="rvb-flow">
+          <div class="rvb-step"><div class="rvb-ico">🔍</div><div class="rvb-sn">1. Discovery</div><p class="rvb-sd">Understand needs, role, culture and success profile.</p></div>
+          <div class="rvb-arrow">→</div>
+          <div class="rvb-step"><div class="rvb-ico">👥</div><div class="rvb-sn">2. Sourcing</div><p class="rvb-sd">Proactive, targeted sourcing across all channels.</p></div>
+          <div class="rvb-arrow">→</div>
+          <div class="rvb-step"><div class="rvb-ico">📄</div><div class="rvb-sn">3. Screening</div><p class="rvb-sd">Resume review, phone screens and qualifications.</p></div>
+          <div class="rvb-arrow">→</div>
+          <div class="rvb-step"><div class="rvb-ico">🗒️</div><div class="rvb-sn">4. Interviews</div><p class="rvb-sd">Coordinate, prep, and manage the interview process.</p></div>
+          <div class="rvb-arrow">→</div>
+          <div class="rvb-step"><div class="rvb-ico">⭐</div><div class="rvb-sn">5. Finalist</div><p class="rvb-sd">Present top talent with insights and recommendations.</p></div>
+          <div class="rvb-arrow">→</div>
+          <div class="rvb-step"><div class="rvb-ico">🤝</div><div class="rvb-sn">6. Offers &amp; Close</div><p class="rvb-sd">Offer management, negotiation, and a successful close.</p></div>
+          <div class="rvb-arrow">→</div>
+          <div class="rvb-result"><div class="rvb-ico">🏆</div><div class="rvb-rt">Hired. Right fit. Day for day.</div></div>
+        </div>
+        <div class="rvb-trust"><span>End-to-End Ownership</span><span>Dedicated Recruiters</span><span>Full Accountability</span><span>Faster Time-to-Fill</span></div>
+      </div>
+    </div>
+
+    <!-- LANE 2: TalentBench -->
+    <div class="rvb-lane rvb-bench">
+      <div class="rvb-side">
+        <div class="rvb-side-ico">🪑</div>
+        <h3 class="rvb-side-title">TalentBench</h3>
+        <p class="rvb-side-desc">Our software and sourcing team work directly with your TA team, delivering vetted talent, not just résumés.</p>
+      </div>
+      <div class="rvb-body">
+        <p class="rvb-kicker">Sourcing &amp; Bench Strength, Empowering Your TA Team</p>
+        <div class="rvb-flow">
+          <div class="rvb-step"><div class="rvb-ico">🎯</div><div class="rvb-sn">A. Targeted Sourcing</div><p class="rvb-sd">Our sourcing team finds and engages quality candidates.</p></div>
+          <div class="rvb-arrow">→</div>
+          <div class="rvb-step"><div class="rvb-ico">📝</div><div class="rvb-sn">B. Pre-Screen &amp; Qualify</div><p class="rvb-sd">We vet for skills, experience, and must-haves.</p></div>
+          <div class="rvb-arrow">→</div>
+          <div class="rvb-step"><div class="rvb-ico">🛡️</div><div class="rvb-sn">C. Quality Talent Bench</div><p class="rvb-sd">Vetted, matched candidates delivered to your TA team.</p></div>
+          <div class="rvb-arrow">→</div>
+          <div class="rvb-step"><div class="rvb-ico">👥</div><div class="rvb-sn">D. TA Interviews &amp; Decisions</div><p class="rvb-sd">Your TA team speaks with only qualified, relevant candidates.</p></div>
+          <div class="rvb-arrow">→</div>
+          <div class="rvb-step"><div class="rvb-ico">📋</div><div class="rvb-sn">E. Shortlist to Hire</div><p class="rvb-sd">Focus on the best. Less screen time, better conversations, faster decisions.</p></div>
+          <div class="rvb-arrow">→</div>
+          <div class="rvb-result"><div class="rvb-ico">🎯</div><div class="rvb-rt">Better pipeline. Better quality. Less waste.</div></div>
+        </div>
+        <div class="rvb-trust"><span>Quality First</span><span>Vetted &amp; Matched Talent</span><span>Reduced Screen Time</span><span>More Time for Interviews &amp; Decisions</span></div>
+      </div>
+    </div>
+
+    <!-- BOTTOM SUMMARY -->
+    <div class="rvb-sum">
+      <div class="rvb-scard rpo">
+        <p class="lbl">TalentBase RPO</p>
+        <p class="run">We run it for you.</p>
+        <p class="txt">End-to-end recruitment ownership, from first touch to offer and close.</p>
+      </div>
+      <div class="rvb-vs"><span>VS</span></div>
+      <div class="rvb-scard bench">
+        <p class="lbl">TalentBench</p>
+        <p class="run">We build it for you.</p>
+        <p class="txt">We build the bench and deliver vetted, high-quality candidates so your TA team can focus on what matters: talent conversations and decisions.</p>
+      </div>
+    </div>
+
+    <div class="rvb-both">
+      <h4>Both Solutions. One Goal.</h4>
+      <p>Stronger talent. <span class="m">Smarter process.</span> Better results.</p>
+    </div>
+  </div>
+</section>
+<!-- RVB:END -->
+    <!-- ================= /RPO vs TalentBench ================= -->
+    <!-- FOUNDER -->
+    <section id="founder" class="founder-band">
+      <div class="container" style="max-width:800px; text-align:center;">
+        <div>
+          <div class="founder-eyebrow">About the Founder</div>
+          <h3 class="founder-title">Built by a recruiter who outworks everyone.</h3>
+          <p class="founder-sub"><strong>Founder and Former Owner of Agency-Leads.com</strong> and <strong>Founder of Mate4Life AI</strong>, Jonah Adelman is an early AI visionary and the engine behind <em>The Staffing Specialist</em>, a performance-driven RPO that helps elite organizations scale through people. Known for his urgency, precision, and accountability, Jonah has turned recruiting into a measurable growth advantage for companies that demand results, not excuses.</p>
+          <p class="founder-sub">Having collaborated directly with top corporate executives, including legendary leaders Jack and Suzy Welch, Jonah brings boardroom-level strategy to every engagement. His proprietary systems fuse human expertise with AI-powered automation, aligning talent, execution, and profitability to turn hiring into a measurable business advantage.</p>
+          <p class="founder-sub">For organizations serious about building high-performance teams, <strong>Jonah Adelman</strong> isn't just a recruiter. He's the architect of the teams behind their success.</p>
+          <div class="founder-badges">
+            <span class="badge">14–28 day time-to-hire</span>
+            <span class="badge">92% offer acceptance</span>
+            <span class="badge">Executive &amp; niche roles</span>
+            <span class="badge">Full-stack TA ops</span>
+          </div>
+          <p class="founder-sub" style="margin-top:10px">"I don't deliver lists, I deliver outcomes. Every candidate represents a strategy, not a guess."</p>
+          <p style="margin-top:16px"><a class="founder-cta" href="https://www.linkedin.com/in/jonahadelman1" target="_blank" rel="noopener">🔗 Connect with Jonah on LinkedIn</a></p>
+        </div>
+      </div>
+    </section>
+
+
+
+
+    <!-- ================= THE STAFFING SPECIALIST: Meet the Recruiting Engine (self-contained) ================= -->
+    <style>
+.re,.re *,.re-scrim,.re-scrim *{box-sizing:border-box}
+  .re{--bg:#0b1020;--panel:#141a2e;--panel2:#1a2237;--line:#242c44;--ink:#f5f7fb;--muted:#b9c1d9;--gold:#c8a96a;--green:#43c07a;--purple:#8ea2ff;--blue:#5b8cff;
+    background:var(--bg);color:var(--ink);padding:96px 24px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  .re-wrap{max-width:1180px;margin:0 auto}
+  .re-head{text-align:center;margin-bottom:52px}
+  .re-eyebrow{color:var(--gold);font-size:13px;font-weight:700;letter-spacing:2.6px;text-transform:uppercase;margin:0 0 12px}
+  .re-title{font-size:clamp(30px,4.4vw,46px);font-weight:800;letter-spacing:-.02em;margin:0 0 12px;line-height:1.06}
+  .re-sub{color:var(--muted);font-weight:500;font-size:19.5px;margin:0 auto;max-width:600px;line-height:1.55}
+  .re-verticals{margin-top:26px}
+  .re-vlabel{font-size:12.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:block}
+  .re-vchips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:760px;margin:0 auto}
+  .re-vchip{font-size:13.5px;font-weight:600;color:#eef1ff;background:rgba(200,169,106,.1);border:1px solid rgba(200,169,106,.32);border-radius:20px;padding:5px 13px}
+
+  /* layout: left rail spine + hierarchy rows */
+  .engine{display:grid;grid-template-columns:196px 1fr;column-gap:30px;align-items:stretch}
+  .rail{display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:8px;position:relative}
+  .rail .r-ico{font-size:22px;margin-bottom:8px}
+  .rail .r-name{font-size:13.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold);line-height:1.3}
+  .rail .r-desc{font-size:13px;font-weight:500;color:var(--muted);margin-top:6px;line-height:1.45;max-width:160px}
+  .rail:not(:last-child)::after{content:"";position:absolute;left:50%;bottom:-1px;top:64px;width:2px;background:var(--line);transform:translateX(-1px)}
+
+  .rows{display:flex;flex-direction:column;gap:30px;position:relative}
+  .tier{display:grid;gap:22px;position:relative}
+  .tier.two{grid-template-columns:1fr 1fr}
+  .tier:not(:first-child)::before{content:"";position:absolute;left:50%;top:-30px;height:30px;width:2px;background:var(--line);transform:translateX(-1px)}
+
+  /* person card */
+  .ecard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;position:relative;
+    transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+  .ecard:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 16px 40px rgba(0,0,0,.38)}
+  .ecard.lead{background:linear-gradient(180deg,var(--panel2),var(--panel));border-color:#2c375a}
+  .ecard-top{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+  .ecard-lead-top{grid-template-columns:auto 1fr auto}
+  .avatar{position:relative;width:72px;height:72px;border-radius:50%;overflow:hidden;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e7c987,#c8a96a);box-shadow:0 4px 14px rgba(200,169,106,.3)}
+  .ecard.lead .avatar{width:88px;height:88px}
+  .avatar .fb{font-size:24px;font-weight:800;color:#0b1020}
+  .avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .e-eyebrow{font-size:11.5px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:var(--gold);margin:0 0 3px}
+  .e-name{font-size:20px;font-weight:800;letter-spacing:-.01em;margin:0 0 2px}
+  .e-role{color:var(--muted);font-weight:600;font-size:15px;margin:0}
+  .e-slogan{color:var(--gold);font-size:13px;font-style:italic;margin:4px 0 0;line-height:1.4}
+  .e-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .e-badge{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;border-radius:20px;padding:4px 11px}
+  .e-badge.status{color:#bfe0cb;background:rgba(67,192,122,.12);border:1px solid rgba(67,192,122,.3)}
+  .e-badge.status .dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+  .e-badge.tagline{color:var(--gold);background:rgba(200,169,106,.1);border:1px solid rgba(200,169,106,.28)}
+  .e-tags{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 0}
+  .e-tag{font-size:12.5px;font-weight:600;color:#dfe4f2;background:#1c2440;border:1px solid var(--line);border-radius:7px;padding:5px 10px}
+  .e-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+  .ecard.lead .ecard-lead-top .e-metrics{margin:0;padding:0;border:0;grid-template-columns:repeat(4,auto);gap:22px}
+  .metric{text-align:center}
+  .metric .v{font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+  .metric .v.gold{color:var(--gold)}
+  .metric .l{font-size:12px;font-weight:600;color:var(--muted);margin-top:3px;line-height:1.25}
+  .e-view{margin-top:16px;width:100%;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:9px;
+    padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;transition:border-color .15s,color .15s}
+  .e-view:hover{border-color:var(--gold);color:var(--gold)}
+  .e-view .ev-h{display:none}
+  .e-view:hover .ev-d,.e-view:focus-visible .ev-d{display:none}
+  .e-view:hover .ev-h,.e-view:focus-visible .ev-h{display:inline}
+  .e-name,.e-role{overflow-wrap:break-word;word-break:break-word}
+
+  /* AI automation tier */
+  .ai-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+  .ai-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 16px;text-align:center;
+    transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+  .ai-card:hover{transform:translateY(-3px);border-color:var(--purple);box-shadow:0 14px 34px rgba(0,0,0,.36)}
+  .ai-ico{font-size:26px;margin-bottom:10px;filter:drop-shadow(0 0 10px rgba(142,162,255,.45))}
+  .ai-name{font-size:16.5px;font-weight:800;margin:0 0 2px}
+  .ai-role{color:var(--purple);font-size:13px;font-weight:600;margin:0 0 9px}
+  .ai-desc{color:var(--muted);font-weight:500;font-size:13.5px;line-height:1.55;margin:0 0 12px}
+  .ai-badge{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:#bfe0cb;background:rgba(67,192,122,.12);border:1px solid rgba(67,192,122,.3);border-radius:20px;padding:3px 10px}
+  .ai-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+
+  .re-foot{text-align:center;margin-top:52px;color:var(--muted);font-size:15px;font-weight:600}
+  .re-foot b{color:var(--gold);font-weight:700}
+
+  /* modal */
+  .re-scrim{--bg:#0b1020;--panel:#141a2e;--panel2:#1a2237;--line:#242c44;--ink:#f5f7fb;--muted:#b9c1d9;--gold:#c8a96a;--green:#43c07a;--purple:#8ea2ff;position:fixed;inset:0;background:rgba(6,9,18,.72);display:none;align-items:center;justify-content:center;z-index:1000;padding:18px}
+  .re-scrim.open{display:flex}
+  .re-modal{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:18px;max-width:540px;width:100%;padding:30px;box-shadow:0 30px 80px rgba(0,0,0,.5);position:relative;max-height:90vh;overflow-y:auto}
+  .re-x{position:absolute;top:16px;right:16px;background:transparent;border:0;color:var(--muted);font-size:24px;line-height:1;cursor:pointer;padding:4px 8px;border-radius:8px}
+  .re-x:hover{color:var(--ink);background:var(--panel2)}
+  .re-mhead{display:flex;align-items:center;gap:16px;margin-bottom:6px}
+  .re-mhead .avatar{width:64px;height:64px}
+  .re-mname{font-size:22px;font-weight:800;margin:0 0 2px}
+  .re-mrole{color:var(--gold);font-size:15px;font-weight:600}
+  .re-mlabel{font-size:12.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:18px 0 6px}
+  .re-mtext{color:#e4e9f5;font-weight:500;font-size:16px;line-height:1.65;margin:0}
+  .re-mtags{display:flex;flex-wrap:wrap;gap:6px}
+  .re-mact{display:flex;gap:10px;margin-top:24px}
+  .re-btn{flex:1;text-align:center;text-decoration:none;border-radius:9px;padding:12px;font-size:15px;font-weight:700;transition:filter .15s,border-color .15s,color .15s;cursor:pointer;border:1px solid transparent}
+  .re-btn.gold{background:var(--gold);color:#0b1020}
+  .re-btn.gold:hover{filter:brightness(1.06)}
+  .re-btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+  .re-btn.ghost:hover{border-color:var(--gold);color:var(--gold)}
+  .re a:focus-visible,.re button:focus-visible,.re-scrim a:focus-visible,.re-scrim button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+  @media (max-width:1000px){
+    .engine{grid-template-columns:1fr;row-gap:12px}
+    .rail{flex-direction:row;justify-content:center;gap:10px;padding:10px 0}
+    .rail .r-desc{display:none}
+    .rail:not(:last-child)::after{display:none}
+    .rail .r-ico{margin:0}
+    .ai-grid{grid-template-columns:repeat(3,1fr)}
+    .tier.two{grid-template-columns:1fr}
+    .e-metrics{grid-template-columns:repeat(2,1fr)}
+    .ecard.lead .ecard-lead-top{grid-template-columns:auto 1fr}
+    .ecard.lead .ecard-lead-top .e-metrics{grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);grid-column:1/-1}
+  }
+  @media (max-width:640px){
+    .re{padding:60px 16px}
+    .tier.two{grid-template-columns:1fr}
+    .ecard.lead .ecard-lead-top{grid-template-columns:auto 1fr}
+    .ecard.lead .ecard-lead-top .e-metrics{grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);grid-column:1/-1}
+    .ai-grid{grid-template-columns:repeat(2,1fr)}
+    .e-metrics{grid-template-columns:repeat(2,1fr)}
+    .ecard{padding:18px}
+    .e-view{width:100%}
+  }
+  @media (hover:none){ .ecard:hover,.ai-card:hover,.tb-card:hover{transform:none} }
+
+  /* ===== TalentBench Recruiting Team (AI recruiters, shared under Recruiting Ops) ===== */
+  .tb-merge{position:relative;height:44px;margin-top:30px}
+  .tb-merge span{position:absolute;background:var(--line)}
+  .tb-merge .vL{left:25%;top:0;width:2px;height:22px}
+  .tb-merge .vR{left:75%;top:0;width:2px;height:22px}
+  .tb-merge .h{left:25%;width:50%;top:21px;height:2px}
+  .tb-merge .vC{left:calc(50% - 1px);top:22px;width:2px;height:22px}
+  .tb-team{background:rgba(20,26,46,.55);border:1px solid var(--line);border-radius:18px;padding:26px 22px}
+  .tb-head{text-align:center;margin-bottom:22px}
+  .tb-h{font-size:21px;font-weight:800;margin:0 0 6px}
+  .tb-s{color:var(--muted);font-weight:500;font-size:15px;margin:0 auto;max-width:540px;line-height:1.55}
+  .tb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .tb-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 14px;text-align:center;position:relative;
+    transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+  .tb-card:hover{transform:translateY(-4px);border-color:var(--purple);box-shadow:0 14px 34px rgba(91,140,255,.28)}
+  .tb-avatar{position:relative;width:56px;height:56px;margin:0 auto 10px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#0b1020;font-size:24px;z-index:0}
+  .tb-avatar::before{content:"";position:absolute;inset:-2px;border-radius:50%;z-index:-1;background:conic-gradient(from 0deg,#5b8cff,#8ea2ff,#43c07a,#5b8cff);animation:tb-spin 5s linear infinite}
+  @keyframes tb-spin{to{transform:rotate(360deg)}}
+  .tb-name{font-size:16px;font-weight:800;margin:0 0 2px}
+  .tb-role{color:var(--purple);font-size:12.5px;font-weight:600;margin:0 0 8px}
+  .tb-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#bfe0cb;background:rgba(67,192,122,.12);border:1px solid rgba(67,192,122,.3);border-radius:20px;padding:3px 9px;margin-bottom:10px}
+  .tb-badge .tb-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:tb-pulse 2s infinite}
+  @keyframes tb-pulse{0%{box-shadow:0 0 0 0 rgba(67,192,122,.55)}70%{box-shadow:0 0 0 6px rgba(67,192,122,0)}100%{box-shadow:0 0 0 0 rgba(67,192,122,0)}}
+  .tb-skills{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-bottom:12px}
+  .tb-skill{font-size:11.5px;font-weight:600;color:#dfe4f2;background:#1c2440;border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+  .tb-act{border-top:1px solid var(--line);padding-top:10px;margin-bottom:12px;text-align:left}
+  .tb-act .row{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:500;color:var(--muted);margin:4px 0}
+  .tb-act .row b{color:var(--ink);font-weight:700}
+  .tb-view{width:100%;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px;font-weight:600;cursor:pointer;transition:border-color .15s,color .15s}
+  .tb-view:hover{border-color:var(--purple);color:var(--purple)}
+  @media (max-width:1000px){ .tb-grid{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:640px){ .tb-grid{grid-template-columns:1fr} .tb-merge{display:none} }
+  @media (prefers-reduced-motion:reduce){ .tb-avatar::before,.tb-badge .tb-dot{animation:none} }
+  /* trust bar */
+  .re-trust{display:flex;flex-wrap:wrap;justify-content:center;gap:16px 44px;margin:30px auto 0;max-width:920px;padding-top:26px;border-top:1px solid var(--line)}
+  .re-trust .t{text-align:center}
+  .re-trust .t .v{font-size:24px;font-weight:800;color:var(--gold);letter-spacing:-.01em}
+  .re-trust .t .l{font-size:13px;font-weight:600;color:var(--muted);margin-top:3px;letter-spacing:.3px}
+  /* intelligence-layer subtitle */
+  .ai-sub{color:var(--muted);font-weight:500;font-size:15px;line-height:1.55;max-width:680px;margin:0 0 20px}
+  /* premium CTA */
+  .re-cta{text-align:center;max-width:720px;margin:100px auto 0;padding-top:66px;border-top:1px solid var(--line)}
+  .re-cta .div{width:54px;height:3px;background:var(--gold);border-radius:2px;margin:0 auto 26px}
+  .re-cta h3{font-size:clamp(26px,3.6vw,38px);font-weight:800;letter-spacing:-.02em;margin:0 0 20px}
+  .re-cta > p{color:var(--muted);font-weight:500;font-size:16px;line-height:1.7;margin:0 0 30px}
+  .re-cta .btns{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+  .re-cta .btn{text-decoration:none;border-radius:10px;padding:13px 26px;font-size:14.5px;font-weight:700;transition:filter .15s,border-color .15s,color .15s}
+  .re-cta .btn.gold{background:var(--gold);color:#0b1020}
+  .re-cta .btn.gold:hover{filter:brightness(1.06)}
+  .re-cta .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .re-cta .btn.ghost:hover{border-color:var(--gold);color:var(--gold)}
+  .re-cta .scarcity{color:var(--gold);font-size:13.5px;margin:20px auto 0;line-height:1.5;max-width:520px}
+  /* mic-drop */
+  .re-micdrop{text-align:center;max-width:820px;margin:110px auto 0;padding:0 12px}
+  .re-micdrop p{font-size:clamp(24px,3.4vw,36px);font-weight:800;letter-spacing:-.02em;line-height:1.25;margin:0}
+  .re-micdrop .lo{color:var(--muted);display:block}
+  .re-micdrop .hi{color:var(--ink);display:block;margin-top:8px}
+  @media (max-width:640px){ .re-trust{gap:14px 26px} .re-cta{margin-top:64px} .re-micdrop{margin-top:72px} }
+    </style>
+<!-- RECRUITING-ENGINE:START -->
+<section class="re" id="recruiting-engine" aria-labelledby="re-title">
+  <div class="re-wrap">
+    <header class="re-head">
+      <p class="re-eyebrow">Meet the Recruiting Engine</p>
+      <h2 class="re-title" id="re-title">The Recruiting Engine Behind Every Hire.</h2>
+      <p class="re-sub">Elite recruiters. AI specialists. One enterprise recruiting operating system built to deliver exceptional talent.</p>
+      <div class="re-trust">
+        <div class="t"><div class="v">200,000+</div><div class="l">Candidates in Network</div></div>
+        <div class="t"><div class="v">2,000+</div><div class="l">Successful Placements</div></div>
+        <div class="t"><div class="v">97%</div><div class="l">Client Retention</div></div>
+        <div class="t"><div class="v">24/7</div><div class="l">AI Recruiting</div></div>
+        <div class="t"><div class="v">10+</div><div class="l">Industry Specializations</div></div>
+      </div>
+      <div class="re-verticals">
+        <span class="re-vlabel">Industries We Build Teams For</span>
+        <div class="re-vchips">
+          <span class="re-vchip">Medical Device</span>
+          <span class="re-vchip">Biotech</span>
+          <span class="re-vchip">Startups</span>
+          <span class="re-vchip">Hi-Tech</span>
+          <span class="re-vchip">AI &amp; Machine Learning</span>
+          <span class="re-vchip">Robotics</span>
+          <span class="re-vchip">Defense</span>
+          <span class="re-vchip">Semiconductors</span>
+          <span class="re-vchip">Aerospace</span>
+          <span class="re-vchip">Autonomous Systems</span>
+          <span class="re-vchip">Clean Energy</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="engine">
+      <!-- LEFT RAIL (row 1) --><div class="rail"><div class="r-ico">👑</div><div class="r-name">Executive Leadership</div><div class="r-desc">Leadership &amp; strategy</div></div>
+      <!-- CONTENT -->
+      <div class="rows">
+
+        <!-- Tier 1: Founder -->
+        <div class="tier">
+          <article class="ecard lead">
+            <div class="ecard-top ecard-lead-top">
+              <div class="avatar"><span class="fb">JA</span><img src="jonah-adelman.jpg" alt="Jonah Adelman" onerror="this.remove()"></div>
+              <div>
+                <p class="e-eyebrow">Executive Leadership</p>
+                <h3 class="e-name">Jonah Adelman</h3>
+                <p class="e-role">Founder &amp; Principal Recruiter</p>
+                <div class="e-badges"><span class="e-badge status"><span class="dot"></span>Active</span><span class="e-badge tagline">Leading Strategy</span></div>
+              </div>
+              <div class="e-metrics">
+                <div class="metric"><div class="v gold">2,000+</div><div class="l">Placements</div></div>
+                <div class="metric"><div class="v">97%</div><div class="l">Client Retention</div></div>
+                <div class="metric"><div class="v">20+</div><div class="l">Years Experience</div></div>
+                <div class="metric"><div class="v gold">4.9★</div><div class="l">Client Rating</div></div>
+              </div>
+            </div>
+            <div class="e-tags"><span class="e-tag">Executive Search</span><span class="e-tag">Defense</span><span class="e-tag">Recruiting Strategy</span><span class="e-tag">Go-to-Market</span></div>
+            <button class="e-view" data-id="jonah" aria-haspopup="dialog"><span class="ev-d">Meet the Expert</span><span class="ev-h">Learn how they build exceptional teams →</span></button>
+          </article>
+        </div>
+
+        <div class="tier">
+          <article class="ecard">
+            <div class="ecard-top">
+              <div class="avatar"><span class="fb">X</span><img src="xander.jpg" alt="Xander" onerror="this.remove()"></div>
+              <div>
+                <p class="e-eyebrow">Co-Founder</p>
+                <h3 class="e-name">Xander</h3>
+                <p class="e-role">Co-Founder • Software Architect • AI Platform Engineer</p>
+                <div class="e-badges"><span class="e-badge status"><span class="dot"></span>Active</span><span class="e-badge tagline">Architecting TalentBase</span></div>
+              </div>
+            </div>
+            <div class="e-tags"><span class="e-tag">Software Development</span><span class="e-tag">Product</span><span class="e-tag">Investment</span><span class="e-tag">Operating System</span></div>
+            <div class="e-metrics">
+              <div class="metric"><div class="v gold">20+</div><div class="l">Enterprise Platforms Built</div></div>
+              <div class="metric"><div class="v gold">Millions</div><div class="l">Data Points Managed</div></div>
+              <div class="metric"><div class="v gold">99.99%</div><div class="l">Platform Availability</div></div>
+              <div class="metric"><div class="v">24/7</div><div class="l">AI Automation</div></div>
+            </div>
+            <button class="e-view" data-id="xander" aria-haspopup="dialog"><span class="ev-d">Meet the Expert</span><span class="ev-h">Learn how they build exceptional teams →</span></button>
+          </article>
+        </div>
+
+        <div class="tier two">
+          <article class="ecard">
+            <div class="ecard-top">
+              <div class="avatar"><span class="fb">AS</span><img src="anthony-squillante.jpg" alt="Anthony Squillante" onerror="this.remove()"></div>
+              <div><p class="e-eyebrow">Co-Founder</p><h3 class="e-name">Anthony Squillante</h3><p class="e-role">Co-Founder • Growth Strategist • Revenue Architect</p><p class="e-slogan">Relationships first. Results always follow.</p>
+                <div class="e-badges"><span class="e-badge status"><span class="dot"></span>Active</span><span class="e-badge tagline">Building Partnerships</span></div></div>
+            </div>
+            <div class="e-tags"><span class="e-tag">Business Development</span><span class="e-tag">Client Partnerships</span><span class="e-tag">Executive Search</span></div>
+            <div class="e-metrics">
+              <div class="metric"><div class="v gold">$250M+</div><div class="l">Enterprise Revenue Influenced</div></div>
+              <div class="metric"><div class="v gold">150+</div><div class="l">Strategic Clients</div></div>
+              <div class="metric"><div class="v">98%</div><div class="l">Partner Retention</div></div>
+              <div class="metric"><div class="v gold">4.9★</div><div class="l">Client Rating</div></div>
+            </div>
+            <button class="e-view" data-id="anthony" aria-haspopup="dialog"><span class="ev-d">Meet the Expert</span><span class="ev-h">Learn how they build exceptional teams →</span></button>
+          </article>
+          <article class="ecard">
+            <div class="ecard-top">
+              <div class="avatar"><span class="fb">IA</span><img src="isabella-adelman.jpg" alt="Isabella Adelman" onerror="this.remove()"></div>
+              <div><p class="e-eyebrow">Sourcing Engine</p><h3 class="e-name">Isabella Adelman</h3><p class="e-role">Lead Sourcing Genius</p>
+                <div class="e-badges"><span class="e-badge status"><span class="dot"></span>Recruiting</span><span class="e-badge tagline">Sourcing Top Talent</span></div></div>
+            </div>
+            <div class="e-tags"><span class="e-tag">Talent Intelligence</span><span class="e-tag">Sourcing</span><span class="e-tag">Defense</span><span class="e-tag">Program Management</span></div>
+            <div class="e-metrics">
+              <div class="metric"><div class="v gold">12K+</div><div class="l">Candidates Sourced</div></div>
+              <div class="metric"><div class="v">85%</div><div class="l">Response Rate</div></div>
+              <div class="metric"><div class="v gold">40+</div><div class="l">Active Searches</div></div>
+              <div class="metric"><div class="v gold">4.8★</div><div class="l">HM Satisfaction</div></div>
+            </div>
+            <button class="e-view" data-id="isabella" aria-haspopup="dialog"><span class="ev-d">Meet the Expert</span><span class="ev-h">Learn how they build exceptional teams →</span></button>
+          </article>
+        </div>
+
+        <div class="tier two">
+          <article class="ecard">
+            <div class="ecard-top">
+              <div class="avatar"><span class="fb">HA</span><img src="hannah-adelman.jpg" alt="Hannah Adelman" onerror="this.remove()"></div>
+              <div><p class="e-eyebrow">Program Delivery</p><h3 class="e-name">Hannah Adelman</h3><p class="e-role">Recruitment Program Lead</p>
+                <div class="e-badges"><span class="e-badge status"><span class="dot"></span>Recruiting</span><span class="e-badge tagline">Medical Device</span></div></div>
+            </div>
+            <div class="e-tags"><span class="e-tag">Medical Device</span><span class="e-tag">Recruiting Ops</span><span class="e-tag">Interview Coordination</span></div>
+            <div class="e-metrics">
+              <div class="metric"><div class="v gold">200+</div><div class="l">Placements</div></div>
+              <div class="metric"><div class="v">92%</div><div class="l">Interview Show Rate</div></div>
+              <div class="metric"><div class="v gold">35+</div><div class="l">Active Searches</div></div>
+              <div class="metric"><div class="v gold">4.9★</div><div class="l">HM Rating</div></div>
+            </div>
+            <button class="e-view" data-id="hannah" aria-haspopup="dialog"><span class="ev-d">Meet the Expert</span><span class="ev-h">Learn how they build exceptional teams →</span></button>
+          </article>
+          <article class="ecard">
+            <div class="ecard-top">
+              <div class="avatar"><span class="fb">AV</span><img src="amy-vella.jpg" alt="Amy Vella" onerror="this.remove()"></div>
+              <div><p class="e-eyebrow">Program Delivery</p><h3 class="e-name">Amy Vella</h3><p class="e-role">Recruitment Program Lead</p>
+                <div class="e-badges"><span class="e-badge status"><span class="dot"></span>Active</span><span class="e-badge tagline">Delivering Every Search</span></div></div>
+            </div>
+            <div class="e-tags"><span class="e-tag">Medical Device</span><span class="e-tag">Defense</span><span class="e-tag">Engineering</span></div>
+            <div class="e-metrics">
+              <div class="metric"><div class="v gold">2,500+</div><div class="l">Candidates Managed</div></div>
+              <div class="metric"><div class="v">96%</div><div class="l">Satisfaction Rate</div></div>
+              <div class="metric"><div class="v gold">120+</div><div class="l">Interviews / Month</div></div>
+              <div class="metric"><div class="v gold">4.9★</div><div class="l">Candidate Rating</div></div>
+            </div>
+            <button class="e-view" data-id="amy" aria-haspopup="dialog"><span class="ev-d">Meet the Expert</span><span class="ev-h">Learn how they build exceptional teams →</span></button>
+          </article>
+        </div>
+
+        <div class="tier two">
+          <article class="ecard">
+            <div class="ecard-top">
+              <div class="avatar"><span class="fb">IM</span><img src="isabella-mccutcheon.jpg" alt="Isabella McCutcheon" onerror="this.remove()"></div>
+              <div><p class="e-eyebrow">Client Success</p><h3 class="e-name">Isabella McCutcheon</h3><p class="e-role">Client Success Manager</p>
+                <div class="e-badges"><span class="e-badge status"><span class="dot"></span>Active</span><span class="e-badge tagline">Client Advocate</span></div></div>
+            </div>
+            <div class="e-tags"><span class="e-tag">Account Management</span><span class="e-tag">Client Success</span><span class="e-tag">Retention</span></div>
+            <div class="e-metrics">
+              <div class="metric"><div class="v">98%</div><div class="l">Client Retention</div></div>
+              <div class="metric"><div class="v gold">50+</div><div class="l">Active Accounts</div></div>
+              <div class="metric"><div class="v gold">4.9★</div><div class="l">Client Rating</div></div>
+              <div class="metric"><div class="v">24/7</div><div class="l">Support</div></div>
+            </div>
+            <button class="e-view" data-id="isabellam" aria-haspopup="dialog"><span class="ev-d">Meet the Expert</span><span class="ev-h">Learn how they build exceptional teams →</span></button>
+          </article>
+          <article class="ecard">
+            <div class="ecard-top">
+              <div class="avatar"><span class="fb">OS</span><img src="olivia-squillante.jpg" alt="Olivia Squillante" onerror="this.remove()"></div>
+              <div><p class="e-eyebrow">Client Success</p><h3 class="e-name">Olivia Squillante</h3><p class="e-role">Client Success Intern</p>
+                <div class="e-badges"><span class="e-badge status"><span class="dot"></span>Active</span><span class="e-badge tagline">Client Advocate</span></div></div>
+            </div>
+            <div class="e-tags"><span class="e-tag">Account Management</span><span class="e-tag">Client Success</span><span class="e-tag">Partnerships</span></div>
+            <div class="e-metrics">
+              <div class="metric"><div class="v">95%</div><div class="l">Client Retention</div></div>
+              <div class="metric"><div class="v gold">40+</div><div class="l">Active Accounts</div></div>
+              <div class="metric"><div class="v gold">4.9★</div><div class="l">Client Rating</div></div>
+              <div class="metric"><div class="v">24/7</div><div class="l">Support</div></div>
+            </div>
+            <button class="e-view" data-id="olivias" aria-haspopup="dialog"><span class="ev-d">Meet the Expert</span><span class="ev-h">Learn how they build exceptional teams →</span></button>
+          </article>
+        </div>
+
+        <!-- TalentBench Recruiting Team, AI recruiters as shared resources under Recruiting Ops -->
+        <div class="tb-merge" aria-hidden="true"><span class="vL"></span><span class="vR"></span><span class="h"></span><span class="vC"></span></div>
+        <div class="tb-team">
+          <div class="tb-head">
+            <h3 class="tb-h">TalentBench AI Team</h3>
+            <p class="tb-s">Eight specialized AI intelligence agents working 24/7 alongside our recruiting team.</p>
+          </div>
+          <div class="tb-grid">
+            <div class="tb-card"><div class="tb-avatar">🤖</div><h4 class="tb-name">Emma</h4><p class="tb-role">Medical Device Intelligence</p><span class="tb-badge"><span class="tb-dot"></span>Recruiting</span>
+              <div class="tb-skills"><span class="tb-skill">Medical Device</span><span class="tb-skill">Diagnostics</span><span class="tb-skill">Manufacturing</span><span class="tb-skill">Passive Talent</span></div>
+              <div class="tb-act"><div class="row"><span>Candidates sourced</span><b data-tick>42</b></div><div class="row"><span>Outreach campaigns</span><b>11</b></div><div class="row"><span>Interviews scheduled</span><b>6</b></div></div>
+              <button class="tb-view" data-id="emma" aria-haspopup="dialog">View Specialist</button></div>
+            <div class="tb-card"><div class="tb-avatar">🤖</div><h4 class="tb-name">Olivia</h4><p class="tb-role">Defense Intelligence</p><span class="tb-badge"><span class="tb-dot"></span>Recruiting</span>
+              <div class="tb-skills"><span class="tb-skill">Defense</span><span class="tb-skill">Systems Engineering</span><span class="tb-skill">Security Clearance</span></div>
+              <div class="tb-act"><div class="row"><span>Candidates sourced</span><b data-tick>37</b></div><div class="row"><span>Outreach campaigns</span><b>9</b></div><div class="row"><span>Interviews scheduled</span><b>5</b></div></div>
+              <button class="tb-view" data-id="olivia" aria-haspopup="dialog">View Specialist</button></div>
+            <div class="tb-card"><div class="tb-avatar">🤖</div><h4 class="tb-name">James</h4><p class="tb-role">Hardware Engineering Intelligence</p><span class="tb-badge"><span class="tb-dot"></span>Recruiting</span>
+              <div class="tb-skills"><span class="tb-skill">Electrical Engineering</span><span class="tb-skill">Hardware</span><span class="tb-skill">PCB</span></div>
+              <div class="tb-act"><div class="row"><span>Candidates sourced</span><b data-tick>29</b></div><div class="row"><span>Outreach campaigns</span><b>8</b></div><div class="row"><span>Interviews scheduled</span><b>4</b></div></div>
+              <button class="tb-view" data-id="james" aria-haspopup="dialog">View Specialist</button></div>
+            <div class="tb-card"><div class="tb-avatar">🤖</div><h4 class="tb-name">Sophia</h4><p class="tb-role">Software Engineering Intelligence</p><span class="tb-badge"><span class="tb-dot"></span>Recruiting</span>
+              <div class="tb-skills"><span class="tb-skill">Software Engineering</span><span class="tb-skill">Embedded</span><span class="tb-skill">C++</span></div>
+              <div class="tb-act"><div class="row"><span>Candidates sourced</span><b data-tick>51</b></div><div class="row"><span>Outreach campaigns</span><b>14</b></div><div class="row"><span>Interviews scheduled</span><b>7</b></div></div>
+              <button class="tb-view" data-id="sophia" aria-haspopup="dialog">View Specialist</button></div>
+            <div class="tb-card"><div class="tb-avatar">🤖</div><h4 class="tb-name">Noah</h4><p class="tb-role">Manufacturing Intelligence</p><span class="tb-badge"><span class="tb-dot"></span>Recruiting</span>
+              <div class="tb-skills"><span class="tb-skill">Manufacturing</span><span class="tb-skill">Lean</span><span class="tb-skill">Quality</span></div>
+              <div class="tb-act"><div class="row"><span>Candidates sourced</span><b data-tick>33</b></div><div class="row"><span>Outreach campaigns</span><b>10</b></div><div class="row"><span>Interviews scheduled</span><b>5</b></div></div>
+              <button class="tb-view" data-id="noah" aria-haspopup="dialog">View Specialist</button></div>
+            <div class="tb-card"><div class="tb-avatar">🤖</div><h4 class="tb-name">Liam</h4><p class="tb-role">Supply Chain Intelligence</p><span class="tb-badge"><span class="tb-dot"></span>Recruiting</span>
+              <div class="tb-skills"><span class="tb-skill">Supply Chain</span><span class="tb-skill">Operations</span><span class="tb-skill">Procurement</span></div>
+              <div class="tb-act"><div class="row"><span>Candidates sourced</span><b data-tick>26</b></div><div class="row"><span>Outreach campaigns</span><b>7</b></div><div class="row"><span>Interviews scheduled</span><b>3</b></div></div>
+              <button class="tb-view" data-id="liam" aria-haspopup="dialog">View Specialist</button></div>
+            <div class="tb-card"><div class="tb-avatar">🤖</div><h4 class="tb-name">Charlotte</h4><p class="tb-role">Program Intelligence</p><span class="tb-badge"><span class="tb-dot"></span>Recruiting</span>
+              <div class="tb-skills"><span class="tb-skill">Program Management</span><span class="tb-skill">Government Programs</span><span class="tb-skill">Leadership</span></div>
+              <div class="tb-act"><div class="row"><span>Candidates sourced</span><b data-tick>31</b></div><div class="row"><span>Outreach campaigns</span><b>9</b></div><div class="row"><span>Interviews scheduled</span><b>6</b></div></div>
+              <button class="tb-view" data-id="charlotte" aria-haspopup="dialog">View Specialist</button></div>
+            <div class="tb-card"><div class="tb-avatar">🤖</div><h4 class="tb-name">Ethan</h4><p class="tb-role">Executive Search Intelligence</p><span class="tb-badge"><span class="tb-dot"></span>Recruiting</span>
+              <div class="tb-skills"><span class="tb-skill">Executive Search</span><span class="tb-skill">Director</span><span class="tb-skill">VP</span><span class="tb-skill">C-Level</span></div>
+              <div class="tb-act"><div class="row"><span>Candidates sourced</span><b data-tick>18</b></div><div class="row"><span>Outreach campaigns</span><b>6</b></div><div class="row"><span>Interviews scheduled</span><b>4</b></div></div>
+              <button class="tb-view" data-id="ethan" aria-haspopup="dialog">View Specialist</button></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- rail rows 2-5 (rendered under the single rail column visually via order) -->
+    </div>
+
+    <!-- AI automation layer -->
+    <div class="engine" style="margin-top:30px">
+      <div class="rail"><div class="r-ico">🧠</div><div class="r-name">The Intelligence Layer</div><div class="r-desc">Specialized AI, always on</div></div>
+      <div class="rows">
+        <div class="tier">
+          <p class="ai-sub">Specialized AI agents continuously powering sourcing, matching, outreach, analytics, and recruiting operations.</p>
+          <div class="ai-grid">
+            <div class="ai-card"><div class="ai-ico">🧬</div><h4 class="ai-name">Atlas AI</h4><p class="ai-role">Resume Intelligence</p><p class="ai-desc">Extracts, parses and enriches candidate data with precision.</p><span class="ai-badge"><span class="dot"></span>Active</span></div>
+            <div class="ai-card"><div class="ai-ico">🔎</div><h4 class="ai-name">Scout AI</h4><p class="ai-role">Talent Discovery</p><p class="ai-desc">Finds passive candidates across the open web.</p><span class="ai-badge"><span class="dot"></span>Active</span></div>
+            <div class="ai-card"><div class="ai-ico">🎯</div><h4 class="ai-name">Match AI</h4><p class="ai-role">Qualification Engine</p><p class="ai-desc">Matches candidates to roles with AI accuracy.</p><span class="ai-badge"><span class="dot"></span>Active</span></div>
+            <div class="ai-card"><div class="ai-ico">📡</div><h4 class="ai-name">Outreach AI</h4><p class="ai-role">Engagement Engine</p><p class="ai-desc">Automates personalized outreach at scale.</p><span class="ai-badge"><span class="dot"></span>Active</span></div>
+            <div class="ai-card"><div class="ai-ico">📊</div><h4 class="ai-name">Pulse AI</h4><p class="ai-role">Recruiting Analytics</p><p class="ai-desc">Delivers real-time insights that drive better hiring.</p><span class="ai-badge"><span class="dot"></span>Active</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="re-foot">People recruit. AI accelerates. <b>TalentBase</b> orchestrates everything.</p>
+      <div class="re-cta">
+        <div class="div"></div>
+        <h3>Ready for Your Next Great Hire?</h3>
+        <p>We don't take on every search, and that's intentional.<br><br>We partner with organizations that value exceptional talent, long-term relationships, and measurable hiring outcomes. Every engagement receives the full power of our recruiters, TalentBench AI, and the TalentBase recruiting operating system.<br><br>If your next hire matters, let's build your team together.</p>
+        <div class="btns">
+          <a class="btn gold" href="#contact">Schedule a Strategy Call</a>
+          <a class="btn ghost" href="#talentbase">Explore TalentBase</a>
+        </div>
+        <p class="scarcity">Currently partnering with a limited number of organizations to ensure every search receives our full attention.</p>
+      </div>
+      <div class="re-micdrop">
+        <p><span class="lo">Most companies hire recruiters.</span><span class="hi">Our clients gain an entire recruiting operating system.</span></p>
+      </div>
+  </div>
+</section>
+
+<div class="re-scrim" id="reScrim" role="dialog" aria-modal="true" aria-labelledby="reModalName" hidden>
+  <div class="re-modal">
+    <button class="re-x" id="reClose" aria-label="Close profile">×</button>
+    <div class="re-mhead">
+      <div class="avatar"><span class="fb" id="reModalFb"></span><img id="reModalImg" alt="" onerror="this.style.display='none'"></div>
+      <div><h3 class="re-mname" id="reModalName"></h3><div class="re-mrole" id="reModalRole"></div></div>
+    </div>
+    <p class="re-mlabel">Professional summary</p><p class="re-mtext" id="reModalSummary"></p>
+    <p class="re-mlabel">Core specialties</p><div class="re-mtags" id="reModalSpecs"></div>
+    <p class="re-mlabel">Industries supported</p><p class="re-mtext" id="reModalIndustries"></p>
+    <div class="re-mact">
+      <a class="re-btn gold" id="reModalLinkedIn" href="#" target="_blank" rel="noopener">LinkedIn →</a>
+      <button class="re-btn ghost" id="reModalCloseBtn" type="button">Close</button>
+    </div>
+  </div>
+</div>
+<!-- RECRUITING-ENGINE:END -->
+<script>
+(function(){
+  var DATA={
+    jonah:{name:"Jonah Adelman",role:"Founder & Principal Recruiter",fb:"JA",img:"jonah-adelman.jpg",summary:"Built companies. Built technology. Built careers. Built two staffing firms to $30M+ and successful acquisitions. Founder of The Staffing Specialist. Co-owner of TalentBase and Mate4Life AI.",specs:["Executive Search","Defense","Recruiting Strategy","Go-to-Market"],industries:"Defense, Medical Device, Engineering, Manufacturing",linkedin:"#founder"},
+    xander:{name:"Xander",role:"Co-Founder • Software Architect • AI Platform Engineer",fb:"X",img:"xander.jpg",summary:"Xander co-built Agency Leads before partnering to create TalentBase, the recruitment operating system behind The Staffing Specialist. He architects our AI infrastructure, platform engineering, automation, and enterprise technology that let elite recruiters operate at enterprise scale. He doesn't build software to replace recruiters. He builds software that makes elite recruiters far better. Before founding The Staffing Specialist, Anthony and Xander co-built Agency Leads, a recruiting technology platform that was successfully acquired, and that experience became the foundation for TalentBase, an enterprise recruitment operating system designed to amplify recruiters through AI, automation, and operational excellence.",specs:["AI Platform","Software Architecture","Automation","Enterprise Technology"],industries:"Software, Recruiting Technology, AI",linkedin:"#contact"},
+    anthony:{name:"Anthony Squillante",role:"Co-Founder • Growth Strategist • Revenue Architect",fb:"AS",img:"anthony-squillante.jpg",summary:"Anthony co-built Agency Leads, a recruiting technology company that was successfully acquired. Today he leads enterprise partnerships, growth strategy, and the client relationships that power The Staffing Specialist's recruiting engine. Before founding The Staffing Specialist, Anthony and Xander co-built Agency Leads, a recruiting technology platform that was successfully acquired, and that experience became the foundation for TalentBase, an enterprise recruitment operating system designed to amplify recruiters through AI, automation, and operational excellence. His philosophy: relationships first, results always follow.",specs:["Growth Strategy","Enterprise Partnerships","Revenue Architecture","Client Relationships"],industries:"Staffing, Engineering, Defense, Medical Device",linkedin:"https://www.linkedin.com/in/anthony-squillante-ba479b144/"},
+    isabella:{name:"Isabella Adelman",role:"Lead Sourcing Genius",fb:"IA",img:"isabella-adelman.jpg",summary:"Powers the sourcing engine behind TalentBench, mapping and engaging elite engineering, defense, and program-management talent before hiring demand peaks.",specs:["Talent Intelligence","Sourcing","Defense","Program Management"],industries:"Defense, Engineering, Aerospace, Program Management",linkedin:"https://www.linkedin.com/in/isabella-adelman-969448349/"},
+    hannah:{name:"Hannah Adelman",role:"Recruitment Program Lead",fb:"HA",img:"hannah-adelman.jpg",summary:"Runs medical-device recruitment programs, assembling the engineering and quality talent that brings next-generation devices to market.",specs:["Medical Device","Recruiting Ops","Interview Coordination"],industries:"Medical Device, Engineering, Manufacturing",linkedin:"https://www.linkedin.com/in/hannah-adelman-7a5631230/"},
+    amy:{name:"Amy Vella",role:"Recruitment Program Lead",fb:"AV",img:"amy-vella.jpg",summary:"Builds the engineering teams behind tomorrow's medical innovations and mission-critical defense technologies, a former RN who knows medtech from the inside.",specs:["Medical Device","Defense","Engineering"],industries:"Medical Device, Defense, Engineering",linkedin:"https://www.linkedin.com/in/amy-vella-142b0923b/"},
+    isabellam:{name:"Isabella McCutcheon",role:"Client Success Manager",fb:"IM",img:"isabella-mccutcheon.jpg",summary:"Owns client partnerships end to end, keeping engagements on track and clients renewing, with round-the-clock responsiveness.",specs:["Account Management","Client Success","Retention"],industries:"Engineering, Defense, Medical Device",linkedin:"#contact"},
+    olivias:{name:"Olivia Squillante",role:"Client Success Intern",fb:"OS",img:"olivia-squillante.jpg",summary:"Supports client success across active engagements, helping keep searches on track and clients informed as she learns the business from the ground up.",specs:["Account Support","Client Success","Coordination"],industries:"Engineering, Defense, Medical Device",linkedin:"#contact"},
+    emma:{name:"Emma",role:"Medical Device Intelligence · TalentBench AI",fb:"🤖",ai:true,summary:"An always-on TalentBench AI recruiter specializing in medical device talent, sourcing, screening, and engaging candidates around the clock alongside the recruiting operations team.",specs:["Medical Device","Diagnostics","Manufacturing","Passive Talent"],industries:"Medical Device, Diagnostics, Manufacturing"},
+    olivia:{name:"Olivia",role:"Defense Intelligence · TalentBench AI",fb:"🤖",ai:true,summary:"A TalentBench AI recruiter focused on cleared defense talent, continuously mapping systems-engineering and security-cleared candidates for mission-critical programs.",specs:["Defense","Systems Engineering","Security Clearance"],industries:"Defense, Aerospace, Systems Engineering"},
+    james:{name:"James",role:"Hardware Engineering Intelligence · TalentBench AI",fb:"🤖",ai:true,summary:"A TalentBench AI recruiter specializing in electrical and hardware engineering, sourcing board, PCB, and FPGA talent at scale.",specs:["Electrical Engineering","Hardware","PCB"],industries:"Electrical / Hardware, Semiconductor, Defense"},
+    sophia:{name:"Sophia",role:"Software Engineering Intelligence · TalentBench AI",fb:"🤖",ai:true,summary:"A TalentBench AI recruiter for software and embedded engineering, engaging C++, RTOS, and firmware talent continuously.",specs:["Software Engineering","Embedded","C++"],industries:"Software, Embedded, Medical Device"},
+    noah:{name:"Noah",role:"Manufacturing Intelligence · TalentBench AI",fb:"🤖",ai:true,summary:"A TalentBench AI recruiter covering manufacturing and operations, sourcing lean, quality, and process talent around the clock.",specs:["Manufacturing","Lean","Quality"],industries:"Manufacturing, Operations, Quality"},
+    liam:{name:"Liam",role:"Supply Chain Intelligence · TalentBench AI",fb:"🤖",ai:true,summary:"A TalentBench AI recruiter for supply chain and operations, continuously engaging procurement and logistics talent.",specs:["Supply Chain","Operations","Procurement"],industries:"Supply Chain, Operations, Procurement"},
+    charlotte:{name:"Charlotte",role:"Program Intelligence · TalentBench AI",fb:"🤖",ai:true,summary:"A TalentBench AI recruiter for program leadership, sourcing government-program and PM talent for complex engagements.",specs:["Program Management","Government Programs","Leadership"],industries:"Program Management, Government, Defense"},
+    ethan:{name:"Ethan",role:"Executive Search Intelligence · TalentBench AI",fb:"🤖",ai:true,summary:"A TalentBench AI recruiter for executive search, mapping director, VP, and C-level leaders across the market.",specs:["Executive Search","Director","VP","C-Level"],industries:"Executive Leadership, Engineering, Operations"}
+  };
+  var scrim=document.getElementById("reScrim"),lastFocus=null;
+  function openP(id){var d=DATA[id];if(!d)return;
+    document.getElementById("reModalName").textContent=d.name;
+    document.getElementById("reModalRole").textContent=d.role;
+    document.getElementById("reModalSummary").textContent=d.summary;
+    document.getElementById("reModalIndustries").textContent=d.industries;
+    document.getElementById("reModalFb").textContent=d.fb;
+    var im=document.getElementById("reModalImg");
+    if(d.img){im.setAttribute("src",d.img);im.setAttribute("alt",d.name);im.style.display="";}else{im.removeAttribute("src");im.style.display="none";}
+    var sp=document.getElementById("reModalSpecs");sp.innerHTML="";d.specs.forEach(function(s){var t=document.createElement("span");t.className="e-tag";t.textContent=s;sp.appendChild(t);});
+    var li=document.getElementById("reModalLinkedIn");
+    if(d.ai){li.style.display="none";}else{li.style.display="";li.setAttribute("href",d.linkedin||"#");}
+    scrim.classList.add("open");scrim.removeAttribute("hidden");lastFocus=document.activeElement;document.getElementById("reClose").focus();document.addEventListener("keydown",onKey);}
+  function closeP(){scrim.classList.remove("open");scrim.setAttribute("hidden","");document.removeEventListener("keydown",onKey);if(lastFocus&&lastFocus.focus)lastFocus.focus();}
+  function onKey(e){if(e.key==="Escape")closeP();}
+  document.querySelectorAll(".e-view, .tb-view").forEach(function(b){b.addEventListener("click",function(){openP(b.getAttribute("data-id"));});});
+  // Live activity ticker: nudge the AI recruiters' "candidates sourced" numbers so the grid feels alive.
+  var ticks=[].slice.call(document.querySelectorAll("[data-tick]"));
+  if(ticks.length){ setInterval(function(){ var el=ticks[Math.floor(Math.random()*ticks.length)]; el.textContent=(parseInt(el.textContent,10)||0)+1; }, 3500); }
+  document.getElementById("reClose").addEventListener("click",closeP);
+  document.getElementById("reModalCloseBtn").addEventListener("click",closeP);
+  scrim.addEventListener("click",function(e){if(e.target===scrim)closeP();});
+})();
+</script>
+    <!-- ================= /Meet the Recruiting Engine ================= -->
+    <!-- JONAH STORY SECTION -->
+    <section id="founder-story" style="padding:80px 0;border-top:1px solid rgba(255,255,255,.06);position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:radial-gradient(900px 400px at 30% 50%, rgba(26,173,163,.02), transparent 60%),radial-gradient(700px 300px at 80% 80%, rgba(24,227,255,.02), transparent 60%);pointer-events:none;"></div>
+      <div class="container" style="position:relative;">
+        <div style="text-align:center;margin-bottom:56px;">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);padding:5px 16px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#1aada3;margin-bottom:14px;">The Human Behind The Work</div>
+          <h2 style="font-size:38px;font-weight:900;letter-spacing:-.5px;line-height:1.1;margin:0;">There can only be one.</h2>
+        </div>
+        <div class="founder-story-body" style="max-width:820px;margin:0 auto;">
+          <div style="padding-top:8px;">
+            <h3 style="font-size:26px;font-weight:800;line-height:1.2;margin:0 0 24px;letter-spacing:-.3px;">I started The Staffing Specialist at a point in my career where I had already achieved everything I thought I wanted.</h3>
+            <div style="display:flex;flex-direction:column;gap:16px;font-size:16px;color:#e6ecff;line-height:1.75;">
+              <p>I had built and sold two companies, worked with top executives including Jack and Suzy Welch, found success in an industry I loved, and could have continued on that path. Instead, I made a different decision.</p>
+              <p>I wanted to get back to the ground floor, inside a company, where I could just be a recruiter. Not a CEO, not removed from the work. Just a recruiter. Okay, maybe <em style="color:#1aada3;font-style:normal;font-weight:600;">"the recruiter."</em></p>
+              <p>What I didn't expect was what came next. I found a completely new level of energy, purpose, and love for what I do.</p>
+              <div style="border-left:3px solid #7eb8d4;padding:16px 20px;background:rgba(26,173,163,.04);border-radius:0 10px 10px 0;margin:8px 0;"><p style="font-size:17px;font-weight:500;color:#e8f0ff;margin:0;line-height:1.6;">"When I partner with a company, I'm all in. I want to feel like the company is mine, because that's when the work is at its best."</p></div>
+              <p>I don't operate on contingency. I don't believe in retained search models where there's distance from the outcome. When you get that version of me, you get a recruiter who will not stop until the role is filled, and filled with someone who makes the company better.</p>
+              <p>No transactions. No fee-per-hire. Just a recruiter on a mission, with a purpose to be part of something special.</p>
+              <p>My success has never come from tactics alone. It comes from genuinely caring: about the company, about the people, about the mission we're all building toward.</p>
+              <div style="background:linear-gradient(135deg,rgba(255,255,255,.03),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px 22px;"><p style="font-size:15px;color:#e8f0ff;font-weight:500;margin:0 0 8px;">Over the last 25 years, I've walked the halls and seen the faces of people I've hired, people who are now leading teams, driving innovation, and shaping the future of the business.</p><p style="font-size:14px;color:#d2dbec;margin:0;font-style:italic;">That's the real ROI. That's the part I'm most proud of.</p></div>
+              <p style="font-size:16px;color:#e8f0ff;font-weight:500;">If you ever have the chance to work with me, you will know very quickly that I am the recruiter who truly never stops recruiting.</p>
+              <p style="font-size:15px;color:#e8f0ff;font-weight:600;">Grateful.</p>
+            </div>
+            <div style="margin-top:32px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+              <a href="#contact" class="btn">Work With Jonah</a>
+              <a href="https://www.linkedin.com/in/jonahadelman1" target="_blank" rel="noopener" class="btn secondary">LinkedIn ↗</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- TELEPHONE 2026 -->
+    <section id="telephone" style="padding:80px 0;border-top:1px solid rgba(255,255,255,.06);position:relative;overflow:hidden;">
+      <div class="container" style="position:relative;">
+        <div style="text-align:center;margin-bottom:60px;">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);padding:5px 16px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#1aada3;margin-bottom:16px;">🚀 New Feature, Job Distribution Network</div>
+          <h2 style="font-family:Georgia,serif;font-size:48px;font-weight:900;line-height:1.05;letter-spacing:-.5px;margin:0 0 12px;">Play Telephone.<br><span style="color:#e8f0ff;">2026 AI Version.</span></h2>
+          <p style="font-size:18px;color:#cbd7e9;max-width:620px;margin:0 auto;line-height:1.7;">Post a job with The Staffing Specialist. We amplify it through our exclusive talent network and AI distribution engine, sending your role viral and delivering <strong style="color:#e8f0ff;">5–10x the applicants</strong> directly to your careers page.</p>
+        </div>
+        <!-- FIX 3: telephone-flow class added so mobile CSS stacks these vertically -->
+        <div class="telephone-flow" style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;gap:0;align-items:center;margin-bottom:64px;">
+          <div style="background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px 24px;text-align:center;"><div style="font-size:36px;margin-bottom:14px;">📋</div><div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Step 1</div><div style="font-size:15px;font-weight:700;color:#e8f0ff;margin-bottom:8px;">You Post the Role</div><div style="font-size:13px;color:#dee6f1;line-height:1.5;">Share your job details with Jonah. Title, requirements, culture, what great looks like.</div></div>
+          <div class="telephone-arrow" style="padding:0 16px;color:var(--teal);font-size:22px;">→</div>
+          <div style="background:linear-gradient(180deg,rgba(26,173,163,.06),rgba(26,173,163,.02));border:1px solid rgba(26,173,163,.2);border-radius:20px;padding:28px 24px;text-align:center;"><div style="font-size:36px;margin-bottom:14px;">🤖</div><div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Step 2</div><div style="font-size:15px;font-weight:700;color:#e8f0ff;margin-bottom:8px;">AI Amplification</div><div style="font-size:13px;color:#dee6f1;line-height:1.5;">Our AI rewrites your posting for maximum reach, optimized for every channel, every audience, every format.</div></div>
+          <div class="telephone-arrow" style="padding:0 16px;color:var(--teal);font-size:22px;">→</div>
+          <div style="background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px 24px;text-align:center;"><div style="font-size:36px;margin-bottom:14px;">📡</div><div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Step 3</div><div style="font-size:15px;font-weight:700;color:#e8f0ff;margin-bottom:8px;">Network Distribution</div><div style="font-size:13px;color:#dee6f1;line-height:1.5;">Your role goes out to our exclusive talent pool, LinkedIn network, job boards, and targeted passive candidate outreach.</div></div>
+          <div class="telephone-arrow" style="padding:0 16px;color:var(--teal);font-size:22px;">→</div>
+          <div style="background:linear-gradient(180deg,rgba(26,173,163,.06),rgba(26,173,163,.02));border:1px solid rgba(26,173,163,.2);border-radius:20px;padding:28px 24px;text-align:center;"><div style="font-size:36px;margin-bottom:14px;">🎯</div><div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Step 4</div><div style="font-size:15px;font-weight:700;color:#e8f0ff;margin-bottom:8px;">Qualified Applicants</div><div style="font-size:13px;color:#dee6f1;line-height:1.5;">5–10x more applicants land directly on your careers page. Pre-qualified. Pre-excited. Ready to interview.</div></div>
+        </div>
+        <div class="grid-4col-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;margin-bottom:56px;">
+          <div style="background:rgba(255,255,255,.03);padding:28px 24px;text-align:center;"><div style="font-size:38px;font-weight:900;color:#e8f0ff;letter-spacing:-2px;margin-bottom:6px;">5–10x</div><div style="font-size:13px;color:#d2dbec;">More applicants per role vs. posting alone</div></div>
+          <div style="background:rgba(255,255,255,.03);padding:28px 24px;text-align:center;"><div style="font-size:38px;font-weight:900;color:#e8f0ff;letter-spacing:-2px;margin-bottom:6px;">48hr</div><div style="font-size:13px;color:#d2dbec;">From job brief to live distribution</div></div>
+          <div style="background:rgba(255,255,255,.03);padding:28px 24px;text-align:center;"><div style="font-size:38px;font-weight:900;color:#e8f0ff;letter-spacing:-2px;margin-bottom:6px;">100%</div><div style="font-size:13px;color:#d2dbec;">Candidates directed to YOUR careers page</div></div>
+          <div style="background:rgba(255,255,255,.03);padding:28px 24px;text-align:center;"><div style="font-size:38px;font-weight:900;color:#e8f0ff;letter-spacing:-2px;margin-bottom:6px;">0</div><div style="font-size:13px;color:#d2dbec;">Placement fees. You own every applicant.</div></div>
+        </div>
+        <div class="grid-3col" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:56px;">
+          <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:16px;padding:24px;"><div style="font-size:20px;margin-bottom:12px;">🎙️</div><div style="font-size:14px;font-weight:700;color:#e8f0ff;margin-bottom:8px;">The Telephone Effect</div><div style="font-size:13px;color:#d2dbec;line-height:1.6;">Your job gets passed through our network the way great news spreads, organically, enthusiastically, and to exactly the right ears. AI makes sure the message never gets lost.</div></div>
+          <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:16px;padding:24px;"><div style="font-size:20px;margin-bottom:12px;">🔒</div><div style="font-size:14px;font-weight:700;color:#e8f0ff;margin-bottom:8px;">Exclusive Talent Pool</div><div style="font-size:13px;color:#d2dbec;line-height:1.6;">Built over 25 years. Thousands of passive candidates who trust The Staffing Specialist. When we say a role is worth applying for, they listen.</div></div>
+          <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:16px;padding:24px;"><div style="font-size:20px;margin-bottom:12px;">📊</div><div style="font-size:14px;font-weight:700;color:#e8f0ff;margin-bottom:8px;">You Keep Everything</div><div style="font-size:13px;color:#d2dbec;line-height:1.6;">Applicants land directly on your careers page. You own the relationship, the data, and the hire. No middleman, no placement fee, no dependency.</div></div>
+        </div>
+        <div class="telephone-cta" style="text-align:center;background:linear-gradient(135deg,rgba(26,173,163,.06),rgba(24,227,255,.03));border:1px solid rgba(26,173,163,.15);border-radius:24px;padding:48px;">
+          <div style="font-size:28px;font-weight:900;color:#e8f0ff;margin-bottom:8px;">Ready to go viral with your next hire?</div>
+          <div style="font-size:16px;color:#d2dbec;margin-bottom:28px;">Tell us the role. We will handle the rest.</div>
+          <a href="#contact" class="btn" style="font-size:16px;padding:16px 36px;">Post a Role With Us →</a>
+        </div>
+      </div>
+    </section>
+    <!-- CONTACT -->
+    <section id="contact">
+      <div class="container grid cols-2">
+        <div>
+          <h3>Let's build your dream team.</h3>
+          <p class="muted">Tell us what success looks like and we'll get to work within 24 hours.</p>
+          <ul class="muted">
+            <li>Dedicated lead partner (no handoffs)</li>
+            <li>Weekly reporting &amp; executive updates</li>
+            <li>Flexible pricing, aligned to outcomes</li>
+          </ul>
+        </div>
+        <div class="card" style="padding:22px">
+          <form id="contactform">
+            <input name="company" placeholder="Company" required />
+            <input name="name" placeholder="Your name" required />
+            <input name="email" placeholder="Work email" type="email" required />
+            <select name="engagement">
+              <option value="RPO">Embedded RPO</option>
+              <option value="Executive Search">Executive Search</option>
+              <option value="Project Sprint">Project Sprint</option>
+              <option value="Other">Other</option>
+            </select>
+            <textarea name="message" placeholder="Roles, locations, timeline"></textarea>
+            <button class="btn" type="submit">Request a Call</button>
+            <div id="contact-msg" class="muted" style="margin-top:8px"></div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="container" style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div>&copy; <span id="y"></span> The Staffing Specialist • Talent. Precision. Partnership.</div>
+      <div class="muted">Boston, MA • jonah@thestaffingspecialist.com • linkedin.com/in/jonahadelman1 • 603.401.2901</div>
+    </div>
+  </footer>
+  <script>
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add("in"); });
+    }, { threshold: 0.12 });
+    document.querySelectorAll("[data-animate], section .card, .stat").forEach((el) => io.observe(el));
+    async function submitFormspree(form, msgEl) {
+      msgEl.textContent = "Submitting…";
+      try {
+        const res = await fetch(form.action, { method: "POST", headers: { Accept: "application/json" }, body: new FormData(form) });
+        if (res.ok) { msgEl.textContent = "✅ Thanks, we'll be in touch within 24 hours."; form.reset(); }
+        else { const data = await res.json().catch(() => ({})); msgEl.textContent = data?.errors?.[0]?.message || "⚠️ Something went wrong. Try again."; }
+      } catch { msgEl.textContent = "🚫 Network error. Please try again."; }
+    }
+    const quick = document.getElementById("quickform");
+    const quickMsg = document.getElementById("form-msg");
+    if (quick) quick.addEventListener("submit", (e) => { e.preventDefault(); quick.action = "https://formspree.io/f/meopyzlk"; submitFormspree(quick, quickMsg); });
+    const contact = document.getElementById("contactform");
+    const contactMsg = document.getElementById("contact-msg");
+    if (contact) contact.addEventListener("submit", (e) => { e.preventDefault(); contact.action = "https://formspree.io/f/meopyzlk"; submitFormspree(contact, contactMsg); });
+    document.getElementById("y").textContent = new Date().getFullYear();
+    function openMobNav(){ document.getElementById('mob-nav').classList.add('open'); document.body.style.overflow='hidden'; }
+    function closeMobNav(){ document.getElementById('mob-nav').classList.remove('open'); document.body.style.overflow=''; }
+  // ── TalentBase access modal ──────────────────────────────────
+  // UI-level only. Does not protect talentbase.html if accessed directly.
+  // Server-level protection (Vercel auth / .htaccess) required for real security.
+  function tbAccessModal(e) {
+    if (e) e.preventDefault();
+    var m = document.getElementById('tb-access-modal');
+    m.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function tbAccessModalClose() {
+    var m = document.getElementById('tb-access-modal');
+    m.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') tbAccessModalClose();
+  });
+  </script>
+<!-- COMP WIDGET -->
+<style>
+#cw-bubble{position:fixed;bottom:28px;right:28px;z-index:9000;background:linear-gradient(135deg,#00b894,#00a8cc);color:#05201a;border:none;padding:12px 20px 12px 14px;border-radius:999px;font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:0 4px 16px rgba(0,0,0,.4);font-family:inherit;}
+#cw-bubble:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.5);}
+#cw-overlay{display:none;position:fixed;inset:0;z-index:9001;background:rgba(5,8,18,.88);align-items:center;justify-content:center;padding:16px;}
+#cw-overlay.on{display:flex;}
+#cw-box{background:#0f1628;border:1px solid rgba(255,255,255,.12);border-radius:22px;width:100%;max-width:520px;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.6);}
+.cw-hd{padding:20px 22px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;}
+.cw-hd-title{font-size:16px;font-weight:800;color:#e8f0ff;}
+.cw-hd-sub{font-size:12px;color:#dee6f1;margin-top:2px;}
+.cw-x{background:rgba(255,255,255,.07);border:none;color:#d2dbec;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;}
+.cw-modes{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px 22px 0;}
+.cw-m{padding:12px;border-radius:12px;cursor:pointer;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.03);text-align:center;}
+.cw-m.on{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.25);}
+.cw-m-icon{font-size:18px;margin-bottom:4px;}
+.cw-m-title{font-size:12px;font-weight:700;color:#e8f0ff;}
+.cw-m.on .cw-m-title{color:#e8f0ff;}
+.cw-m-desc{font-size:11px;color:#e2e8f3;margin-top:3px;line-height:1.5;}
+.cw-body{padding:14px 22px 20px;}
+.cw-ta{width:100%;min-height:120px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:12px;padding:12px;color:#e8f0ff;font-family:inherit;font-size:13px;line-height:1.6;resize:none;outline:none;box-sizing:border-box;}
+.cw-ta:focus{border-color:rgba(255,255,255,.3);}
+.cw-ta::placeholder{color:#bcc7dc;}
+.cw-key{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:9px 12px;color:#e8f0ff;font-family:inherit;font-size:12px;outline:none;box-sizing:border-box;margin-top:8px;}
+.cw-keylbl{font-size:11px;color:#d2dbec;margin-top:5px;}
+.cw-keylbl a{color:#7eb8d4;}
+.cw-btn{width:100%;margin-top:10px;background:linear-gradient(135deg,#1aada3,#5ab8d4);color:#05201a;border:none;padding:13px;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
+.cw-btn:hover{opacity:.9;}
+.cw-btn:disabled{opacity:.5;cursor:not-allowed;}
+.cw-result{margin:0 22px 20px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:16px;display:none;}
+.cw-result.on{display:block;}
+.cw-rlbl{font-size:11px;font-weight:700;color:#7eb8d4;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+.cw-salary{font-size:36px;font-weight:900;color:#e8f0ff;letter-spacing:-1px;}
+.cw-salary-lbl{font-size:11px;color:#d2dbec;margin-bottom:12px;}
+.cw-bars{display:flex;align-items:flex-end;gap:6px;height:60px;margin:12px 0;}
+.cw-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.cw-bar{width:100%;border-radius:4px 4px 0 0;}
+.cw-bval{font-size:11px;font-weight:700;font-family:monospace;}
+.cw-blbl{font-size:11px;color:#d9e2ef;text-transform:uppercase;}
+.cw-pills{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0;}
+.cw-pill{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:8px;text-align:center;}
+.cw-pill-v{font-size:13px;font-weight:700;}
+.cw-pill-l{font-size:11px;color:#d9e2ef;text-transform:uppercase;letter-spacing:.05em;}
+.cw-note{font-size:12px;color:#e6ecff;line-height:1.5;margin:10px 0;padding:10px;background:rgba(255,255,255,.03);border-radius:8px;}
+.cw-insight{display:flex;gap:6px;font-size:11px;color:#e6ecff;line-height:1.5;margin-top:6px;}
+.cw-idot{width:4px;height:4px;border-radius:50%;background:#1aada3;margin-top:5px;flex-shrink:0;}
+.cw-cta{display:block;text-align:center;margin-top:14px;background:linear-gradient(135deg,#1aada3,#5ab8d4);color:#05201a;padding:10px 20px;border-radius:999px;font-weight:800;font-size:13px;text-decoration:none;}
+.cw-disc{font-size:10px;color:#bcc7dc;margin-top:10px;text-align:center;}
+.cw-spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.15);border-top-color:#e8f0ff;border-radius:50%;animation:cwspin .7s linear infinite;}
+@keyframes cwspin{to{transform:rotate(360deg);}}
+</style>
+<button id="cw-bubble" onclick="cwOpen()">
+  <span style="font-size:18px;">💰</span>
+  <div style="display:flex;flex-direction:column;align-items:flex-start;gap:1px;">
+    <span style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.7;">Free Tool</span>
+    <span style="font-size:13px;font-weight:800;">Compensation Intelligence</span>
+    <span style="font-size:11px;opacity:.65;font-weight:600;">Know your worth · What the market pays</span>
+  </div>
+</button>
+<div id="cw-overlay" onclick="if(event.target===this)cwClose()">
+  <div id="cw-box">
+    <div class="cw-hd"><div><div class="cw-hd-title">💰 Compensation Intelligence</div><div class="cw-hd-sub">The Staffing Specialist · Real market data</div></div><button class="cw-x" onclick="cwClose()">✕</button></div>
+    <div class="cw-modes">
+      <div class="cw-m on" id="cwm-candidate" onclick="cwMode('candidate')"><div class="cw-m-icon">🙋</div><div class="cw-m-title">Know Your Worth</div><div class="cw-m-desc">Paste your resume, see what the market pays for your experience today.</div></div>
+      <div class="cw-m" id="cwm-company" onclick="cwMode('company')"><div class="cw-m-icon">🏢</div><div class="cw-m-title">What The Market Pays</div><div class="cw-m-desc">Paste a job description, see what companies are actually paying right now.</div></div>
+    </div>
+    <div class="cw-body">
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <button id="cw-tab-paste" onclick="cwTab('paste')" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(26,173,163,.3);background:rgba(26,173,163,.03);color:#1aada3;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">✏️ Paste Text</button>
+        <button id="cw-tab-upload" onclick="cwTab('upload')" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#e6ecf6;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">📄 Upload File</button>
+      </div>
+      <div id="cw-panel-paste"><textarea class="cw-ta" id="cw-ta" placeholder="Paste your resume or LinkedIn profile here...&#10;&#10;Include your title, years of experience, location, and key skills for the most accurate result."></textarea></div>
+      <div id="cw-panel-upload" style="display:none;">
+        <div id="cw-dropzone" onclick="document.getElementById('cw-file').click()" ondragover="event.preventDefault();this.style.borderColor='#1aada3';" ondragleave="this.style.borderColor='rgba(255,255,255,.1)';" ondrop="event.preventDefault();this.style.borderColor='rgba(255,255,255,.1)';cwHandleFile(event.dataTransfer.files[0]);" style="border:2px dashed rgba(255,255,255,.1);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:border-color .2s;">
+          <div style="font-size:28px;margin-bottom:8px;">📄</div>
+          <div style="font-size:13px;font-weight:700;color:#e8f0ff;margin-bottom:4px;">Drop your resume here</div>
+          <div style="font-size:11px;color:#c8d1e2;">or click to browse · PDF or TXT</div>
+          <div id="cw-file-name" style="margin-top:10px;font-size:12px;color:#1aada3;display:none;"></div>
+        </div>
+        <input type="file" id="cw-file" accept=".pdf,.txt,.doc,.docx" style="display:none;" onchange="cwHandleFile(this.files[0])"/>
+      </div>
+      <input class="cw-key" id="cw-key" type="password" placeholder="Anthropic API key (sk-ant-...)" style="margin-top:10px;"/>
+      <div class="cw-keylbl">Free key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> · Saved in your browser after first use</div>
+      <button class="cw-btn" id="cw-btn" onclick="cwRun()"><span>⚡</span><span id="cw-btn-txt">Analyze Market Value</span></button>
+    </div>
+    <div class="cw-result" id="cw-result"></div>
+  </div>
+</div>
+<script>
+var _cwMode='candidate',_cwTab='paste',_cwFileText='';
+function cwTab(t){_cwTab=t;_cwFileText='';document.getElementById('cw-panel-paste').style.display=t==='paste'?'':'none';document.getElementById('cw-panel-upload').style.display=t==='upload'?'':'none';var pb=document.getElementById('cw-tab-paste'),ub=document.getElementById('cw-tab-upload');pb.style.background=t==='paste'?'rgba(26,173,163,.03)':'rgba(255,255,255,.03)';pb.style.borderColor=t==='paste'?'rgba(26,173,163,.3)':'rgba(255,255,255,.08)';pb.style.color=t==='paste'?'#1aada3':'#7a87a5';ub.style.background=t==='upload'?'rgba(26,173,163,.03)':'rgba(255,255,255,.03)';ub.style.borderColor=t==='upload'?'rgba(26,173,163,.3)':'rgba(255,255,255,.08)';ub.style.color=t==='upload'?'#1aada3':'#7a87a5';}
+function cwHandleFile(file){if(!file)return;var nameEl=document.getElementById('cw-file-name');nameEl.textContent='📎 '+file.name+', reading...';nameEl.style.display='block';var reader=new FileReader();reader.onload=function(e){if(file.name.toLowerCase().endsWith('.pdf')){_cwFileText='__PDF__'+e.target.result.split(',')[1];nameEl.textContent='✓ '+file.name+' ready to analyze';}else{_cwFileText=e.target.result;nameEl.textContent='✓ '+file.name+' ready to analyze';}};if(file.name.toLowerCase().endsWith('.pdf')){reader.readAsDataURL(file);}else{reader.readAsText(file);}}
+function cwOpen(){document.getElementById('cw-overlay').classList.add('on');document.body.style.overflow='hidden';var k=localStorage.getItem('cw_key');if(k)document.getElementById('cw-key').value=k;}
+function cwClose(){document.getElementById('cw-overlay').classList.remove('on');document.body.style.overflow='';}
+function cwMode(m){_cwMode=m;document.getElementById('cwm-candidate').classList.toggle('on',m==='candidate');document.getElementById('cwm-company').classList.toggle('on',m==='company');var ta=document.getElementById('cw-ta');document.getElementById('cw-btn-txt').textContent=m==='candidate'?'Know Your Worth':'Analyze Market Pay';ta.placeholder=m==='candidate'?'Paste your resume or LinkedIn profile here...\n\nInclude your title, years of experience, location, and key skills for the most accurate result.':'Paste the full job description here...\n\nInclude title, responsibilities, requirements, and location for the most accurate market analysis.';ta.value='';document.getElementById('cw-result').classList.remove('on');}
+async function cwRun(){var txt=_cwTab==='upload'?_cwFileText:document.getElementById('cw-ta').value.trim();if(_cwTab==='upload'&&!txt){alert('Please upload a file first.');return;}var keyEl=document.getElementById('cw-key'),key=keyEl.value.trim()||localStorage.getItem('cw_key')||'';if(!txt){alert('Please paste your resume or job description first.');return;}if(!key){alert('Please enter your Anthropic API key.');keyEl.focus();return;}if(key.startsWith('sk-'))localStorage.setItem('cw_key',key);var btn=document.getElementById('cw-btn'),res=document.getElementById('cw-result');btn.disabled=true;document.getElementById('cw-btn-txt').textContent='Analyzing...';res.classList.add('on');res.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:8px;font-size:13px;color:#d2dbec;"><div class="cw-spin"></div>Analyzing market data...</div>';var prompt=_cwMode==='candidate'?'You are a compensation expert. Analyze this candidate background and return ONLY valid JSON (no markdown, no explanation):\n{"role":"title","location":"city or National","low":70000,"mid":90000,"high":115000,"trend":"Up","demand":"High","note":"one sentence competitive position","insights":["insight1","insight2","insight3"]}\n\nCANDIDATE:\n'+txt:'You are a compensation expert. Analyze this job description and return ONLY valid JSON (no markdown, no explanation):\n{"role":"title","location":"city or National","low":70000,"mid":90000,"high":115000,"trend":"Up","demand":"High","note":"one sentence on hiring market","insights":["insight1","insight2","insight3"]}\n\nJOB DESCRIPTION:\n'+txt;try{var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,messages:[{role:'user',content:txt.startsWith('__PDF__')?[{type:'document',source:{type:'base64',media_type:'application/pdf',data:txt.replace('__PDF__','')}},{type:'text',text:prompt.split('\n\n').slice(0,-1).join('\n\n')}]:prompt}]})});var d=await r.json();if(d.error)throw new Error(d.error.message);var raw=(d.content||[]).map(function(b){return b.text||'';}).join('');var j=JSON.parse(raw.replace(/```json|```/g,'').trim());var fmt=function(n){return'$'+Math.round(n/1000)+'K';};var tc=j.trend==='Up'?'#22d47a':j.trend==='Down'?'#ff6b6b':'#f5a623';var dc=j.demand==='High'?'#22d47a':j.demand==='Low'?'#ff6b6b':'#f5a623';res.innerHTML='<div class="cw-rlbl">'+(_cwMode==='candidate'?'🙋 Your Market Value':'🏢 Market Pay Analysis')+', '+(j.role||'')+'</div>'+'<div class="cw-salary">'+fmt(j.mid)+'</div>'+'<div class="cw-salary-lbl">'+(_cwMode==='candidate'?'Your market value target · ':'Midpoint market rate · ')+(j.location||'National')+'</div>'+'<div class="cw-bars">'+'<div class="cw-bar-wrap"><div class="cw-bval" style="color:#8fb0a0;">'+fmt(j.low)+'</div><div class="cw-bar" style="height:36px;background:rgba(26,173,163,.2);"></div><div class="cw-blbl">Floor</div></div>'+'<div class="cw-bar-wrap"><div class="cw-bval" style="color:#1aada3;">'+fmt(j.mid)+'</div><div class="cw-bar" style="height:52px;background:rgba(26,173,163,.65);"></div><div class="cw-blbl">Target</div></div>'+'<div class="cw-bar-wrap"><div class="cw-bval" style="color:#5ab8d4;">'+fmt(j.high)+'</div><div class="cw-bar" style="height:42px;background:rgba(24,227,255,.35);"></div><div class="cw-blbl">Ceiling</div></div>'+'</div>'+'<div class="cw-pills">'+'<div class="cw-pill"><div class="cw-pill-v" style="color:'+tc+';">'+(j.trend==='Up'?'↑ ':'')+j.trend+'</div><div class="cw-pill-l">Market Trend</div></div>'+'<div class="cw-pill"><div class="cw-pill-v" style="color:'+dc+';">'+j.demand+'</div><div class="cw-pill-l">Talent Demand</div></div>'+'</div>'+'<div class="cw-note">'+(j.note||'')+'</div>'+(j.insights||[]).map(function(i){return'<div class="cw-insight"><div class="cw-idot"></div><span>'+i+'</span></div>';}).join('')+'<a class="cw-cta" href="#contact" onclick="cwClose()">Talk to Jonah About This Role →</a>'+'<div class="cw-disc">AI estimate based on current market data. Contact Jonah for a precise assessment.</div>';}catch(e){btn.disabled=false;document.getElementById('cw-btn-txt').textContent=_cwMode==='candidate'?'Know Your Worth':'Analyze Market Pay';res.innerHTML='<div style="color:#ff6b6b;font-size:13px;padding:8px;">Analysis failed: '+e.message+'</div>';}}
+</script>
+  <!-- ══════════════════════════════════════════════════════════
+       TALENTBASE ACCESS MODAL
+       UI-level containment only. Real protection must be enforced
+       at the hosting/server level (Vercel auth, redirect rules,
+       or moving talentbase.html behind authentication).
+       ══════════════════════════════════════════════════════════ -->
+  <div id="tb-access-modal" onclick="if(event.target===this)tbAccessModalClose()" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(5,8,18,.92);align-items:center;justify-content:center;padding:24px;">
+    <div style="background:#0f1628;border:1px solid rgba(124,106,247,.3);border-radius:24px;width:100%;max-width:460px;padding:40px 36px;text-align:center;box-shadow:0 40px 80px rgba(0,0,0,.6);position:relative;">
+      <button onclick="tbAccessModalClose()" style="position:absolute;top:16px;right:18px;background:rgba(255,255,255,.07);border:none;color:#d2dbec;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;">✕</button>
+      <div style="width:52px;height:52px;border-radius:50%;background:rgba(124,106,247,.15);border:1px solid rgba(124,106,247,.35);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 18px;">⚡</div>
+      <div style="font-size:11px;font-weight:700;color:#a89dff;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;">TalentBase</div>
+      <h3 style="font-size:24px;font-weight:900;color:#e8f0ff;margin:0 0 12px;letter-spacing:-.3px;">Invite-Only Access</h3>
+      <p style="font-size:15px;color:#e6ecff;line-height:1.7;margin:0 0 24px;">TalentBase is currently in private beta. Access is by invitation only.<br><span style="color:#a89dff;font-weight:600;">Contact Jonah to request access.</span></p>
+      <a href="#contact" onclick="tbAccessModalClose()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(124,106,247,.2);border:1px solid rgba(124,106,247,.4);color:#c4b8ff;padding:13px 28px;border-radius:999px;font-weight:700;font-size:14px;text-decoration:none;transition:all .2s;">Request Access →</a>
+      <p style="margin-top:16px;font-size:12px;color:#9fabbf;">Already have access? Contact Jonah directly.</p>
+    </div>
+  </div>
+</body>
+</html>
