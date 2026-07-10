@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<!--
+  THE STAFFING SPECIALIST — "Meet the Recruiting Engine" (org-OS hierarchy)
+  PLACEMENT: paste <section id="recruiting-engine"> ... </section> immediately AFTER
+  "About the Founder" and BEFORE "The Human Behind the Work".
+  PHOTOS: cards load headshots by filename with initials fallback. Save next to the
+  page (or send the 7 images as file uploads and I'll embed them):
+    jonah-adelman.jpg  anthony-squillante.jpg  isabella-adelman.jpg  hannah-adelman.jpg
+    amy-vella.jpg  eric-marten.jpg  yina-rivera.jpg
+  NOTE: metric figures and AI-feature copy are reproduced from your mockup —
+  confirm they are accurate before publishing.
+  Theme: background #0b1020, gold accent.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meet the Recruiting Engine — preview</title>
+<style>
+  body{margin:0;background:#0b1020;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+  .re,.re *,.re-scrim,.re-scrim *{box-sizing:border-box}
+  .re{--bg:#0b1020;--panel:#141a2e;--panel2:#1a2237;--line:#242c44;--ink:#f5f7fb;--muted:#9aa3bd;--gold:#c8a96a;--green:#43c07a;--purple:#8ea2ff;--blue:#5b8cff;
+    background:var(--bg);color:var(--ink);padding:96px 24px}
+  .re-wrap{max-width:1180px;margin:0 auto}
+  .re-head{text-align:center;margin-bottom:52px}
+  .re-eyebrow{color:var(--gold);font-size:13px;font-weight:700;letter-spacing:2.6px;text-transform:uppercase;margin:0 0 12px}
+  .re-title{font-size:clamp(30px,4.4vw,46px);font-weight:800;letter-spacing:-.02em;margin:0 0 12px;line-height:1.06}
+  .re-sub{color:var(--muted);font-size:18px;margin:0 auto;max-width:560px;line-height:1.5}
+  .re-verticals{margin-top:26px}
+  .re-vlabel{font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:block}
+  .re-vchips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:760px;margin:0 auto}
+  .re-vchip{font-size:12.5px;font-weight:600;color:#eef1ff;background:rgba(200,169,106,.1);border:1px solid rgba(200,169,106,.32);border-radius:20px;padding:5px 13px}
+
+  /* layout: left rail spine + hierarchy rows */
+  .engine{display:grid;grid-template-columns:196px 1fr;column-gap:30px;align-items:stretch}
+  .rail{display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:8px;position:relative}
+  .rail .r-ico{font-size:22px;margin-bottom:8px}
+  .rail .r-name{font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold);line-height:1.3}
+  .rail .r-desc{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.4;max-width:150px}
+  .rail:not(:last-child)::after{content:"";position:absolute;left:50%;bottom:-1px;top:64px;width:2px;background:var(--line);transform:translateX(-1px)}
+
+  .rows{display:flex;flex-direction:column;gap:30px;position:relative}
+  .tier{display:grid;gap:22px;position:relative}
+  .tier.two{grid-template-columns:1fr 1fr}
+  .tier:not(:first-child)::before{content:"";position:absolute;left:50%;top:-30px;height:30px;width:2px;background:var(--line);transform:translateX(-1px)}
+
+  /* person card */
+  .ecard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;position:relative;
+    transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+  .ecard:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 16px 40px rgba(0,0,0,.38)}
+  .ecard.lead{background:linear-gradient(180deg,var(--panel2),var(--panel));border-color:#2c375a}
+  .ecard-top{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+  .ecard-lead-top{grid-template-columns:auto 1fr auto}
+  .avatar{position:relative;width:72px;height:72px;border-radius:50%;overflow:hidden;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e7c987,#c8a96a);box-shadow:0 4px 14px rgba(200,169,106,.3)}
+  .ecard.lead .avatar{width:88px;height:88px}
+  .avatar .fb{font-size:24px;font-weight:800;color:#0b1020}
+  .avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .e-eyebrow{font-size:10px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:var(--gold);margin:0 0 3px}
+  .e-name{font-size:18px;font-weight:800;letter-spacing:-.01em;margin:0 0 2px}
+  .e-role{color:var(--muted);font-size:13px;margin:0}
+  .e-slogan{color:var(--gold);font-size:11.5px;font-style:italic;margin:4px 0 0;line-height:1.35}
+  .e-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .e-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px}
+  .e-badge.status{color:#bfe0cb;background:rgba(67,192,122,.12);border:1px solid rgba(67,192,122,.3)}
+  .e-badge.status .dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+  .e-badge.tagline{color:var(--gold);background:rgba(200,169,106,.1);border:1px solid rgba(200,169,106,.28)}
+  .e-tags{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 0}
+  .e-tag{font-size:11px;font-weight:600;color:#cdd4e6;background:#1c2440;border:1px solid var(--line);border-radius:7px;padding:4px 9px}
+  .e-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+  .ecard.lead .ecard-lead-top .e-metrics{margin:0;padding:0;border:0;grid-template-columns:repeat(4,auto);gap:22px}
+  .metric{text-align:center}
+  .metric .v{font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+  .metric .v.gold{color:var(--gold)}
+  .metric .l{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.2}
+  .e-view{margin-top:16px;width:100%;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:9px;
+    padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:border-color .15s,color .15s}
+  .e-view:hover{border-color:var(--gold);color:var(--gold)}
+
+  /* AI automation tier */
+  .ai-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+  .ai-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 16px;text-align:center;
+    transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+  .ai-card:hover{transform:translateY(-3px);border-color:var(--purple);box-shadow:0 14px 34px rgba(0,0,0,.36)}
+  .ai-ico{font-size:26px;margin-bottom:10px;filter:drop-shadow(0 0 10px rgba(142,162,255,.45))}
+  .ai-name{font-size:15px;font-weight:800;margin:0 0 2px}
+  .ai-role{color:var(--purple);font-size:11.5px;font-weight:600;margin:0 0 9px}
+  .ai-desc{color:var(--muted);font-size:12px;line-height:1.5;margin:0 0 12px}
+  .ai-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#bfe0cb;background:rgba(67,192,122,.12);border:1px solid rgba(67,192,122,.3);border-radius:20px;padding:3px 10px}
+  .ai-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+
+  .re-foot{text-align:center;margin-top:52px;color:var(--muted);font-size:13.5px;font-weight:600}
+  .re-foot b{color:var(--gold);font-weight:700}
+
+  /* modal */
+  .re-scrim{--bg:#0b1020;--panel:#141a2e;--panel2:#1a2237;--line:#242c44;--ink:#f5f7fb;--muted:#9aa3bd;--gold:#c8a96a;--green:#43c07a;--purple:#8ea2ff;position:fixed;inset:0;background:rgba(6,9,18,.72);display:none;align-items:center;justify-content:center;z-index:1000;padding:18px}
+  .re-scrim.open{display:flex}
+  .re-modal{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:18px;max-width:540px;width:100%;padding:30px;box-shadow:0 30px 80px rgba(0,0,0,.5);position:relative;max-height:90vh;overflow-y:auto}
+  .re-x{position:absolute;top:16px;right:16px;background:transparent;border:0;color:var(--muted);font-size:24px;line-height:1;cursor:pointer;padding:4px 8px;border-radius:8px}
+  .re-x:hover{color:var(--ink);background:var(--panel2)}
+  .re-mhead{display:flex;align-items:center;gap:16px;margin-bottom:6px}
+  .re-mhead .avatar{width:64px;height:64px}
+  .re-mname{font-size:20px;font-weight:800;margin:0 0 2px}
+  .re-mrole{color:var(--gold);font-size:13px;font-weight:600}
+  .re-mlabel{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:18px 0 6px}
+  .re-mtext{color:#cdd4e6;font-size:14.5px;line-height:1.6;margin:0}
+  .re-mtags{display:flex;flex-wrap:wrap;gap:6px}
+  .re-mact{display:flex;gap:10px;margin-top:24px}
+  .re-btn{flex:1;text-align:center;text-decoration:none;border-radius:9px;padding:11px;font-size:13.5px;font-weight:700;transition:filter .15s,border-color .15s,color .15s;cursor:pointer;border:1px solid transparent}
+  .re-btn.gold{background:var(--gold);color:#0b1020}
+  .re-btn.gold:hover{filter:brightness(1.06)}
+  .re-btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+  .re-btn.ghost:hover{border-color:var(--gold);color:var(--gold)}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+  @media (max-width:1000px){
+    .engine{grid-template-columns:1fr;row-gap:12px}
+    .rail{flex-direction:row;justify-content:center;gap:10px;padding:10px 0}
+    .rail .r-desc{display:none}
+    .rail:not(:last-child)::after{display:none}
+    .rail .r-ico{margin:0}
+    .ai-grid{grid-template-columns:repeat(3,1fr)}
+  }
+  @media (max-width:640px){
+    .re{padding:60px 16px}
+    .tier.two{grid-template-columns:1fr}
+    .ecard.lead .ecard-lead-top{grid-template-columns:auto 1fr}
+    .ecard.lead .ecard-lead-top .e-metrics{grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);grid-column:1/-1}
+    .ai-grid{grid-template-columns:repeat(2,1fr)}
+    .e-metrics{grid-template-columns:repeat(2,1fr)}
+  }
+
+  /* ===== TalentBench Recruiting Team (AI recruiters, shared under Recruiting Ops) ===== */
+  .tb-merge{position:relative;height:44px;margin-top:30px}
+  .tb-merge span{position:absolute;background:var(--line)}
+  .tb-merge .vL{left:25%;top:0;width:2px;height:22px}
+  .tb-merge .vR{left:75%;top:0;width:2px;height:22px}
+  .tb-merge .h{left:25%;width:50%;top:21px;height:2px}
+  .tb-merge .vC{left:calc(50% - 1px);top:22px;width:2px;height:22px}
+  .tb-team{background:rgba(20,26,46,.55);border:1px solid var(--line);border-radius:18px;padding:26px 22px}
+  .tb-head{text-align:center;margin-bottom:22px}
+  .tb-h{font-size:19px;font-weight:800;margin:0 0 6px}
+  .tb-s{color:var(--muted);font-size:13.5px;margin:0 auto;max-width:520px;line-height:1.5}
+  .tb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .tb-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 14px;text-align:center;position:relative;
+    transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+  .tb-card:hover{transform:translateY(-4px);border-color:var(--purple);box-shadow:0 14px 34px rgba(91,140,255,.28)}
+  .tb-avatar{position:relative;width:56px;height:56px;margin:0 auto 10px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#0b1020;font-size:24px;z-index:0}
+  .tb-avatar::before{content:"";position:absolute;inset:-2px;border-radius:50%;z-index:-1;background:conic-gradient(from 0deg,#5b8cff,#8ea2ff,#43c07a,#5b8cff);animation:tb-spin 5s linear infinite}
+  @keyframes tb-spin{to{transform:rotate(360deg)}}
+  .tb-name{font-size:14.5px;font-weight:800;margin:0 0 2px}
+  .tb-role{color:var(--purple);font-size:11px;font-weight:600;margin:0 0 8px}
+  .tb-badge{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;color:#bfe0cb;background:rgba(67,192,122,.12);border:1px solid rgba(67,192,122,.3);border-radius:20px;padding:3px 9px;margin-bottom:10px}
+  .tb-badge .tb-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:tb-pulse 2s infinite}
+  @keyframes tb-pulse{0%{box-shadow:0 0 0 0 rgba(67,192,122,.55)}70%{box-shadow:0 0 0 6px rgba(67,192,122,0)}100%{box-shadow:0 0 0 0 rgba(67,192,122,0)}}
+  .tb-skills{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-bottom:12px}
+  .tb-skill{font-size:10px;font-weight:600;color:#cdd4e6;background:#1c2440;border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+  .tb-act{border-top:1px solid var(--line);padding-top:10px;margin-bottom:12px;text-align:left}
+  .tb-act .row{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);margin:3px 0}
+  .tb-act .row b{color:var(--ink);font-weight:700}
+  .tb-view{width:100%;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px;font-size:12px;font-weight:600;cursor:pointer;transition:border-color .15s,color .15s}
+  .tb-view:hover{border-color:var(--purple);color:var(--purple)}
+  @media (max-width:1000px){ .tb-grid{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:640px){ .tb-grid{grid-template-columns:1fr} .tb-merge{display:none} }
+  @media (prefers-reduced-motion:reduce){ .tb-avatar::before,.tb-badge .tb-dot{animation:none} }
+  /* trust bar */
+  .re-trust{display:flex;flex-wrap:wrap;justify-content:center;gap:16px 44px;margin:30px auto 0;max-width:920px;padding-top:26px;border-top:1px solid var(--line)}
+  .re-trust .t{text-align:center}
+  .re-trust .t .v{font-size:22px;font-weight:800;color:var(--gold);letter-spacing:-.01em}
+  .re-trust .t .l{font-size:11.5px;color:var(--muted);margin-top:3px;letter-spacing:.3px}
+  /* intelligence-layer subtitle */
+  .ai-sub{color:var(--muted);font-size:14px;line-height:1.5;max-width:660px;margin:0 0 20px}
+  /* premium CTA */
+  .re-cta{text-align:center;max-width:720px;margin:100px auto 0;padding-top:66px;border-top:1px solid var(--line)}
+  .re-cta .div{width:54px;height:3px;background:var(--gold);border-radius:2px;margin:0 auto 26px}
+  .re-cta h3{font-size:clamp(26px,3.6vw,38px);font-weight:800;letter-spacing:-.02em;margin:0 0 20px}
+  .re-cta > p{color:var(--muted);font-size:16px;line-height:1.7;margin:0 0 30px}
+  .re-cta .btns{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+  .re-cta .btn{text-decoration:none;border-radius:10px;padding:13px 26px;font-size:14.5px;font-weight:700;transition:filter .15s,border-color .15s,color .15s}
+  .re-cta .btn.gold{background:var(--gold);color:#0b1020}
+  .re-cta .btn.gold:hover{filter:brightness(1.06)}
+  .re-cta .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .re-cta .btn.ghost:hover{border-color:var(--gold);color:var(--gold)}
+  .re-cta .scarcity{color:var(--gold);font-size:12.5px;margin:20px auto 0;line-height:1.5;max-width:520px}
+  /* mic-drop */
+  .re-micdrop{text-align:center;max-width:820px;margin:110px auto 0;padding:0 12px}
+  .re-micdrop p{font-size:clamp(24px,3.4vw,36px);font-weight:800;letter-spacing:-.02em;line-height:1.25;margin:0}
+  .re-micdrop .lo{color:var(--muted);display:block}
+  .re-micdrop .hi{color:var(--ink);display:block;margin-top:8px}
+  @media (max-width:640px){ .re-trust{gap:14px 26px} .re-cta{margin-top:64px} .re-micdrop{margin-top:72px} }
+</style>
+</head>
+<body>
+
+<!-- RECRUITING-ENGINE:START -->
+<section class="re" id="recruiting-engine" aria-labelledby="re-title">
+  <div class="re-wrap">
+    <header class="re-head">
+      <p class="re-eyebrow">Meet the Recruiting Engine</p>
+      <h2 class="re-title" id="re-title">The Recruiting Engine Behind Every Hire.</h2>
+      <p class="re-sub">Elite recruiters. AI specialists. One enterprise recruiting operating system built to deliver exceptional talent.</p>
+      <div class="re-trust">
+        <div class="t"><div class="v">200,000+</div><div class="l">Candidates in Network</div></div>
+        <div class="t"><div class="v">2,000+</div><div class="l">Successful Placements</div></div>
+        <div class="t"><div class="v">97%</div><div class="l">Client Retention</div></div>
+        <div class="t"><div class="v">24/7</div><div class="l">AI Recruiting</div></div>
+        <div class="t"><div class="v">10+</div><div class="l">Industry Specializations</div></div>
+      </div>
+      <div class="re-verticals">
+        <span class="re-vlabel">Industries We Build Teams For</span>
+        <div class="re-vchips">
+          <span class="re-vchip">Medical Device</span>
+          <span class="re-vchip">Biotech</span>
+          <span class="re-vchip">Startups</span>
+          <span class="re-vchip">Hi-Tech</span>
+          <span class="re-vchip">AI &amp; Machine Learning</span>
+          <span class="re-vchip">Robotics</span>
+          <span class="re-vchip">Defense</span>
+          <span class="re-vchip">Semiconductors</span>
+          <span class="re-vchip">Aerospace</span>
+          <span class="re-vchip">Autonomous Systems</span>
+          <span class="re-vchip">Clean Energy</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="engine">
+      <!-- LEFT RAIL (row 1) --><div class="rail"><div class="r-ico">👑</div><div class="r-name">Executive Leadership</div><div class="r-desc">Leadership &amp; strategy</div></div>
+      <!-- CONTENT -->
+      <div class="rows">
+
+        <!-- Tier 1: Founder -->
+        <div class="tier">
+          <article class="ecard lead">
+            <div class="ecard-top ecard-lead-top">
+              <div class="avatar"><span class="fb">JA</span><img src="jonah-adelman.jpg" alt="Jonah Adelman" onerror="this.remove()"></div>
+              <div>
+                <p class="e-eyebrow">Executive Leadership</p>
+                <h3 class="e-name">Jonah Adelman</h3>
+                <p class="e-role">Founder &amp; Principal Recruiter</p>
+                <div class="e-badges"><span class="e-badge status"><span class="dot"></span>Active</span><span class="e-badge tagline">Leading Strategy</span></div>
+              </div>
+              <div class="e-metrics">
+                <div class="metric"><div class="v gold">2,000+</div><div class="l">Placements</div></div>
+                <div class="metric"><div class="v">97%</div><div class="l">Client Retention</div></div>
+                <div class="metric"><div class="v">20+</div><div class="l">Years Experience</div></div>
+                <div class="metric"><div class="v gold">4.9★</div><div class="l">Client Rating</div></div>
+              </div>
+            </div>
+            <div class="e-tags"><span class="e-tag">Executive Search</span><span class="e-tag">Defense</span><span class="e-tag">Recruiting Strategy</span><span class="e-tag">Go-to-Market</span></div>
+            <button class="e-view" data-id="jonah" aria-haspopup="dialog">View Full Profile</button>
+          </article>
+        </div>
+
+        <div class="tier">
+          <article class="ecard">
+            <div class="ecard-top">
+              <div class="avatar"><span class="fb">X</span><img src="xander.jpg" alt="Xander" onerror="this.remove()"></div>
+              <div>
+                <p class="e-eyebrow">Executive Leadership</p>
+                <h3 class="e-name">Xander</h3>
+                <p class="e-role">Partner / Investor / Software Developer</p>
+                <div class="e-badges"><span class="e-badge status"><span class="dot"></span>Active</span><span class="e-badge tagline">Architecting TalentBase</span></div>
+              </div>
+            </div>
+            <div class="e-tags"><span class="e-tag">Software Development</span><span class="e-tag">Product</span><span class="e-tag">Investment</span><span class="e-tag">Operating System</span></div>
+            <button class="e-view" data-id="xander" aria-haspopup="dialog">View Full Profile</button>
+          </article>
+        </div>
+
+        <div class="tier two">
+          <article class="ecard">
+            <div class="ecard-top">
+              <div class="avatar"><span class="fb">AS</span><img src="anthony-squillante.jpg" alt="Anthony Squillante" onerror="this.remove()"></div>
+              <div><p class="e-eyebrow">Client Acquisition</p><h3 class="e-name">Anthony Squillante</h3><p class="e-role">VP of Business Development &amp; Lead Genius</p>
+                <div class="e-badges"><span class="e-badge status"><span class="dot"></span>Active</span><span class="e-badge tagline">Building Partnerships</span></div></div>
+            </div>
+            <div class="e-tags"><span class="e-tag">Business Development</span><span class="e-tag">Client Partnerships</span><span class="e-tag">Executive Search</span></div>
+            <div class="e-metrics">
+              <div class="metric"><div class="v gold">150+</div><div class="l">New Clients</div></div>
+              <div class="metric"><div class="v">98%</div><div class="l">Client Retention</div></div>
+              <div class="metric"><div class="v gold">$250M+</div><div class="l">Contracts Won</div></div>
+              <div class="metric"><div class="v gold">4.9★</div><div class="l">Client Rating</div></div>
+            </div>
+            <button class="e-view" data-id="anthony" aria-haspopup="dialog">View Full Profile</button>
+          </article>
+          <article class="ecard">
+            <div class="ecard-top">
+              <div class="avatar"><span class="fb">IA</span><img src="isabella-adelman.jpg" alt="Isabella Adelman" onerror="this.remove()"></div>
+              <div><p class="e-eyebrow">Sourcing Engine</p><h3 class="e-name">Isabella Adelman</h3><p class="e-role">Lead Sourcing Genius</p><p class="e-slogan">Powering every search with market intelligence and AI-driven talent discovery.</p>
+                <div class="e-badges"><span class="e-badge status"><span class="dot"></span>Recruiting</span><span class="e-badge tagline">Sourcing Top Talent</span></div></div>
+            </div>
+            <div class="e-tags"><span class="e-tag">Talent Intelligence</span><span class="e-tag">Sourcing</span><span class="e-tag">Defense</span><span class="e-tag">Program Management</span></div>
+            <div class="e-metrics">
+              <div class="metric"><div class="v gold">12K+</div><div class="l">Candidates Sourced</div></div>
+              <div class="metric"><div class="v">85%</div><div class="l">Response Rate</div></div>
+              <div class="metric"><div class="v gold">40+</div><div class="l">Active Searches</div></div>
+              <div class="metric"><div class="v gold">4.8★</div><div class="l">HM Satisfaction</div></div>
+            </div>
+            <button class="e-view" data-id="isabella" aria-haspopup="dialog">View Full Profile</button>
+          </article>
+        </div>
+
+        <div class="tier two">
+          <article class="ecard">
+            <div class="ecard-top">
+              <div class="avatar"><span class="fb">HA</span><img src="hannah-adelman.jpg" alt="Hannah Adelman" onerror="this.remove()"></div>
+              <div><p class="e-eyebrow">Program Delivery</p><h3 class="e-name">Hannah Adelman</h3><p class="e-role">Recruitment Program Lead</p>
+                <div class="e-badges"><span class="e-badge status"><span class="dot"></span>Recruiting</span><span class="e-badge tagline">Medical Device</span></div></div>
+            </div>
+            <div class="e-tags"><span class="e-tag">Medical Device</span><span class="e-tag">Recruiting Ops</span><span class="e-tag">Interview Coordination</span></div>
+            <div class="e-metrics">
+              <div class="metric"><div class="v gold">200+</div><div class="l">Placements</div></div>
+              <div class="metric"><div class="v">92%</div><div class="l">Interview Show Rate</div></div>
+              <div class="metric"><div class="v gold">35+</div><div class="l">Active Searches</div></div>
+              <div class="metric"><div class="v gold">4.9★</div><div class="l">HM Rating</div></div>
+            </div>
+            <button class="e-view" data-id="hannah" aria-haspopup="dialog">View Full Profile</button>
+          </article>
+          <article class="ecard">
+            <div class="ecard-top">
+              <div class="avatar"><span class="fb">AV</span><img src="amy-vella.jpg" alt="Amy Vella" onerror="this.remove()"></div>
+              <div><p class="e-eyebrow">Program Delivery</p><h3 class="e-name">Amy Vella</h3><p class="e-role">Recruitment Program Lead</p>
+                <div class="e-badges"><span class="e-badge status"><span class="dot"></span>Active</span><span class="e-badge tagline">Delivering Every Search</span></div></div>
+            </div>
+            <div class="e-tags"><span class="e-tag">Medical Device</span><span class="e-tag">Defense</span><span class="e-tag">Engineering</span></div>
+            <div class="e-metrics">
+              <div class="metric"><div class="v gold">2,500+</div><div class="l">Candidates Managed</div></div>
+              <div class="metric"><div class="v">96%</div><div class="l">Satisfaction Rate</div></div>
+              <div class="metric"><div class="v gold">120+</div><div class="l">Interviews / Month</div></div>
+              <div class="metric"><div class="v gold">4.9★</div><div class="l">Candidate Rating</div></div>
+            </div>
+            <button class="e-view" data-id="amy" aria-haspopup="dialog">View Full Profile</button>
+          </article>
+        </div>
+
+        <div class="tier two">
+          <article class="ecard">
+            <div class="ecard-top">
+              <div class="avatar"><span class="fb">IM</span><img src="isabella-mccutcheon.jpg" alt="Isabella McCutcheon" onerror="this.remove()"></div>
+              <div><p class="e-eyebrow">Client Success</p><h3 class="e-name">Isabella McCutcheon</h3><p class="e-role">Client Success Manager</p>
+                <div class="e-badges"><span class="e-badge status"><span class="dot"></span>Active</span><span class="e-badge tagline">Client Advocate</span></div></div>
+            </div>
+            <div class="e-tags"><span class="e-tag">Account Management</span><span class="e-tag">Client Success</span><span class="e-tag">Retention</span></div>
+            <div class="e-metrics">
+              <div class="metric"><div class="v">98%</div><div class="l">Client Retention</div></div>
+              <div class="metric"><div class="v gold">50+</div><div class="l">Active Accounts</div></div>
+              <div class="metric"><div class="v gold">4.9★</div><div class="l">Client Rating</div></div>
+              <div class="metric"><div class="v">24/7</div><div class="l">Support</div></div>
+            </div>
+            <button class="e-view" data-id="isabellam" aria-haspopup="dialog">View Full Profile</button>
+          </article>
+          <article class="ecard">
+            <div class="ecard-top">
+              <div class="avatar"><span class="fb">OS</span><img src="olivia-squillante.jpg" alt="Olivia Squillante" onerror="this.remove()"></div>
+              <div><p class="e-eyebrow">Client Success</p><h3 class="e-name">Olivia Squillante</h3><p class="e-role">Client Success Manager</p>
+                <div class="e-badges"><span class="e-badge status"><span class="dot"></span>Active</span><span class="e-badge tagline">Client Advocate</span></div></div>
+            </div>
+            <div class="e-tags"><span class="e-tag">Account Management</span><span class="e-tag">Client Success</span><span class="e-tag">Partnerships</span></div>
+            <div class="e-metrics">
+              <div class="metric"><div class="v">95%</div><div class="l">Client Retention</div></div>
+              <div class="metric"><div class="v gold">40+</div><div class="l">Active Accounts</div></div>
+              <div class="metric"><div class="v gold">4.9★</div><div class="l">Client Rating</div></div>
+              <div class="metric"><div class="v">24/7</div><div class="l">Support</div></div>
+            </div>
+            <button class="e-view" data-id="olivias" aria-haspopup="dialog">View Full Profile</button>
+          </article>
+        </div>
+
+        <!-- TalentBench Recruiting Team — AI recruiters as shared resources under Recruiting Ops -->
+        <div class="tb-merge" aria-hidden="true"><span class="vL"></span><span class="vR"></span><span class="h"></span><span class="vC"></span></div>
+        <div class="tb-team">
+          <div class="tb-head">
+            <h3 class="tb-h">TalentBench AI Team</h3>
+            <p class="tb-s">Eight specialized AI intelligence agents working 24/7 alongside our recruiting team.</p>
+          </div>
+          <div class="tb-grid">
+            <div class="tb-card"><div class="tb-avatar">🤖</div><h4 class="tb-name">Emma</h4><p class="tb-role">Medical Device Intelligence</p><span class="tb-badge"><span class="tb-dot"></span>Recruiting</span>
+              <div class="tb-skills"><span class="tb-skill">Medical Device</span><span class="tb-skill">Diagnostics</span><span class="tb-skill">Manufacturing</span><span class="tb-skill">Passive Talent</span></div>
+              <div class="tb-act"><div class="row"><span>Candidates sourced</span><b data-tick>42</b></div><div class="row"><span>Outreach campaigns</span><b>11</b></div><div class="row"><span>Interviews scheduled</span><b>6</b></div></div>
+              <button class="tb-view" data-id="emma" aria-haspopup="dialog">View Specialist</button></div>
+            <div class="tb-card"><div class="tb-avatar">🤖</div><h4 class="tb-name">Olivia</h4><p class="tb-role">Defense Intelligence</p><span class="tb-badge"><span class="tb-dot"></span>Recruiting</span>
+              <div class="tb-skills"><span class="tb-skill">Defense</span><span class="tb-skill">Systems Engineering</span><span class="tb-skill">Security Clearance</span></div>
+              <div class="tb-act"><div class="row"><span>Candidates sourced</span><b data-tick>37</b></div><div class="row"><span>Outreach campaigns</span><b>9</b></div><div class="row"><span>Interviews scheduled</span><b>5</b></div></div>
+              <button class="tb-view" data-id="olivia" aria-haspopup="dialog">View Specialist</button></div>
+            <div class="tb-card"><div class="tb-avatar">🤖</div><h4 class="tb-name">James</h4><p class="tb-role">Hardware Engineering Intelligence</p><span class="tb-badge"><span class="tb-dot"></span>Recruiting</span>
+              <div class="tb-skills"><span class="tb-skill">Electrical Engineering</span><span class="tb-skill">Hardware</span><span class="tb-skill">PCB</span></div>
+              <div class="tb-act"><div class="row"><span>Candidates sourced</span><b data-tick>29</b></div><div class="row"><span>Outreach campaigns</span><b>8</b></div><div class="row"><span>Interviews scheduled</span><b>4</b></div></div>
+              <button class="tb-view" data-id="james" aria-haspopup="dialog">View Specialist</button></div>
+            <div class="tb-card"><div class="tb-avatar">🤖</div><h4 class="tb-name">Sophia</h4><p class="tb-role">Software Engineering Intelligence</p><span class="tb-badge"><span class="tb-dot"></span>Recruiting</span>
+              <div class="tb-skills"><span class="tb-skill">Software Engineering</span><span class="tb-skill">Embedded</span><span class="tb-skill">C++</span></div>
+              <div class="tb-act"><div class="row"><span>Candidates sourced</span><b data-tick>51</b></div><div class="row"><span>Outreach campaigns</span><b>14</b></div><div class="row"><span>Interviews scheduled</span><b>7</b></div></div>
+              <button class="tb-view" data-id="sophia" aria-haspopup="dialog">View Specialist</button></div>
+            <div class="tb-card"><div class="tb-avatar">🤖</div><h4 class="tb-name">Noah</h4><p class="tb-role">Manufacturing Intelligence</p><span class="tb-badge"><span class="tb-dot"></span>Recruiting</span>
+              <div class="tb-skills"><span class="tb-skill">Manufacturing</span><span class="tb-skill">Lean</span><span class="tb-skill">Quality</span></div>
+              <div class="tb-act"><div class="row"><span>Candidates sourced</span><b data-tick>33</b></div><div class="row"><span>Outreach campaigns</span><b>10</b></div><div class="row"><span>Interviews scheduled</span><b>5</b></div></div>
+              <button class="tb-view" data-id="noah" aria-haspopup="dialog">View Specialist</button></div>
+            <div class="tb-card"><div class="tb-avatar">🤖</div><h4 class="tb-name">Liam</h4><p class="tb-role">Supply Chain Intelligence</p><span class="tb-badge"><span class="tb-dot"></span>Recruiting</span>
+              <div class="tb-skills"><span class="tb-skill">Supply Chain</span><span class="tb-skill">Operations</span><span class="tb-skill">Procurement</span></div>
+              <div class="tb-act"><div class="row"><span>Candidates sourced</span><b data-tick>26</b></div><div class="row"><span>Outreach campaigns</span><b>7</b></div><div class="row"><span>Interviews scheduled</span><b>3</b></div></div>
+              <button class="tb-view" data-id="liam" aria-haspopup="dialog">View Specialist</button></div>
+            <div class="tb-card"><div class="tb-avatar">🤖</div><h4 class="tb-name">Charlotte</h4><p class="tb-role">Program Intelligence</p><span class="tb-badge"><span class="tb-dot"></span>Recruiting</span>
+              <div class="tb-skills"><span class="tb-skill">Program Management</span><span class="tb-skill">Government Programs</span><span class="tb-skill">Leadership</span></div>
+              <div class="tb-act"><div class="row"><span>Candidates sourced</span><b data-tick>31</b></div><div class="row"><span>Outreach campaigns</span><b>9</b></div><div class="row"><span>Interviews scheduled</span><b>6</b></div></div>
+              <button class="tb-view" data-id="charlotte" aria-haspopup="dialog">View Specialist</button></div>
+            <div class="tb-card"><div class="tb-avatar">🤖</div><h4 class="tb-name">Ethan</h4><p class="tb-role">Executive Search Intelligence</p><span class="tb-badge"><span class="tb-dot"></span>Recruiting</span>
+              <div class="tb-skills"><span class="tb-skill">Executive Search</span><span class="tb-skill">Director</span><span class="tb-skill">VP</span><span class="tb-skill">C-Level</span></div>
+              <div class="tb-act"><div class="row"><span>Candidates sourced</span><b data-tick>18</b></div><div class="row"><span>Outreach campaigns</span><b>6</b></div><div class="row"><span>Interviews scheduled</span><b>4</b></div></div>
+              <button class="tb-view" data-id="ethan" aria-haspopup="dialog">View Specialist</button></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- rail rows 2-5 (rendered under the single rail column visually via order) -->
+    </div>
+
+    <!-- AI automation layer -->
+    <div class="engine" style="margin-top:30px">
+      <div class="rail"><div class="r-ico">🧠</div><div class="r-name">The Intelligence Layer</div><div class="r-desc">Specialized AI, always on</div></div>
+      <div class="rows">
+        <div class="tier">
+          <p class="ai-sub">Specialized AI agents continuously powering sourcing, matching, outreach, analytics, and recruiting operations.</p>
+          <div class="ai-grid">
+            <div class="ai-card"><div class="ai-ico">🧬</div><h4 class="ai-name">Atlas AI</h4><p class="ai-role">Resume Intelligence</p><p class="ai-desc">Extracts, parses and enriches candidate data with precision.</p><span class="ai-badge"><span class="dot"></span>Active</span></div>
+            <div class="ai-card"><div class="ai-ico">🔎</div><h4 class="ai-name">Scout AI</h4><p class="ai-role">Talent Discovery</p><p class="ai-desc">Finds passive candidates across the open web.</p><span class="ai-badge"><span class="dot"></span>Active</span></div>
+            <div class="ai-card"><div class="ai-ico">🎯</div><h4 class="ai-name">Match AI</h4><p class="ai-role">Qualification Engine</p><p class="ai-desc">Matches candidates to roles with AI accuracy.</p><span class="ai-badge"><span class="dot"></span>Active</span></div>
+            <div class="ai-card"><div class="ai-ico">📡</div><h4 class="ai-name">Outreach AI</h4><p class="ai-role">Engagement Engine</p><p class="ai-desc">Automates personalized outreach at scale.</p><span class="ai-badge"><span class="dot"></span>Active</span></div>
+            <div class="ai-card"><div class="ai-ico">📊</div><h4 class="ai-name">Pulse AI</h4><p class="ai-role">Recruiting Analytics</p><p class="ai-desc">Delivers real-time insights that drive better hiring.</p><span class="ai-badge"><span class="dot"></span>Active</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="re-foot">People recruit. AI accelerates. <b>TalentBase</b> orchestrates everything.</p>
+      <div class="re-cta">
+        <div class="div"></div>
+        <h3>Ready for Your Next Great Hire?</h3>
+        <p>We don't take on every search&mdash;and that's intentional.<br><br>We partner with organizations that value exceptional talent, long-term relationships, and measurable hiring outcomes. Every engagement receives the full power of our recruiters, TalentBench AI, and the TalentBase recruiting operating system.<br><br>If your next hire matters, let's build your team together.</p>
+        <div class="btns">
+          <a class="btn gold" href="#contact">Schedule a Strategy Call</a>
+          <a class="btn ghost" href="#talentbase">Explore TalentBase</a>
+        </div>
+        <p class="scarcity">Currently partnering with a limited number of organizations to ensure every search receives our full attention.</p>
+      </div>
+      <div class="re-micdrop">
+        <p><span class="lo">Most companies hire recruiters.</span><span class="hi">Our clients gain an entire recruiting operating system.</span></p>
+      </div>
+  </div>
+</section>
+
+<div class="re-scrim" id="reScrim" role="dialog" aria-modal="true" aria-labelledby="reModalName" hidden>
+  <div class="re-modal">
+    <button class="re-x" id="reClose" aria-label="Close profile">×</button>
+    <div class="re-mhead">
+      <div class="avatar"><span class="fb" id="reModalFb"></span><img id="reModalImg" alt="" onerror="this.style.display='none'"></div>
+      <div><h3 class="re-mname" id="reModalName"></h3><div class="re-mrole" id="reModalRole"></div></div>
+    </div>
+    <p class="re-mlabel">Professional summary</p><p class="re-mtext" id="reModalSummary"></p>
+    <p class="re-mlabel">Core specialties</p><div class="re-mtags" id="reModalSpecs"></div>
+    <p class="re-mlabel">Industries supported</p><p class="re-mtext" id="reModalIndustries"></p>
+    <div class="re-mact">
+      <a class="re-btn gold" id="reModalLinkedIn" href="#" target="_blank" rel="noopener">LinkedIn →</a>
+      <button class="re-btn ghost" id="reModalCloseBtn" type="button">Close</button>
+    </div>
+  </div>
+</div>
+<!-- RECRUITING-ENGINE:END -->
+
+<script>
+(function(){
+  var DATA={
+    jonah:{name:"Jonah Adelman",role:"Founder & Principal Recruiter",fb:"JA",img:"jonah-adelman.jpg",summary:"Founder of The Staffing Specialist and architect of TalentBase. A recruiter who outworks entire teams, with 1,500+ hires delivered across engineering, defense, and medical device programs.",specs:["Executive Search","Defense","Recruiting Strategy","Go-to-Market"],industries:"Defense, Medical Device, Engineering, Manufacturing",linkedin:"#founder"},
+    xander:{name:"Xander",role:"Partner / Investor / Software Developer",fb:"X",img:"xander.jpg",summary:"Partner, investor, and the software developer behind the platform — building the technology that powers TalentBase and TalentBench.",specs:["Software Development","Product","Investment","Operating System"],industries:"Software, Recruiting Technology, AI",linkedin:"#contact"},
+    anthony:{name:"Anthony Squillante",role:"VP of Business Development & Lead Genius",fb:"AS",img:"anthony-squillante.jpg",summary:"Leads business development — connecting the right companies with the right talent at the right time, and building the client partnerships behind every search.",specs:["Business Development","Client Partnerships","Executive Search"],industries:"Staffing, Engineering, Defense, Medical Device",linkedin:"https://www.linkedin.com/in/anthony-squillante-ba479b144/"},
+    isabella:{name:"Isabella Adelman",role:"Lead Sourcing Genius",fb:"IA",img:"isabella-adelman.jpg",summary:"Powers the sourcing engine behind TalentBench — mapping and engaging elite engineering, defense, and program-management talent before hiring demand peaks.",specs:["Talent Intelligence","Sourcing","Defense","Program Management"],industries:"Defense, Engineering, Aerospace, Program Management",linkedin:"https://www.linkedin.com/in/isabella-adelman-969448349/"},
+    hannah:{name:"Hannah Adelman",role:"Recruitment Program Lead",fb:"HA",img:"hannah-adelman.jpg",summary:"Runs medical-device recruitment programs, assembling the engineering and quality talent that brings next-generation devices to market.",specs:["Medical Device","Recruiting Ops","Interview Coordination"],industries:"Medical Device, Engineering, Manufacturing",linkedin:"https://www.linkedin.com/in/hannah-adelman-7a5631230/"},
+    amy:{name:"Amy Vella",role:"Recruitment Program Lead",fb:"AV",img:"amy-vella.jpg",summary:"Builds the engineering teams behind tomorrow's medical innovations and mission-critical defense technologies — a former RN who knows medtech from the inside.",specs:["Medical Device","Defense","Engineering"],industries:"Medical Device, Defense, Engineering",linkedin:"https://www.linkedin.com/in/amy-vella-142b0923b/"},
+    isabellam:{name:"Isabella McCutcheon",role:"Client Success Manager",fb:"IM",img:"isabella-mccutcheon.jpg",summary:"Owns client partnerships end to end — keeping engagements on track and clients renewing, with round-the-clock responsiveness.",specs:["Account Management","Client Success","Retention"],industries:"Engineering, Defense, Medical Device",linkedin:"#contact"},
+    olivias:{name:"Olivia Squillante",role:"Client Success Manager",fb:"OS",img:"olivia-squillante.jpg",summary:"Partners with clients to align every search to their goals, protecting the relationship and driving long-term account growth.",specs:["Account Management","Client Success","Partnerships"],industries:"Engineering, Defense, Medical Device",linkedin:"#contact"},
+    emma:{name:"Emma",role:"Medical Device Intelligence · TalentBench AI",fb:"🤖",ai:true,summary:"An always-on TalentBench AI recruiter specializing in medical device talent — sourcing, screening, and engaging candidates around the clock alongside the recruiting operations team.",specs:["Medical Device","Diagnostics","Manufacturing","Passive Talent"],industries:"Medical Device, Diagnostics, Manufacturing"},
+    olivia:{name:"Olivia",role:"Defense Intelligence · TalentBench AI",fb:"🤖",ai:true,summary:"A TalentBench AI recruiter focused on cleared defense talent — continuously mapping systems-engineering and security-cleared candidates for mission-critical programs.",specs:["Defense","Systems Engineering","Security Clearance"],industries:"Defense, Aerospace, Systems Engineering"},
+    james:{name:"James",role:"Hardware Engineering Intelligence · TalentBench AI",fb:"🤖",ai:true,summary:"A TalentBench AI recruiter specializing in electrical and hardware engineering — sourcing board, PCB, and FPGA talent at scale.",specs:["Electrical Engineering","Hardware","PCB"],industries:"Electrical / Hardware, Semiconductor, Defense"},
+    sophia:{name:"Sophia",role:"Software Engineering Intelligence · TalentBench AI",fb:"🤖",ai:true,summary:"A TalentBench AI recruiter for software and embedded engineering — engaging C++, RTOS, and firmware talent continuously.",specs:["Software Engineering","Embedded","C++"],industries:"Software, Embedded, Medical Device"},
+    noah:{name:"Noah",role:"Manufacturing Intelligence · TalentBench AI",fb:"🤖",ai:true,summary:"A TalentBench AI recruiter covering manufacturing and operations — sourcing lean, quality, and process talent around the clock.",specs:["Manufacturing","Lean","Quality"],industries:"Manufacturing, Operations, Quality"},
+    liam:{name:"Liam",role:"Supply Chain Intelligence · TalentBench AI",fb:"🤖",ai:true,summary:"A TalentBench AI recruiter for supply chain and operations — continuously engaging procurement and logistics talent.",specs:["Supply Chain","Operations","Procurement"],industries:"Supply Chain, Operations, Procurement"},
+    charlotte:{name:"Charlotte",role:"Program Intelligence · TalentBench AI",fb:"🤖",ai:true,summary:"A TalentBench AI recruiter for program leadership — sourcing government-program and PM talent for complex engagements.",specs:["Program Management","Government Programs","Leadership"],industries:"Program Management, Government, Defense"},
+    ethan:{name:"Ethan",role:"Executive Search Intelligence · TalentBench AI",fb:"🤖",ai:true,summary:"A TalentBench AI recruiter for executive search — mapping director, VP, and C-level leaders across the market.",specs:["Executive Search","Director","VP","C-Level"],industries:"Executive Leadership, Engineering, Operations"}
+  };
+  var scrim=document.getElementById("reScrim"),lastFocus=null;
+  function openP(id){var d=DATA[id];if(!d)return;
+    document.getElementById("reModalName").textContent=d.name;
+    document.getElementById("reModalRole").textContent=d.role;
+    document.getElementById("reModalSummary").textContent=d.summary;
+    document.getElementById("reModalIndustries").textContent=d.industries;
+    document.getElementById("reModalFb").textContent=d.fb;
+    var im=document.getElementById("reModalImg");
+    if(d.img){im.setAttribute("src",d.img);im.setAttribute("alt",d.name);im.style.display="";}else{im.removeAttribute("src");im.style.display="none";}
+    var sp=document.getElementById("reModalSpecs");sp.innerHTML="";d.specs.forEach(function(s){var t=document.createElement("span");t.className="e-tag";t.textContent=s;sp.appendChild(t);});
+    var li=document.getElementById("reModalLinkedIn");
+    if(d.ai){li.style.display="none";}else{li.style.display="";li.setAttribute("href",d.linkedin||"#");}
+    scrim.classList.add("open");scrim.removeAttribute("hidden");lastFocus=document.activeElement;document.getElementById("reClose").focus();document.addEventListener("keydown",onKey);}
+  function closeP(){scrim.classList.remove("open");scrim.setAttribute("hidden","");document.removeEventListener("keydown",onKey);if(lastFocus&&lastFocus.focus)lastFocus.focus();}
+  function onKey(e){if(e.key==="Escape")closeP();}
+  document.querySelectorAll(".e-view, .tb-view").forEach(function(b){b.addEventListener("click",function(){openP(b.getAttribute("data-id"));});});
+  // Live activity ticker: nudge the AI recruiters' "candidates sourced" numbers so the grid feels alive.
+  var ticks=[].slice.call(document.querySelectorAll("[data-tick]"));
+  if(ticks.length){ setInterval(function(){ var el=ticks[Math.floor(Math.random()*ticks.length)]; el.textContent=(parseInt(el.textContent,10)||0)+1; }, 3500); }
+  document.getElementById("reClose").addEventListener("click",closeP);
+  document.getElementById("reModalCloseBtn").addEventListener("click",closeP);
+  scrim.addEventListener("click",function(e){if(e.target===scrim)closeP();});
+})();
+</script>
+</body>
+</html>
