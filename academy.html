@@ -193,7 +193,7 @@ var LESSONS = [
     { q:"Before adding any candidate you should always…", o:["Search their name to avoid duplicates","Export a backup CSV","Set their priority to High"], a:0, why:"One candidate, one record — search first." }
   ]},
 { n:4, id:"profile", min:7, roles:["recruiter","coordinator","client"], title:"The Candidate File — Where Everything Lives",
-  obj:"Read and maintain a candidate file: Executive Brief, skills, status, TalentFit scorecard, notes, and Send to HM.",
+  obj:"Read and maintain a candidate file: Executive Brief, skills, status, TalentFit scorecard, notes, and Submit to HM.",
   body:[
     ["h","Anatomy of the file"],
     ["p","Click any candidate (or find them via search) and their file opens. Top to bottom: the <b>Executive Brief</b> — a 3–4 sentence professional summary a hiring manager could read cold; the <b>TalentFit scorecard</b> showing their best req matches with scores and reasons; contact and profile fields (email, phone, location, discipline, title, company); <b>Skills</b> as tags; workflow fields (<b>Status</b>, <b>Priority</b>, <b>Recruiter Owner</b>, target <b>Reqs</b>); the attached <b>resume</b>; and <b>Notes &amp; Activities</b> — the running history."],
@@ -204,8 +204,8 @@ var LESSONS = [
       "<b>Set the next follow-up date</b> whenever you finish touching a candidate. That feeds Follow-Ups Due.",
       "<b>Keep the Executive Brief current</b> — it's what goes in front of the client."
     ]],
-    ["h","Send to HM"],
-    ["p","When a candidate is ready for a hiring manager, open their file and use <b>Send to HM</b>. TalentBase builds the submission package: the candidate's profile, the TalentFit verdict with reasons, and the resume — addressed to the req's hiring manager. Then set the candidate's status to <b>Submitted</b> so they appear under Pending HM Review."],
+    ["h","Submit to HM"],
+    ["p","When a candidate is ready for a hiring manager, open their file and use <b>Submit to HM</b>. TalentBase builds the submission package: the candidate's profile, the TalentFit verdict with reasons, and the resume — addressed to the req's hiring manager. Then set the candidate's status to <b>Submitted</b> so they appear under Pending HM Review."],
     ["tip","<b>Client users:</b> your view is read-focused — Executive Brief, scorecard, and resume are your quick read. Respond to submissions through your TSS contact and the interview-request flow."]
   ],
   quiz:[
@@ -234,7 +234,7 @@ var LESSONS = [
     ["h","Two kinds of reqs"],
     ["p","<b>Open Requisitions</b> are the active Elbit MTC program roles — committed, funded openings being actively filled. <b>TalentBench</b> reqs are the sourcing pipeline: roles we build ready-now benches for (statuses like <i>waiting</i> until they activate). Both live in the Reqs and TalentBench sections, and both are searchable by title or number from the top bar."],
     ["h","Reading a req card"],
-    ["p","Each req shows the job ID (e.g. <b>[1488]</b>), title, site code, discipline, openings, comp range when known, and the <b>hiring manager</b> with contact details. Site codes: <b>FWO / FTW / DET</b> = Fort Worth TX · <b>MMO</b> = Merrimack NH · <b>TAO</b> = Talladega AL · <b>CHS</b> = Charleston SC · <b>YUMA</b> = Yuma AZ · plus Roanoke VA."],
+    ["p","Each req shows the job ID (e.g. <b>[1488]</b>), title, site code, discipline, openings, comp range when known, and the <b>hiring manager</b> with contact details. Site codes: <b>FWO / FTW</b> = Fort Worth TX · <b>DET</b> = Detroit MI · <b>MMO</b> = Merrimack NH · <b>TAO</b> = Talladega AL · <b>CHS</b> = Charleston SC · <b>YUMA</b> = Yuma AZ · <b>ROA</b> = Roanoke VA."],
     ["h","The Sourcing Toolkit"],
     ["steps",[
       "Open any req and find its <b>Sourcing Toolkit</b>.",
@@ -247,7 +247,7 @@ var LESSONS = [
   ],
   quiz:[
     { q:"A role we're building a ready-now bench for (not yet an active MTC opening) belongs in…", o:["Open Requisitions","TalentBench","Archive"], a:1, why:"TalentBench is the sourcing pipeline; Open Reqs are active program roles." },
-    { q:"Site code MMO means the role sits in…", o:["Fort Worth, TX","Merrimack, NH","Talladega, AL"], a:1, why:"MMO = Merrimack NH. FWO/FTW/DET = Fort Worth TX, TAO = Talladega AL, CHS = Charleston SC." }
+    { q:"Site code MMO means the role sits in…", o:["Fort Worth, TX","Merrimack, NH","Talladega, AL"], a:1, why:"MMO = Merrimack NH. FWO/FTW = Fort Worth TX, DET = Detroit MI, TAO = Talladega AL, CHS = Charleston SC." }
   ]},
 { n:7, id:"talentfit", min:6, roles:["recruiter","client"], title:"TalentFit™ — How the Matching Engine Thinks",
   obj:"Read TalentFit scores and verdicts correctly, and know what the engine does — and doesn't — decide.",
@@ -259,7 +259,7 @@ var LESSONS = [
       "<b>Candidate file</b> — the scorecard shows that person's best req matches, ranked with reasons.",
       "<b>TalentFit Board</b> — the full matching view across the pool.",
       "<b>Auto-intake notes</b> — every From-Resume candidate arrives with matches already written into Notes.",
-      "<b>Send to HM</b> — the submission includes the TalentFit verdict and reasons."
+      "<b>Submit to HM</b> — the submission includes the TalentFit verdict and reasons."
     ]],
     ["h","Reading the score honestly"],
     ["p","<b>Strong</b> = discipline, skills, level, and location all line up — a submit-with-confidence signal. <b>Possible</b> = real overlap with a gap: an <i>adjacent discipline</i> (a quality engineer on a reliability req), a level jump, or a relocation. The reasons always say which. Specialist profiles (like Contracts) only match their own discipline — the engine won't force a lawyer onto an engineering req."],
