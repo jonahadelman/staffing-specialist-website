@@ -2085,26 +2085,31 @@ var BOARD = (function(){
     return "mid";
   }
   var SITE_GEO = [
-    {key:"Fort Worth TX", site:/\bfwo\b|\bftw\b|\bdet\b|fort worth/i, cand:/fort worth|dallas|\bdfw\b|arlington|irving|plano|frisco|grand prairie|north richland|keller|euless|hurst|mansfield|burleson|weatherford|denton|mckinney|garland|mesquite|richardson|carrollton|lewisville|southlake|grapevine|haltom|benbrook|crowley|cleburne|azle/i},
+    {key:"Fort Worth TX", site:/\bfwo\b|\bftw\b|fort worth/i, cand:/fort worth|dallas|\bdfw\b|arlington|irving|plano|frisco|grand prairie|north richland|keller|euless|hurst|mansfield|burleson|weatherford|denton|mckinney|garland|mesquite|richardson|carrollton|lewisville|southlake|grapevine|haltom|benbrook|crowley|cleburne|azle/i},
+    {key:"Detroit MI", site:/\bdet\b|detroit/i, cand:/detroit|dearborn|\bwarren\b|\btroy\b|livonia|sterling heights|ann arbor|\bnovi\b|farmington|southfield|royal oak|pontiac|auburn hills|rochester hills|\bcanton\b|westland|romulus|ypsilanti|wixom|plymouth mi|michigan|\bmi\b/i},
     {key:"Merrimack NH", site:/\bmmo\b|merrimack|nashua|new hampshire|\bnh\b|03054/i, cand:/merrimack|nashua|manchester|bedford|hudson|litchfield|amherst|hooksett|hollis|milford|new hampshire|\bnh\b|03054|03060|salem|londonderry|\bderry\b|\blowell\b|tyngsboro|chelmsford|dracut|tewksbury|billerica|andover|lawrence|haverhill|boston|cambridge|woburn|burlington|westborough|worcester|massachusetts|\bma\b/i},
     {key:"Talladega AL", site:/\btao\b|talladega/i, cand:/talladega|birmingham|anniston|oxford|pell city|sylacauga|childersburg|alabama|\bal\b/i},
     {key:"Charleston SC", site:/\bchs\b|charleston/i, cand:/charleston|mount pleasant|summerville|goose creek|ladson|hanahan|moncks corner|south carolina|\bsc\b/i},
     {key:"Yuma AZ", site:/\byuma\b/i, cand:/yuma|phoenix|tucson|arizona|\baz\b/i},
-    {key:"Roanoke VA", site:/roanoke/i, cand:/roanoke|salem|blacksburg|lynchburg|christiansburg|virginia|\bva\b/i}
+    {key:"Roanoke VA", site:/\broa\b|roanoke/i, cand:/roanoke|salem|blacksburg|lynchburg|christiansburg|virginia|\bva\b/i}
   ];
   function locScore(reqLoc, c){
     var rl=(reqLoc||"");
     var candLocs=c.locs||[];
     var probe=(c.ref && c.ref.location && String(c.ref.location).trim().length) ? String(c.ref.location) : "";
     var reqRemote=/remote/i.test(rl);
-    var site=null;
-    for(var i=0;i<SITE_GEO.length;i++){ if(SITE_GEO[i].site.test(rl)){ site=SITE_GEO[i]; break; } }
-    if(site){
-      var isLocal = (probe && site.cand.test(probe)) || (!probe && site.cand.test(c.txt.slice(0,300))) || (site.key==="Merrimack NH" && candLocs.indexOf("MRMK")>=0);
-      if(isLocal) return {s:20, why:"local to " + site.key + " site"};
+    var sites=[];
+    for(var i=0;i<SITE_GEO.length;i++){ if(SITE_GEO[i].site.test(rl)){ sites.push(SITE_GEO[i]); } }
+    if(sites.length){
+      for(var si=0;si<sites.length;si++){
+        var site=sites[si];
+        var isLocal = (probe && site.cand.test(probe)) || (!probe && site.cand.test(c.txt.slice(0,300))) || (site.key==="Merrimack NH" && candLocs.indexOf("MRMK")>=0);
+        if(isLocal) return {s:20, why:"local to " + site.key + " site"};
+      }
       if(reqRemote) return {s:14, why:"remote req"};
       if(/willing to relocate|open to relocat|relocat(e|ing|ion).{0,12}(yes|open|willing)/i.test(c.txt)) return {s:11, why:"open to relocation"};
-      return {s:6, why:"relocation needed (" + site.key + ")"};
+      var keys=[]; for(var sk=0;sk<sites.length;sk++){ keys.push(sites[sk].key); }
+      return {s:6, why:"relocation needed (" + keys.join(" / ") + ")"};
     }
     var rll=rl.toLowerCase();
     var reqNH=/merrimack|nashua|manchester|new hampshire|\bnh\b|03054/.test(rll) || rll.trim()==="";
@@ -3260,7 +3265,7 @@ function autoMatchReqs(text, cand){
     if(typeof REQS !== "object"){ return ""; }
     var t = (text || "").toLowerCase();
     var STOP = {"engineer":1,"engineering":1,"the":1,"and":1,"for":1,"with":1,"iii":1,"program":1};
-    var SITE_STATE = {FWO:"TX",FTW:"TX",DET:"TX",MMO:"NH",TAO:"AL",CHS:"SC",YUMA:"AZ",NH:"NH"};
+    var SITE_STATE = {FWO:"TX",FTW:"TX",DET:"MI",MMO:"NH",TAO:"AL",CHS:"SC",YUMA:"AZ",ROA:"VA",NH:"NH"};
     var FULLSTATE = {"texas":"TX","new hampshire":"NH","alabama":"AL","south carolina":"SC","arizona":"AZ","virginia":"VA","massachusetts":"MA"};
     var cl = cand.loc || "";
     var cstate = (cl.match(/,\s*([A-Z]{2})\b/) || [])[1] || FULLSTATE[(cl.toLowerCase().match(/texas|new hampshire|alabama|south carolina|arizona|virginia|massachusetts/) || [""])[0]] || "";
@@ -3600,7 +3605,7 @@ function openReqModal(existing){
   if(existing && (r.title || r.role)){
     try{
       var _skTitle = (r.title || r.role || "").replace(/\s*[-\u2013\u2014]\s*(MTC|FWO.*|DET.*|SlingWorks)$/i, "").trim();
-      var _skSiteCity = { FWO:"Fort Worth, Texas", FTW:"Fort Worth, Texas", DET:"Fort Worth, Texas", MMO:"Merrimack, New Hampshire", TAO:"Talladega, Alabama", CHS:"Charleston, South Carolina", YUMA:"Yuma, Arizona", NH:"Merrimack, New Hampshire" };
+      var _skSiteCity = { FWO:"Fort Worth, Texas", FTW:"Fort Worth, Texas", DET:"Detroit, Michigan", MMO:"Merrimack, New Hampshire", TAO:"Talladega, Alabama", CHS:"Charleston, South Carolina", YUMA:"Yuma, Arizona", ROA:"Roanoke, Virginia", NH:"Merrimack, New Hampshire" };
       var _skLoc = _skSiteCity[(r.loc || "").split(/[\/,\s]/)[0].trim().toUpperCase()] || (r.loc || "");
       if(/roanoke/i.test(r.loc || "")){ _skLoc = "Roanoke, Virginia"; }
       var _skJd = (r.jd || "").slice(0, 4000);
