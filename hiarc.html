@@ -306,6 +306,134 @@
   }
   @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 </style>
+
+<style id="tb-ds2">
+/* ============================================================
+   TalentBase Design System v2.0 — "Visual DNA" polish layer
+   Non-destructive overlay. One type scale, one spacing grid,
+   one color language, one component voice. No JS changes here.
+   ============================================================ */
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  --dur:150ms; --ease:cubic-bezier(.2,.7,.3,1);
+  /* refined elevation system (3 levels only) */
+  --shadow-sm:0 1px 2px rgba(16,20,35,.06);
+  --shadow-md:0 4px 14px rgba(16,20,35,.09);
+  --shadow-lg:0 18px 44px rgba(16,20,35,.16);
+  --ring:0 0 0 3px rgba(59,91,255,.22);
+  /* TalentFit confidence language */
+  --tfit-strong:#15803d; --tfit-strong-bg:#ecfdf3; --tfit-strong-line:#bbe7cd;
+  --tfit-mod:#b45309;    --tfit-mod-bg:#fffbeb;    --tfit-mod-line:#f2e0b8;
+  --tfit-stretch:#7c3aed;--tfit-stretch-bg:#f5f3ff;--tfit-stretch-line:#ddd3f7;
+  --tfit-track:#e8ebf3;
+}
+html{ -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+body{ font-family:var(--font); }
+::selection{ background:var(--gold-dim); color:var(--ink); }
+
+/* ---------- Typography: 7 sizes, 5 weights, defined roles ---------- */
+.toolbar .title{ font-size:18px; font-weight:700; letter-spacing:-.2px; }
+.side h3{ font-size:11px; font-weight:700; letter-spacing:.9px; text-transform:uppercase; color:var(--muted); }
+.hint{ font-size:12px; line-height:1.5; color:var(--muted); }
+.sub2{ font-size:12px; color:var(--muted); }
+.nm{ font-size:13px; font-weight:600; color:var(--ink); }
+table,.count,.roval,.due,.right,.tfit-score,.tfit-ring-score{ font-variant-numeric:tabular-nums; }
+
+/* ---------- Tables ---------- */
+thead th{ font-size:11px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; color:var(--muted); padding:9px 12px; }
+tbody td{ font-size:13px; padding:10px 12px; }
+tbody tr.click td{ transition:background var(--dur) var(--ease); }
+tbody tr.click:hover td{ background:#f6f8ff; }
+
+/* ---------- Buttons: one system ---------- */
+.btn{ font-size:13px; font-weight:600; letter-spacing:.1px; border-radius:8px; padding:7px 14px;
+      transition:transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+                 background var(--dur) var(--ease), border-color var(--dur) var(--ease); }
+.btn:hover{ transform:translateY(-1px); box-shadow:var(--shadow-sm); }
+.btn:active{ transform:translateY(0); box-shadow:none; }
+.btn.sm{ font-size:12px; padding:5px 10px; border-radius:7px; }
+.btn.gold{ box-shadow:0 1px 3px rgba(59,91,255,.28); }
+.btn.gold:hover{ box-shadow:0 4px 12px rgba(59,91,255,.30); }
+
+/* ---------- Pills & badges ---------- */
+.pill{ font-size:11px; font-weight:600; letter-spacing:.2px; padding:3px 10px; border-radius:999px; }
+
+/* ---------- Sidebar ---------- */
+.vtab{ border-radius:8px; transition:background var(--dur) var(--ease), color var(--dur) var(--ease); }
+.vtab.active{ font-weight:600; }
+
+/* ---------- Forms ---------- */
+.fld label{ font-size:12px; font-weight:600; color:var(--muted); letter-spacing:.2px; }
+.fld input,.fld select,.fld textarea,select.fil,.gate input{ border-radius:8px;
+  transition:border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+
+/* ---------- Modal & overlays ---------- */
+.scrim{ background:rgba(15,18,32,.45); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); }
+.modal{ border-radius:16px; box-shadow:var(--shadow-lg); }
+.mhead{ font-weight:600; }
+.toast{ border-radius:10px; box-shadow:var(--shadow-lg); }
+
+/* ---------- Auth gate ---------- */
+.gate .card{ border-radius:16px; box-shadow:var(--shadow-lg); }
+
+/* ---------- Empty states ---------- */
+.empty{ padding:48px 24px; }
+.empty .big{ font-weight:600; color:var(--ink); }
+
+/* ---------- Scrollbars ---------- */
+::-webkit-scrollbar{ width:10px; height:10px; }
+::-webkit-scrollbar-thumb{ background:#c9cfdd; border-radius:8px; border:2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover{ background:#aab3c7; }
+
+/* ============================================================
+   TalentFit™ — the signature experience
+   ============================================================ */
+.tfit{ border:1px solid var(--line); border-radius:14px; background:#fff;
+       padding:16px 18px 12px; margin:4px 0 12px; box-shadow:var(--shadow-sm); }
+.tfit-head{ display:flex; align-items:baseline; gap:8px; margin-bottom:12px; }
+.tfit-logo{ font-size:12px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; color:var(--ink); }
+.tfit-powered{ font-size:11px; font-weight:500; color:var(--muted); }
+.tfit-hero{ display:flex; align-items:center; gap:16px; margin:2px 0 14px; }
+.tfit-ring{ position:relative; width:64px; height:64px; border-radius:50%; flex:0 0 64px;
+            display:grid; place-items:center; }
+.tfit-ring::after{ content:""; position:absolute; inset:6px; border-radius:50%; background:#fff; }
+.tfit-ring-score{ position:relative; z-index:1; font-size:20px; font-weight:800; color:var(--ink); }
+.tfit-ring-score::after{ content:"%"; font-size:11px; font-weight:700; color:var(--muted); }
+.tfit-hero-tx{ display:flex; flex-direction:column; gap:6px; }
+.tfit-hero-l{ font-size:13px; font-weight:600; color:var(--muted); }
+.tfit-chip{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700;
+            padding:4px 12px; border-radius:999px; width:max-content; border:1px solid; }
+.tfit-chip .tfit-dot{ width:7px; height:7px; border-radius:50%; background:currentColor; }
+.tfit-v-strong{ color:var(--tfit-strong); }
+.tfit-chip.tfit-v-strong{ background:var(--tfit-strong-bg); border-color:var(--tfit-strong-line); }
+.tfit-v-moderate{ color:var(--tfit-mod); }
+.tfit-chip.tfit-v-moderate{ background:var(--tfit-mod-bg); border-color:var(--tfit-mod-line); }
+.tfit-v-stretch{ color:var(--tfit-stretch); }
+.tfit-chip.tfit-v-stretch{ background:var(--tfit-stretch-bg); border-color:var(--tfit-stretch-line); }
+.tfit-sect{ font-size:11px; font-weight:700; letter-spacing:1.1px; text-transform:uppercase;
+            color:var(--muted); margin:0 0 8px; }
+.tfit-row{ padding:8px 0 10px; border-top:1px solid #f0f2f8; }
+.tfit-row.first{ border-top:none; padding-top:2px; }
+.tfit-line{ display:flex; align-items:baseline; gap:8px; }
+.tfit-rank{ font-size:11px; font-weight:700; color:var(--muted); width:14px; flex:0 0 14px;
+            font-variant-numeric:tabular-nums; }
+.tfit-title{ font-size:13px; font-weight:600; color:var(--ink); flex:1; min-width:0;
+             overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tfit-score{ font-size:13px; font-weight:700; }
+.tfit-bar{ height:4px; border-radius:999px; background:var(--tfit-track); margin:6px 0 5px 22px; overflow:hidden; }
+.tfit-fill{ display:block; height:100%; border-radius:999px; background:currentColor;
+            transition:width .5s var(--ease); }
+.tfit-meta{ font-size:11px; color:var(--muted); margin-left:22px; }
+.tfit-why{ font-size:11px; color:var(--muted); opacity:.85; margin:2px 0 0 22px; line-height:1.5; }
+.tfit-empty{ padding:14px 0 8px; }
+.tfit-empty-t{ font-size:13px; font-weight:600; color:var(--ink); margin-bottom:2px; }
+.tfit-empty-s{ font-size:12px; color:var(--muted); }
+
+@media (prefers-reduced-motion:reduce){
+  .btn,.vtab,tbody tr.click td,.tfit-fill{ transition:none; }
+}
+
+</style>
 </head>
 <body>
 
@@ -2867,29 +2995,49 @@ function openDetail(c){
       if(!isNew && typeof BOARD !== "undefined" && BOARD.scoreCandidate){
         var afRes = BOARD.scoreCandidate(c);
         var afTop = ((afRes && afRes.results) || []).filter(function(r2){ return r2.verdict === "strong" || r2.verdict === "moderate" || r2.verdict === "stretch"; }).slice(0, 6);
-        var afWrap = el("div", "fld full"); afWrap.style.cssText = "border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:linear-gradient(180deg,#fbfcfe,#f4f7fb);margin:4px 0 10px;";
-        var afT = el("div", null, "TalentFit\u2122 \u00b7 Powered by TSS\u2122");
-        afT.style.cssText = "font-weight:700;font-size:11px;letter-spacing:.6px;color:#1F3864;margin:8px 0 4px;";
-        afWrap.appendChild(afT);
+        var afWrap = el("div", "fld full tfit");
+        var afHead = el("div", "tfit-head");
+        afHead.appendChild(el("span", "tfit-logo", "TalentFit\u2122"));
+        afHead.appendChild(el("span", "tfit-powered", "Powered by TSS\u2122"));
+        afWrap.appendChild(afHead);
         if(!afTop.length){
-          afWrap.appendChild(el("div", "hint", "No moderate-or-better TalentFit matches against current reqs."));
+          var afEmpty = el("div", "tfit-empty");
+          afEmpty.appendChild(el("div", "tfit-empty-t", "No matches yet"));
+          afEmpty.appendChild(el("div", "tfit-empty-s", "No moderate-or-better TalentFit matches against current reqs."));
+          afWrap.appendChild(afEmpty);
         } else {
           var best0 = afTop[0];
-          var vdot = best0.verdict === "strong" ? "\ud83d\udfe2 Strong Match" : (best0.verdict === "moderate" ? "\ud83d\udfe1 Moderate Match" : "\u26aa Stretch");
-          var ov = el("div", null, "Overall Fit  " + best0.score + "%\u2003" + vdot);
-          ov.style.cssText = "font-size:15px;font-weight:800;color:#1F3864;margin:2px 0 8px;";
-          afWrap.appendChild(ov);
-          var bmh = el("div", null, "BEST MATCHES"); bmh.style.cssText = "font-size:9px;font-weight:800;letter-spacing:1px;color:#8a93a6;margin-bottom:2px;"; afWrap.appendChild(bmh);
+          var vLabel = best0.verdict === "strong" ? "Strong Match" : (best0.verdict === "moderate" ? "Moderate Match" : "Stretch");
+          var afHero = el("div", "tfit-hero");
+          var afRing = el("div", "tfit-ring tfit-v-" + best0.verdict);
+          afRing.style.background = "conic-gradient(currentColor " + (Math.max(0, Math.min(100, best0.score)) * 3.6) + "deg, var(--tfit-track) 0)";
+          afRing.appendChild(el("span", "tfit-ring-score", String(best0.score)));
+          afHero.appendChild(afRing);
+          var afHtx = el("div", "tfit-hero-tx");
+          afHtx.appendChild(el("div", "tfit-hero-l", "Overall Fit"));
+          var afChip = el("span", "tfit-chip tfit-v-" + best0.verdict);
+          afChip.appendChild(el("i", "tfit-dot"));
+          afChip.appendChild(document.createTextNode(vLabel));
+          afHtx.appendChild(afChip);
+          afHero.appendChild(afHtx);
+          afWrap.appendChild(afHero);
+          afWrap.appendChild(el("div", "tfit-sect", "Best Matches"));
           afTop.forEach(function(r2, i2){
             var q = r2.req || {};
-            var row = el("div", "hint", (i2 + 1) + ".  " + (q.title || "") + "  \u2014  " + r2.score + "%  \u00b7  [" + (q.jobId || "?") + "] " + (q.loc || "?") + (q.bench ? "  (TalentBench)" : ""));
-            row.style.cssText = "padding:2px 0;font-weight:" + (i2 === 0 ? "700" : "500") + ";";
-            afWrap.appendChild(row);
-            if(r2.reasons && r2.reasons.length){
-              var why = el("div", "hint", "    " + r2.reasons.join("  \u2022  "));
-              why.style.cssText = "padding:0 0 4px 14px;font-size:11px;opacity:.75;";
-              afWrap.appendChild(why);
-            }
+            var afRow = el("div", "tfit-row" + (i2 === 0 ? " first" : ""));
+            var afLine = el("div", "tfit-line");
+            afLine.appendChild(el("span", "tfit-rank", String(i2 + 1)));
+            afLine.appendChild(el("span", "tfit-title", q.title || ""));
+            afLine.appendChild(el("span", "tfit-score tfit-v-" + r2.verdict, r2.score + "%"));
+            afRow.appendChild(afLine);
+            var afBar = el("div", "tfit-bar");
+            var afFill = el("i", "tfit-fill tfit-v-" + r2.verdict);
+            afFill.style.width = Math.max(0, Math.min(100, r2.score)) + "%";
+            afBar.appendChild(afFill);
+            afRow.appendChild(afBar);
+            afRow.appendChild(el("div", "tfit-meta", (q.jobId ? "[" + q.jobId + "] \u00b7 " : "") + (q.loc || "\u2014") + (q.bench ? " \u00b7 TalentBench" : "")));
+            if(r2.reasons && r2.reasons.length){ afRow.appendChild(el("div", "tfit-why", r2.reasons.join("  \u00b7  "))); }
+            afWrap.appendChild(afRow);
           });
         }
         body.appendChild(afWrap);
