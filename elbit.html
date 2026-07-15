@@ -1267,9 +1267,15 @@ var BOARD = (function(){
   }
   function domainScore(txt){
     var on=0, off=0;
-    if(/medical device|medical instrument|in.?vitro|\bivd\b|diagnostic|analytical instrument|clinical (analyzer|instrument)|iec ?62304|iso ?13485|iec ?60601|21 ?cfr ?(part ?)?820|\bfda\b|biomedical|drug delivery/i.test(txt)) on+=2;
-    if(/motion control|fluidic|electro.?optic|\boptics\b|instrument|robotic|thermal control|analyzer|laboratory|life scien/i.test(txt)) on+=1;
-    if(/aerospace|defen[cs]e|avionic|automotive|iso ?26262|semiconductor|industrial automation|scientific instrument|electro.?mechanical/i.test(txt)) on+=1;
+    if(typeof ORG !== "undefined" && ORG === "elbit"){
+      if(/aerospace|defen[cs]e|avionics?|mil.?std|\bdod\b|\bdfars?\b|\bitar\b|\bradar\b|missile|munition|weapons?|fighter|\bf-?35\b|\bf-?16\b|rotorcraft|helicopter|\buas\b|\buav\b|night vision|do-?178|do-?254|arp ?4754|security clearance|secret clearance|\bts\/sci\b|electronic warfare/i.test(txt)) on+=2;
+      if(/electro.?optic|\boptics\b|\bemi\b|\bemc\b|ruggedized|\bmilitary\b|government contract|\bfaa\b|do-?160|space systems|satellite|\bnasa\b/i.test(txt)) on+=1;
+      if(/automotive|iso ?26262|semiconductor|industrial automation|medical device|iso ?13485|commercial aviation|scientific instrument|electro.?mechanical/i.test(txt)) on+=1;
+    } else {
+      if(/medical device|medical instrument|in.?vitro|\bivd\b|diagnostic|analytical instrument|clinical (analyzer|instrument)|iec ?62304|iso ?13485|iec ?60601|21 ?cfr ?(part ?)?820|\bfda\b|biomedical|drug delivery/i.test(txt)) on+=2;
+      if(/motion control|fluidic|electro.?optic|\boptics\b|instrument|robotic|thermal control|analyzer|laboratory|life scien/i.test(txt)) on+=1;
+      if(/aerospace|defen[cs]e|avionic|automotive|iso ?26262|semiconductor|industrial automation|scientific instrument|electro.?mechanical/i.test(txt)) on+=1;
+    }
     if(/\b(front.?end|full.?stack|web develop|mobile app|android develop|ios develop|saas|e.?commerce|website|wordpress|digital marketing|game develop)\b/i.test(txt) && !/medical|instrument|hardware|firmware|\bpcb\b|device|\bfda\b|iso ?13485/i.test(txt)) off+=2;
     if(/\b(help ?desk|it support|network admin|system admin|sysadmin|database admin|business analyst|accounts payable|retail|sales associate)\b/i.test(txt)) off+=1;
     if(off>=2 && on===0) return "off";
@@ -1309,10 +1315,30 @@ var BOARD = (function(){
     if(/\bsr\.?\b|senior|\blead\b/i.test(t)) return "sr";
     return "mid";
   }
-  function locScore(reqLoc, candLocs){
-    var rl=(reqLoc||"").toLowerCase();
-    var reqRemote=/remote/.test(rl);
-    var reqNH=/merrimack|nashua|manchester|new hampshire|\bnh\b|03054/.test(rl) || rl.trim()==="";
+  var SITE_GEO = [
+    {key:"Fort Worth TX", site:/\bfwo\b|\bftw\b|\bdet\b|fort worth/i, cand:/fort worth|dallas|\bdfw\b|arlington|irving|plano|frisco|grand prairie|north richland|keller|euless|hurst|mansfield|burleson|weatherford|denton|mckinney|garland|mesquite|richardson|carrollton|lewisville|southlake|grapevine|haltom|benbrook|crowley|cleburne|azle/i},
+    {key:"Merrimack NH", site:/\bmmo\b|merrimack|nashua|new hampshire|\bnh\b|03054/i, cand:/merrimack|nashua|manchester|bedford|hudson|litchfield|amherst|hooksett|hollis|milford|new hampshire|\bnh\b|03054|03060|salem|londonderry|\bderry\b|\blowell\b|tyngsboro|chelmsford|dracut|tewksbury|billerica|andover|lawrence|haverhill|boston|cambridge|woburn|burlington|westborough|worcester|massachusetts|\bma\b/i},
+    {key:"Talladega AL", site:/\btao\b|talladega/i, cand:/talladega|birmingham|anniston|oxford|pell city|sylacauga|childersburg|alabama|\bal\b/i},
+    {key:"Charleston SC", site:/\bchs\b|charleston/i, cand:/charleston|mount pleasant|summerville|goose creek|ladson|hanahan|moncks corner|south carolina|\bsc\b/i},
+    {key:"Yuma AZ", site:/\byuma\b/i, cand:/yuma|phoenix|tucson|arizona|\baz\b/i},
+    {key:"Roanoke VA", site:/roanoke/i, cand:/roanoke|salem|blacksburg|lynchburg|christiansburg|virginia|\bva\b/i}
+  ];
+  function locScore(reqLoc, c){
+    var rl=(reqLoc||"");
+    var candLocs=c.locs||[];
+    var probe=(c.ref && c.ref.location && String(c.ref.location).trim().length) ? String(c.ref.location) : "";
+    var reqRemote=/remote/i.test(rl);
+    var site=null;
+    for(var i=0;i<SITE_GEO.length;i++){ if(SITE_GEO[i].site.test(rl)){ site=SITE_GEO[i]; break; } }
+    if(site){
+      var isLocal = (probe && site.cand.test(probe)) || (!probe && site.cand.test(c.txt.slice(0,300))) || (site.key==="Merrimack NH" && candLocs.indexOf("MRMK")>=0);
+      if(isLocal) return {s:20, why:"local to " + site.key + " site"};
+      if(reqRemote) return {s:14, why:"remote req"};
+      if(/willing to relocate|open to relocat|relocat(e|ing|ion).{0,12}(yes|open|willing)/i.test(c.txt)) return {s:11, why:"open to relocation"};
+      return {s:6, why:"relocation needed (" + site.key + ")"};
+    }
+    var rll=rl.toLowerCase();
+    var reqNH=/merrimack|nashua|manchester|new hampshire|\bnh\b|03054/.test(rll) || rll.trim()==="";
     if(candLocs.indexOf("MRMK")>=0 && (reqNH || !reqRemote)) return {s:20, why:"NH/commute match"};
     if(reqRemote && candLocs.indexOf("REMOTE")>=0) return {s:14, why:"remote-eligible"};
     if(candLocs.indexOf("REMOTE")>=0) return {s:10, why:"remote candidate"};
@@ -1335,7 +1361,7 @@ var BOARD = (function(){
     
     if(!fnOK) return {req:req, score:8, verdict:"not", reasons:["discipline mismatch ("+c.fn+" vs "+rfn+")"]};
     s+=28; reasons.push("discipline match");
-    var ls=locScore(req.loc, c.locs); s+=ls.s; reasons.push(ls.why);
+    var ls=locScore(req.loc, c); s+=ls.s; reasons.push(ls.why);
     var want=LEVELORD[rlevel]||2, have=LEVELORD[c.level]||2, d=have-want;
     if(d===0){s+=18;reasons.push("seniority on-level");}
     else if(d===1||d===-1){s+=12;reasons.push(d>0?"slightly senior":"slightly junior");}
@@ -1349,6 +1375,7 @@ var BOARD = (function(){
     if(c.junior){ s=Math.min(s, want>=2?40:50); reasons.push("junior cap"); }
     if(s<0)s=0; if(s>100)s=100;
     if(adjacentOnly){ if(s > 58) s = 58; reasons.push("adjacent discipline (" + c.fn + " vs " + rfn + ")"); }
+    if(rfn === "CONTRACTS" && c.fnset.indexOf("CONTRACTS") >= 0 && s < 45){ s = 45; reasons.push("specialist in-lane floor"); }
     var verdict = s>=72?"strong": s>=52?"moderate": s>=38?"stretch":"not";
     return {req:req, score:s, verdict:verdict, reasons:reasons};
   }
