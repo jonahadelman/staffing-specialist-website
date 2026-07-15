@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TalentBase Academy™ — Powered by TSS™</title>
+<style>
+  :root{
+    --bg:#f4f5f9;--panel:#ffffff;--panel2:#f0f1f6;--line:#e2e5ef;
+    --ink:#111318;--muted:#52576b;--blue:#3B5BFF;--blue-dim:#eaedff;
+    --gray:#676d86;--green:#15803d;--red:#dc2626;--amber:#b45309;--navy:#0d1230;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55}
+  h1,h2,h3{margin:0;font-weight:800}
+  button{font-family:inherit;cursor:pointer}
+  .wrap{max-width:980px;margin:0 auto;padding:0 20px}
+  /* header */
+  header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .topbar{display:flex;align-items:center;gap:12px;padding:12px 0;flex-wrap:wrap}
+  .logo{width:34px;height:34px;border-radius:8px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;flex-shrink:0}
+  .brand-name{font-size:16px;font-weight:800;letter-spacing:-.3px;line-height:1.1}
+  .brand-sub{font-size:9.5px;color:var(--muted);font-weight:600;letter-spacing:.4px}
+  .grow{flex:1}
+  .navbtns{display:flex;gap:6px;flex-wrap:wrap}
+  .nb{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;color:var(--ink)}
+  .nb.active{background:var(--blue);border-color:var(--blue);color:#fff}
+  .progresspill{font-size:11.5px;font-weight:800;color:var(--blue);background:var(--blue-dim);border-radius:20px;padding:5px 12px;white-space:nowrap}
+  /* hero */
+  .hero{margin:22px 0;border-radius:16px;padding:34px 34px 30px;color:#fff;background:linear-gradient(135deg,#0d1230 0%,#17204d 55%,#1d2a6e 100%);position:relative;overflow:hidden}
+  .hero:after{content:"";position:absolute;right:-60px;top:-60px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(59,91,255,.35),transparent 70%)}
+  .hero h1{font-size:30px;letter-spacing:-.5px}
+  .hero p{color:#c6cdf2;max-width:640px;margin:10px 0 0}
+  .hero .kicker{font-size:10.5px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#8fa0ff;margin-bottom:8px}
+  /* cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin:18px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;transition:box-shadow .15s}
+  .card:hover{box-shadow:0 6px 18px rgba(10,12,24,.08)}
+  .sech{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.6px;color:var(--gray);margin:26px 0 4px}
+  .roletag{display:inline-block;font-size:10px;font-weight:800;border-radius:20px;padding:2px 9px;margin-right:4px;background:var(--panel2);border:1px solid var(--line);color:var(--gray)}
+  .roletag.on{background:var(--blue-dim);border-color:var(--blue);color:var(--blue)}
+  .lessonrow{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:10px;cursor:pointer}
+  .lessonrow:hover{box-shadow:0 5px 16px rgba(10,12,24,.08)}
+  .lnum{width:38px;height:38px;border-radius:10px;background:var(--blue-dim);color:var(--blue);font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .lnum.done{background:var(--green);color:#fff}
+  .ltitle{font-weight:800;font-size:14.5px}
+  .lmeta{font-size:11.5px;color:var(--gray);margin-top:2px}
+  .lstate{margin-left:auto;font-size:11px;font-weight:800;color:var(--gray);white-space:nowrap}
+  .lstate.done{color:var(--green)}
+  /* lesson detail */
+  .lesson{background:#fff;border:1px solid var(--line);border-radius:14px;padding:28px 30px;margin:18px 0}
+  .lesson h2{font-size:22px;letter-spacing:-.3px}
+  .lesson h3{font-size:15px;margin:24px 0 8px;color:var(--navy)}
+  .obj{background:var(--blue-dim);border-radius:10px;padding:14px 18px;margin:16px 0;font-size:13.5px}
+  .obj b{color:var(--blue)}
+  .steps{margin:8px 0;padding-left:0;list-style:none;counter-reset:s}
+  .steps li{counter-increment:s;position:relative;padding:7px 0 7px 40px;font-size:14px}
+  .steps li:before{content:counter(s);position:absolute;left:0;top:6px;width:26px;height:26px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);color:var(--blue);font-weight:800;font-size:12.5px;display:flex;align-items:center;justify-content:center}
+  .tip{border-left:3px solid var(--blue);background:var(--panel2);border-radius:0 10px 10px 0;padding:10px 16px;margin:14px 0;font-size:13px}
+  .tip b{color:var(--blue)}
+  .warn{border-left:3px solid var(--amber);background:#fdf6ec;border-radius:0 10px 10px 0;padding:10px 16px;margin:14px 0;font-size:13px}
+  .mock{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:14px 16px;margin:14px 0;font-size:13px}
+  .mock .mbar{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--gray)}
+  .pillrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .spill{font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;background:#fff;border:1px solid var(--line)}
+  .kc{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:18px;margin:22px 0 8px}
+  .kc h4{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:var(--gray)}
+  .q{margin:14px 0}
+  .q .qq{font-weight:700;font-size:14px;margin-bottom:8px}
+  .opt{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px 13px;margin:6px 0;font-size:13.5px}
+  .opt:hover{border-color:var(--blue)}
+  .opt.right{background:#e9f7ee;border-color:var(--green);font-weight:700}
+  .opt.wrong{background:#fdeceb;border-color:var(--red)}
+  .why{font-size:12.5px;color:var(--muted);margin-top:6px;display:none}
+  .btn{background:var(--blue);color:#fff;border:0;border-radius:9px;padding:11px 22px;font-size:14px;font-weight:800}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .lessonnav{display:flex;gap:10px;margin:22px 0 40px}
+  /* video */
+  .vid{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+  .vid video{width:100%;border-radius:10px;background:#0d1230}
+  .vid h3{font-size:16px;margin-bottom:4px}
+  .vid p{font-size:13px;color:var(--muted);margin:4px 0 12px}
+  /* quiz + cert */
+  .scorebar{font-size:15px;font-weight:800;margin:14px 0}
+  .cert{border:3px solid var(--navy);border-radius:14px;background:#fff;padding:46px 40px;text-align:center;margin:20px 0}
+  .cert .cbrand{font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--blue)}
+  .cert h2{font-size:28px;margin:14px 0 4px}
+  .cert .cname{font-size:24px;font-weight:800;color:var(--navy);border-bottom:2px solid var(--line);display:inline-block;padding:0 30px 6px;margin:18px 0 8px}
+  .cert .csub{color:var(--muted);font-size:13px}
+  input.nameinput{border:1px solid var(--line);border-radius:9px;padding:10px 14px;font-size:15px;width:280px;text-align:center}
+  footer{margin:50px 0 30px;text-align:center;font-size:11.5px;color:var(--gray)}
+  @media print{ header,.lessonnav,.navbtns,#printHide{display:none!important} body{background:#fff} .cert{border-width:4px} }
+</style>
+</head>
+<body>
+<header><div class="wrap topbar">
+  <div class="logo">T</div>
+  <div><div class="brand-name">TalentBase Academy™</div><div class="brand-sub">TRAINING &amp; CERTIFICATION · POWERED BY TSS™</div></div>
+  <div class="grow"></div>
+  <div class="navbtns" id="navBtns">
+    <button class="nb active" data-nav="home">Home</button>
+    <button class="nb" data-nav="lessons">Lessons</button>
+    <button class="nb" data-nav="videos">Videos</button>
+    <button class="nb" data-nav="exam">Final Exam</button>
+  </div>
+  <span class="progresspill" id="progPill">0 of 8 lessons</span>
+</div></header>
+
+<div class="wrap" id="app"></div>
+
+<footer>TalentBase Academy™ · TalentBase TES — Talent Experience System · © The Staffing Specialist™ · Powered by TSS™</footer>
+
+<script>
+"use strict";
+/* ================= state ================= */
+var P = {}; try{ P = JSON.parse(localStorage.getItem("tb_academy") || "{}"); }catch(e){ P = {}; }
+if(!P.done){ P.done = {}; }
+if(!P.role){ P.role = ""; }
+function save(){ try{ localStorage.setItem("tb_academy", JSON.stringify(P)); }catch(e){} }
+function el(tag, cls, html){ var e = document.createElement(tag); if(cls){ e.className = cls; } if(html !== undefined){ e.innerHTML = html; } return e; }
+
+/* ================= roles ================= */
+var ROLES = [
+  { id:"recruiter",  name:"Recruiter",            desc:"You work candidates end-to-end: sourcing, intake, submissions, interviews, offers.", lessons:[1,2,3,4,5,6,7,8] },
+  { id:"coordinator",name:"Coordinator / Admin",  desc:"You keep the data flowing: resumes in, records clean, follow-ups current.",          lessons:[1,2,3,4,8] },
+  { id:"client",     name:"Client / Hiring Team", desc:"You review candidates, respond to submissions, and track your reqs.",                lessons:[1,2,4,6,7] }
+];
+
+/* ================= lessons ================= */
+var LESSONS = [
+{ n:1, id:"tour", min:6, roles:["recruiter","coordinator","client"], title:"Welcome to TalentBase — the Lay of the Land",
+  obj:"Know what TalentBase is, find your way around the workspace, and read the dashboard in ten seconds.",
+  body:[
+    ["h","What TalentBase is"],
+    ["p","TalentBase TES (Talent Experience System) is The Staffing Specialist's recruiting platform. Your workspace — <b>Elbit Systems of America</b> — holds every candidate, every open requisition, and every interview in one place, live. When anyone on the team updates a record, everyone sees it."],
+    ["h","The three zones of the screen"],
+    ["steps",[
+      "<b>Top bar</b> — the universal search box plus the action buttons: Import CSV, Export, Dayforce CSV, Bulk Add, From Resume, and <b>+ Candidate</b>.",
+      "<b>Left sidebar — Views</b> — how you slice the candidate list. Sections: Action, Pipeline, Sourcing &amp; Review, TalentBench, Reqs, People &amp; Reference, and Closed. Click a section name to expand it.",
+      "<b>Main area</b> — whatever the selected view shows: the dashboard, a candidate list, req cards, or the calendar."
+    ]],
+    ["mock","<div style='font-weight:800;margin-bottom:6px'>TODAY'S WORK</div><div class='pillrow'><span class='spill'>Currently Interviewing</span><span class='spill'>Interviews This Week</span><span class='spill'>Interview Requests</span><span class='spill'>Pending HM Review</span><span class='spill'>Follow-Ups Due</span></div><div style='font-weight:800;margin:10px 0 6px'>RECRUITING SNAPSHOT</div><div class='pillrow'><span class='spill'>Active Candidates</span><span class='spill'>Open Reqs</span><span class='spill'>Open TalentBench Reqs</span><span class='spill'>Offers Pending</span></div>"],
+    ["h","Reading the dashboard"],
+    ["p","<b>Today's Work</b> is your action row — it counts the things that need attention now, in priority order: who is interviewing, what's scheduled this week, open interview requests, candidates submitted and awaiting hiring-manager feedback (<b>Pending HM Review</b>), and follow-ups that are due. <b>Recruiting Snapshot</b> is the big picture: active candidates, the Elbit MTC <b>Open Reqs</b>, the <b>Open TalentBench Reqs</b> (sourcing pipeline roles), and offers pending. Every card is clickable — it jumps to the matching view."],
+    ["tip","<b>Start every day on the dashboard.</b> Card order matches priority: interviews first, then HM feedback, then follow-ups."]
+  ],
+  quiz:[
+    { q:"A candidate was submitted to a hiring manager and you're waiting on their answer. Which dashboard card counts them?", o:["Follow-Ups Due","Pending HM Review","Interview Requests"], a:1, why:"Pending HM Review counts submitted candidates awaiting hiring-manager feedback." },
+    { q:"Where do you switch between views like All Candidates, Dashboard, and Open Requisitions?", o:["The top bar buttons","The left sidebar (Views)","The Export menu"], a:1, why:"The left sidebar is the view switcher; the top bar holds actions and search." }
+  ]},
+{ n:2, id:"search", min:5, roles:["recruiter","coordinator","client"], title:"Search Like a Pro — Find Anyone, Any Req, From Anywhere",
+  obj:"Use the universal search bar to jump to a candidate's file or an open req in two keystrokes, from any screen.",
+  body:[
+    ["h","One box does it all"],
+    ["p","The search box at the top works from <b>every</b> section of TalentBase. Start typing and a dropdown appears with live results in two groups: <b>Candidates</b> and <b>Reqs</b> — each with a count."],
+    ["mock","<div class='mbar'>🔍 &nbsp;Search candidates, job titles, req #s…</div><div style='margin-top:10px;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--gray)'>CANDIDATES (1)</div><div style='background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-top:5px'><b>Joshua Kirby</b> <span class='spill'>New</span><br><span style='color:var(--muted);font-size:12px'>Specialist Systems Engineer · Eaton Corporation</span></div><div style='margin-top:8px;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--gray)'>OPEN REQS (1) <span style='float:right;color:var(--blue)'>Open Requisitions →</span></div><div style='background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-top:5px'><b>[1488]  Principal Systems Engineer</b><br><span style='color:var(--muted);font-size:12px'>FWO · HM: Alex Rekhelis</span></div>"],
+    ["steps",[
+      "<b>Find a person:</b> type part of their name (e.g. <i>kirby</i>). Click the result — their full candidate file opens instantly, no matter which view you were in. If exactly one name matches, just press <b>Enter</b>.",
+      "<b>Find a req:</b> type a job title (<i>systems engineer</i>) or a req number (<i>1488</i>). Open Reqs and TalentBench reqs are listed separately, each with a count. Click a req to open it, or click the arrow to jump to that board.",
+      "<b>Filter the list:</b> the same text also filters whatever candidate list you're viewing, live."
+    ]],
+    ["h","Power search (boolean)"],
+    ["p","The list filter understands <b>AND</b>, <b>OR</b>, <b>NOT</b>, quotes, and parentheses. Example: <i>doors AND \"systems engineer\" NOT intern</i> finds candidates whose record mentions DOORS and the exact phrase \"systems engineer\", excluding anyone matching \"intern\". It searches names, titles, skills, summaries, notes — even resume text."],
+    ["tip","<b>Closed reqs never appear</b> in search results — anything marked Filled, Closed, or Cancelled is filtered out automatically."]
+  ],
+  quiz:[
+    { q:"You're on the Dashboard and need Michael Kantor's file. Fastest path?", o:["Switch to All Candidates and scroll","Type 'kantor' in the top search and click his name","Export the list and search the CSV"], a:1, why:"Universal search works from any screen and opens the file directly." },
+    { q:"What does typing '1488' in the search bar show?", o:["Nothing — search is names only","Candidates born in 1488","Req [1488] under Open Reqs, with a count"], a:2, why:"Job titles and req numbers surface matching open reqs, grouped and counted." }
+  ]},
+{ n:3, id:"intake", min:8, roles:["recruiter","coordinator"], title:"Adding Candidates — Four Ways In",
+  obj:"Add candidates by resume, by hand, by CSV import, and attach resume files in bulk — and know which path to use when.",
+  body:[
+    ["h","1 · From Resume (the everyday path)"],
+    ["steps",[
+      "Click <b>From Resume</b> in the top bar and choose the PDF or Word file.",
+      "TalentBase parses it — name, email, phone, location, title, company, skills — including contact details hiding in Word headers.",
+      "The moment the candidate is created, <b>TalentFit auto-matches</b> them against every open req and writes an <i>AUTO-INTAKE</i> block into their Notes: ranked matches with job IDs and reasons.",
+      "Review the parsed fields, fix anything odd, and Save. The resume file attaches to the record automatically."
+    ]],
+    ["warn","Scanned-image PDFs and very old .doc files can't be read automatically — TalentBase will tell you. Enter those candidates manually with <b>+ Candidate</b> and attach the file."],
+    ["h","2 · + Candidate (manual)"],
+    ["p","For a name that arrives by phone or referral with no resume. Click <b>+ Candidate</b>, fill in what you know — at minimum name, and ideally email, location, title, and discipline — then Save. You can attach a resume later."],
+    ["h","3 · Import CSV (batches)"],
+    ["p","For lists — a spreadsheet of leads, a batch from another system. Click <b>Import CSV</b> and pick the file. The header row must use TalentBase's column names (First Name, Last Name, Email, Phone, Location, Current Title, Current Company, Skills, Source, Status, Priority, Recruiter Owner, Discipline, …). Skills separated by commas become tags automatically."],
+    ["h","4 · Bulk Add (resume files in a batch)"],
+    ["p","Have 20 resume files for candidates already in the system? <b>Bulk Add</b> uploads them all and attaches each to the right candidate by matching the filename to the name on the record."],
+    ["tip","<b>Golden rule: no duplicates.</b> Search the candidate's name BEFORE adding. If they exist, update the existing record."]
+  ],
+  quiz:[
+    { q:"You receive one strong PDF resume by email. Best path in?", o:["Import CSV","From Resume","Bulk Add"], a:1, why:"From Resume parses the file, creates the record, attaches the resume, and auto-matches reqs in one pass." },
+    { q:"What happens automatically right after a From-Resume candidate is created?", o:["An offer letter is drafted","TalentFit matches them against open reqs and writes the results into Notes","They're submitted to a hiring manager"], a:1, why:"The AUTO-INTAKE notes block lists ranked req matches with job IDs and reasons." },
+    { q:"Before adding any candidate you should always…", o:["Search their name to avoid duplicates","Export a backup CSV","Set their priority to High"], a:0, why:"One candidate, one record — search first." }
+  ]},
+{ n:4, id:"profile", min:7, roles:["recruiter","coordinator","client"], title:"The Candidate File — Where Everything Lives",
+  obj:"Read and maintain a candidate file: Executive Brief, skills, status, TalentFit scorecard, notes, and Send to HM.",
+  body:[
+    ["h","Anatomy of the file"],
+    ["p","Click any candidate (or find them via search) and their file opens. Top to bottom: the <b>Executive Brief</b> — a 3–4 sentence professional summary a hiring manager could read cold; the <b>TalentFit scorecard</b> showing their best req matches with scores and reasons; contact and profile fields (email, phone, location, discipline, title, company); <b>Skills</b> as tags; workflow fields (<b>Status</b>, <b>Priority</b>, <b>Recruiter Owner</b>, target <b>Reqs</b>); the attached <b>resume</b>; and <b>Notes &amp; Activities</b> — the running history."],
+    ["h","Rules of a clean file"],
+    ["steps",[
+      "<b>Status is sacred.</b> It drives every pipeline view and dashboard count. Update it the moment reality changes.",
+      "<b>Log activities same-day.</b> Calls, emails, interview feedback — if it isn't logged, it didn't happen.",
+      "<b>Set the next follow-up date</b> whenever you finish touching a candidate. That feeds Follow-Ups Due.",
+      "<b>Keep the Executive Brief current</b> — it's what goes in front of the client."
+    ]],
+    ["h","Send to HM"],
+    ["p","When a candidate is ready for a hiring manager, open their file and use <b>Send to HM</b>. TalentBase builds the submission package: the candidate's profile, the TalentFit verdict with reasons, and the resume — addressed to the req's hiring manager. Then set the candidate's status to <b>Submitted</b> so they appear under Pending HM Review."],
+    ["tip","<b>Client users:</b> your view is read-focused — Executive Brief, scorecard, and resume are your quick read. Respond to submissions through your TSS contact and the interview-request flow."]
+  ],
+  quiz:[
+    { q:"Which field drives the pipeline views and dashboard counts?", o:["Priority","Status","Source"], a:1, why:"Status is the workflow engine — keep it true in real time." },
+    { q:"You just called a candidate and they want to talk next Tuesday. You should log the call and…", o:["Set Next Follow-Up to Tuesday","Change their discipline","Archive them"], a:0, why:"The follow-up date is what surfaces them in Follow-Ups Due on the right day." }
+  ]},
+{ n:5, id:"pipeline", min:7, roles:["recruiter"], title:"The Pipeline — Statuses, Interviews, and Follow-Ups",
+  obj:"Move candidates through the hiring pipeline correctly and never let one go cold.",
+  body:[
+    ["h","The status flow"],
+    ["mock","<div class='pillrow'><span class='spill'>New</span> → <span class='spill'>Submitted</span> → <span class='spill'>Interviewing Stage 1</span> → <span class='spill'>Stage 2 / 3</span> → <span class='spill'>Panel / Final</span> → <span class='spill'>Offer Pending</span> → <span class='spill' style='border-color:var(--green);color:var(--green)'>Offer Accepted - Hired</span></div><div class='pillrow' style='margin-top:6px'><span class='spill' style='border-color:var(--red);color:var(--red)'>TA Rejected</span><span class='spill' style='border-color:var(--red);color:var(--red)'>HM Rejected</span><span class='spill'>Archived</span></div>"],
+    ["p","<b>New</b> — in the pool, being worked. <b>Submitted</b> — sent to a hiring manager, awaiting feedback. <b>Interviewing Stages 1–3 and Panel/Final</b> — in the loop. <b>Offer Pending</b> → <b>Offer Accepted - Hired</b>. Rejections are split: <b>TA Rejected</b> (our screen) vs <b>HM Rejected</b> (client's call) — each with a reason and date. <b>Archived</b> removes them from active views without deleting history."],
+    ["h","Interview Requests &amp; Calendar"],
+    ["p","When a hiring manager wants to meet a candidate, log it under <b>Interview Requests</b>. Once scheduled, the date puts it on the <b>Interview Calendar</b> and it counts in <b>Interviews This Week</b>. After the interview: log feedback as an activity the same day and advance (or exit) the status."],
+    ["h","Follow-Ups"],
+    ["p","The <b>Follow Up Due</b> view (under Action) is your worklist — everyone whose follow-up date has arrived, overdue first. Work it to zero daily: make the touch, log it, set the next date."],
+    ["warn","A candidate mid-interview with a stale status makes the whole team blind. If you only do one admin task a day, make it status truth."]
+  ],
+  quiz:[
+    { q:"The hiring manager passed on a candidate after the panel. Correct status?", o:["Archived","HM Rejected — with reason and date","TA Rejected"], a:1, why:"Client-side rejections are HM Rejected; the reason feeds reporting and future matching." },
+    { q:"What should happen within a day of every interview?", o:["Feedback logged as an activity and status advanced or exited","A new req is opened","The candidate is archived"], a:0, why:"Same-day feedback keeps the pipeline honest and the client informed." }
+  ]},
+{ n:6, id:"reqs", min:7, roles:["recruiter","client"], title:"Reqs &amp; TalentBench — the Demand Side",
+  obj:"Know the difference between Open Reqs and TalentBench, read a req card, and use the Sourcing Toolkit.",
+  body:[
+    ["h","Two kinds of reqs"],
+    ["p","<b>Open Requisitions</b> are the active Elbit MTC program roles — committed, funded openings being actively filled. <b>TalentBench</b> reqs are the sourcing pipeline: roles we build ready-now benches for (statuses like <i>waiting</i> until they activate). Both live in the Reqs and TalentBench sections, and both are searchable by title or number from the top bar."],
+    ["h","Reading a req card"],
+    ["p","Each req shows the job ID (e.g. <b>[1488]</b>), title, site code, discipline, openings, comp range when known, and the <b>hiring manager</b> with contact details. Site codes: <b>FWO / FTW / DET</b> = Fort Worth TX · <b>MMO</b> = Merrimack NH · <b>TAO</b> = Talladega AL · <b>CHS</b> = Charleston SC · <b>YUMA</b> = Yuma AZ · plus Roanoke VA."],
+    ["h","The Sourcing Toolkit"],
+    ["steps",[
+      "Open any req and find its <b>Sourcing Toolkit</b>.",
+      "Copy the <b>ideal-candidate LinkedIn search</b> (tight: exact title, skills, location) or the <b>broader search</b> (wider net) straight into LinkedIn.",
+      "Use the pre-written <b>outreach message</b> for that req — personalize the first line, then send."
+    ]],
+    ["h","People &amp; Reference"],
+    ["p","The <b>Hiring Managers</b> directory lists every HM with title, email, and phone — synced to the reqs they own. The <b>By Req</b> view groups candidates under the reqs they're targeting."],
+    ["tip","<b>Client users:</b> your open reqs and their candidate flow are always live here — search a req number any time for the current picture."]
+  ],
+  quiz:[
+    { q:"A role we're building a ready-now bench for (not yet an active MTC opening) belongs in…", o:["Open Requisitions","TalentBench","Archive"], a:1, why:"TalentBench is the sourcing pipeline; Open Reqs are active program roles." },
+    { q:"Site code MMO means the role sits in…", o:["Fort Worth, TX","Merrimack, NH","Talladega, AL"], a:1, why:"MMO = Merrimack NH. FWO/FTW/DET = Fort Worth TX, TAO = Talladega AL, CHS = Charleston SC." }
+  ]},
+{ n:7, id:"talentfit", min:6, roles:["recruiter","client"], title:"TalentFit™ — How the Matching Engine Thinks",
+  obj:"Read TalentFit scores and verdicts correctly, and know what the engine does — and doesn't — decide.",
+  body:[
+    ["h","What TalentFit does"],
+    ["p","TalentFit scores every candidate against every open req, 0–100, and gives a verdict: <b>Strong</b>, <b>Possible</b>, or <b>Not a fit</b> — with plain-English reasons. It weighs the candidate's <b>discipline</b> (systems, software, electrical, quality, contracts…), skills and keyword depth, seniority level, and <b>location vs the req's site</b>."],
+    ["h","Where you'll see it"],
+    ["steps",[
+      "<b>Candidate file</b> — the scorecard shows that person's best req matches, ranked with reasons.",
+      "<b>TalentFit Board</b> — the full matching view across the pool.",
+      "<b>Auto-intake notes</b> — every From-Resume candidate arrives with matches already written into Notes.",
+      "<b>Send to HM</b> — the submission includes the TalentFit verdict and reasons."
+    ]],
+    ["h","Reading the score honestly"],
+    ["p","<b>Strong</b> = discipline, skills, level, and location all line up — a submit-with-confidence signal. <b>Possible</b> = real overlap with a gap: an <i>adjacent discipline</i> (a quality engineer on a reliability req), a level jump, or a relocation. The reasons always say which. Specialist profiles (like Contracts) only match their own discipline — the engine won't force a lawyer onto an engineering req."],
+    ["warn","<b>TalentFit is decision support, not the decision.</b> A high score means \"look here first,\" never \"skip the phone screen.\" Always verify clearance eligibility, comp expectations, and actual willingness to relocate."]
+  ],
+  quiz:[
+    { q:"A candidate scores 55 marked 'adjacent discipline (QA vs REL)'. That means…", o:["The system glitched","Real overlap but from a neighboring discipline — probe the gap before submitting","They're a guaranteed fit"], a:1, why:"Adjacent-discipline matches are capped and flagged so you screen the difference deliberately." },
+    { q:"TalentFit rates someone 86 (Strong) on req 1488. What's the right next move?", o:["Submit instantly, no call","Screen them — verify clearance, comp, and interest — then submit with the scorecard","Ignore it and re-read every resume manually"], a:1, why:"Strong scores prioritize your attention; the human screen still happens." }
+  ]},
+{ n:8, id:"routine", min:5, roles:["recruiter","coordinator","client"], title:"The Daily Routine — Ten Minutes to On Top of Everything",
+  obj:"Run a repeatable daily loop so nothing — candidate, interview, or req — ever goes cold.",
+  body:[
+    ["h","The morning loop"],
+    ["steps",[
+      "<b>Dashboard first.</b> Read Today's Work left to right: interviewing, this week's interviews, open interview requests, pending HM review, follow-ups due.",
+      "<b>Chase HM feedback.</b> Anyone sitting in Pending HM Review more than 2–3 business days gets a nudge today.",
+      "<b>Work Follow-Ups Due to zero.</b> Touch, log, set next date.",
+      "<b>Prep today's interviews.</b> Resume attached? Executive Brief current? HM confirmed?",
+      "<b>New resumes in.</b> Run every new resume through From Resume and act on the auto-match notes."
+    ]],
+    ["h","The weekly loop"],
+    ["p","Once a week: sweep the pipeline for stale statuses, review TalentBench reqs for bench-building progress, and check that every active candidate has an owner and a next follow-up date."],
+    ["tip","<b>The whole system runs on two habits:</b> keep Status true, and always set the next follow-up. Everything else — dashboards, worklists, client visibility — flows from those."]
+  ],
+  quiz:[
+    { q:"What's the FIRST thing to open each morning?", o:["The Archive","The Dashboard","The Export menu"], a:1, why:"Today's Work is the prioritized action row for the day." },
+    { q:"The two habits everything depends on are…", o:["Exporting CSVs and printing resumes","Keeping Status true and setting the next follow-up","Emailing the whole team daily"], a:1, why:"Status truth + follow-up dates power every view, count, and worklist." }
+  ]}
+];
+
+/* ================= videos ================= */
+var VIDEOS = [
+  { file:"tb_academy_1_welcome.mp4",   title:"1 · Welcome to TalentBase",        desc:"What TalentBase is, the workspace tour, reading the dashboard, and universal search. (~4 min)" },
+  { file:"tb_academy_2_candidates.mp4",title:"2 · Working Candidates",           desc:"Adding candidates four ways, the candidate file, statuses, and the pipeline. (~5 min)" },
+  { file:"tb_academy_3_reqs.mp4",      title:"3 · Reqs, TalentBench & TalentFit",desc:"Open Reqs vs TalentBench, req cards, the Sourcing Toolkit, and reading TalentFit scores. (~4 min)" }
+];
+
+/* ================= final exam ================= */
+var EXAM = [
+  { q:"Which dashboard card counts candidates submitted and awaiting hiring-manager feedback?", o:["Follow-Ups Due","Pending HM Review","Interview Requests","Offers Pending"], a:1 },
+  { q:"Fastest way to open Joshua Kirby's file from ANY screen:", o:["Scroll All Candidates","Type 'kirby' in the top search and click his name","Open Reqs → By Req","Export and search the CSV"], a:1 },
+  { q:"Typing a req number like '1488' in the search bar shows…", o:["Nothing","Matching open reqs, grouped and counted","Only candidates","The archive"], a:1 },
+  { q:"One strong PDF resume arrives by email. The best path in is…", o:["Import CSV","Bulk Add","From Resume","Dayforce CSV"], a:2 },
+  { q:"Right after a From-Resume candidate is created, TalentBase automatically…", o:["Submits them to an HM","Matches them against open reqs and writes results into Notes","Deletes duplicates","Schedules an interview"], a:1 },
+  { q:"The field that drives every pipeline view and dashboard count is…", o:["Priority","Source","Status","Owner"], a:2 },
+  { q:"A hiring manager passes on a candidate after interviews. Correct status:", o:["TA Rejected","Archived","HM Rejected with reason and date","New"], a:2 },
+  { q:"TalentBench reqs are…", o:["Closed roles","The sourcing pipeline — roles we build ready-now benches for","Duplicate reqs","Contractor-only roles"], a:1 },
+  { q:"Site code MMO =", o:["Fort Worth TX","Talladega AL","Merrimack NH","Charleston SC"], a:2 },
+  { q:"A TalentFit score flagged 'adjacent discipline' means…", o:["A system error","Real overlap from a neighboring discipline — probe the gap","A perfect match","The req is closed"], a:1 },
+  { q:"TalentFit's role in your decisions is…", o:["It makes the final call","Decision support — it prioritizes, you verify and decide","Marketing only","It replaces phone screens"], a:1 },
+  { q:"The two habits the whole system runs on:", o:["Status truth + next follow-up always set","Daily exports + weekly printouts","Bulk Add + Dayforce CSV","Archiving + deleting"], a:0 }
+];
+
+/* ================= rendering ================= */
+var app = document.getElementById("app");
+var nav = "home", curLesson = null, examState = null;
+
+function doneCount(){ var n = 0; LESSONS.forEach(function(l){ if(P.done[l.id]){ n++; } }); return n; }
+function updatePill(){ var pl = document.getElementById("progPill"); var d = doneCount(); pl.textContent = P.certified ? "★ Certified" : (d + " of " + LESSONS.length + " lessons"); }
+
+function go(v, arg){
+  nav = v; curLesson = (v === "lesson") ? arg : null;
+  document.querySelectorAll("#navBtns .nb").forEach(function(b){ b.className = "nb" + ((b.getAttribute("data-nav") === v || (v === "lesson" && b.getAttribute("data-nav") === "lessons")) ? " active" : ""); });
+  window.scrollTo(0,0); render();
+}
+document.getElementById("navBtns").addEventListener("click", function(e){ var b = e.target.closest("[data-nav]"); if(b){ go(b.getAttribute("data-nav")); } });
+
+function render(){
+  app.innerHTML = ""; updatePill();
+  if(nav === "home"){ renderHome(); }
+  else if(nav === "lessons"){ renderLessons(); }
+  else if(nav === "lesson"){ renderLesson(curLesson); }
+  else if(nav === "videos"){ renderVideos(); }
+  else if(nav === "exam"){ renderExam(); }
+}
+
+function renderHome(){
+  var h = el("div","hero");
+  h.appendChild(el("div","kicker","TalentBase Academy™ · Elbit Workspace Edition"));
+  h.appendChild(el("h1",null,"Become dangerous with TalentBase in about an hour."));
+  h.appendChild(el("p",null,"Eight short lessons, three videos, and one certification exam. Pick your role below — your path lights up. Your progress saves on this device automatically."));
+  app.appendChild(h);
+
+  app.appendChild(el("div","sech","1 · Choose your role"));
+  var g = el("div","grid");
+  ROLES.forEach(function(r){
+    var c = el("div","card");
+    c.style.cursor = "pointer";
+    if(P.role === r.id){ c.style.borderColor = "var(--blue)"; c.style.boxShadow = "0 0 0 2px var(--blue-dim)"; }
+    c.innerHTML = "<div style='font-weight:800;font-size:15px'>" + r.name + (P.role === r.id ? " <span style='color:var(--blue)'>✓</span>" : "") + "</div><div style='font-size:12.5px;color:var(--muted);margin-top:6px'>" + r.desc + "</div><div style='font-size:11px;font-weight:800;color:var(--blue);margin-top:10px'>" + r.lessons.length + " lessons in this path</div>";
+    c.addEventListener("click", function(){ P.role = r.id; save(); render(); });
+    g.appendChild(c);
+  });
+  app.appendChild(g);
+
+  app.appendChild(el("div","sech","2 · Take the lessons"));
+  renderLessonList(true);
+
+  app.appendChild(el("div","sech","3 · Watch the videos, then get certified"));
+  var g2 = el("div","grid");
+  var v = el("div","card","<div style='font-weight:800'>🎬 Training videos</div><div style='font-size:12.5px;color:var(--muted);margin-top:6px'>Three narrated walkthroughs of the platform. Great as a first pass or a refresher.</div>");
+  v.style.cursor = "pointer"; v.addEventListener("click", function(){ go("videos"); });
+  var x = el("div","card","<div style='font-weight:800'>🏅 Certification exam</div><div style='font-size:12.5px;color:var(--muted);margin-top:6px'>12 questions · pass at 80% · printable TalentBase Fundamentals certificate.</div>");
+  x.style.cursor = "pointer"; x.addEventListener("click", function(){ go("exam"); });
+  g2.appendChild(v); g2.appendChild(x); app.appendChild(g2);
+}
+
+function renderLessonList(pathOnly){
+  var role = ROLES.filter(function(r){ return r.id === P.role; })[0];
+  LESSONS.forEach(function(l){
+    var inPath = !role || role.lessons.indexOf(l.n) !== -1;
+    if(pathOnly && role && !inPath){ return; }
+    var row = el("div","lessonrow");
+    var done = !!P.done[l.id];
+    row.appendChild(el("div","lnum" + (done ? " done" : ""), done ? "✓" : String(l.n)));
+    var mid = el("div");
+    mid.appendChild(el("div","ltitle", l.title));
+    var tags = l.roles.map(function(rid){ var rr = ROLES.filter(function(r){ return r.id === rid; })[0]; return "<span class='roletag" + (P.role === rid ? " on" : "") + "'>" + rr.name.split(" ")[0] + "</span>"; }).join("");
+    mid.appendChild(el("div","lmeta", "~" + l.min + " min &nbsp; " + tags));
+    row.appendChild(mid);
+    row.appendChild(el("div","lstate" + (done ? " done" : ""), done ? "Completed" : "Start →"));
+    row.addEventListener("click", function(){ go("lesson", l); });
+    app.appendChild(row);
+  });
+}
+
+function renderLessons(){
+  app.appendChild(el("div","sech","All lessons" + (P.role ? " — your path highlighted" : "")));
+  renderLessonList(false);
+}
+
+function renderLesson(l){
+  var box = el("div","lesson");
+  box.appendChild(el("div","lmeta","Lesson " + l.n + " of " + LESSONS.length + " · ~" + l.min + " min"));
+  box.appendChild(el("h2",null,l.title));
+  box.appendChild(el("div","obj","<b>You'll learn:</b> " + l.obj));
+  l.body.forEach(function(b){
+    if(b[0] === "h"){ box.appendChild(el("h3",null,b[1])); }
+    else if(b[0] === "p"){ box.appendChild(el("p",null,b[1])); }
+    else if(b[0] === "tip"){ box.appendChild(el("div","tip",b[1])); }
+    else if(b[0] === "warn"){ box.appendChild(el("div","warn","⚠ " + b[1])); }
+    else if(b[0] === "mock"){ box.appendChild(el("div","mock",b[1])); }
+    else if(b[0] === "steps"){ var ol = el("ol","steps"); b[1].forEach(function(s){ ol.appendChild(el("li",null,s)); }); box.appendChild(ol); }
+  });
+
+  /* knowledge check */
+  var kc = el("div","kc"); kc.appendChild(el("h4",null,"Knowledge check — answer to complete the lesson"));
+  var answered = {};
+  l.quiz.forEach(function(qq, qi){
+    var q = el("div","q"); q.appendChild(el("div","qq",(qi+1) + ". " + qq.q));
+    var why = el("div","why","💡 " + qq.why);
+    qq.o.forEach(function(opt, oi){
+      var b = el("button","opt",opt);
+      b.addEventListener("click", function(){
+        if(answered[qi]){ return; }
+        answered[qi] = true;
+        b.className = "opt " + (oi === qq.a ? "right" : "wrong");
+        if(oi !== qq.a){ q.querySelectorAll(".opt")[qq.a].className = "opt right"; }
+        why.style.display = "block";
+        if(Object.keys(answered).length === l.quiz.length){
+          P.done[l.id] = true; save(); updatePill();
+          doneBtn.disabled = false; doneBtn.textContent = "✓ Lesson complete — next lesson →";
+        }
+      });
+      q.appendChild(b);
+    });
+    q.appendChild(why); kc.appendChild(q);
+  });
+  box.appendChild(kc);
+  app.appendChild(box);
+
+  var navr = el("div","lessonnav");
+  var back = el("button","btn ghost","← All lessons"); back.addEventListener("click", function(){ go("lessons"); });
+  var doneBtn = el("button","btn", P.done[l.id] ? "Next lesson →" : "Answer the knowledge check to continue");
+  doneBtn.disabled = !P.done[l.id];
+  doneBtn.addEventListener("click", function(){
+    var idx = LESSONS.indexOf(l);
+    if(idx < LESSONS.length - 1){ go("lesson", LESSONS[idx+1]); } else { go("exam"); }
+  });
+  navr.appendChild(back); navr.appendChild(doneBtn); app.appendChild(navr);
+}
+
+function renderVideos(){
+  app.appendChild(el("div","sech","Training videos"));
+  VIDEOS.forEach(function(v){
+    var d = el("div","vid");
+    d.appendChild(el("h3",null,v.title));
+    d.appendChild(el("p",null,v.desc));
+    var vid = document.createElement("video");
+    vid.controls = true; vid.preload = "metadata"; vid.src = v.file;
+    vid.addEventListener("error", function(){ d.appendChild(el("p",null,"<i>Video file " + v.file + " isn't uploaded yet — ask your TSS admin.</i>")); vid.style.display = "none"; }, { once:true });
+    d.appendChild(vid);
+    app.appendChild(d);
+  });
+}
+
+function renderExam(){
+  if(P.certified){ renderCert(); return; }
+  var d = doneCount();
+  app.appendChild(el("div","sech","TalentBase Fundamentals — Certification Exam"));
+  var box = el("div","lesson");
+  if(d < LESSONS.length){
+    box.appendChild(el("p",null,"<b>Heads up:</b> you've completed " + d + " of " + LESSONS.length + " lessons. You can take the exam any time, but finishing the lessons first makes it easy."));
+  }
+  box.appendChild(el("p",null,"12 questions · you need <b>10 correct (80%)</b> to pass · retake any time."));
+  if(!examState){
+    var start = el("button","btn","Start the exam");
+    start.addEventListener("click", function(){ examState = { answers:{} }; render(); });
+    box.appendChild(start); app.appendChild(box); return;
+  }
+  EXAM.forEach(function(qq, qi){
+    var q = el("div","q"); q.appendChild(el("div","qq",(qi+1) + ". " + qq.q));
+    qq.o.forEach(function(opt, oi){
+      var b = el("button","opt" + (examState.answers[qi] === oi ? " right" : ""), opt);
+      b.addEventListener("click", function(){ examState.answers[qi] = oi; render(); });
+      q.appendChild(b);
+    });
+    box.appendChild(q);
+  });
+  var n = Object.keys(examState.answers).length;
+  var sub = el("button","btn", n < EXAM.length ? ("Answer all questions (" + n + "/" + EXAM.length + ")") : "Submit exam");
+  sub.disabled = n < EXAM.length;
+  sub.addEventListener("click", function(){
+    var score = 0; EXAM.forEach(function(qq, qi){ if(examState.answers[qi] === qq.a){ score++; } });
+    var pct = Math.round(100 * score / EXAM.length);
+    if(pct >= 80){ P.certified = { score:pct, date:new Date().toLocaleDateString() }; save(); examState = null; render(); }
+    else{
+      examState.failed = pct; examState.answers = {}; render();
+    }
+  });
+  if(examState.failed !== undefined){ box.appendChild(el("div","scorebar","❌ " + examState.failed + "% — not quite. Review the lessons and try again; the answers don't change but understanding does.")); }
+  box.appendChild(el("div",null,"<br>"));
+  box.appendChild(sub);
+  app.appendChild(box);
+}
+
+function renderCert(){
+  app.appendChild(el("div","sech","Certification"));
+  var c = el("div","cert");
+  c.appendChild(el("div","cbrand","TalentBase Academy™ · Powered by TSS™"));
+  c.appendChild(el("h2",null,"Certificate of Completion"));
+  c.appendChild(el("div","csub","TalentBase Fundamentals — Elbit Workspace"));
+  var name = el("div","cname", P.certName || "");
+  if(!P.certName){
+    var inp = document.createElement("input"); inp.className = "nameinput"; inp.placeholder = "Type your full name";
+    var ok = el("button","btn"," Put my name on it ");
+    ok.style.marginLeft = "8px";
+    ok.addEventListener("click", function(){ if(inp.value.trim()){ P.certName = inp.value.trim(); save(); render(); } });
+    var wrap = el("div","", ""); wrap.id = "printHide"; wrap.appendChild(inp); wrap.appendChild(ok);
+    c.appendChild(wrap);
+  } else { c.appendChild(name); }
+  c.appendChild(el("div","csub","Score: " + P.certified.score + "% · " + P.certified.date + " · Issued by The Staffing Specialist™"));
+  app.appendChild(c);
+  var pr = el("button","btn","🖨 Print / save as PDF"); pr.id = "printHide";
+  pr.addEventListener("click", function(){ window.print(); });
+  app.appendChild(pr);
+}
+
+render();
+</script>
+</body>
+</html>
