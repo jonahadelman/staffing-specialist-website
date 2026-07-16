@@ -5041,5 +5041,220 @@ function makeSourcingBtn(r, tr){
 })();
 
 </script>
+
+<style id="tb-reqpicker-css">
+.rqp-ctrl{ margin:6px 0 8px; }
+.rqp-search{ width:100%; border:1px solid var(--line); border-radius:8px; padding:8px 12px; font-size:13px;
+  background:#fff; color:var(--ink); font-family:inherit; }
+.rqp-tags{ display:flex; flex-wrap:wrap; gap:6px; margin:0 0 8px; }
+.rqp-tag{ display:inline-flex; align-items:center; gap:6px; max-width:280px; background:var(--gold-dim);
+  border:1px solid transparent; color:var(--gold); border-radius:999px; padding:3px 6px 3px 11px; font-size:12px; font-weight:600; }
+.rqp-tag-t{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rqp-tag-x{ border:none; background:transparent; color:var(--gold); font-size:14px; cursor:pointer; line-height:1; padding:2px 4px; border-radius:50%; }
+.rqp-tag-x:hover{ background:rgba(59,91,255,.15); }
+.reqgrid[data-rqp]{ display:block; max-height:340px; overflow-y:auto; padding:6px 10px 10px; }
+.rqp-group{ font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted);
+  padding:12px 2px 6px; border-bottom:1px solid var(--line); margin-bottom:6px; position:sticky; top:0; background:var(--panel2); z-index:1; }
+.rqp-section{ display:grid; grid-template-columns:1fr 1fr; gap:4px 14px; margin-bottom:2px; }
+@media (max-width:700px){ .rqp-section{ grid-template-columns:1fr; } }
+.fld label.rqp-item, .rqp-item, .rqp-tx, .rqp-tx span{ text-transform:none !important; letter-spacing:0 !important; }
+.rqp-item{ align-items:flex-start; padding:5px 6px; border-radius:8px; transition:background var(--dur, .15s) ease; }
+.rqp-item:hover{ background:#fff; }
+.rqp-item input{ margin-top:3px; flex:0 0 auto; }
+.rqp-tx{ display:flex; flex-direction:column; gap:1px; min-width:0; }
+.rqp-title{ font-size:13px; font-weight:600; color:var(--ink); line-height:1.35; }
+.rqp-sub{ font-size:11px; color:var(--muted); line-height:1.35; }
+.rqp-meta{ font-size:11px; color:var(--muted); }
+.rqp-meta mark, .rqp-title mark, .rqp-sub mark{ background:var(--gold-dim); color:var(--gold); border-radius:3px; padding:0 1px; }
+.rqp-dup{ margin-left:8px; font-size:10px; font-weight:700; color:var(--red); background:#fdecec; border-radius:999px; padding:1px 8px; }
+.rqp-empty{ padding:18px 6px; font-size:12px; color:var(--muted); text-align:center; }
+</style>
+
+<script id="tb-reqpicker">
+
+(function(){
+  "use strict";
+  if(typeof window === "undefined"){ return; }
+
+  var GROUP_ORDER = ["Program Management","Systems Engineering","Software Engineering","Electrical Engineering",
+    "Mechanical Engineering","Manufacturing Engineering","Configuration Management","Cyber Security","Quality",
+    "Contracts & Subcontracts","Project Engineering","Test Engineering","Engineering Technicians","Internships"];
+
+  var TITLE_FIX = [[/\bSr\.?(?=\s)/g,"Senior"],[/\bJr\.?(?=\s)/g,"Junior"],[/\bMgr\b\.?/g,"Manager"],
+    [/\bPrin\b\.?(?=\s)/g,"Principal"],[/\bEngr\b\.?/g,"Engineer"],[/\bMfg\b\.?/g,"Manufacturing"],
+    [/\bDir\b\.?(?=\s)/g,"Director"],[/\bAssoc\b\.?(?=\s)/g,"Associate"]];
+  function prettyTitle(t){
+    var out = String(t||"");
+    TITLE_FIX.forEach(function(fx){ out = out.replace(fx[0], fx[1]); });
+    return out.replace(/\s{2,}/g," ").trim();
+  }
+  var LOC_MAP = { FWO:"Fort Worth, TX", FTW:"Fort Worth, TX", DET:"Detroit, MI", CHS:"Charleston, SC",
+    ROA:"Roanoke, VA", MMO:"Merrimack, NH", NH:"Merrimack, NH", YUMA:"Yuma, AZ", TAO:"Talladega, AL" };
+  function prettyLoc(loc){
+    var raw = String(loc||"").trim(); if(!raw){ return ""; }
+    var parts = raw.split("/").map(function(x){ return x.trim(); });
+    var mapped = parts.map(function(x){ return LOC_MAP[x.toUpperCase()] || x; });
+    if(parts.length > 2){ return "Multiple Locations"; }
+    return mapped.join(" / ");
+  }
+  function famOf(title, jobId){
+    var meta = (window.TB_REQ_META || {})[String(jobId||"").trim()];
+    var base = meta ? (meta.f || "") : "";
+    var t = String(title||"");
+    if(!base || base === "Engineering"){
+      if(/systems eng|chief eng|\bSE\b|safety eng/i.test(t)){ return "Systems Engineering"; }
+      if(/software|firmware|embedded/i.test(t)){ return "Software Engineering"; }
+      if(/electrical|\bEE\b|fpga|power/i.test(t)){ return "Electrical Engineering"; }
+      if(/mechanical|\bME\b/i.test(t)){ return "Mechanical Engineering"; }
+      if(/manufacturing eng|process eng/i.test(t)){ return "Manufacturing Engineering"; }
+      if(/test eng|metrology|environmental qual/i.test(t)){ return "Test Engineering"; }
+      if(/configuration/i.test(t)){ return "Configuration Management"; }
+      if(/cyber|security eng|\bRMF\b/i.test(t)){ return "Cyber Security"; }
+      if(/project eng/i.test(t)){ return "Project Engineering"; }
+      if(/technician/i.test(t)){ return "Engineering Technicians"; }
+      if(/intern/i.test(t)){ return "Internships"; }
+      if(base === "Engineering"){ return "Engineering — General"; }
+    }
+    if(/quality/i.test(base)){ return "Quality"; }
+    if(/program management/i.test(base)){ return "Program Management"; }
+    if(/contract|subcontract/i.test(t)){ return "Contracts & Subcontracts"; }
+    return base || "Other";
+  }
+  function groupRank(g){
+    var i = GROUP_ORDER.indexOf(g);
+    if(i >= 0){ return "0" + ("00" + i).slice(-3); }
+    if(g === "Other"){ return "3zzz"; }
+    return "1" + g;
+  }
+  function hi(text, q){
+    var sp = document.createElement("span");
+    if(!q){ sp.textContent = text; return sp; }
+    var idx = text.toLowerCase().indexOf(q.toLowerCase());
+    if(idx < 0){ sp.textContent = text; return sp; }
+    sp.appendChild(document.createTextNode(text.slice(0, idx)));
+    var mk = document.createElement("mark"); mk.textContent = text.slice(idx, idx + q.length); sp.appendChild(mk);
+    sp.appendChild(document.createTextNode(text.slice(idx + q.length)));
+    return sp;
+  }
+
+  function enhance(scope){
+    var grid = (scope || document).querySelector("#modal .reqgrid");
+    if(!grid || grid.getAttribute("data-rqp")){ return; }
+    grid.setAttribute("data-rqp","1");
+    var wrap = grid.parentNode;
+
+    /* collect items — the original inputs are NEVER recreated, only re-homed */
+    var items = [];
+    var seenId = {};
+    Array.prototype.slice.call(grid.querySelectorAll("label.reqck")).forEach(function(lab){
+      var input = lab.querySelector("input[data-reqopt]"); if(!input){ return; }
+      var raw = input.getAttribute("data-reqopt") || "";
+      var cut = raw.lastIndexOf(" – ");
+      var titleRaw = cut > 0 ? raw.slice(0, cut) : raw;
+      var locRaw = cut > 0 ? raw.slice(cut + 3) : "";
+      var jobId = "";
+      try{
+        (typeof REQS !== "undefined" ? REQS : []).some(function(r){
+          var l1 = (r.title||"") + " – " + (r.loc||""), l2 = (r.title||"") + " - " + (r.loc||"");
+          if(raw === l1 || raw === l2){ jobId = String(r.jobId||"").trim(); return true; }
+          return false;
+        });
+      }catch(e){}
+      var mTitle = titleRaw.match(/^(.*?)\s*\((.+)\)\s*$/);
+      var it = { lab:lab, input:input, raw:raw, jobId:jobId,
+                 title:prettyTitle(mTitle ? mTitle[1] : titleRaw),
+                 subtitle:mTitle ? prettyTitle(mTitle[2]) : "",
+                 loc:prettyLoc(locRaw), group:famOf(titleRaw, jobId),
+                 dup:false };
+      if(jobId){ if(seenId[jobId]){ it.dup = true; } seenId[jobId] = 1; }
+      items.push(it);
+    });
+    if(!items.length){ return; }
+
+    items.sort(function(a,b){
+      var g = groupRank(a.group).localeCompare(groupRank(b.group));
+      return g !== 0 ? g : a.title.localeCompare(b.title);
+    });
+
+    /* controls: search + selected tags */
+    var ctrl = document.createElement("div"); ctrl.className = "rqp-ctrl";
+    var search = document.createElement("input"); search.type = "search";
+    search.className = "rqp-search"; search.placeholder = "Search by title, req ID, location, program, or discipline…";
+    search.setAttribute("aria-label","Search target requisitions");
+    ctrl.appendChild(search);
+    var tags = document.createElement("div"); tags.className = "rqp-tags";
+    wrap.insertBefore(ctrl, grid); wrap.insertBefore(tags, grid);
+
+    function renderTags(){
+      tags.innerHTML = "";
+      var any = false;
+      items.forEach(function(it){
+        if(!it.input.checked){ return; }
+        any = true;
+        var tg = document.createElement("span"); tg.className = "rqp-tag"; tg.title = it.raw;
+        var tx = document.createElement("span"); tx.className = "rqp-tag-t";
+        tx.textContent = it.title + (it.jobId ? " · Req " + it.jobId : "");
+        tg.appendChild(tx);
+        var x = document.createElement("button"); x.type = "button"; x.className = "rqp-tag-x"; x.textContent = "×";
+        x.setAttribute("aria-label","Remove " + it.title);
+        x.addEventListener("click", function(ev){ ev.preventDefault(); it.input.checked = false; renderTags(); });
+        tg.appendChild(x);
+        tags.appendChild(tg);
+      });
+      tags.style.display = any ? "flex" : "none";
+    }
+
+    function paint(){
+      var q = (search.value || "").trim();
+      grid.innerHTML = "";
+      var lastGroup = null; var shown = 0; var section = null;
+      items.forEach(function(it){
+        var meta2 = (window.TB_REQ_META || {})[it.jobId] || {};
+        var hay = [it.title, it.subtitle, it.loc, it.jobId, it.group, meta2.p || "", meta2.d || ""].join(" ").toLowerCase();
+        var match = !q || hay.indexOf(q.toLowerCase()) >= 0;
+        if(!match){ return; }
+        shown++;
+        if(it.group !== lastGroup){
+          lastGroup = it.group;
+          var gh = document.createElement("div"); gh.className = "rqp-group"; gh.textContent = it.group;
+          grid.appendChild(gh);
+          section = document.createElement("div"); section.className = "rqp-section";
+          grid.appendChild(section);
+        }
+        /* rebuild label content: keep the input node itself, restructure text */
+        var lab = it.lab; lab.innerHTML = ""; lab.className = "reqck rqp-item"; lab.title = it.raw;
+        lab.appendChild(it.input);
+        var tx = document.createElement("span"); tx.className = "rqp-tx";
+        var t1 = document.createElement("span"); t1.className = "rqp-title"; t1.appendChild(hi(it.title, q)); tx.appendChild(t1);
+        if(it.subtitle){ var t2 = document.createElement("span"); t2.className = "rqp-sub"; t2.appendChild(hi(it.subtitle, q)); tx.appendChild(t2); }
+        var t3 = document.createElement("span"); t3.className = "rqp-meta";
+        var metaTxt = [it.loc, it.jobId ? "Req " + it.jobId : ""].filter(Boolean).join(" • ");
+        t3.appendChild(hi(metaTxt || "—", q));
+        if(it.dup){ var db = document.createElement("span"); db.className = "rqp-dup"; db.textContent = "Duplicate ID"; db.title = "This Job Req ID appears more than once — review in Data Integrity"; t3.appendChild(db); }
+        tx.appendChild(t3);
+        lab.appendChild(tx);
+        section.appendChild(lab);
+        it.input.addEventListener("change", renderTags);
+      });
+      if(!shown){
+        var em = document.createElement("div"); em.className = "rqp-empty";
+        em.textContent = "No requisitions match “" + q + "”.";
+        grid.appendChild(em);
+      }
+    }
+    search.addEventListener("input", paint);
+    paint(); renderTags();
+  }
+
+  if(typeof openDetail === "function"){
+    var _od = openDetail;
+    window.openDetail = function(c){
+      _od(c);
+      try{ enhance(document); }catch(e){}
+    };
+  }
+})();
+
+</script>
 </body>
 </html>
