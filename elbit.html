@@ -6762,14 +6762,28 @@ function makeSourcingBtn(r, tr){
       /* PEOPLE section */
       if(!document.getElementById("tbPeopleNav")){
         var sec = el("div"); sec.id = "tbPeopleNav";
-        sec.appendChild(el("h3",null,"People"));
-        [["tb_people_ta","🎯 TA Managers"],["tb_people_rec","🤝 Recruiters"],["tb_people_hm","👔 Hiring Managers"]].forEach(function(pv){
+        sec.appendChild(el("h3",null,"Talent Acquisition"));
+        [["tb_people_rec","🤝 Recruiters"],["tb_people_hm","👔 Hiring Managers"]].forEach(function(pv){
           var t = el("div","vtab" + ((typeof ui !== "undefined" && ui.view === pv[0]) ? " active" : ""), pv[1]);
           t.setAttribute("data-view", pv[0]);
           sec.appendChild(t);
         });
         nav.parentNode.insertBefore(sec, nav.nextSibling);
       }
+      /* remove the duplicate People & Reference section — Talent Acquisition is the single destination */
+      try{
+        var tabsHost = document.getElementById("tabs");
+        var kids = Array.prototype.slice.call(tabsHost.children);
+        for(var ki = 0; ki < kids.length; ki++){
+          var kEl = kids[ki];
+          if(kEl.tagName === "H3" && kEl.textContent.indexOf("People & Reference") >= 0){
+            var toKill = [kEl]; var kj = ki + 1;
+            while(kj < kids.length && kids[kj].tagName !== "H3"){ toKill.push(kids[kj]); kj++; }
+            toKill.forEach(function(x){ if(x.parentNode){ x.parentNode.removeChild(x); } });
+            break;
+          }
+        }
+      }catch(ePR){}
       /* de-jargon the core heading */
       document.querySelectorAll(".side h3, #tabs h3").forEach(function(h){ if((h.textContent||"").trim().toLowerCase() === "views"){ h.textContent = "Workspace"; } });
     }catch(eNav){}

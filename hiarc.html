@@ -792,7 +792,7 @@ var VIEWS = [
   { id:"reqs", collapsible:true, name:"Open Requisitions", fn:function(){ return true; }, special:"reqs", section:"Reqs" },
   { id:"byreq", collapsible:true, name:"By Req", fn:function(c){ return c.status !== "Archived"; }, special:"byreq", section:"Reqs" },
   { id:"bydisc", collapsible:true, name:"By Discipline", fn:function(c){ return c.status !== "Archived"; }, group:"discipline", section:"Reqs" },
-  { id:"managers", collapsible:true, name:"Hiring Managers", fn:function(){ return true; }, special:"managers", section:"People & Reference" },
+  { id:"managers", collapsible:true, name:"Hiring Managers", fn:function(){ return true; }, special:"managers", section:"Talent Acquisition" },
   { id:"tarejected", name:"TA Rejected", fn:function(c){ return c.status === "TA Rejected"; }, section:"Closed", collapsible:true },
   { id:"hmrejected", name:"HM Rejected", fn:function(c){ return c.status === "HM Rejected"; }, section:"Closed", collapsible:true },
   { id:"archive", name:"Archive", fn:function(c){ return c.status === "Archived"; }, section:"Closed", collapsible:true }
@@ -875,7 +875,7 @@ function prioTag(text, varname){ var w = el("span"); w.style.cssText = "display:
 function toast(msg){ var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); }, 1900); }
 
 /* ---------- sidebar ---------- */
-var sectionCollapsed = { "Closed": true, "Action": true, "Pipeline": true, "Sourcing & Review": true, "Reqs": true, "People & Reference": true };
+var sectionCollapsed = { "Closed": true, "Action": true, "Pipeline": true, "Sourcing & Review": true, "Reqs": true, "Talent Acquisition": true };
 function fuState(){
   var any = false, overdue = false;
   state.candidates.forEach(function(c){ var fr = followUp(c); if(fr.label !== ""){ any = true; if(fr.label === "Overdue"){ overdue = true; } } });
