@@ -1161,6 +1161,145 @@ function renderFollowUpWorklist(host){
     host.appendChild(nfWrap);
   }
 }
+/* ── HM directory helpers: per-manager stats + right-side detail drawer ── */
+function hmStats(name){
+  var key = (name || "").trim().toLowerCase();
+  var reqs = REQS.filter(function(r){ return (r.hm || "").trim().toLowerCase() === key; });
+  if(window.TB_METRICS){ reqs = TB_METRICS.canonicalReqEntries(reqs).map(function(e){ return e.req; }); }
+  var active = reqs.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isActiveReq(r) : !/(filled|closed|cancell?ed|archived)/.test((r.reqStatus||"").toLowerCase()); });
+  var lb = {};
+  reqs.forEach(function(r){ [(r.title||"") + " – " + (r.loc||""), (r.title||"") + " - " + (r.loc||"")].forEach(function(l){ lb[l] = 1; }); });
+  var cands = (state.candidates || []).filter(function(c){ return (c.reqs || []).some(function(l){ return lb[l]; }); });
+  var activeC = cands.filter(function(c){ return window.TB_METRICS ? TB_METRICS.isActiveCand(c) : (c.status !== "Archived" && c.status !== "Offer Accepted - Hired"); });
+  var overdue = false;
+  try{ overdue = activeC.some(function(c){ return followUp(c).label === "Overdue"; }); }catch(e){}
+  return {
+    reqs: reqs, activeReqList: active, activeReqs: active.length,
+    cands: activeC, candidates: activeC.length,
+    interviewing: activeC.filter(function(c){ return window.TB_METRICS ? TB_METRICS.isInterviewingCand(c) : ["Interviewing Stage 1","Interviewing Stage 2","Interviewing Stage 3","Panel / Final Interview","Interviewing"].indexOf(c.status) !== -1; }).length,
+    offers: activeC.filter(function(c){ return c.status === "Offer Pending"; }).length,
+    overdue: overdue
+  };
+}
+function closeHmDrawer(){
+  var d = document.getElementById("hmDrawer"), o = document.getElementById("hmDrawerOverlay");
+  if(d){ d.classList.remove("open"); }
+  if(o){ o.classList.remove("open"); }
+}
+function openHmDrawer(m, focusSection){
+  var d = document.getElementById("hmDrawer"), o = document.getElementById("hmDrawerOverlay");
+  if(!d){
+    o = el("div"); o.id = "hmDrawerOverlay"; o.addEventListener("click", closeHmDrawer); document.body.appendChild(o);
+    d = el("aside"); d.id = "hmDrawer"; d.setAttribute("role","dialog"); d.setAttribute("aria-label","Hiring manager details"); document.body.appendChild(d);
+    document.addEventListener("keydown", function(ev){ if(ev.key === "Escape"){ closeHmDrawer(); } });
+    d.addEventListener("click", function(ev){
+      var rv = ev.target.closest("[data-reqview]");
+      if(rv){ var rr = REQS.filter(function(x){ return x.id === rv.getAttribute("data-reqview"); })[0]; if(rr && typeof viewReq === "function"){ viewReq(rr); } return; }
+      var cv = ev.target.closest("[data-hmcand]");
+      if(cv){ var cc = (state.candidates || []).filter(function(x){ return x.id === cv.getAttribute("data-hmcand"); })[0]; if(cc && typeof openDetail === "function"){ openDetail(cc); } return; }
+      var iv = ev.target.closest("[data-hmir]");
+      if(iv){ var ii = (state.interviewRequests || []).filter(function(x){ return x.id === iv.getAttribute("data-hmir"); })[0]; if(ii && typeof openInterviewRequestDetail === "function"){ openInterviewRequestDetail(ii); } return; }
+    });
+  }
+  var st = hmStats(m.name);
+  d.innerHTML = "";
+  var hd = el("div","hmd-head");
+  var hleft = el("div");
+  hleft.appendChild(el("div","hmd-nm", m.name));
+  hleft.appendChild(el("div","hmd-title", m.title || ""));
+  hd.appendChild(hleft);
+  var x = el("button","hmd-x","×"); x.title = "Close (Esc)"; x.addEventListener("click", closeHmDrawer); hd.appendChild(x);
+  d.appendChild(hd);
+  var body = el("div","hmd-body");
+  /* contact */
+  var ctc = el("div","hmd-sec");
+  if(m.email){ var ea = el("a","tag gold", m.email); ea.href = "mailto:" + m.email; ctc.appendChild(ea); }
+  if(m.phone){ var pa2 = el("a","tag", m.phone); pa2.href = "tel:" + m.phone.replace(/[^0-9+]/g,""); pa2.style.marginLeft = "8px"; ctc.appendChild(pa2); }
+  body.appendChild(ctc);
+  /* stats */
+  var srow = el("div","hmd-stats");
+  [["Active Reqs", st.activeReqs], ["Candidates", st.candidates], ["Interviews", st.interviewing], ["Offers", st.offers]].forEach(function(s){
+    var b = el("div","hm-stat"); b.appendChild(el("div","hm-stat-v", String(s[1]))); b.appendChild(el("div","hm-stat-l", s[0])); srow.appendChild(b);
+  });
+  body.appendChild(srow);
+  /* departments + programs */
+  var depts = {}, progs = {};
+  st.reqs.forEach(function(r){
+    var dep = (typeof window.reqProgram === "function") ? window.reqProgram(r) : ""; if(dep){ depts[dep] = 1; }
+    var pg = (typeof window.tbProgOf === "function") ? window.tbProgOf(r) : ""; if(pg){ progs[pg] = 1; }
+  });
+  function chipSec(label, keys){
+    if(!keys.length){ return; }
+    var sec = el("div","hmd-sec");
+    sec.appendChild(el("div","hmd-sec-t", label));
+    keys.sort().forEach(function(k){ sec.appendChild(el("span","tag", k)); });
+    body.appendChild(sec);
+  }
+  chipSec("Departments", Object.keys(depts));
+  chipSec("Programs", Object.keys(progs));
+  /* active requisitions */
+  var rsec = el("div","hmd-sec"); rsec.id = "hmdReqs";
+  rsec.appendChild(el("div","hmd-sec-t","Active Requisitions (" + st.activeReqs + ")"));
+  if(!st.activeReqList.length){ rsec.appendChild(el("div","sub2","None")); }
+  st.activeReqList.slice().sort(function(a,b){ return (a.jobId||"zzz").localeCompare(b.jobId||"zzz"); }).forEach(function(r){
+    var row = el("div","hmd-req"); row.setAttribute("data-reqview", r.id);
+    var jid = (window.TB_METRICS ? TB_METRICS.normalizedJobId(r) : (r.jobId || ""));
+    var l1 = el("div","hmd-req-l1");
+    l1.appendChild(el("span","hmd-req-id", jid ? ("#" + jid) : "—"));
+    l1.appendChild(el("span","hmd-req-title", r.role || r.title || ""));
+    l1.appendChild(pill(r.reqStatus || "—", reqStatusColor(r.reqStatus || "")));
+    row.appendChild(l1);
+    var dep2 = (typeof window.reqProgram === "function") ? (window.reqProgram(r) || "") : "";
+    var pg2 = (typeof window.tbProgOf === "function") ? (window.tbProgOf(r) || "") : "";
+    row.appendChild(el("div","hmd-req-l2", [dep2, pg2, r.loc || ""].filter(Boolean).join(" · ")));
+    row.title = (r.title || "") + " – " + (r.loc || "") + (r.bench === true ? "  · TalentBench" : "  · RPO");
+    rsec.appendChild(row);
+  });
+  body.appendChild(rsec);
+  /* recent candidates */
+  var csec = el("div","hmd-sec"); csec.id = "hmdCands";
+  csec.appendChild(el("div","hmd-sec-t","Recent Candidates"));
+  var recent = st.cands.slice().sort(function(a,b){ return (b.lastContacted || b.createdAt || "").localeCompare(a.lastContacted || a.createdAt || ""); }).slice(0, 6);
+  if(!recent.length){ csec.appendChild(el("div","sub2","None")); }
+  recent.forEach(function(c){
+    var row = el("div","hmd-req"); row.setAttribute("data-hmcand", c.id);
+    var l1c = el("div","hmd-req-l1");
+    l1c.appendChild(el("span","hmd-req-title", (c.firstName || "") + " " + (c.lastName || "")));
+    l1c.appendChild(pill(c.status, (typeof STATUS_COLOR !== "undefined" && STATUS_COLOR[c.status]) || "--gray"));
+    row.appendChild(l1c);
+    row.appendChild(el("div","hmd-req-l2", [c.title, c.company].filter(Boolean).join(" · ")));
+    csec.appendChild(row);
+  });
+  body.appendChild(csec);
+  /* interview requests — newest first */
+  var isec = el("div","hmd-sec");
+  isec.appendChild(el("div","hmd-sec-t","Interview Requests"));
+  var mine = (state.interviewRequests || []).filter(function(ir){ return (ir.hiringManager || "").trim().toLowerCase() === (m.name || "").trim().toLowerCase(); })
+    .sort(function(a,b){ return (b.createdAt || "").localeCompare(a.createdAt || ""); }).slice(0, 6);
+  if(!mine.length){ isec.appendChild(el("div","sub2","None")); }
+  mine.forEach(function(ir){
+    var row = el("div","hmd-req"); row.setAttribute("data-hmir", ir.id);
+    var l1i = el("div","hmd-req-l1");
+    l1i.appendChild(el("span","hmd-req-title", ir.candidateName || "—"));
+    l1i.appendChild(pill(ir.status || "Requested","--gold"));
+    row.appendChild(l1i);
+    row.appendChild(el("div","hmd-req-l2", [ir.role, ir.interviewDate].filter(Boolean).join(" · ")));
+    isec.appendChild(row);
+  });
+  body.appendChild(isec);
+  d.appendChild(body);
+  /* footer actions */
+  if(!VIEW_ONLY){
+    var ft = el("div","hmd-foot");
+    var ed2 = el("button","btn sm ghost","Edit"); ed2.addEventListener("click", function(){ closeHmDrawer(); if(typeof openManagerModal === "function"){ openManagerModal(m); } }); ft.appendChild(ed2);
+    var dl2 = el("button","btn sm danger","Delete"); dl2.addEventListener("click", function(){ closeHmDrawer(); if(typeof deleteManager === "function"){ deleteManager(m.id); } }); ft.appendChild(dl2); /* deleteManager has its own confirm */
+    d.appendChild(ft);
+  }
+  o.classList.add("open"); d.classList.add("open");
+  if(focusSection === "reqs"){ var tr2 = d.querySelector("#hmdReqs"); if(tr2){ tr2.scrollIntoView({ block:"start" }); } }
+  if(focusSection === "cands"){ var tc2 = d.querySelector("#hmdCands"); if(tc2){ tc2.scrollIntoView({ block:"start" }); } }
+  x.focus();
+}
 function renderManagers(host){
   // Editable directory backed by the Supabase managers table. Reqs owned are matched
   // by name against REQS. Names found only on reqs are listed below for one-click add.
@@ -1178,28 +1317,48 @@ function renderManagers(host){
     em.appendChild(el("div", null, VIEW_ONLY ? "No managers have been added." : "Use Add Manager to create an entry, or add one from the reqs below."));
     host.appendChild(em);
   } else {
-    var table = el("table","mgrcards"); var thead = el("thead"); var htr = el("tr");
-    var cols = ["Hiring Manager","Title","Email","Phone","Reqs"]; if(!VIEW_ONLY){ cols.push(""); }
-    cols.forEach(function(h){ htr.appendChild(el("th", null, h)); });
-    thead.appendChild(htr); table.appendChild(thead); var tb = el("tbody");
+    /* ── Compact summary cards + right-side detail drawer ──
+       Uniform height, no inline req chips, whole card clickable. */
+    var grid = el("div","hm-grid");
     saved.forEach(function(m){
-      var tr = el("tr");
-      tr.appendChild(el("td","nm", m.name));
-      tr.appendChild(el("td","sub2", m.title || "-"));
-      var et = el("td"); if(m.email){ var a = el("a","tag gold", m.email); a.href = "mailto:" + m.email; et.appendChild(a); } else { et.appendChild(el("span","sub2","-")); } tr.appendChild(et);
-      var pt = el("td"); if(m.phone){ var pa = el("a","sub2", m.phone); pa.href = "tel:" + m.phone.replace(/[^0-9+]/g,""); pt.appendChild(pa); } else { pt.appendChild(el("span","sub2","-")); } tr.appendChild(pt);
-      var rt = el("td"); var _rl = reqsFor(m.name); if(_rl.length){ _rl.forEach(function(rn){ var lbl = rn.num ? ("#" + rn.num) : (rn.title || "-"); var chip = el("span","mgrchip", lbl); if(rn.title){ chip.title = rn.title + (rn.num ? (" (#" + rn.num + ")") : ""); } rt.appendChild(chip); }); } else { rt.appendChild(el("span","sub2","-")); } tr.appendChild(rt);
-      if(!VIEW_ONLY){
-        var act = el("td"); act.style.whiteSpace = "nowrap";
-        var actw = el("div"); actw.style.cssText = "display:flex;gap:8px;align-items:center";
-        var ed = el("button","btn sm ghost","Edit"); ed.setAttribute("data-mgredit", m.id); actw.appendChild(ed);
-        var dl = el("button","btn sm danger","Delete"); dl.setAttribute("data-mgrdel", m.id); actw.appendChild(dl);
-        act.appendChild(actw);
-        tr.appendChild(act);
-      }
-      tb.appendChild(tr);
+      var st = hmStats(m.name);
+      var card = el("div","hm-card");
+      card.setAttribute("tabindex","0");
+      card.setAttribute("role","button");
+      card.title = "Open " + m.name + " — full details";
+      var top = el("div","hm-card-top");
+      top.appendChild(el("div","hm-card-nm", m.name));
+      if(st.overdue){ var od = el("span","hm-dot-red"); od.title = "Has candidates with OVERDUE follow-ups"; top.appendChild(od); }
+      card.appendChild(top);
+      card.appendChild(el("div","hm-card-title", m.title || "\u2014"));
+      var ct = el("div","hm-card-contact");
+      ct.appendChild(el("div","sub2", m.email || "\u2014"));
+      ct.appendChild(el("div","sub2", m.phone || "\u2014"));
+      card.appendChild(ct);
+      var stats = el("div","hm-card-stats");
+      [["Active Reqs", st.activeReqs, st.activeReqs > 0 ? "hm-stat-blue" : ""],
+       ["Candidates", st.candidates, st.activeReqs > 0 && st.candidates === 0 ? "hm-stat-orange" : ""],
+       ["Interviews", st.interviewing, ""],
+       ["Offers", st.offers, ""]].forEach(function(s){
+        var box = el("div","hm-stat");
+        box.appendChild(el("div","hm-stat-v" + (s[2] ? " " + s[2] : ""), String(s[1])));
+        box.appendChild(el("div","hm-stat-l", s[0]));
+        stats.appendChild(box);
+      });
+      card.appendChild(stats);
+      /* quick actions on hover — act without leaving the directory */
+      var qa = el("div","hm-qa");
+      if(m.email){ var qe = el("a","hm-qa-btn","\u2709 Email"); qe.href = "mailto:" + m.email; qe.setAttribute("data-stop","1"); qa.appendChild(qe); }
+      if(m.phone){ var qp = el("a","hm-qa-btn","\ud83d\udcde Call"); qp.href = "tel:" + m.phone.replace(/[^0-9+]/g,""); qp.setAttribute("data-stop","1"); qa.appendChild(qp); }
+      var qr = el("span","hm-qa-btn","\ud83d\udcc4 Reqs"); qr.setAttribute("data-stop","1"); qr.addEventListener("click", function(ev){ ev.stopPropagation(); openHmDrawer(m, "reqs"); }); qa.appendChild(qr);
+      var qc = el("span","hm-qa-btn","\ud83d\udc65 Candidates"); qc.setAttribute("data-stop","1"); qc.addEventListener("click", function(ev){ ev.stopPropagation(); openHmDrawer(m, "cands"); }); qa.appendChild(qc);
+      card.appendChild(qa);
+      card.appendChild(el("div","hm-card-view","View Details \u2192"));
+      card.addEventListener("click", function(ev){ if(ev.target && ev.target.closest("a,button,[data-stop]")){ return; } openHmDrawer(m); });
+      card.addEventListener("keydown", function(ev){ if(ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); openHmDrawer(m); } });
+      grid.appendChild(card);
     });
-    table.appendChild(tb); host.appendChild(table);
+    host.appendChild(grid);
   }
   var onReqs = {};
   REQS.forEach(function(r){ var nm = (r.hm||"").trim(); if(!nm){ return; } var key = nm.toLowerCase(); if(byNameSaved[key]){ return; } if(!onReqs[key]){ onReqs[key] = { name:nm, reqs:[] }; } onReqs[key].reqs.push(r.title); });
@@ -4599,7 +4758,21 @@ function renderInterviewRequests(host){
   // Structured interview-request log backed by the Supabase interview_requests table.
   // One row per interview round. Replaces dumping interview asks into candidate Notes.
   var rows = (state.interviewRequests || []).slice();
-  document.getElementById("viewMeta").textContent = rows.length + (rows.length === 1 ? " interview request" : " interview requests");
+  /* Sort: newest request first (recruiters need the latest asks on top),
+     then candidate priority (High → Low), then scheduled interview date ASC. */
+  var PRIO_RANK = { "High": 0, "Medium": 1, "Low": 2 };
+  function irPrio(x){
+    var c = (state.candidates || []).filter(function(cc){ return cc.id === x.candidateId; })[0];
+    return (c && PRIO_RANK[c.priority] != null) ? PRIO_RANK[c.priority] : 3;
+  }
+  rows.sort(function(a, b){
+    var da = a.createdAt || "", db2 = b.createdAt || "";
+    if(da !== db2){ return db2.localeCompare(da); }                                /* requested DESC */
+    var pa = irPrio(a), pb = irPrio(b);
+    if(pa !== pb){ return pa - pb; }                                               /* priority High first */
+    return (a.interviewDate || "9999").localeCompare(b.interviewDate || "9999");   /* interview date ASC */
+  });
+  document.getElementById("viewMeta").textContent = rows.length + (rows.length === 1 ? " interview request" : " interview requests") + " · newest first";
   if(!VIEW_ONLY){
     var bar = el("div"); bar.style.marginBottom = "12px";
     var addb = el("button","btn gold sm","+ Add Interview Request"); addb.setAttribute("data-iradd","1"); bar.appendChild(addb);
@@ -7376,6 +7549,55 @@ function makeSourcingBtn(r, tr){
 })();
 
 </script>
+
+<style id="tb-hmdir-css">
+/* ── Hiring Manager directory: compact cards + right-side drawer ── */
+.hm-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:14px; }
+.hm-card{ position:relative; background:var(--panel); border:1.5px solid var(--line); border-radius:14px;
+  padding:16px 16px 40px; cursor:pointer; transition:all .15s; min-height:196px; display:flex; flex-direction:column; gap:6px; }
+.hm-card:hover,.hm-card:focus{ box-shadow:0 6px 22px rgba(0,0,0,.10); border-color:var(--gold); transform:translateY(-2px); outline:none; }
+.hm-card-top{ display:flex; align-items:center; gap:8px; }
+.hm-card-nm{ font-size:15px; font-weight:800; color:var(--ink); }
+.hm-dot-red{ width:9px; height:9px; border-radius:50%; background:var(--red); flex-shrink:0; }
+.hm-card-title{ font-size:12px; color:var(--muted); min-height:16px; }
+.hm-card-contact{ font-size:12px; line-height:1.5; overflow:hidden; }
+.hm-card-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:auto; }
+.hm-stat{ text-align:center; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:7px 2px 5px; }
+.hm-stat-v{ font-size:17px; font-weight:800; color:var(--ink); line-height:1; }
+.hm-stat-v.hm-stat-blue{ color:var(--blue); }
+.hm-stat-v.hm-stat-orange{ color:var(--orange); }
+.hm-stat-l{ font-size:9.5px; color:var(--muted); margin-top:3px; letter-spacing:.02em; }
+.hm-qa{ position:absolute; left:12px; right:12px; bottom:8px; display:flex; gap:6px; opacity:0; transition:opacity .15s; }
+.hm-card:hover .hm-qa,.hm-card:focus .hm-qa{ opacity:1; }
+.hm-qa-btn{ font-size:10.5px; font-weight:700; color:var(--ink); background:var(--bg); border:1px solid var(--line);
+  border-radius:999px; padding:3px 8px; cursor:pointer; text-decoration:none; white-space:nowrap; }
+.hm-qa-btn:hover{ border-color:var(--gold); color:var(--gold); }
+.hm-card-view{ position:absolute; right:14px; bottom:10px; font-size:11px; font-weight:700; color:var(--gold); opacity:.85; transition:opacity .15s; }
+.hm-card:hover .hm-card-view{ opacity:0; } /* quick actions replace it on hover */
+#hmDrawerOverlay{ position:fixed; inset:0; background:rgba(10,14,25,.35); opacity:0; pointer-events:none; transition:opacity .2s; z-index:60; }
+#hmDrawerOverlay.open{ opacity:1; pointer-events:auto; }
+#hmDrawer{ position:fixed; top:0; right:0; height:100%; width:min(480px,94vw); background:var(--panel);
+  border-left:1px solid var(--line); box-shadow:-12px 0 34px rgba(0,0,0,.18); transform:translateX(102%);
+  transition:transform .22s ease; z-index:61; display:flex; flex-direction:column; }
+#hmDrawer.open{ transform:translateX(0); }
+.hmd-head{ display:flex; align-items:flex-start; justify-content:space-between; padding:18px 18px 12px; border-bottom:1px solid var(--line); }
+.hmd-nm{ font-size:18px; font-weight:800; color:var(--ink); }
+.hmd-title{ font-size:12px; color:var(--muted); margin-top:3px; }
+.hmd-x{ background:none; border:none; font-size:24px; line-height:1; color:var(--muted); cursor:pointer; padding:2px 6px; border-radius:6px; }
+.hmd-x:hover{ color:var(--ink); background:var(--bg); }
+.hmd-body{ flex:1; overflow-y:auto; padding:14px 18px; }
+.hmd-sec{ margin-bottom:18px; }
+.hmd-sec-t{ font-size:11px; font-weight:800; color:var(--gold); letter-spacing:.07em; text-transform:uppercase; margin-bottom:8px; }
+.hmd-sec .tag{ margin:0 6px 6px 0; display:inline-block; }
+.hmd-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:18px; }
+.hmd-req{ border:1px solid var(--line); border-radius:9px; padding:8px 10px; margin-bottom:7px; cursor:pointer; transition:all .12s; background:var(--bg); }
+.hmd-req:hover{ border-color:var(--gold); }
+.hmd-req-l1{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.hmd-req-id{ font-size:12px; font-weight:800; color:var(--gold); }
+.hmd-req-title{ font-size:13px; font-weight:600; color:var(--ink); flex:1; }
+.hmd-req-l2{ font-size:11px; color:var(--muted); margin-top:3px; }
+.hmd-foot{ padding:12px 18px; border-top:1px solid var(--line); display:flex; gap:10px; justify-content:flex-end; }
+</style>
 
 <script id="tb-metrics">
 /* ═══════════════════════════════════════════════════════════════════════════
