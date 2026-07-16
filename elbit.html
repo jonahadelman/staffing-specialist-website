@@ -873,6 +873,8 @@ var VIEWS = [
   { id:"guide", name:"\u2139 Getting Started", fn:function(){ return true; }, special:"guide" },
   { id:"all", name:"All Candidates", fn:function(){ return true; } },
   { id:"activecandidates", hidden:true, name:"Active Candidates", fn:function(c){ return window.TB_METRICS ? TB_METRICS.isActiveCand(c) : (c.status !== "Archived" && c.status !== "Offer Accepted - Hired"); } },
+  { id:"allactive", hidden:true, name:"All Active Requisitions", fn:function(){ return true; }, special:"activedir" },
+  { id:"closedreqs", hidden:true, name:"Closed Requisitions", fn:function(){ return true; }, special:"closeddir" },
   { id:"followup", collapsible:true, name:"Follow Up Due", fn:function(c){ return followUp(c).label !== ""; }, section:"Action" },
   { id:"pipeline", collapsible:true, name:"\u2630 Hiring Pipeline", fn:function(){ return true; }, special:"pipeline", section:"Pipeline" },
   { id:"dashboard", collapsible:true, name:"\u25A6 Dashboard", fn:function(){ return true; }, special:"dashboard", section:"Pipeline" },
@@ -1021,6 +1023,8 @@ function renderList(){
   var host = document.getElementById("list"); host.innerHTML = "";
   var v = activeView();
   if(v.special === "reqs"){ renderReqs(host); return; }
+  if(v.special === "activedir"){ renderReqDirectory(host, ""); return; }
+  if(v.special === "closeddir"){ renderReqDirectory(host, "closed"); return; }
   if(v.special === "managers"){ renderManagers(host); return; }
   if(v.special === "interviewrequests"){ renderInterviewRequests(host); return; }
   if(v.special === "calendar"){ renderCalendar(host); return; }
@@ -1220,8 +1224,10 @@ function abbrevTitle(t){ if(!t){ return t; } var m=[[/\bPrincipal\b/gi,"Prin."],
 function renderReqs(host){
   /* Central selector: Open Requisitions = not bench, not filled/closed/cancelled/archived */
   function isClosedReq(r){ return window.TB_METRICS ? TB_METRICS.isClosedReq(r) : /(filled|closed|cancell?ed|archived)/.test((r.reqStatus||'').toLowerCase()); }
-  var openRows = REQS.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : (!r.bench && !isClosedReq(r)); });
-  var ranked = (window.TB_METRICS ? TB_METRICS.uniq(openRows, function(r){ return r.id; }) : openRows).sort(function(a,b){ var ra = (a.rank==null?9999:a.rank), rb = (b.rank==null?9999:b.rank); return (ra - rb) || (a.title||"").localeCompare(b.title||""); });
+  /* DEDUPE FIRST, then classify — a req whose duplicate rows disagree on
+     delivery model must land in exactly one view (its canonical entry's). */
+  var canonBase = window.TB_METRICS ? TB_METRICS.canonicalReqEntries(REQS).map(function(e){ return e.req; }) : REQS;
+  var ranked = canonBase.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : (!r.bench && !isClosedReq(r)); }).sort(function(a,b){ var ra = (a.rank==null?9999:a.rank), rb = (b.rank==null?9999:b.rank); return (ra - rb) || (a.title||"").localeCompare(b.title||""); });
   var rankedCount = ranked.filter(function(r){ return r.rank != null; }).length;
   document.getElementById("viewMeta").textContent = ranked.length + " requisition" + (ranked.length === 1 ? "" : "s") + " · " + rankedCount + " ranked";
   if(typeof PROGRAM_NOTES !== "undefined" && PROGRAM_NOTES){
@@ -1260,6 +1266,97 @@ function renderReqs(host){
     tb.appendChild(tr);
   });
   table.appendChild(tb); host.appendChild(table);
+}
+/* ═══ ACTIVE REQUISITIONS DIRECTORY (v1, feature-flagged, READ-ONLY) ═══
+   A roll-up view over existing data. It does NOT replace either workflow:
+   opening an RPO record enters the existing requisition detail; opening a
+   TalentBench record enters the existing detail with its TalentBench Review
+   section. No editing here. model: "" = all active · "closed" = closed. */
+function renderReqDirectory(host, model){
+  if(!window.TB_METRICS){ host.appendChild(el("div","empty","Metrics layer unavailable.")); return; }
+  var allEntries = TB_METRICS.canonicalReqEntries(REQS);
+  /* All Active = RPO + TalentBench, exactly. Unclassified (exception) records
+     never appear here — QA Exceptions / Data Review only. */
+  var entries = allEntries.filter(function(e){
+    var m = TB_METRICS.deliveryModel(e.req);
+    return model === "closed" ? m === "closed" : (m === "rpo" || m === "talentbench");
+  });
+  var exN = (model === "closed") ? 0 : allEntries.filter(function(e){ return TB_METRICS.deliveryModel(e.req) === "exception"; }).length;
+  var rpoN = 0, tbN = 0;
+  entries.forEach(function(e){ var m = TB_METRICS.deliveryModel(e.req); if(m === "rpo"){ rpoN++; } else if(m === "talentbench"){ tbN++; } });
+  var metaTxt = model === "closed"
+    ? entries.length + " unique closed requisition" + (entries.length === 1 ? "" : "s")
+    : entries.length + " unique active requisition" + (entries.length === 1 ? "" : "s") + " · " + rpoN + " RPO + " + tbN + " TalentBench" + (exN ? " · " + exN + " unclassified excluded — see QA Exceptions" : "");
+  document.getElementById("viewMeta").textContent = metaTxt;
+  var note = el("div","sub2", model === "closed"
+    ? "Read-only directory of filled / closed / cancelled / archived requisitions. One row per canonical Job Req ID."
+    : "Read-only roll-up directory. RPO = Full-Cycle Recruiting · TalentBench = Sourcing and TA Handoff. Open a row for the record's existing workflow.");
+  note.style.cssText = "margin-bottom:12px;font-style:italic";
+  host.appendChild(note);
+  if(entries.length === 0){ var em = el("div","empty"); em.appendChild(el("div","big","Nothing here")); host.appendChild(em); return; }
+  var table = el("table"); var thead = el("thead"); var htr = el("tr");
+  ["Req #","Role / Title","Delivery Model","Status","Location","Hiring Manager","Department",""].forEach(function(h){ htr.appendChild(el("th", null, h)); });
+  thead.appendChild(htr); table.appendChild(thead);
+  var tb = el("tbody");
+  entries.sort(function(a, b){ return (TB_METRICS.normalizedJobId(a.req) || "zzz").localeCompare(TB_METRICS.normalizedJobId(b.req) || "zzz") || (a.req.title || "").localeCompare(b.req.title || ""); });
+  entries.forEach(function(e){
+    var r = e.req;
+    var tr = el("tr","click"); tr.setAttribute("data-reqview", r.id);
+    tr.appendChild(el("td","sub2", TB_METRICS.normalizedJobId(r) || "—"));
+    var roletd = el("td"); roletd.appendChild(el("span","nm", r.role || r.title || "-")); tr.appendChild(roletd);
+    var mtd = el("td"); var m = TB_METRICS.deliveryModel(r);
+    if(model === "closed"){ mtd.appendChild(pill(r.bench === true ? "TalentBench" : "RPO", "--gray")); }
+    else if(m === "rpo"){ var pR = pill("RPO", "--gold"); pR.title = "Full-Cycle Recruiting — TSS owns the complete lifecycle through hire."; mtd.appendChild(pR); }
+    else if(m === "talentbench"){ var pT = pill("TalentBench", "--teal"); pT.title = "Sourcing and TA Handoff — TSS owns sourcing/review/readiness; Elbit TA owns recruiting after handoff."; mtd.appendChild(pT); }
+    else { mtd.appendChild(pill("Unclassified", "--red")); }
+    tr.appendChild(mtd);
+    var st = el("td"); st.appendChild(pill(r.reqStatus || "—", reqStatusColor(r.reqStatus || ""))); tr.appendChild(st);
+    var lt = el("td","sub2", r.loc || "-"); lt.style.whiteSpace = "nowrap"; tr.appendChild(lt);
+    tr.appendChild(el("td","sub2", r.hm || "-"));
+    tr.appendChild(el("td","sub2", (typeof window.reqProgram === "function" ? (window.reqProgram(r) || "—") : "—")));
+    var ft = el("td");
+    if(e.conflict){ var fb = pill("Data Review Required", "--red"); fb.title = e.rows.length + " database rows share Job Req ID " + (TB_METRICS.normalizedJobId(r) || "?") + " (row ids: " + e.rows.map(function(x){ return x.id; }).join(", ") + "). Counted once; both records preserved unchanged. See QA Exceptions."; ft.appendChild(fb); }
+    tr.appendChild(ft);
+    tb.appendChild(tr);
+  });
+  table.appendChild(tb); host.appendChild(table);
+}
+/* Roll-up strip: ACTIVE REQUISITIONS · Total = RPO + TalentBench. Reporting
+   relationship only. Feature-flagged; scoped to the current context. */
+function buildActiveReqRollup(){
+  if(!window.TB_ACTIVE_REQUISITIONS_V1 || !window.TB_METRICS){ return null; }
+  var entries = TB_METRICS.canonicalReqEntries(REQS);
+  /* All Active = RPO + TalentBench, EXACTLY. "exception" records are excluded
+     from All Active (they appear only in QA Exceptions) so the equation can
+     never drift when an unclassifiable record shows up. */
+  var act = 0, rpo = 0, tbn = 0, cls = 0;
+  entries.forEach(function(e){
+    var m = TB_METRICS.deliveryModel(e.req);
+    if(m === "closed"){ cls++; }
+    else if(m === "rpo"){ rpo++; act++; }
+    else if(m === "talentbench"){ tbn++; act++; }
+    /* m === "exception": intentionally not counted anywhere here */
+  });
+  var wrap = el("div"); wrap.style.cssText = "margin-bottom:28px";
+  var hd = el("div", null, "Active Requisitions — " + (window.TB_SUBPROGRAM ? window.TB_SUBPROGRAM + " Program" : (window.TB_PROGRAM || "Enterprise")));
+  hd.style.cssText = "font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px";
+  wrap.appendChild(hd);
+  var grid = el("div"); grid.style.cssText = "display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:12px";
+  [[act, "All Active", "allactive", "Every active requisition — Active RPO + Active TalentBench. Read-only roll-up directory.", true],
+   [rpo, "RPO", "reqs", "Full-Cycle Recruiting — TSS owns the complete recruiting lifecycle through hire. Opens the existing Open Requisitions workflow.", false],
+   [tbn, "TalentBench", "talentbench", "Sourcing and TA Handoff — TSS owns sourcing, review, and readiness; Elbit TA owns recruiting after handoff. Opens the existing TalentBench workflow.", false],
+   [cls, "Closed", "closedreqs", "Filled / closed / cancelled / archived requisitions.", false]].forEach(function(a){
+    var c = el("div"); c.title = a[3];
+    c.style.cssText = "background:var(--panel);border:1.5px solid " + (a[4] ? "var(--gold)" : "var(--line)") + ";border-radius:14px;padding:16px 16px 12px;cursor:pointer;transition:all .15s;text-align:center";
+    c.addEventListener("mouseenter", function(){ this.style.boxShadow = "0 6px 22px rgba(0,0,0,.1)"; this.style.transform = "translateY(-2px)"; });
+    c.addEventListener("mouseleave", function(){ this.style.boxShadow = ""; this.style.transform = ""; });
+    c.addEventListener("click", function(){ ui.view = a[2]; refresh(); });
+    c.appendChild(el("div", null, String(a[0]))).style.cssText = "font-size:34px;font-weight:800;color:" + (a[4] ? "var(--gold)" : "var(--ink)") + ";line-height:1;margin-bottom:8px";
+    c.appendChild(el("div", null, a[1])).style.cssText = "font-size:12px;font-weight:700;color:var(--ink)";
+    grid.appendChild(c);
+  });
+  wrap.appendChild(grid);
+  return wrap;
 }
 function reqPrioColor(p){ if(/High/i.test(p)){ return "--red"; } if(/Medium/i.test(p)){ return "--orange"; } if(/Low/i.test(p)){ return "--gray"; } return "--gray"; }
 function reqStatusColor(s){ if(!s) return "--gray"; var sl=s.toLowerCase(); if(sl.indexOf("immediate")!==-1) return "--red"; if(sl.indexOf("high priority")!==-1) return "--orange"; if(sl.indexOf("on hold")!==-1) return "--yellow"; if(/^open/i.test(s)) return "--green"; if(sl.indexOf("pipeline")!==-1) return "--teal"; if(sl.indexOf("july")!==-1||sl.indexOf("august")!==-1) return "--blue"; if(sl.indexOf("awaiting")!==-1||sl.indexOf("need to open")!==-1) return "--purple"; if(sl.indexOf("filled")!==-1||sl.indexOf("closed")!==-1||sl.indexOf("cancelled")!==-1) return "--gray"; return "--gray"; }
@@ -1671,7 +1768,8 @@ function renderGuide(host){
   /* ── live data ── */
   var cands    = state.candidates||[];
   var irs      = state.interviewRequests||[];
-  var openReqs = REQS.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : (!r.bench && !/(filled|closed|cancell?ed|archived)/.test((r.reqStatus||'').toLowerCase())); });
+  var canonReqs = window.TB_METRICS ? TB_METRICS.canonicalReqEntries(REQS).map(function(e){ return e.req; }) : REQS; /* dedupe first */
+  var openReqs = canonReqs.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : (!r.bench && !/(filled|closed|cancell?ed|archived)/.test((r.reqStatus||'').toLowerCase())); });
   var followUp = [];
   try{ followUp=cands.filter(function(c){ var f=window.followUp?window.followUp(c):null; return f&&f.label; }); }catch(e){}
   var offerP   = cands.filter(function(c){ return c.status==="Offer Pending"; });
@@ -1882,6 +1980,9 @@ function renderGuide(host){
   twWrap.appendChild(twGrid);
   wrap.appendChild(twWrap);
 
+  /* ══ 2b. ACTIVE REQUISITIONS ROLL-UP (feature-flagged) ══ */
+  try{ var arRoll = (typeof buildActiveReqRollup === "function") ? buildActiveReqRollup() : null; if(arRoll){ wrap.appendChild(arRoll); } }catch(eAR){}
+
   /* ══ 3. RECRUITING SNAPSHOT ══ */
   var snapWrap=d("margin-bottom:32px;");
   snapWrap.appendChild(sh("Recruiting Snapshot — " + (window.TB_SUBPROGRAM ? window.TB_SUBPROGRAM + " Program" : (window.TB_PROGRAM || "Enterprise"))));
@@ -1900,7 +2001,7 @@ function renderGuide(host){
   /* The authoritative snapshot. Five metrics, explicit labels, every card
      clickable, and each drill-down renders exactly these records (same
      central selector, same context). */
-  var benchReqsSnap = REQS.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isBenchReq(r) : r.bench === true; });
+  var benchReqsSnap = canonReqs.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isBenchReq(r) : r.bench === true; });
   [[openReqs.length,"Open Requisitions","reqs","var(--gold)"],
    [benchReqsSnap.length,"TalentBench Reqs","talentbench","var(--gold)"],
    [activeCands.length,"Active Candidates","activecandidates","var(--gold)"],
@@ -2414,6 +2515,12 @@ async function bulkAttachConfirm(){
    All async — card renders a loading state then fills in.
 ──────────────────────────────────────────────────────────── */
 async function renderTBAnalytics(host){
+  /* ASYNC-SAFETY (stabilization): this renderer awaits a network call while
+     the program router may have temporarily swapped REQS. Snapshot the scoped
+     array SYNCHRONOUSLY before the first await, and abort the late DOM update
+     if the user has navigated to a different view meanwhile. */
+  var REQS_AT_RENDER = (typeof REQS !== "undefined" && REQS ? REQS.slice() : []);
+  var VIEW_AT_RENDER = (typeof ui !== "undefined") ? ui.view : null;
   /* ── container card ── */
   var wrap = el("div");
   wrap.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px";
@@ -2434,6 +2541,9 @@ async function renderTBAnalytics(host){
     .order("created_at", { ascending: true });
 
   loading.remove();
+  /* user navigated away while the request was in flight — do not inject
+     analytics into a different view */
+  if(typeof ui !== "undefined" && ui.view !== VIEW_AT_RENDER){ wrap.remove(); return; }
 
   if(res.error){
     var err = el("div",null,"Could not load TalentBench data: " + (res.error.message||"unknown error"));
@@ -2578,7 +2688,7 @@ async function renderTBAnalytics(host){
     var s = reqMap[reqId];
     var rate = s.submitted ? Math.round((s.accepted/s.submitted)*100) : 0;
     /* Try to resolve req title from REQS */
-    var reqObj = (REQS||[]).filter(function(r){ return r.id === reqId; })[0];
+    var reqObj = REQS_AT_RENDER.filter(function(r){ return r.id === reqId; })[0]; /* scoped snapshot, not the (restored) global */
     var reqLabel = reqObj ? (reqObj.title || reqId) : (reqId === "unassigned" ? "Unassigned" : reqId.slice(0,8)+"…");
     var row = el("div");
     row.style.cssText = "display:grid;grid-template-columns:1fr 60px 60px 60px 70px;gap:0 8px;padding:7px 10px;background:var(--bg);border:1px solid var(--line);border-radius:7px;font-size:12px;align-items:center";
@@ -2808,8 +2918,11 @@ function renderDashboard(host){
 function getBenchReqs(){
   /* Central selector: TalentBench Reqs = bench=true AND still active
      (not filled/closed/cancelled/archived). Unique by req ID. */
-  var rows = (state.reqs || REQS || []).filter(function(r){ return window.TB_METRICS ? TB_METRICS.isBenchReq(r) : r.bench === true; });
-  return window.TB_METRICS ? TB_METRICS.uniq(rows, function(r){ return r.id; }) : rows;
+  /* DEDUPE FIRST, then classify (see renderReqs) — keeps a conflicted req in
+     exactly one workflow view. */
+  var base = (state.reqs || REQS || []);
+  if(window.TB_METRICS){ base = TB_METRICS.canonicalReqEntries(base).map(function(e){ return e.req; }); }
+  return base.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isBenchReq(r) : r.bench === true; });
 }
 
 
@@ -5841,8 +5954,9 @@ function makeSourcingBtn(r, tr){
   window.tbIsClosedReq = tbIsClosedReq;
   function programStats(name){
     var reqs = (typeof REQS !== "undefined" ? REQS : []).filter(function(r){ return reqProgram(r) === name; });
+    if(window.TB_METRICS){ reqs = TB_METRICS.canonicalReqEntries(reqs).map(function(e){ return e.req; }); } /* dedupe first, then classify */
     /* "Open" must mean exactly what the Open Requisitions view renders: not bench, not filled/closed/cancelled */
-    var open = reqs.filter(function(r){ return !r.bench && !tbIsClosedReq(r); }).length;
+    var open = reqs.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : (!r.bench && !tbIsClosedReq(r)); }).length;
     var closed = reqs.filter(function(r){ return !r.bench && tbIsClosedReq(r); }).length;
     var bench = reqs.filter(function(r){ return !!r.bench; }).length;
     var labels = {};
@@ -6548,6 +6662,7 @@ function makeSourcingBtn(r, tr){
 
   function deptStats(name){
     var reqs = (typeof REQS !== "undefined" ? REQS : []).filter(function(r){ return reqProgram(r) === name; });
+    if(window.TB_METRICS){ reqs = TB_METRICS.canonicalReqEntries(reqs).map(function(e){ return e.req; }); } /* dedupe first, then classify */
     var open = reqs.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : (!r.bench && !tbIsClosedReq(r)); });
     var bench = reqs.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isBenchReq(r) : (!!r.bench && !tbIsClosedReq(r)); });
     var labels = {};
@@ -6602,6 +6717,10 @@ function makeSourcingBtn(r, tr){
       strip.appendChild(t);
     });
     host.appendChild(strip);
+
+    /* Active Requisitions roll-up (feature-flagged) — reporting relationship
+       only: Total Active = Active RPO + Active TalentBench. */
+    try{ var arRoll2 = (typeof buildActiveReqRollup === "function") ? buildActiveReqRollup() : null; if(arRoll2){ host.appendChild(arRoll2); } }catch(eAR2){}
 
     /* department cards */
     var grid = el("div","tb-prog-grid");
@@ -6740,6 +6859,37 @@ function makeSourcingBtn(r, tr){
         host.appendChild(rc);
       }
     }catch(eR2){}
+
+    /* ── QA Exceptions (Stabilization v1.0) — report only, never auto-corrected.
+       Feature flag: window.TB_STABILIZATION.qaExceptions ── */
+    try{
+      if(window.TB_QA_EXCEPTIONS && window.TB_STABILIZATION && window.TB_STABILIZATION.qaExceptions){
+        var exRows = window.TB_QA_EXCEPTIONS();
+        var xc = el("div","tb-recon");
+        xc.appendChild(el("div","tb-prog-dir-t","QA Exceptions · report only — nothing is auto-corrected"));
+        xc.appendChild(el("div","tb-prog-dir-s", exRows.length === 0 ? "No data-quality exceptions detected in this browser's loaded data." : exRows.length + " item" + (exRows.length === 1 ? "" : "s") + " need" + (exRows.length === 1 ? "s" : "") + " human review. Live records are unchanged."));
+        if(exRows.length){
+          var xt = el("table","tb-recon-tbl"); var xh = el("tr");
+          ["Exception","Record","Detail"].forEach(function(hx){ xh.appendChild(el("th",null,hx)); });
+          var xthead = el("thead"); xthead.appendChild(xh); xt.appendChild(xthead);
+          var xtb = el("tbody");
+          exRows.forEach(function(x){
+            var xr = el("tr");
+            [x.type, x.record, x.detail].forEach(function(v, ix){ xr.appendChild(el("td", ix === 0 ? "nm" : null, String(v))); });
+            xtb.appendChild(xr);
+          });
+          xt.appendChild(xtb); xc.appendChild(xt);
+          var xcp = el("button","btn sm","Copy QA Exceptions"); xcp.type = "button"; xcp.style.marginTop = "8px";
+          xcp.addEventListener("click", function(){
+            var lines = ["Exception\tRecord\tDetail"];
+            exRows.forEach(function(x){ lines.push([x.type, x.record, x.detail].join("\t")); });
+            try{ navigator.clipboard.writeText(lines.join("\n")); xcp.textContent = "Copied ✓"; setTimeout(function(){ xcp.textContent = "Copy QA Exceptions"; }, 1500); }catch(eC){}
+          });
+          xc.appendChild(xcp);
+        }
+        host.appendChild(xc);
+      }
+    }catch(eX){}
   }
 
   /* ============ PEOPLE DIRECTORIES ============ */
@@ -6914,7 +7064,7 @@ function makeSourcingBtn(r, tr){
       if(window.TB_PROGRAM && typeof tbIsClosedReq === "function"){
         var mEl2 = document.getElementById("viewMeta");
         if(mEl2 && /candidate/i.test(mEl2.textContent) && mEl2.textContent.indexOf("supporting") < 0){
-          var openN = REQS.filter(function(r){ return (window.TB_METRICS ? TB_METRICS.isOpenReq(r) : (!r.bench && !tbIsClosedReq(r))) && reqProgram(r) === window.TB_PROGRAM; }).length;
+          var openN = window.TB_METRICS ? TB_METRICS.counts(window.TB_PROGRAM, "").openReqs : REQS.filter(function(r){ return !r.bench && !tbIsClosedReq(r) && reqProgram(r) === window.TB_PROGRAM; }).length;
           mEl2.textContent = mEl2.textContent + " · supporting " + openN + " open requisition" + (openN === 1 ? "" : "s");
         }
       }
@@ -7273,7 +7423,24 @@ function makeSourcingBtn(r, tr){
       var cid = {}; cands.forEach(function(c){ cid[c.id] = 1; });
       irs = irs.filter(function(q){ return !q.candidateId || cid[q.candidateId]; });
     }
-    return { reqs: uniq(reqs, function(r){ return r.id; }), cands: uniq(cands, function(c){ return c.id; }), irs: irs };
+    /* Requisitions dedup by CANONICAL key (valid Job Req ID first, row id
+       fallback) — two rows for Req 1484 with different row ids count once. */
+    return { reqs: canonicalReqEntries(reqs).map(function(e){ return e.req; }), cands: uniq(cands, function(c){ return c.id; }), irs: irs };
+  }
+  /* Canonical active-requisition selector for the roll-up and directory.
+     model: "" (all active) | "rpo" | "talentbench" | "closed"
+     RECONCILIATION GUARANTEE: All Active = RPO + TalentBench, EXACTLY.
+     deliveryModel === "exception" records are excluded from All Active and
+     from the directories — they surface ONLY in QA Exceptions / Data Review. */
+  function activeReqs(dept, sub, model){
+    var s = scoped(dept, sub);
+    var entries = canonicalReqEntries(s.reqs);
+    return entries.filter(function(e){
+      var m = deliveryModel(e.req);
+      if(model === "closed"){ return m === "closed"; }
+      if(!model){ return m === "rpo" || m === "talentbench"; } /* all active — exceptions excluded */
+      return m === model;
+    });
   }
   function records(dept, sub){
     var s = scoped(dept, sub);
@@ -7317,8 +7484,8 @@ function makeSourcingBtn(r, tr){
       var fnOff = viewFn("offerpending")     || isOfferPendingCand;
       var fnFu  = viewFn("followup")         || isFollowUpDue;
       return {
-        openReqs:               uniqLen(REQS.filter(function(r){ return isOpenReq(r); })),
-        benchReqs:              uniqLen(typeof getBenchReqs === "function" ? getBenchReqs() : REQS.filter(isBenchReq)),
+        openReqs:               uniqLen(REQS.filter(function(r){ return isOpenReq(r); }), canonicalReqKey),
+        benchReqs:              uniqLen(typeof getBenchReqs === "function" ? getBenchReqs() : REQS.filter(isBenchReq), canonicalReqKey),
         activeCandidates:       uniqLen(s.cands.filter(function(c){ return fnAct(c); })),
         candidatesInterviewing: uniqLen(s.cands.filter(function(c){ return fnInt(c); })),
         offersPending:          uniqLen(s.cands.filter(function(c){ return fnOff(c); })),
@@ -7351,8 +7518,76 @@ function makeSourcingBtn(r, tr){
     return rows;
   }
 
+  /* ═══ CANONICAL SELECTORS (Stabilization v1.0) ═══
+     Exactly two questions, exactly one answer each. Never re-derive
+     this logic anywhere else in the application.
+
+     1) DELIVERY MODEL — deliveryModel(r) → "TalentBench" | "RPO"
+        Precedence when signals conflict:
+          1. The live database `bench` flag on the requisition record is
+             AUTHORITATIVE for all display, counting, and filtering.
+          2. The embedded 07/14 workbook (TB_REQ_META delivery model) is a
+             REFERENCE signal only. A mismatch between workbook and live flag
+             is NEVER auto-corrected — it is surfaced in the QA Exceptions
+             report for a human to resolve.
+
+     2) ACTIVE STATUS — isActiveReq(r) → true | false
+        A requisition is Active unless its status contains
+        filled / closed / cancelled / canceled / archived (case-insensitive).
+        "On Hold" and month-named statuses are Active.
+        Every dashboard, list, filter, and count uses this one function
+        (isOpenReq and isBenchReq are Active ∩ delivery-model). */
+  function isActiveReq(r){ return !!r && !isClosedReq(r); } /* ≡ isOpenReq(r) OR isBenchReq(r) */
+
+  /* deliveryModel(r) → "rpo" | "talentbench" | "closed" | "exception"
+     RPO         = The Staffing Specialist owns the complete lifecycle through hire.
+     TalentBench = TSS owns sourcing/review/readiness/handoff; Elbit TA owns after handoff.
+     Active Requisitions = Active RPO + Active TalentBench (reporting roll-up only —
+     the two operational workflows are never merged). */
+  function deliveryModel(r){
+    if(!r){ return "exception"; }
+    if(!isActiveReq(r)){ return "closed"; }
+    if(r.bench === true){ return "talentbench"; }
+    if(r.bench === false){ return "rpo"; }
+    return "exception"; /* bench flag missing/ambiguous — surfaced in QA Exceptions */
+  }
+
+  /* ── CANONICAL REQUISITION IDENTITY ──
+     Precedence: (1) valid normalized Job Req ID → (2) Supabase row id →
+     (3) temporary view-only key + QA exception.
+     A valid Job Req ID is a real numeric identifier ("1484", "1,472");
+     placeholders like "Need HRBP Approval" or blanks are NOT valid.
+     Never deduplicate primarily by title/location (title dupes are only a
+     QA warning). */
+  function normalizedJobId(r){
+    var j = String((r && r.jobId != null ? r.jobId : (r && r.job_id)) || "").replace(/[,\s]/g, "");
+    return /^\d{3,6}$/.test(j) ? j : "";
+  }
+  function canonicalReqKey(r){
+    var j = normalizedJobId(r);
+    if(j){ return "jid:" + j; }
+    if(r && r.id != null && r.id !== ""){ return "row:" + r.id; }
+    return "tmp:" + (r && (r.title || "") ) + "|" + (r && (r.loc || "")); /* view-only; QA exception */
+  }
+  /* Group requisitions by canonical key. Multiple rows sharing one valid
+     Job Req ID collapse to ONE canonical entry (never counted twice, never
+     silently chosen — entry is marked conflicted for Data Review). */
+  function canonicalReqEntries(reqs){
+    var by = {}, order = [];
+    (reqs || []).forEach(function(r){
+      if(!r){ return; }
+      var k = canonicalReqKey(r);
+      if(!by[k]){ by[k] = { key: k, req: r, rows: [r] }; order.push(k); }
+      else { by[k].rows.push(r); }
+    });
+    return order.map(function(k){ var e = by[k]; e.conflict = e.rows.length > 1; return e; });
+  }
+
   window.TB_METRICS = {
     LABELS: LABELS, VIEW_FOR: VIEW_FOR,
+    deliveryModel: deliveryModel, isActiveReq: isActiveReq,
+    canonicalReqKey: canonicalReqKey, normalizedJobId: normalizedJobId,
+    canonicalReqEntries: canonicalReqEntries, activeReqs: activeReqs,
     isClosedReq: isClosedReq, isOpenReq: isOpenReq, isBenchReq: isBenchReq,
     isActiveCand: isActiveCand, isInterviewingCand: isInterviewingCand,
     isOfferPendingCand: isOfferPendingCand, isFollowUpDue: isFollowUpDue,
@@ -7361,6 +7596,105 @@ function makeSourcingBtn(r, tr){
     drilldownCounts: drilldownCounts
   };
   window.TB_RECON_RUN = reconRun;
+
+  /* ═══ QA EXCEPTIONS (Stabilization v1.0) — report-only, feature-flagged.
+     Finds data-quality conflicts. NOTHING is auto-corrected. ═══ */
+  window.TB_STABILIZATION = window.TB_STABILIZATION || { qaExceptions: true };
+  /* ═══ ACTIVE REQUISITIONS ROLL-UP (v1) — FEATURE FLAG ═══
+     PREPROD TEST FILE: flag is ON for validation.
+     PRODUCTION DEFAULT MUST BE false — with the flag false the application
+     behaves exactly as it does today (roll-up strip and the All Active /
+     Closed directories simply do not render). */
+  if(typeof window.TB_ACTIVE_REQUISITIONS_V1 === "undefined"){ window.TB_ACTIVE_REQUISITIONS_V1 = true; }
+  function qaExceptions(){
+    var reqs = (typeof REQS !== "undefined" ? REQS : []) || [];
+    var cands = ((typeof state !== "undefined" && state.candidates) || []);
+    var META2 = window.TB_REQ_META || {};
+    var deptNames = ((window.TB_PROGRAMS) || []).map(function(p){ return p.name; });
+    var ex = [];
+    function add(type, id, detail){ ex.push({ type: type, record: id, detail: detail }); }
+
+    /* 1. conflicting delivery model: live bench flag vs workbook model */
+    reqs.forEach(function(r){
+      var jid = String(r.jobId || "").trim(); if(!jid || !META2[jid]){ return; }
+      var wb = META2[jid].m;
+      if(wb === "TalentBench" && r.bench !== true){ add("Conflicting delivery model", "Req " + jid, "Workbook says TalentBench; live record bench flag is false. Live flag governs display."); }
+      if(wb === "RPO" && r.bench === true){ add("Conflicting delivery model", "Req " + jid, "Workbook says RPO; live record bench flag is true. Live flag governs display."); }
+    });
+    /* 2. duplicate VALID Job Req IDs (live) — collapsed to ONE canonical entry
+       in every count and directory; flagged Data Review Required. */
+    var byJid = {};
+    reqs.forEach(function(r){ var j = normalizedJobId(r); if(j){ (byJid[j] = byJid[j] || []).push(r.id); } });
+    Object.keys(byJid).forEach(function(j){ if(byJid[j].length > 1){ add("Duplicate Job Req ID — Data Review Required", "Req " + j, byJid[j].length + " database rows share this valid Job Req ID (row ids: " + byJid[j].join(", ") + "). Counted ONCE via canonical key; no record was chosen, changed, or deleted."); } });
+    /* 3. missing or INVALID Job Req IDs (placeholders like "Need HRBP Approval" are not identifiers) */
+    reqs.forEach(function(r){
+      var raw = String(r.jobId || "").trim();
+      if(!normalizedJobId(r)){
+        add("Missing valid Job Req ID", (r.title || "(untitled)") + " – " + (r.loc || ""),
+          (raw ? "Job Req Id value '" + raw + "' is not a valid requisition identifier" : "No Job Req Id") + ". Identity falls back to database row id " + (r.id != null && r.id !== "" ? ("(" + r.id + ")") : "(none — temporary view-only key)") + ".");
+      }
+    });
+    /* 3b. workbook reqs not found live (RPO/TalentBench only) */
+    var liveJ = {}; reqs.forEach(function(r){ var j = String(r.jobId || "").trim(); if(j){ liveJ[j] = 1; } });
+    Object.keys(META2).forEach(function(j){ var m = META2[j]; if((m.m === "RPO" || m.m === "TalentBench") && !liveJ[j]){ add("Workbook req missing from database", "Req " + j, m.m + " · " + m.t + " (" + m.d + ") — in the 07/14 workbook but not in this database."); } });
+    /* 4. status-signal conflicts: bench lifecycle says filled, req status still active */
+    reqs.forEach(function(r){ if(r.bench === true && isActiveReq(r) && (r.benchStatus === "filled")){ add("Inactive appearing as active", "Req " + (r.jobId || r.id), "TalentBench lifecycle is 'filled' but requisition status ('" + (r.reqStatus || "—") + "') still counts as Active. Human review needed."); } });
+    /* 5. active reqs with no department */
+    reqs.forEach(function(r){
+      if(!isActiveReq(r)){ return; }
+      var d = (typeof window.reqProgram === "function") ? window.reqProgram(r) : "";
+      if(!d || deptNames.indexOf(d) === -1){ add("Active req with no department", "Req " + (r.jobId || r.id), (r.title || "") + " — resolves to '" + (d || "none") + "'; excluded from department views, still in Enterprise."); }
+    });
+    /* 6. active reqs with no delivery model flag */
+    reqs.forEach(function(r){ if(isActiveReq(r) && typeof r.bench !== "boolean"){ add("Active req with no delivery model", "Req " + (r.jobId || r.id), "bench flag is " + String(r.bench) + "; treated as RPO by rule."); } });
+    /* 7. orphaned candidate req-tags */
+    var labelSet = {};
+    reqs.forEach(function(r){ labelsFor(r).forEach(function(l){ labelSet[l] = 1; }); });
+    cands.forEach(function(c){
+      (c.reqs || []).forEach(function(l){
+        if(!labelSet[l]){ add("Orphaned candidate req-tag", (c.firstName || "") + " " + (c.lastName || "") + " (" + c.id + ")", "Tagged to '" + l + "' which matches no requisition. Candidate still counts at Enterprise level."); }
+      });
+    });
+    /* 7b. candidate tags matching MORE THAN ONE canonical requisition */
+    var labelToKeys = {};
+    reqs.forEach(function(r){ var k = canonicalReqKey(r); labelsFor(r).forEach(function(l){ (labelToKeys[l] = labelToKeys[l] || {})[k] = 1; }); });
+    var multiWarned = {};
+    cands.forEach(function(c){
+      (c.reqs || []).forEach(function(l){
+        var ks = Object.keys(labelToKeys[l] || {});
+        if(ks.length > 1 && !multiWarned[l]){ multiWarned[l] = 1; add("Candidate tag matches multiple requisitions", "'" + l + "'", ks.length + " distinct canonical requisitions share this title–location label; candidate tags using it are ambiguous."); }
+      });
+    });
+    /* 7c. duplicate title/location combinations (warning only — NEVER used for dedup) */
+    Object.keys(labelToKeys).forEach(function(l){
+      var n = Object.keys(labelToKeys[l]).length;
+      if(n > 1 && /–/.test(l)){ add("Duplicate title/location", "'" + l + "'", n + " distinct requisitions share this title–location. Counts are unaffected (canonical Job Req ID identity), but labels are ambiguous."); }
+    });
+    /* 7d. delivery-model classification exceptions */
+    reqs.forEach(function(r){ if(isActiveReq(r) && deliveryModel(r) === "exception"){ add("Unknown delivery model — Data Review Required", "Req " + (normalizedJobId(r) || r.id), "bench flag is " + String(r.bench) + " — cannot classify RPO vs TalentBench. EXCLUDED from All Active counts and directories until classified (All Active always equals RPO + TalentBench)."); } });
+    /* 7e. programs not resolvable to a valid department */
+    reqs.forEach(function(r){
+      var sp = (typeof window.tbProgOf === "function") ? window.tbProgOf(r) : "";
+      if(!sp){ return; }
+      var d = (typeof window.reqProgram === "function") ? window.reqProgram(r) : "";
+      if(!d || deptNames.indexOf(d) === -1){ add("Program without valid department", "Req " + (normalizedJobId(r) || r.id), "Program '" + sp + "' but department resolves to '" + (d || "none") + "'."); }
+    });
+    /* 7f. notes with unknown context */
+    (((typeof state !== "undefined" && state.notes) || [])).forEach(function(n){
+      var cx = n.context || "";
+      if(cx !== "priolist" && cx !== "talentbench" && cx.indexOf("req:") !== 0){ add("Note with unknown context", "Note " + n.id, "context '" + cx + "' is not a recognized notes context (priolist / talentbench / req:<id>)."); }
+    });
+    /* 7g. self-test: closed requisitions must never appear in active selectors */
+    activeReqs("", "", "").forEach(function(e){ if(!isActiveReq(e.req)){ add("Closed req in active selector (SELF-TEST FAILURE)", "Req " + (normalizedJobId(e.req) || e.req.id), "Report this — the active selector returned a closed requisition."); } });
+    /* 8. records excluded from counts (informational) */
+    var closedN = reqs.filter(function(r){ return !isActiveReq(r); }).length;
+    var archN = cands.filter(function(c){ return c.status === "Archived"; }).length;
+    var hiredN = cands.filter(function(c){ return c.status === "Offer Accepted - Hired"; }).length;
+    if(closedN){ add("Excluded from counts (by rule)", closedN + " requisitions", "Status filled/closed/cancelled/archived — excluded from Open and TalentBench counts."); }
+    if(archN || hiredN){ add("Excluded from counts (by rule)", archN + " archived · " + hiredN + " hired candidates", "Excluded from Active Candidates by definition."); }
+    return ex;
+  }
+  window.TB_QA_EXCEPTIONS = qaExceptions;
 })();
 </script>
 </body>
