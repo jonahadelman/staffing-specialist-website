@@ -4170,31 +4170,8 @@ function openReqModal(existing){
   /* ── Sourcing Toolkit: LinkedIn searches + outreach message per req ── */
   if(existing && (r.title || r.role)){
     try{
-      var _skTitle = (r.title || r.role || "").replace(/\s*[-\u2013\u2014]\s*(MTC|FWO.*|DET.*|SlingWorks)$/i, "").trim();
-      var _skSiteCity = { FWO:"Fort Worth, Texas", FTW:"Fort Worth, Texas", DET:"Detroit, Michigan", MMO:"Merrimack, New Hampshire", TAO:"Talladega, Alabama", CHS:"Charleston, South Carolina", YUMA:"Yuma, Arizona", ROA:"Roanoke, Virginia", NH:"Merrimack, New Hampshire" };
-      var _skLoc = _skSiteCity[(r.loc || "").split(/[\/,\s]/)[0].trim().toUpperCase()] || (r.loc || "");
-      if(/roanoke/i.test(r.loc || "")){ _skLoc = "Roanoke, Virginia"; }
-      var _skJd = (r.jd || "").slice(0, 4000);
-      var _skKws = [];
-      ["MBSE","Cameo","DOORS","FPGA","VHDL","RF","radar","EW","C4ISR","embedded","RTOS","1553","EVMS","Six Sigma","SolidWorks","GD&T","SMT","RMF","CISSP","clearance","Secret"].forEach(function(k){ if(_skKws.length < 3 && new RegExp("(^|[^A-Za-z])" + k + "([^A-Za-z]|$)", "i").test(_skJd)){ _skKws.push(k); } });
-      var _skIdeal = "https://www.linkedin.com/search/results/people/?keywords=" + encodeURIComponent('"' + _skTitle + '" ' + _skKws.join(" ") + (_skLoc ? ' "' + _skLoc.split(",")[0] + '"' : ""));
-      var _skRoot = _skTitle.replace(/^(Senior|Sr\.?|Staff|Principal|Lead|Junior|Jr\.?)\s+/i, "").replace(/\s+(I{1,3}|IV|V)$/i, "");
-      var _skWide = "https://www.linkedin.com/search/results/people/?keywords=" + encodeURIComponent((_skRoot + " " + (_skLoc ? (_skLoc.split(",")[1] || _skLoc) : "")).trim());
-      var _skWrap = el("div","fld full");
-      _skWrap.style.cssText = "border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:linear-gradient(180deg,#fbfcfe,#f4f7fb);margin:4px 0 10px;";
-      var _skT = el("div", null, "SOURCING TOOLKIT"); _skT.style.cssText = "font-size:10px;font-weight:800;letter-spacing:1px;color:#8a93a6;margin-bottom:8px;"; _skWrap.appendChild(_skT);
-      var _skRow = el("div"); _skRow.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;";
-      function _skBtn(label, url){ var a = el("a", null, label); a.href = url; a.target = "_blank"; a.style.cssText = "font-size:11.5px;font-weight:700;color:#fff;background:#1F3864;border-radius:8px;padding:6px 12px;text-decoration:none;"; return a; }
-      _skRow.appendChild(_skBtn("\ud83c\udfaf Ideal Candidate Search (LinkedIn)", _skIdeal));
-      _skRow.appendChild(_skBtn("\ud83c\udf10 Broader LinkedIn Search", _skWide));
-      _skWrap.appendChild(_skRow);
-      var _skMsg = "Hi {first name},\n\nI came across your background and it lines up well with a " + _skTitle + " opening I am recruiting for" + (_skLoc ? " in " + _skLoc : "") + (r.jobId ? " (Req " + r.jobId + ")" : "") + ".\n\nA few reasons this could be interesting:\n- High-impact defense and technology programs\n- " + (_skKws.length ? ("Hands-on work with " + _skKws.join(", ")) : "Strong engineering ownership from day one") + "\n- Stable, funded requisition with an engaged hiring manager\n\nWould you be open to a quick 15-minute call this week? Happy to share the full details.\n\nBest,\n" + ((typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.name) ? CURRENT_USER.name : "The Staffing Specialist");
-      var _skTa = document.createElement("textarea"); _skTa.value = _skMsg; _skTa.readOnly = true;
-      _skTa.style.cssText = "width:100%;min-height:130px;font-size:11.5px;line-height:1.5;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;resize:vertical;";
-      _skWrap.appendChild(_skTa);
-      var _skCp = el("button","btn sm","Copy Outreach Message"); _skCp.type = "button"; _skCp.style.marginTop = "6px";
-      _skCp.addEventListener("click", function(){ try{ navigator.clipboard.writeText(_skTa.value); _skCp.textContent = "Copied \u2713"; setTimeout(function(){ _skCp.textContent = "Copy Outreach Message"; }, 1500); }catch(e2){ _skTa.select(); document.execCommand("copy"); } });
-      _skWrap.appendChild(_skCp);
+      var _skWrap = buildSourcingToolkit(r);
+      _skWrap.className = "fld full stk";
       body.appendChild(_skWrap);
     }catch(eSK){}
   }
@@ -4587,6 +4564,7 @@ function viewReq(r){
   g.appendChild(roField("Min Comp", r.compMin || "-")); g.appendChild(roField("Max Comp", r.compMax || "-")); g.appendChild(roField("Target Comp", r.compTarget || "-")); g.appendChild(roField("EICP Eligible (Annual Bonus)", r.eicp || "-"));
   g.appendChild(roField("Desired Start", r.desiredStart || "-")); g.appendChild(roField("Contingent Hire", r.contingent || "-"));
   if(r.jdLink){ var lk = el("div","fld full"); lk.appendChild(el("label", null, "Job Description Link")); var a = el("a","tag gold","Open job description"); a.href = r.jdLink; a.target = "_blank"; lk.appendChild(a); g.appendChild(lk); }
+  try{ var _skV = buildSourcingToolkit(r); _skV.className = "fld full stk"; g.appendChild(_skV); }catch(eSKV){}
   var jdWrap = el("div","fld full"); jdWrap.appendChild(el("label", null, "Job Description")); if(r.jd && String(r.jd).trim()){ jdWrap.appendChild(renderJD(r.jd)); } else { jdWrap.appendChild(el("div","roval","-")); } g.appendChild(jdWrap);
   body.appendChild(g); m.appendChild(body);
   var foot = el("div","mfoot"); foot.appendChild(el("div")); var right = el("div","right");
@@ -5328,6 +5306,75 @@ boot();
     window.addEventListener("resize", function(){ if(window.innerWidth>820){ closeNav(); } });
   }catch(e){}
 })();
+</script>
+
+<style id="tb-stk">
+.stk{ border:1px solid var(--line); border-radius:14px; background:#fff; padding:16px 18px 14px;
+      margin:6px 0 10px; box-shadow:var(--shadow-sm); text-align:left; }
+.stk-head{ display:flex; align-items:baseline; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.stk-logo{ font-size:12px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; color:var(--ink); }
+.stk-sub{ font-size:11px; font-weight:500; color:var(--muted); }
+.stk-row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.stk-btn{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600;
+          padding:7px 14px; border-radius:8px; text-decoration:none; border:1px solid var(--line);
+          color:var(--ink); background:#fff; transition:transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.stk-btn.primary{ background:var(--gold); border-color:var(--gold); color:#fff; box-shadow:0 1px 3px rgba(59,91,255,.28); }
+.stk-btn:hover{ transform:translateY(-1px); box-shadow:var(--shadow-sm); }
+.stk-msg{ width:100%; min-height:130px; font-size:12px; line-height:1.55; border:1px solid var(--line);
+          border-radius:8px; padding:10px 12px; background:var(--panel2); resize:vertical;
+          font-family:var(--font); color:var(--ink); }
+.stk-copy{ margin-top:8px; }
+.stk-toggle{ font-size:11px; font-weight:600; color:var(--gold); background:var(--gold-dim);
+             border:1px solid transparent; border-radius:999px; padding:2px 10px; margin-left:8px;
+             cursor:pointer; vertical-align:1px; transition:background var(--dur) var(--ease); }
+.stk-toggle:hover{ background:#dfe5ff; }
+.stk-toggle.open{ background:var(--gold); color:#fff; }
+.stk-tr td{ background:var(--panel2); padding:10px 14px; }
+</style>
+<script id="tb-sourcing-kit">
+/* Sourcing Toolkit v2 - shared component: req modal, Open Reqs, TalentBench */
+function buildSourcingToolkit(r){
+  var _skTitle = (r.title || r.role || "").replace(/\s*[-\u2013\u2014]\s*(MTC|FWO.*|DET.*|SlingWorks)$/i, "").trim();
+  var _skSiteCity = { FWO:"Fort Worth, Texas", FTW:"Fort Worth, Texas", DET:"Detroit, Michigan", MMO:"Merrimack, New Hampshire", TAO:"Talladega, Alabama", CHS:"Charleston, South Carolina", YUMA:"Yuma, Arizona", ROA:"Roanoke, Virginia", NH:"Merrimack, New Hampshire" };
+  var _skLoc = _skSiteCity[(r.loc || "").split(/[\/,\s]/)[0].trim().toUpperCase()] || (r.loc || "");
+  if(/roanoke/i.test(r.loc || "")){ _skLoc = "Roanoke, Virginia"; }
+  var _skJd = (r.jd || "").slice(0, 4000);
+  var _skKws = [];
+  ["MBSE","Cameo","DOORS","FPGA","VHDL","RF","radar","EW","C4ISR","embedded","RTOS","1553","EVMS","Six Sigma","SolidWorks","GD&T","SMT","RMF","CISSP","clearance","Secret"].forEach(function(k){ if(_skKws.length < 3 && new RegExp("(^|[^A-Za-z])" + k + "([^A-Za-z]|$)", "i").test(_skJd)){ _skKws.push(k); } });
+  var _skIdeal = "https://www.linkedin.com/search/results/people/?keywords=" + encodeURIComponent('"' + _skTitle + '" ' + _skKws.join(" ") + (_skLoc ? ' "' + _skLoc.split(",")[0] + '"' : ""));
+  var _skRoot = _skTitle.replace(/^(Senior|Sr\.?|Staff|Principal|Lead|Junior|Jr\.?)\s+/i, "").replace(/\s+(I{1,3}|IV|V)$/i, "");
+  var _skWide = "https://www.linkedin.com/search/results/people/?keywords=" + encodeURIComponent((_skRoot + " " + (_skLoc ? (_skLoc.split(",")[1] || _skLoc) : "")).trim());
+  var w = el("div","stk");
+  var head = el("div","stk-head");
+  head.appendChild(el("span","stk-logo","Sourcing Toolkit"));
+  head.appendChild(el("span","stk-sub", _skTitle ? ("How we target candidates \u00b7 " + _skTitle) : "How we target candidates"));
+  w.appendChild(head);
+  var row = el("div","stk-row");
+  function _b(label, url, primary){ var a = el("a","stk-btn" + (primary ? " primary" : ""), label); a.href = url; a.target = "_blank"; a.rel = "noopener"; return a; }
+  row.appendChild(_b("\ud83c\udfaf Ideal Candidate Search (LinkedIn)", _skIdeal, true));
+  row.appendChild(_b("\ud83c\udf10 Broader LinkedIn Search", _skWide, false));
+  w.appendChild(row);
+  var _skMsg = "Hi {first name},\n\nI came across your background and it lines up well with a " + _skTitle + " opening I am recruiting for" + (_skLoc ? " in " + _skLoc : "") + (r.jobId ? " (Req " + r.jobId + ")" : "") + ".\n\nA few reasons this could be interesting:\n- High-impact defense and technology programs\n- " + (_skKws.length ? ("Hands-on work with " + _skKws.join(", ")) : "Strong engineering ownership from day one") + "\n- Stable, funded requisition with an engaged hiring manager\n\nWould you be open to a quick 15-minute call this week? Happy to share the full details.\n\nBest,\n" + ((typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.name) ? CURRENT_USER.name : "The Staffing Specialist");
+  var ta = document.createElement("textarea"); ta.value = _skMsg; ta.readOnly = true; ta.className = "stk-msg";
+  w.appendChild(ta);
+  var cp = el("button","btn sm stk-copy","Copy Outreach Message"); cp.type = "button";
+  cp.addEventListener("click", function(){ try{ navigator.clipboard.writeText(ta.value); cp.textContent = "Copied \u2713"; setTimeout(function(){ cp.textContent = "Copy Outreach Message"; }, 1500); }catch(e2){ ta.select(); document.execCommand("copy"); } });
+  w.appendChild(cp);
+  return w;
+}
+function makeSourcingBtn(r, tr){
+  var b = el("button","stk-toggle","\ud83c\udfaf Sourcing"); b.type = "button"; b.title = "Sourcing Toolkit \u2013 how we target candidates for this req";
+  b.setAttribute("data-stop","1");
+  b.addEventListener("click", function(ev){
+    ev.stopPropagation(); ev.preventDefault();
+    var next = tr.nextElementSibling;
+    if(next && next.className === "stk-tr"){ next.parentNode.removeChild(next); b.classList.remove("open"); return; }
+    var xtr = el("tr","stk-tr"); var td = el("td"); td.colSpan = 12;
+    td.appendChild(buildSourcingToolkit(r)); xtr.appendChild(td);
+    tr.parentNode.insertBefore(xtr, tr.nextSibling); b.classList.add("open");
+  });
+  return b;
+}
 </script>
 </body>
 </html>
