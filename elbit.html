@@ -7605,7 +7605,7 @@ function makeSourcingBtn(r, tr){
      PRODUCTION DEFAULT MUST BE false — with the flag false the application
      behaves exactly as it does today (roll-up strip and the All Active /
      Closed directories simply do not render). */
-  if(typeof window.TB_ACTIVE_REQUISITIONS_V1 === "undefined"){ window.TB_ACTIVE_REQUISITIONS_V1 = true; }
+  if(typeof window.TB_ACTIVE_REQUISITIONS_V1 === "undefined"){ window.TB_ACTIVE_REQUISITIONS_V1 = false; }
   function qaExceptions(){
     var reqs = (typeof REQS !== "undefined" ? REQS : []) || [];
     var cands = ((typeof state !== "undefined" && state.candidates) || []);
