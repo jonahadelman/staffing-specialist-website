@@ -872,6 +872,7 @@ window.TALENTBASE_FU_WORKLIST = true;
 var VIEWS = [
   { id:"guide", name:"\u2139 Getting Started", fn:function(){ return true; }, special:"guide" },
   { id:"all", name:"All Candidates", fn:function(){ return true; } },
+  { id:"activecandidates", hidden:true, name:"Active Candidates", fn:function(c){ return window.TB_METRICS ? TB_METRICS.isActiveCand(c) : (c.status !== "Archived" && c.status !== "Offer Accepted - Hired"); } },
   { id:"followup", collapsible:true, name:"Follow Up Due", fn:function(c){ return followUp(c).label !== ""; }, section:"Action" },
   { id:"pipeline", collapsible:true, name:"\u2630 Hiring Pipeline", fn:function(){ return true; }, special:"pipeline", section:"Pipeline" },
   { id:"dashboard", collapsible:true, name:"\u25A6 Dashboard", fn:function(){ return true; }, special:"dashboard", section:"Pipeline" },
@@ -981,7 +982,9 @@ function renderTabs(){
   var box = document.getElementById("tabs"); box.innerHTML = "";
   var actSec = (activeView()||{}).section || "";
   var lastSection = null;
+  window.__TB_ACTION_COUNTS = null; /* recompute action badges once per render */
   VIEWS.forEach(function(v){
+    if(v.hidden){ return; } /* routable but not shown in nav (e.g. Active Candidates drill-down) */
     var sec = v.section || "";
     if(sec && sec !== lastSection){
       lastSection = sec;
@@ -992,19 +995,18 @@ function renderTabs(){
       box.appendChild(h);
     }
     if(v.collapsible && sectionCollapsed[v.section] && actSec !== v.section){ return; }
-    var count;
-    if(v.special === "reqs"){ count = REQS.filter(function(r){ return !r.bench; }).length; }
-    else if(v.special === "resumecheck"){ count = state.candidates.filter(function(c){ return c.status !== "Archived" && resumeStatus(c) !== "match"; }).length; }
-    else if(v.special === "pipeline"){ count = state.candidates.filter(function(c){ return PIPE_STAGES.indexOf(c.status) !== -1; }).length; }
-    else if(v.special === "dashboard"){ count = ""; }
-    else if(v.special === "interviewrequests"){ count = (state.interviewRequests||[]).length; }
-    else if(v.special === "calendar"){ count = (state.interviewRequests||[]).filter(function(c){ return !!c.interviewDate; }).length; }
-    else if(v.special === "managers"){
-      var seen = {}; REQS.filter(function(r){ return !r.bench; }).forEach(function(r){ var n = (r.hm||"").trim(); if(n){ seen[n] = 1; } }); count = Object.keys(seen).length;
+    /* Sidebar is navigation, not a dashboard. Badges appear ONLY on immediate-
+       action views (Follow-Up Due, Interview Requests), scoped to the current
+       department/program so the number always equals the drill-down list. */
+    var count = "";
+    if(window.TB_METRICS && (v.id === "followup" || v.special === "interviewrequests")){
+      if(!window.__TB_ACTION_COUNTS){ window.__TB_ACTION_COUNTS = TB_METRICS.counts(window.TB_PROGRAM || "", window.TB_SUBPROGRAM || ""); }
+      count = (v.id === "followup") ? window.__TB_ACTION_COUNTS.followUpDue : window.__TB_ACTION_COUNTS.interviewRequests;
+    } else if(!window.TB_METRICS && v.id === "followup"){
+      count = state.candidates.filter(function(c){ return v.fn(c); }).length;
+    } else if(!window.TB_METRICS && v.special === "interviewrequests"){
+      count = (state.interviewRequests||[]).length;
     }
-    else if(v.special === "guide"){ count = ""; }
-    else if(v.special === "talentbench"){ count = (state.reqs || REQS || []).filter(function(r){ return r.bench === true; }).length; }
-    else{ count = state.candidates.filter(function(c){ return v.fn(c); }).length; }
     var fu = (v.id === "followup") ? fuState() : "";
     var b = el("button","vtab" + (v.id===ui.view ? " active" : "") + (fu ? " fu-" + fu : ""));
     b.appendChild(el("span", null, v.name)); if(count !== "" && count !== null){ b.appendChild(el("span","count", String(count))); }
@@ -1030,7 +1032,7 @@ function renderList(){
   if(v.special === "talentbench"){ renderTalentBench(host); return; }
   if(v.id === "followup" && window.TALENTBASE_FU_WORKLIST){ renderFollowUpWorklist(host); return; }
   var rows = pipelineSort(currentList());
-  document.getElementById("viewMeta").textContent = rows.length + (rows.length === 1 ? " candidate" : " candidates");
+  document.getElementById("viewMeta").textContent = rows.length + (rows.length === 1 ? " unique candidate" : " unique candidates");
   if(rows.length === 0){
     var filtersOn = !!(ui.q && ui.q.trim()) || !!ui.fStatus || !!ui.fDiscipline || !!ui.fReq || !!ui.fOwner || !!ui.fPriority;
     var em = el("div","empty");
@@ -1200,9 +1202,12 @@ function renderManagers(host){
 }
 function abbrevTitle(t){ if(!t){ return t; } var m=[[/\bPrincipal\b/gi,"Prin."],[/\bEngineering\b/gi,"Eng"],[/\bEngineer\b/gi,"Eng"],[/\bManagement\b/gi,"Mgmt"],[/\bManager\b/gi,"Mgr"],[/\bSenior\b/gi,"Sr"],[/\bDevelopment\b/gi,"Dev"],[/\bIntegration\b/gi,"Integ"],[/\bAdministrator\b/gi,"Admin"],[/\bSpecialist\b/gi,"Spec."]]; m.forEach(function(x){ t=t.replace(x[0],x[1]); }); return t; }
 function renderReqs(host){
-  function isClosedReq(r){ var s=(r.reqStatus||'').toLowerCase(); return s.indexOf('filled')!==-1||s.indexOf('closed')!==-1||s.indexOf('cancelled')!==-1; } var ranked = REQS.filter(function(r){ return !r.bench && !isClosedReq(r); }).sort(function(a,b){ var ra = (a.rank==null?9999:a.rank), rb = (b.rank==null?9999:b.rank); return (ra - rb) || (a.title||"").localeCompare(b.title||""); });
+  /* Central selector: Open Requisitions = not bench, not filled/closed/cancelled/archived */
+  function isClosedReq(r){ return window.TB_METRICS ? TB_METRICS.isClosedReq(r) : /(filled|closed|cancell?ed|archived)/.test((r.reqStatus||'').toLowerCase()); }
+  var openRows = REQS.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : (!r.bench && !isClosedReq(r)); });
+  var ranked = (window.TB_METRICS ? TB_METRICS.uniq(openRows, function(r){ return r.id; }) : openRows).sort(function(a,b){ var ra = (a.rank==null?9999:a.rank), rb = (b.rank==null?9999:b.rank); return (ra - rb) || (a.title||"").localeCompare(b.title||""); });
   var rankedCount = ranked.filter(function(r){ return r.rank != null; }).length;
-  document.getElementById("viewMeta").textContent = rankedCount + " ranked / " + ranked.length + " reqs";
+  document.getElementById("viewMeta").textContent = ranked.length + " requisition" + (ranked.length === 1 ? "" : "s") + " · " + rankedCount + " ranked";
   if(typeof PROGRAM_NOTES !== "undefined" && PROGRAM_NOTES){
     var pn = el("details","prognotes"); pn.style.cssText = "border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:10px;padding:0 16px;margin:0 0 16px;background:var(--panel)"; pn.open = PROGNOTES_OPEN; pn.addEventListener("toggle", function(){ PROGNOTES_OPEN = pn.open; });
     var sm = el("summary"); sm.style.cssText = "cursor:pointer;padding:13px 0;font-weight:700;color:var(--gold);font-size:13px"; sm.textContent = PROGRAM_NOTES.title;
@@ -1650,7 +1655,7 @@ function renderGuide(host){
   /* ── live data ── */
   var cands    = state.candidates||[];
   var irs      = state.interviewRequests||[];
-  var openReqs = REQS.filter(function(r){ var s=(r.reqStatus||r.urgency||'').toLowerCase(); return !r.bench && s.indexOf('filled')===-1 && s.indexOf('closed')===-1 && s.indexOf('cancelled')===-1; });
+  var openReqs = REQS.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : (!r.bench && !/(filled|closed|cancell?ed|archived)/.test((r.reqStatus||'').toLowerCase())); });
   var followUp = [];
   try{ followUp=cands.filter(function(c){ var f=window.followUp?window.followUp(c):null; return f&&f.label; }); }catch(e){}
   var offerP   = cands.filter(function(c){ return c.status==="Offer Pending"; });
@@ -1856,8 +1861,8 @@ function renderGuide(host){
 
   /* ══ 3. RECRUITING SNAPSHOT ══ */
   var snapWrap=d("margin-bottom:32px;");
-  snapWrap.appendChild(sh("Recruiting Snapshot"));
-  var snapGrid=d("display:grid;grid-template-columns:repeat(4,1fr);gap:12px;");
+  snapWrap.appendChild(sh("Recruiting Snapshot — " + (window.TB_PROGRAM ? (window.TB_PROGRAM + (window.TB_SUBPROGRAM ? " / " + window.TB_SUBPROGRAM : "")) : "Enterprise")));
+  var snapGrid=d("display:grid;grid-template-columns:repeat(5,1fr);gap:12px;");
 
   function snapCard(val,label,viewId,color){
     var c=d("background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:22px 18px 16px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;");
@@ -1869,7 +1874,15 @@ function renderGuide(host){
     return c;
   }
 
-  [[activeCands.length,"Active Candidates","all","var(--gold)"],[openReqs.length,"Open Reqs","reqs","var(--gold)"],[REQS.filter(function(r){ return r.bench; }).length,"Open TalentBench Reqs","talentbench","var(--gold)"],[offerP.length,"Offers Pending","offerpending","var(--gold)"]].forEach(function(a){ snapGrid.appendChild(snapCard(a[0],a[1],a[2],a[3])); });
+  /* The authoritative snapshot. Five metrics, explicit labels, every card
+     clickable, and each drill-down renders exactly these records (same
+     central selector, same context). */
+  var benchReqsSnap = REQS.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isBenchReq(r) : r.bench === true; });
+  [[openReqs.length,"Open Requisitions","reqs","var(--gold)"],
+   [benchReqsSnap.length,"TalentBench Reqs","talentbench","var(--gold)"],
+   [activeCands.length,"Active Candidates","activecandidates","var(--gold)"],
+   [interviewing.length,"Candidates Interviewing","interviewing","var(--gold)"],
+   [offerP.length,"Offers Pending","offerpending","var(--gold)"]].forEach(function(a){ snapGrid.appendChild(snapCard(a[0],a[1],a[2],a[3])); });
   snapWrap.appendChild(snapGrid);
   wrap.appendChild(snapWrap);
 
@@ -2743,7 +2756,10 @@ function renderDashboard(host){
    ============================================================ */
 
 function getBenchReqs(){
-  return (state.reqs || REQS || []).filter(function(r){ return r.bench === true; });
+  /* Central selector: TalentBench Reqs = bench=true AND still active
+     (not filled/closed/cancelled/archived). Unique by req ID. */
+  var rows = (state.reqs || REQS || []).filter(function(r){ return window.TB_METRICS ? TB_METRICS.isBenchReq(r) : r.bench === true; });
+  return window.TB_METRICS ? TB_METRICS.uniq(rows, function(r){ return r.id; }) : rows;
 }
 
 
@@ -3096,7 +3112,7 @@ function renderTalentBench(host){
   var showSrc = TB_FLAGS.sourcingStatus;
   var partners = Array.from(new Set(benchReqs.map(function(r){ return r.partner || "Unassigned"; }))).sort();
   var total = benchReqs.length;
-  document.getElementById("viewMeta").textContent = total + " sourcing req" + (total !== 1 ? "s" : "") + (partners.length ? " | " + partners.join(", ") : "");
+  document.getElementById("viewMeta").textContent = total + " TalentBench req" + (total !== 1 ? "s" : "") + (partners.length ? " | " + partners.join(", ") : "");
 
   var slogan = el("div"); slogan.style.cssText = "font-size:12px;color:var(--muted);font-style:italic;margin:-4px 0 14px 0";
   slogan.textContent = "Your best recruiter just got a team. \u2003TalentBench\u2122 \u00b7 Powered by TSS\u2122";
@@ -5966,10 +5982,10 @@ function makeSourcingBtn(r, tr){
         TB_PROGRAMS.forEach(function(p){
           var st = programStats(p.name);
           var t = el("div","vtab tb-prog-tab" + (window.TB_PROGRAM === p.name ? " tb-prog-on" : ""));
-          t.title = st.reqs + " Open Requisitions — not TalentBench, not filled/closed/cancelled. Sidebar badges always mean Open Requisitions.";
+          /* Sidebar is navigation — no numeric badges. Counts live on the
+             Overview cards and in each view header, scoped and labeled. */
+          t.title = p.name + " — " + st.reqs + " open requisition" + (st.reqs === 1 ? "" : "s") + ". Full metrics on the Overview page.";
           t.appendChild(el("span", null, p.icon + " " + p.name));
-          var cnt = el("span","count", String(st.reqs));
-          t.appendChild(cnt);
           t.addEventListener("click", function(){
             var target = (window.TB_PROGRAM === p.name ? "" : p.name);
             try{
@@ -6482,17 +6498,23 @@ function makeSourcingBtn(r, tr){
 
   function deptStats(name){
     var reqs = (typeof REQS !== "undefined" ? REQS : []).filter(function(r){ return reqProgram(r) === name; });
-    var open = reqs.filter(function(r){ return !r.bench && !tbIsClosedReq(r); });
-    var bench = reqs.filter(function(r){ return !!r.bench; });
+    var open = reqs.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : (!r.bench && !tbIsClosedReq(r)); });
+    var bench = reqs.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isBenchReq(r) : (!!r.bench && !tbIsClosedReq(r)); });
     var labels = {};
     reqs.forEach(function(r){ labels[(r.title||"")+" – "+(r.loc||"")] = 1; labels[(r.title||"")+" - "+(r.loc||"")] = 1; });
     var cands = ((state && state.candidates) || []).filter(function(c){ return (c.reqs||[]).some(function(l){ return labels[l]; }); });
     var progs = {};
     reqs.forEach(function(r){ var p = progOf(r); if(p){ progs[p] = (progs[p]||0)+1; } });
+    /* All figures come from the central TB_METRICS rules — same definitions
+       as every drill-down view. "candidates" = ACTIVE unique candidates;
+       "interviews" = candidates in an interviewing stage (never TA Interview);
+       "offers" = Offer Pending only (never accepted/declined). */
+    var M = window.TB_METRICS;
+    var activeC = M ? cands.filter(M.isActiveCand) : cands.filter(function(c){ return c.status !== "Archived" && c.status !== "Offer Accepted - Hired"; });
     return { open:open.length, closed:reqs.filter(function(r){ return !r.bench && tbIsClosedReq(r); }).length,
-             total:reqs.length, bench:bench.length, candidates:cands.length,
-             interviews:cands.filter(function(c){ return /interview/i.test(c.status||""); }).length,
-             offers:cands.filter(function(c){ return /offer/i.test(c.status||""); }).length, programs:progs };
+             total:reqs.length, bench:bench.length, candidates:activeC.length,
+             interviews:(M ? cands.filter(M.isInterviewingCand) : cands.filter(function(c){ return ["Interviewing Stage 1","Interviewing Stage 2","Interviewing Stage 3","Panel / Final Interview","Interviewing"].indexOf(c.status) !== -1; })).length,
+             offers:cands.filter(function(c){ return c.status === "Offer Pending"; }).length, programs:progs };
   }
 
   /* ============ ENTERPRISE OVERVIEW (executive command center) ============ */
@@ -6503,14 +6525,21 @@ function makeSourcingBtn(r, tr){
     var names = (window.TB_PROGRAMS||[]).map(function(p){ return p.name; });
     var stats = {}; var tot = {open:0,bench:0,cands:0,iv:0,of:0};
     names.forEach(function(n){ var s = deptStats(n); stats[n]=s; tot.open+=s.open; tot.bench+=s.bench; tot.cands+=s.candidates; tot.iv+=s.interviews; tot.of+=s.offers; });
-    var mEl = document.getElementById("viewMeta"); if(mEl){ mEl.textContent = names.length + " departments · " + tot.open + " open jobs"; }
+    var mEl = document.getElementById("viewMeta"); if(mEl){ mEl.textContent = names.length + " departments · " + tot.open + " open requisitions · Enterprise-wide"; }
 
-    /* executive KPI strip */
+    /* Enterprise Recruiting Snapshot — the ONE authoritative enterprise summary.
+       Explicit labels, central definitions, every tile clickable, and the
+       drill-down renders exactly the counted records. */
+    var ENT_VIEW = {"Open Requisitions":"reqs","TalentBench Reqs":"talentbench","Active Candidates":"activecandidates","Candidates Interviewing":"interviewing","Offers Pending":"offerpending"};
     var strip = el("div","ent-strip");
-    [["Departments", names.length],["Open Jobs", tot.open],["Active Candidates", tot.cands],
-     ["TalentBench Reqs", tot.bench],["Interviews", tot.iv],["Offers", tot.of]].forEach(function(k){
-      var STIPS = {"Departments":"Active departments in this client workspace.","Open Jobs":"Open Jobs = requisitions not on TalentBench and not filled, closed, or cancelled. Same rule on every screen.","Active Candidates":"Unique candidates tagged to any requisition, enterprise-wide.","TalentBench Reqs":"Requisitions delivered via TalentBench sourcing (a delivery model). Counts requisitions, never candidates.","Interviews":"Active candidates currently in any interviewing stage.","Offers":"Active candidates currently at offer pending or accepted."};
+    [["Departments", names.length],["Open Requisitions", tot.open],["TalentBench Reqs", tot.bench],
+     ["Active Candidates", tot.cands],["Candidates Interviewing", tot.iv],["Offers Pending", tot.of]].forEach(function(k){
+      var STIPS = {"Departments":"Active departments in this client workspace.","Open Requisitions":"Unique requisitions: not TalentBench, and not filled, closed, cancelled, or archived. Same rule on every screen.","Active Candidates":"Unique candidates whose status is not Archived and not Offer Accepted - Hired.","TalentBench Reqs":"Unique ACTIVE requisitions delivered via TalentBench sourcing. Counts requisitions, never candidates.","Candidates Interviewing":"Unique candidates currently in an interviewing-stage status (Stage 1/2/3, Panel/Final, or legacy Interviewing).","Offers Pending":"Unique candidates whose status is exactly Offer Pending."};
       var t = el("div","ent-kpi"); t.title = STIPS[k[0]] || "";
+      if(ENT_VIEW[k[0]]){
+        t.style.cursor = "pointer";
+        (function(target){ t.addEventListener("click", function(){ try{ (window.TB_setProgram||function(){})(""); ui.view = target; refresh(); }catch(e){} }); })(ENT_VIEW[k[0]]);
+      }
       t.appendChild(el("div","ent-kpi-v", String(k[1])));
       t.appendChild(el("div","ent-kpi-l", k[0]));
       strip.appendChild(t);
@@ -6529,12 +6558,17 @@ function makeSourcingBtn(r, tr){
       card.appendChild(hd);
       var anchor = el("div","ent-anchor");
       anchor.appendChild(el("span","ent-anchor-v", String(s.open)));
-      var al = el("span","ent-anchor-l","Open Jobs"); al.title = "Open Jobs = requisitions not on TalentBench and not filled, closed, or cancelled. Same rule on every screen."; anchor.appendChild(al);
+      var al = el("span","ent-anchor-l","Open Requisitions"); al.title = "Unique requisitions: not TalentBench, and not filled, closed, cancelled, or archived. Same rule on every screen."; anchor.appendChild(al);
+      anchor.style.cursor = "pointer"; anchor.title = "Open " + p.name + " — Open Requisitions";
+      anchor.addEventListener("click", function(){ try{ (window.TB_setProgram||function(){})(p.name); ui.view = "reqs"; refresh(); }catch(e){} });
       card.appendChild(anchor);
       var sec = el("div","ent-secondary");
-      var TIPS = {"Candidates":"Active Candidates = unique candidates tagged to this department's requisitions.","TalentBench Reqs":"TalentBench Reqs = requisitions delivered via TalentBench sourcing (a delivery model), grouped under this department. Counts requisitions, never candidates.","Interviews":"Interviews = active candidates currently in any interviewing stage.","Offers":"Offers = active candidates currently at offer pending or accepted."};
-      [["Candidates",s.candidates],["TalentBench Reqs",s.bench],["Interviews",s.interviews],["Offers",s.offers]].forEach(function(k){
+      var TIPS = {"Active Candidates":"Unique candidates on this department's requisitions whose status is not Archived and not Offer Accepted - Hired.","TalentBench Reqs":"Unique ACTIVE requisitions delivered via TalentBench sourcing, in this department. Counts requisitions, never candidates.","Candidates Interviewing":"Unique candidates in this department currently in an interviewing-stage status.","Offers Pending":"Unique candidates in this department whose status is exactly Offer Pending."};
+      var SEC_VIEW = {"Active Candidates":"activecandidates","TalentBench Reqs":"talentbench","Candidates Interviewing":"interviewing","Offers Pending":"offerpending"};
+      [["Active Candidates",s.candidates],["TalentBench Reqs",s.bench],["Candidates Interviewing",s.interviews],["Offers Pending",s.offers]].forEach(function(k){
         var d2 = el("div","ent-sec-kpi"); d2.title = TIPS[k[0]] || "";
+        d2.style.cursor = "pointer";
+        (function(target){ d2.addEventListener("click", function(){ try{ (window.TB_setProgram||function(){})(p.name); ui.view = target; refresh(); }catch(e){} }); })(SEC_VIEW[k[0]]);
         d2.appendChild(el("span","ent-sec-v", String(k[1])));
         d2.appendChild(el("span","ent-sec-l", k[0]));
         sec.appendChild(d2);
@@ -6544,7 +6578,7 @@ function makeSourcingBtn(r, tr){
       if(progKeys.length){
         var pr = el("div","ent-progs");
         pr.appendChild(el("span","ent-progs-l","Programs: "));
-        pr.appendChild(el("span",null, progKeys.map(function(k){ return k + " (" + s.programs[k] + ")"; }).join(" · ")));
+        pr.appendChild(el("span",null, progKeys.map(function(k){ return k + " (" + s.programs[k] + " req" + (s.programs[k] === 1 ? "" : "s") + ")"; }).join(" · ")));
         pr.title = "Programs are initiatives inside this department. Counts are the program's requisitions — a subset of the department total, never added twice.";
         card.appendChild(pr);
       }
@@ -6606,6 +6640,43 @@ function makeSourcingBtn(r, tr){
       rec.appendChild(checks);
       host.appendChild(rec);
     }catch(eR){}
+
+    /* ── Metric Reconciliation — displayed count vs. drill-down unique records.
+       Runs live on this browser's loaded data, for every context (Enterprise,
+       each department, each program) and every dashboard metric. A row FAILS
+       if clicking the metric would show a different number of unique records
+       than the number displayed. ── */
+    try{
+      if(window.TB_RECON_RUN){
+        var rows2 = window.TB_RECON_RUN();
+        var fails = rows2.filter(function(r){ return !r.pass; }).length;
+        var rc = el("div","tb-recon");
+        rc.appendChild(el("div","tb-prog-dir-t","Metric Reconciliation · displayed = drill-down"));
+        rc.appendChild(el("div","tb-prog-dir-s", fails === 0 ? "All " + rows2.length + " metric/context pairs reconcile: every displayed number equals the unique records its drill-down shows." : ("⚠ " + fails + " of " + rows2.length + " metric/context pairs DO NOT reconcile — see rows marked FAIL.")));
+        var t3 = el("table","tb-recon-tbl"); var h3r = el("tr");
+        ["Context","Metric","Displayed","Unique Records","Result"].forEach(function(hx){ h3r.appendChild(el("th",null,hx)); });
+        var thd3 = el("thead"); thd3.appendChild(h3r); t3.appendChild(thd3);
+        var tb3 = el("tbody");
+        rows2.forEach(function(r){
+          var trr3 = el("tr", r.pass ? null : "tb-recon-ent");
+          [r.context, r.metric, r.displayed, r.drilldown, r.pass ? "Pass" : "FAIL"].forEach(function(v, ix){
+            var td3 = el("td", ix === 0 ? "nm" : null, String(v));
+            if(ix === 4){ td3.style.fontWeight = "700"; td3.style.color = r.pass ? "var(--green)" : "var(--red)"; }
+            trr3.appendChild(td3);
+          });
+          tb3.appendChild(trr3);
+        });
+        t3.appendChild(tb3); rc.appendChild(t3);
+        var cp3 = el("button","btn sm","Copy Reconciliation Report"); cp3.type = "button"; cp3.style.marginTop = "8px";
+        cp3.addEventListener("click", function(){
+          var lines = ["Context\tMetric\tDisplayed\tUnique Records\tResult"];
+          rows2.forEach(function(r){ lines.push([r.context, r.metric, r.displayed, r.drilldown, r.pass ? "Pass" : "FAIL"].join("\t")); });
+          try{ navigator.clipboard.writeText(lines.join("\n")); cp3.textContent = "Copied ✓"; setTimeout(function(){ cp3.textContent = "Copy Reconciliation Report"; }, 1500); }catch(eC){}
+        });
+        rc.appendChild(cp3);
+        host.appendChild(rc);
+      }
+    }catch(eR2){}
   }
 
   /* ============ PEOPLE DIRECTORIES ============ */
@@ -6770,9 +6841,17 @@ function makeSourcingBtn(r, tr){
       if(window.TB_PROGRAM && typeof tbIsClosedReq === "function"){
         var mEl2 = document.getElementById("viewMeta");
         if(mEl2 && /candidate/i.test(mEl2.textContent) && mEl2.textContent.indexOf("supporting") < 0){
-          var openN = REQS.filter(function(r){ return reqProgram(r) === window.TB_PROGRAM && !r.bench && !tbIsClosedReq(r); }).length;
-          mEl2.textContent = mEl2.textContent.replace(/candidates?/i, function(w){ return "active " + w.toLowerCase(); })
-                           + " · supporting " + openN + " open requisition" + (openN === 1 ? "" : "s");
+          var openN = REQS.filter(function(r){ return (window.TB_METRICS ? TB_METRICS.isOpenReq(r) : (!r.bench && !tbIsClosedReq(r))) && reqProgram(r) === window.TB_PROGRAM; }).length;
+          mEl2.textContent = mEl2.textContent + " · supporting " + openN + " open requisition" + (openN === 1 ? "" : "s");
+        }
+      }
+      /* Scope labeling: enterprise-wide views say so explicitly; scoped views
+         are already prefixed with "Department / Program" in the title. */
+      if(!window.TB_PROGRAM && typeof ui !== "undefined"){
+        var SCOPE_VIEWS = { reqs:1, talentbench:1, all:1, activecandidates:1, interviewing:1, offerpending:1, offeraccepted:1, submitted:1, followup:1, interviewrequests:1, calendar:1 };
+        if(SCOPE_VIEWS[ui.view]){
+          var mEl3 = document.getElementById("viewMeta");
+          if(mEl3 && mEl3.textContent && mEl3.textContent.indexOf("Enterprise-wide") < 0){ mEl3.textContent += " · Enterprise-wide"; }
         }
       }
     }catch(eCtx){}
@@ -7071,6 +7150,144 @@ function makeSourcingBtn(r, tr){
   }
 })();
 
+</script>
+
+<script id="tb-metrics">
+/* ═══════════════════════════════════════════════════════════════════════════
+   TB_METRICS — THE single, authoritative counting system.
+   Every displayed metric and every drill-down list uses these rules.
+
+   Canonical definitions (unique records by canonical ID):
+     Open Requisitions       reqs: bench=false AND status not filled/closed/cancelled/archived
+     TalentBench Reqs        reqs: bench=true  AND status not filled/closed/cancelled/archived
+     Active Candidates       candidates: status NOT IN {Archived, Offer Accepted - Hired}
+     Candidates Interviewing candidates: status IN {Interviewing Stage 1/2/3,
+                             Panel / Final Interview, Interviewing (legacy)}
+     Offers Pending          candidates: status = Offer Pending
+     Follow-Up Due           candidates with a due/overdue follow-up
+     Interview Requests      interview-request records in scope
+
+   Context chain: Enterprise ("") → Department (TB_PROGRAM) → Program (TB_SUBPROGRAM).
+   A program is a subset of its department — never added twice.
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function(){
+  "use strict";
+  var CLOSED_RE = /(filled|closed|cancell?ed|archived)/;
+  var INTERVIEW_STATUSES = ["Interviewing Stage 1","Interviewing Stage 2","Interviewing Stage 3","Panel / Final Interview","Interviewing"];
+  function isClosedReq(r){ var s = (r && (r.reqStatus != null ? r.reqStatus : r.req_status)) || ""; return CLOSED_RE.test(String(s).toLowerCase()); }
+  function isOpenReq(r){ return !!r && r.bench !== true && !isClosedReq(r); }
+  function isBenchReq(r){ return !!r && r.bench === true && !isClosedReq(r); }
+  function isActiveCand(c){ return !!c && c.status !== "Archived" && c.status !== "Offer Accepted - Hired"; }
+  function isInterviewingCand(c){ return !!c && INTERVIEW_STATUSES.indexOf(c.status) !== -1; }
+  function isOfferPendingCand(c){ return !!c && c.status === "Offer Pending"; }
+  function isFollowUpDue(c){ try{ return !!c && typeof followUp === "function" && followUp(c).label !== ""; }catch(e){ return false; } }
+  function uniq(arr, key){ var seen = {}, out = []; (arr || []).forEach(function(x){ if(!x){ return; } var k = key(x); if(k == null || k === ""){ k = "__row__" + out.length; } if(!seen[k]){ seen[k] = 1; out.push(x); } }); return out; }
+  function uniqLen(arr, key){ return uniq(arr, key || function(x){ return x.id; }).length; }
+  function labelsFor(r){ return [(r.title || "") + " – " + (r.loc || ""), (r.title || "") + " - " + (r.loc || "")]; }
+
+  /* Scope current data to a department and/or program using the app's own
+     resolution functions (reqProgram → department, tbProgOf → program). */
+  function scoped(dept, sub){
+    var reqs  = (typeof REQS !== "undefined" ? REQS : []) || [];
+    var cands = ((typeof state !== "undefined" && state.candidates) || []);
+    var irs   = ((typeof state !== "undefined" && state.interviewRequests) || []);
+    if(dept && typeof window.reqProgram === "function"){ reqs = reqs.filter(function(r){ return window.reqProgram(r) === dept; }); }
+    if(sub  && typeof window.tbProgOf  === "function"){ reqs = reqs.filter(function(r){ return window.tbProgOf(r)  === sub;  }); }
+    if(dept || sub){
+      var lb = {}; reqs.forEach(function(r){ labelsFor(r).forEach(function(l){ lb[l] = 1; }); });
+      cands = cands.filter(function(c){ return (c.reqs || []).some(function(l){ return lb[l]; }); });
+      var cid = {}; cands.forEach(function(c){ cid[c.id] = 1; });
+      irs = irs.filter(function(q){ return !q.candidateId || cid[q.candidateId]; });
+    }
+    return { reqs: uniq(reqs, function(r){ return r.id; }), cands: uniq(cands, function(c){ return c.id; }), irs: irs };
+  }
+  function records(dept, sub){
+    var s = scoped(dept, sub);
+    return {
+      openReqs:               s.reqs.filter(isOpenReq),
+      benchReqs:              s.reqs.filter(isBenchReq),
+      activeCandidates:       s.cands.filter(isActiveCand),
+      candidatesInterviewing: s.cands.filter(isInterviewingCand),
+      offersPending:          s.cands.filter(isOfferPendingCand),
+      followUpDue:            s.cands.filter(isFollowUpDue),
+      interviewRequests:      s.irs
+    };
+  }
+  function counts(dept, sub){ var r = records(dept, sub), o = {}; Object.keys(r).forEach(function(k){ o[k] = r[k].length; }); return o; }
+
+  var LABELS = { openReqs:"Open Requisitions", benchReqs:"TalentBench Reqs", activeCandidates:"Active Candidates",
+                 candidatesInterviewing:"Candidates Interviewing", offersPending:"Offers Pending",
+                 followUpDue:"Follow-Up Due", interviewRequests:"Interview Requests" };
+  var VIEW_FOR = { openReqs:"reqs", benchReqs:"talentbench", activeCandidates:"activecandidates",
+                   candidatesInterviewing:"interviewing", offersPending:"offerpending",
+                   followUpDue:"followup", interviewRequests:"interviewrequests" };
+
+  /* ── Automated reconciliation: displayed_count === drilldown_unique_record_count.
+     The drill-down side runs the REAL view predicates (VIEWS fns, getBenchReqs,
+     the Open Requisitions filter) under the same context, then counts unique IDs. */
+  function viewFn(id){
+    var vs = (typeof VIEWS !== "undefined" ? VIEWS : []);
+    for(var i = 0; i < vs.length; i++){ if(vs[i].id === id){ return vs[i].fn || null; } }
+    return null;
+  }
+  function drilldownCounts(dept, sub){
+    var s = scoped(dept, sub);
+    var hasState = (typeof state !== "undefined");
+    var oR = (typeof REQS !== "undefined") ? REQS : null;
+    var oC = hasState ? state.candidates : null;
+    var oI = hasState ? state.interviewRequests : null;
+    try{
+      REQS = s.reqs; if(hasState){ state.candidates = s.cands; state.interviewRequests = s.irs; }
+      var fnAct = viewFn("activecandidates") || isActiveCand;
+      var fnInt = viewFn("interviewing")     || isInterviewingCand;
+      var fnOff = viewFn("offerpending")     || isOfferPendingCand;
+      var fnFu  = viewFn("followup")         || isFollowUpDue;
+      return {
+        openReqs:               uniqLen(REQS.filter(function(r){ return isOpenReq(r); })),
+        benchReqs:              uniqLen(typeof getBenchReqs === "function" ? getBenchReqs() : REQS.filter(isBenchReq)),
+        activeCandidates:       uniqLen(s.cands.filter(function(c){ return fnAct(c); })),
+        candidatesInterviewing: uniqLen(s.cands.filter(function(c){ return fnInt(c); })),
+        offersPending:          uniqLen(s.cands.filter(function(c){ return fnOff(c); })),
+        followUpDue:            uniqLen(s.cands.filter(function(c){ return fnFu(c); })),
+        interviewRequests:      s.irs.length
+      };
+    } finally {
+      if(oR !== null){ REQS = oR; }
+      if(hasState){ state.candidates = oC; state.interviewRequests = oI; }
+    }
+  }
+  function reconRun(){
+    var contexts = [{ label:"Enterprise", dept:"", sub:"" }];
+    ((window.TB_PROGRAMS) || []).forEach(function(p){ contexts.push({ label:p.name, dept:p.name, sub:"" }); });
+    var subs = {};
+    ((typeof REQS !== "undefined" ? REQS : []) || []).forEach(function(r){
+      var sp = (typeof window.tbProgOf === "function") ? window.tbProgOf(r) : "";
+      if(sp){ var d = (typeof window.reqProgram === "function") ? window.reqProgram(r) : ""; subs[d + "|" + sp] = { dept:d, sub:sp }; }
+    });
+    Object.keys(subs).sort().forEach(function(k){ var sc = subs[k]; contexts.push({ label:sc.dept + " / " + sc.sub, dept:sc.dept, sub:sc.sub }); });
+    var METRIC_KEYS = ["openReqs","benchReqs","activeCandidates","candidatesInterviewing","offersPending","followUpDue","interviewRequests"];
+    var rows = [];
+    contexts.forEach(function(cx){
+      var displayed = counts(cx.dept, cx.sub);
+      var drill = drilldownCounts(cx.dept, cx.sub);
+      METRIC_KEYS.forEach(function(m){
+        rows.push({ context: cx.label, metric: LABELS[m], displayed: displayed[m], drilldown: drill[m], pass: displayed[m] === drill[m] });
+      });
+    });
+    return rows;
+  }
+
+  window.TB_METRICS = {
+    LABELS: LABELS, VIEW_FOR: VIEW_FOR,
+    isClosedReq: isClosedReq, isOpenReq: isOpenReq, isBenchReq: isBenchReq,
+    isActiveCand: isActiveCand, isInterviewingCand: isInterviewingCand,
+    isOfferPendingCand: isOfferPendingCand, isFollowUpDue: isFollowUpDue,
+    uniq: uniq, uniqLen: uniqLen,
+    scoped: scoped, records: records, counts: counts,
+    drilldownCounts: drilldownCounts
+  };
+  window.TB_RECON_RUN = reconRun;
+})();
 </script>
 </body>
 </html>
