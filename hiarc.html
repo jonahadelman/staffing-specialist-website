@@ -4627,7 +4627,7 @@ function buildSourcingToolkit(r){
   row.appendChild(_b("\ud83c\udfaf Ideal Candidate Search (LinkedIn)", _skIdeal, true));
   row.appendChild(_b("\ud83c\udf10 Broader LinkedIn Search", _skWide, false));
   w.appendChild(row);
-  var _skMsg = "Hi {first name},\n\nVery few " + (_skTitle || "professionals") + "s have the combination this search demands" + (_skKws.length ? " \u2014 " + _skKws.join(", ") + " at depth" : "") + ".\n\nI'm leading a confidential search" + (_skLoc ? " in " + _skLoc : "") + " for a program that will matter well beyond one product cycle. You'd own the hard part from day one.\n\nIf you're open to a conversation, reply with:\n\u2022 Resume\n\u2022 Target compensation\n\u2022 Availability\n\nI'll take it from there.\n\n" + ((typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.name) ? CURRENT_USER.name : "The Staffing Specialist");
+  var _skMsg = "Hi {first name},\n\nVery few " + (_skTitle || "professionals") + "s have the combination this search demands" + (_skKws.length ? " \u2014 " + _skKws.join(", ") + " at depth" : "") + ".\n\nI'm leading a confidential search" + (_skLoc ? " in " + _skLoc : "") + " for a program that will matter well beyond one product cycle. You'd own the hard part from day one.\n\nIf you're open to a conversation, please send:\n\u2022 Resume\n\u2022 Current compensation\n\u2022 Target compensation\n\u2022 Availability\n\nI'll take it from there.\n\n" + ((typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.name) ? CURRENT_USER.name : "The Staffing Specialist");
   var ta = document.createElement("textarea"); ta.value = _skMsg; ta.readOnly = true; ta.className = "stk-msg";
   w.appendChild(ta);
   var cp = el("button","btn sm stk-copy","Copy Outreach Message"); cp.type = "button";
@@ -4815,7 +4815,7 @@ function makeSourcingBtn(r, tr){
     var whyNow = pick(rand, VOICE.whyNow) + ".";
 
     /* 4 — CTA (three things, nothing more) */
-    var cta = "If you're open to a conversation, reply with:\n• Resume\n• Target compensation\n• Availability\n\nI'll take it from there.";
+    var cta = "If you're open to a conversation, please send:\n• Resume\n• Current compensation\n• Target compensation\n• Availability\n\nI'll take it from there.";
 
     var parts = ["Hi " + ctx.first + ",", whyMe, company + " " + challenge, whyNow, cta];
     if(mods.shorter){ parts.splice(3,1); }                 /* drop why-now */
@@ -4830,7 +4830,7 @@ function makeSourcingBtn(r, tr){
     var rand = mkRand("fu|" + ctx.first + ctx.roleTitle + style);
     var so = signoff();
     return [
-      { day:3, label:"Follow-up 1", text:"Hi " + ctx.first + ",\n\nOne thing I left out: " + pick(rand, VOICE.whyNow).toLowerCase() + ". If that changes anything, you know the three things to send." + so },
+      { day:3, label:"Follow-up 1", text:"Hi " + ctx.first + ",\n\nOne thing I left out: " + pick(rand, VOICE.whyNow).toLowerCase() + ". If that changes anything, you know the four things to send." + so },
       { day:7, label:"Follow-up 2", text:"Hi " + ctx.first + ",\n\nNo pitch. Just this: the hiring manager personally reviews every profile I submit, and yours would go first. A yes or no either way helps us both." + so },
       { day:14, label:"Follow-up 3", text:"Hi " + ctx.first + ",\n\nTiming beats interest — it usually does. Tell me when to circle back: three months, six, or never. All three are useful answers." + so },
       { day:21, label:"Breakup", text:"Hi " + ctx.first + ",\n\nClosing the loop — last note from me on this search. When the next exceptional one crosses my desk, I'll think of you first. My line stays open." + so }
@@ -4857,7 +4857,7 @@ function makeSourcingBtn(r, tr){
     coach.push(wc >= 75 && wc <= 150 ? "✓ " + wc + " words — inside the 75–150 executive window" : (wc < 75 ? "△ " + wc + " words — could earn one more specific line" : "✗ " + wc + " words — over 150; use 'Shorter'"));
     coach.push(banned.length === 0 ? "✓ Zero recruiter clichés" : "✗ Banned phrase detected: “" + banned[0] + "” — regenerate");
     coach.push(personalTokens >= 3 ? "✓ Written for this one person — " + personalTokens + " specific details" : "△ Add specificity — try 'More Personal'");
-    coach.push(/reply with/i.test(msg) ? "✓ Three-item CTA: resume, target comp, availability" : "△ CTA drifted — regenerate");
+    coach.push(/please send/i.test(msg) && /Current compensation/.test(msg) ? "✓ Standard CTA: resume, current comp, target comp, availability" : "△ CTA drifted — regenerate");
     coach.push(miss >= 4 ? "✓ Mission carries the message" : "△ Try the Mission style for this audience");
     if(ctx.fit){ coach.push("✓ TalentFit " + ctx.fit.score + "% (" + ctx.fit.verdict + ") factored into targeting"); }
     return { personalization:pers, executiveTone:exec, missionAlignment:miss, engagement:curi, clarity:brev,
@@ -4868,7 +4868,7 @@ function makeSourcingBtn(r, tr){
   function aiKey(){ try{ return localStorage.getItem("tb_anthropic_key") || ""; }catch(e){ return ""; } }
   async function aiGenerate(ctx, style, current){
     var key = aiKey(); if(!key){ throw new Error("no-key"); }
-    var sys = "You are TalentOutreach inside TalentBase, writing as an elite executive recruiter for " + VOICE.client + ". Structure: Why me (recognition — the first two sentences must stop a passive executive from scrolling), Why this (company in ONE sentence selling mission/impact/future — never history; role as a challenge: own/build/define/lead — never a job description), Why now (one line), then a CTA asking for exactly three things: resume, target compensation, availability. HARD RULES: 75-150 words total. Style: " + style + " (Executive = Fortune 500 tone; Mission = purpose and impact; Direct = brief and confident). BANNED: 'I came across', 'I hope you're doing well', 'exciting opportunity', 'fifteen minutes', 'lines up well', 'stable funded role', 'hands-on work', exclamation marks, emojis, anything a staffing agency would write. Tone: Apple, Palantir, SpaceX. Create curiosity; leave them wanting more; then stop.";
+    var sys = "You are TalentOutreach inside TalentBase, writing as an elite executive recruiter for " + VOICE.client + ". Structure: Why me (recognition — the first two sentences must stop a passive executive from scrolling), Why this (company in ONE sentence selling mission/impact/future — never history; role as a challenge: own/build/define/lead — never a job description), Why now (one line), then a CTA that ends with exactly: 'Please send:' followed by four bullets \u2014 Resume, Current compensation, Target compensation, Availability. HARD RULES: 75-150 words total. Style: " + style + " (Executive = Fortune 500 tone; Mission = purpose and impact; Direct = brief and confident). BANNED: 'I came across', 'I hope you're doing well', 'exciting opportunity', 'fifteen minutes', 'lines up well', 'stable funded role', 'hands-on work', exclamation marks, emojis, anything a staffing agency would write. Tone: Apple, Palantir, SpaceX. Create curiosity; leave them wanting more; then stop.";
     var user = "DATA:\n" + JSON.stringify({ candidate: ctx.cand ? { name:ctx.first, title:ctx.title, company:ctx.company, skills:ctx.skills } : null, role: { title:ctx.roleTitle, location:ctx.loc }, talentfit: ctx.fit }, null, 1)
       + (current ? "\n\nCURRENT DRAFT (beat it — sharper recognition, more curiosity, same length discipline):\n" + current : "")
       + "\n\nReturn ONLY the message text.";
