@@ -5374,7 +5374,7 @@ function buildSourcingToolkit(r){
   row.appendChild(_b("\ud83c\udfaf Ideal Candidate Search (LinkedIn)", _skIdeal, true));
   row.appendChild(_b("\ud83c\udf10 Broader LinkedIn Search", _skWide, false));
   w.appendChild(row);
-  var _skMsg = "Hi {first name},\n\nI came across your background and it lines up well with a " + _skTitle + " opening I am recruiting for" + (_skLoc ? " in " + _skLoc : "") + (r.jobId ? " (Req " + r.jobId + ")" : "") + ".\n\nA few reasons this could be interesting:\n- High-impact defense and technology programs\n- " + (_skKws.length ? ("Hands-on work with " + _skKws.join(", ")) : "Strong engineering ownership from day one") + "\n- Stable, funded requisition with an engaged hiring manager\n\nWould you be open to a quick 15-minute call this week? Happy to share the full details.\n\nBest,\n" + ((typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.name) ? CURRENT_USER.name : "The Staffing Specialist");
+  var _skMsg = "Hi {first name},\n\nVery few " + (_skTitle || "professionals") + "s have the combination this search demands" + (_skKws.length ? " \u2014 " + _skKws.join(", ") + " at depth" : "") + ".\n\nI'm leading a confidential search" + (_skLoc ? " in " + _skLoc : "") + " for a program that will matter well beyond one product cycle. You'd own the hard part from day one.\n\nIf you're open to a conversation, reply with:\n\u2022 Resume\n\u2022 Target compensation\n\u2022 Availability\n\nI'll take it from there.\n\n" + ((typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.name) ? CURRENT_USER.name : "The Staffing Specialist");
   var ta = document.createElement("textarea"); ta.value = _skMsg; ta.readOnly = true; ta.className = "stk-msg";
   w.appendChild(ta);
   var cp = el("button","btn sm stk-copy","Copy Outreach Message"); cp.type = "button";
@@ -5862,8 +5862,8 @@ function makeSourcingBtn(r, tr){
 
     /* Enterprise recruiter directory */
     var dir = el("div","tb-prog-dir");
-    dir.appendChild(el("div","tb-prog-dir-t","Recruiter Directory · Enterprise Resources"));
-    dir.appendChild(el("div","tb-prog-dir-s","One centralized roster. Recruiters serve across all Programs — no duplicate records."));
+    dir.appendChild(el("div","tb-prog-dir-t","Enterprise Talent Team"));
+    dir.appendChild(el("div","tb-prog-dir-s","One Team. One Standard. One Recruiting Engine. — United We Hire. Divided We Lose."));
     var chips = el("div","tb-prog-chips");
     TB_RECRUITER_DIRECTORY.forEach(function(rr){
       var ch = el("span","tb-prog-chip", rr.name);
@@ -6046,236 +6046,209 @@ function makeSourcingBtn(r, tr){
 </style>
 
 <script id="tb-outreach">
-/* ============================================================
-   TalentOutreach™ — Outreach Intelligence Engine (additive)
-   The communication equivalent of TalentFit.
-   Two modes: instant composition engine (no setup) and
-   AI mode (recruiter's own Anthropic API key, optional).
-   ============================================================ */
+
 (function(){
   "use strict";
   if(typeof window === "undefined"){ return; }
-
   var ORG_KEY = (typeof CONFIG !== "undefined" && CONFIG.org) ? CONFIG.org : "elbit";
 
-  /* ---------- Client brand voices ---------- */
+  /* ---------- Client brand voices (one sentence each — never a company history) ---------- */
   var VOICES = {
     elbit: {
       client: "Elbit Systems of America",
-      mission: [
-        "supporting programs that directly impact national security",
-        "building the systems that protect the people who protect us",
-        "modernizing capabilities the warfighter will rely on for decades"
+      companyLine: [
+        "I'm leading a confidential search for one of the country's most advanced defense technology programs.",
+        "I'm running a confidential search inside a defense technology organization whose work will matter for decades."
       ],
-      frame: "one of the country's most consequential defense technology organizations",
-      values: ["mission", "national security", "defense", "leadership", "purpose"],
-      why_now: [
-        "This program is entering a decade-defining growth phase following major contract awards",
-        "The division is scaling in a way that creates rare ground-floor leadership territory",
-        "Funded, long-horizon programs like this open up only a few times in a career"
-      ]
+      whyNow: [
+        "This program is entering a decade-defining phase, and the people who join now will define it",
+        "Searches like this open a handful of times in a career",
+        "The leadership seat is being shaped right now — early voices carry"
+      ],
+      values: ["mission","national security","defense","leadership","purpose"]
     },
     hiarc: {
       client: "HiArc",
-      mission: [
-        "engineering medical devices that clinicians trust with patients' lives",
-        "advancing instrumentation that changes what's possible in patient care",
-        "building precision systems where engineering excellence directly serves medicine"
+      companyLine: [
+        "I'm leading a confidential search for a medical device organization whose instruments clinicians trust with patients' lives.",
+        "I'm running a search for an engineering-led medical device company where the product still carries individual fingerprints."
       ],
-      frame: "an innovation-driven medical device organization in New Hampshire",
-      values: ["innovation", "collaboration", "engineering excellence", "patient impact"],
-      why_now: [
-        "The engineering organization is growing deliberately, and early hires shape how it's built",
-        "New product programs are moving from concept to development right now",
-        "This is the stage where individual engineers still visibly move the product"
-      ]
+      whyNow: [
+        "The engineering organization is being built deliberately, and early hires shape it",
+        "New programs are moving from concept to development right now",
+        "This is the stage where one engineer still visibly moves the product"
+      ],
+      values: ["innovation","patient impact","engineering excellence","collaboration"]
     }
   };
   var VOICE = VOICES[ORG_KEY] || VOICES.elbit;
 
-  /* ---------- Tone styles ---------- */
-  var STYLES = ["Executive","Mission-Driven","Consultative","Direct","Technical","Conversational"];
+  var STYLES = ["Executive","Mission","Direct"];
 
-  /* ---------- Deterministic seeded picker (varied, reproducible, regenerable) ---------- */
+  var BANNED = ["came across","hope you're doing well","exciting opportunity","fifteen minutes","15 minutes",
+                "lines up well","funded requisition","hands-on work","touching base","reaching out to you"];
+
   function mkRand(seedStr){
     var h = 2166136261;
     for(var i=0;i<seedStr.length;i++){ h ^= seedStr.charCodeAt(i); h = Math.imul(h, 16777619); }
     return function(){ h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 10000) / 10000; };
   }
   function pick(rand, arr){ return arr[Math.floor(rand() * arr.length) % arr.length]; }
+  function words(s){ return (s.match(/\S+/g) || []).length; }
 
-  /* ---------- Context assembly (never make the recruiter fill a prompt) ---------- */
   function buildCtx(c, r){
     var ctx = { cand:c || null, req:r || null };
     ctx.first = c ? (c.firstName || (c.lastName||"").split(" ")[0] || "there") : "{first name}";
     ctx.title = c ? (c.title || "") : "";
     ctx.company = c ? (c.company || "") : "";
-    ctx.skills = c ? (c.skills || []).slice(0,4) : [];
+    ctx.skills = c ? (c.skills || []).slice(0,3) : [];
     ctx.roleTitle = r ? (r.title || r.role || "") : "";
-    ctx.roleOfficial = r ? (r.role || r.title || "") : "";
     ctx.loc = r ? (r.loc || "") : "";
-    ctx.comp = r ? (r.compTarget && !/still working/i.test(r.compTarget) ? r.compTarget : "") : "";
-    ctx.program = (r && typeof reqProgram === "function") ? reqProgram(r) : "";
     ctx.senior = /director|vp|chief|head|principal|senior manager|sr\.? manager|executive/i.test((ctx.title||"") + " " + (ctx.roleTitle||""));
     ctx.fit = null;
     try{
       if(c && typeof BOARD !== "undefined" && BOARD.scoreCandidate){
         var f = BOARD.scoreCandidate(c);
-        if(f && f.best){ ctx.fit = { score:f.best.score, verdict:f.best.verdict, reasons:(f.best.reasons||[]).slice(0,3) }; }
+        if(f && f.best){ ctx.fit = { score:f.best.score, verdict:f.best.verdict, reasons:(f.best.reasons||[]).slice(0,2) }; }
       }
     }catch(e){}
     return ctx;
   }
 
-  /* ---------- The composition engine (framework: Recognition → Mission → Opportunity → Future → CTA) ---------- */
+  function signoff(){
+    var n = (typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.name) ? CURRENT_USER.name : "";
+    return n ? ("\n\n" + n + "\nThe Staffing Specialist") : "\n\nThe Staffing Specialist";
+  }
+
+  /* ---------- Compose: Why me → Why this → Why now → CTA. 75–150 words. Then stop. ---------- */
   function compose(ctx, style, variant, mods){
     mods = mods || {};
     var rand = mkRand([ctx.first, ctx.roleTitle, style, variant].join("|"));
-    var v = VOICE;
-    var p = [];
+    var roleShort = (ctx.title || "").replace(/^(Sr\.?|Senior|Staff|Principal|Lead)\s+/i,"");
 
-    /* 1 — Recognition */
-    var recog;
-    var creds = [];
-    if(ctx.title){ creds.push(ctx.title.toLowerCase().replace(/^(a|an)\s+/,"")); }
-    if(ctx.company){ creds.push("your work at " + ctx.company); }
-    if(ctx.skills.length){ creds.push(ctx.skills.slice(0,2).join(" and ")); }
+    /* 1 — Why me (recognition, first two sentences must stop the scroll) */
+    var whyMe;
     if(ctx.cand){
-      recog = pick(rand, [
-        "Your background stood out immediately — very few " + (ctx.title ? ctx.title.replace(/^Sr\.?\s|^Senior\s/i,"") + "s" : "people in your field") + " have combined " + (ctx.skills.length ? ctx.skills.slice(0,3).join(", ") : "depth and leadership") + " at the level you have" + (ctx.company ? " at " + ctx.company : "") + ".",
-        "I don't reach out casually — your profile" + (ctx.company ? " and your track record at " + ctx.company : "") + " put you in a very short group I'm contacting about this.",
-        "I've reviewed a lot of backgrounds for this search. Yours is one of the few where the alignment is obvious" + (ctx.fit && ctx.fit.score >= 70 ? " — our internal fit analysis agrees" : "") + "."
-      ]);
+      if(style === "Executive"){
+        whyMe = pick(rand, [
+          "Very few " + (roleShort ? roleShort + "s" : "leaders") + " have combined " + (ctx.skills.length ? ctx.skills.slice(0,2).join(" and ") : "depth and leadership") + " at the level your background demonstrates.",
+          "I don't send many messages like this. Your track record" + (ctx.company ? " at " + ctx.company : "") + " is the reason for this one."
+        ]);
+      } else if(style === "Mission"){
+        whyMe = pick(rand, [
+          "Very few engineers have built the kind of systems you have" + (ctx.company ? " at " + ctx.company : "") + ".",
+          "Your background stood out for one reason: the work you've done" + (ctx.company ? " at " + ctx.company : "") + " is exactly what this mission requires."
+        ]);
+      } else {
+        whyMe = pick(rand, [
+          "Your background stood out for one reason: " + (ctx.skills.length >= 2 ? ctx.skills[0] + " plus " + ctx.skills[1] : "the depth of your experience") + (ctx.company ? " at " + ctx.company : "") + ". That combination is rare.",
+          "Two things about your profile made me stop: " + (ctx.skills.length >= 2 ? ctx.skills[0] + " and " + ctx.skills[1] : "range and depth") + ". Most people have one."
+        ]);
+      }
     } else {
-      recog = "I'm reaching out to a very small group of " + (ctx.roleTitle || "professionals") + " whose backgrounds specifically match what this search requires.";
+      whyMe = "I'm contacting a very short list of " + (ctx.roleTitle || "professionals") + " whose backgrounds match what this search demands. Yours is on it.";
     }
-    p.push("Hi " + ctx.first + ",\n\n" + recog);
 
-    /* 2 — Mission */
-    p.push(pick(rand, [
-      "I'm leading a confidential search for " + v.frame + " — " + pick(rand, v.mission) + ".",
-      "The organization behind this search is " + v.frame + ". The work here is about " + pick(rand, v.mission) + "."
-    ]));
-
-    /* 3 — Opportunity */
-    var opp = "The role is " + (ctx.roleTitle || "a senior position") + (ctx.loc ? " based in " + ctx.loc : "") + (ctx.comp ? " (target compensation " + ctx.comp + ")" : "") + ".";
+    /* 2 — Why this (company: ONE sentence · role: the challenge, not the JD) */
+    var company = pick(rand, VOICE.companyLine);
+    var challenge;
     if(style === "Executive" || ctx.senior){
-      opp += " " + pick(rand, [
-        "This isn't a maintain-the-machine seat — it's the chance to define how " + (ctx.program || "an entire division") + " operates for the next decade.",
-        "The mandate is ownership: build the function, set the standard, and be accountable for what it becomes."
+      challenge = pick(rand, [
+        "You'd own how " + (ctx.roleTitle || "this function") + " gets built — the standard, the team, the outcome.",
+        "The mandate is ownership: define it, build it, answer for it."
       ]);
-    } else if(style === "Technical"){
-      opp += " " + pick(rand, [
-        "The technical scope is real" + (ctx.skills.length ? " — day one involves exactly the " + ctx.skills[0] + " work you've been doing" : "") + ", with hardware that ships and programs that matter.",
-        "You'd be hands-on with " + (ctx.skills.length ? ctx.skills.slice(0,2).join(" and ") : "the core engineering") + " on funded, long-horizon programs."
-      ]);
+    } else if(style === "Direct"){
+      challenge = "The role: " + (ctx.roleTitle || "senior engineer") + (ctx.loc ? ", " + ctx.loc : "") + ". You'd own the hard part from day one.";
     } else {
-      opp += " " + pick(rand, [
-        "It's a role with visible impact — the kind where your work is on the product, not buried under it.",
-        "What makes it different is scope: real ownership, an engaged hiring manager, and a funded req."
-      ]);
+      challenge = "You'd help define the future architecture of something that matters well beyond one product cycle.";
     }
-    p.push(opp);
 
-    /* 4 — Future / why now */
-    p.push(pick(rand, v.why_now) + ".");
+    /* 3 — Why now (one line) */
+    var whyNow = pick(rand, VOICE.whyNow) + ".";
 
-    /* 5 — CTA */
-    var cta;
-    if(style === "Executive" || style === "Consultative"){
-      cta = "If you've reached the point where building something meaningful matters more than maintaining what exists, this conversation is worth 15 minutes. Reply here and I'll share the full picture — role, comp, and why this one is different.";
-    } else {
-      cta = "If you're open to hearing more, just reply with:\n• Resume\n• Current / target compensation\n• Best phone number\n• Availability this week\n\nI'll share the details from there.";
-    }
-    p.push(cta);
+    /* 4 — CTA (three things, nothing more) */
+    var cta = "If you're open to a conversation, reply with:\n• Resume\n• Target compensation\n• Availability\n\nI'll take it from there.";
 
-    var msg = p.join("\n\n");
-
-    /* modifiers */
-    if(mods.shorter){ msg = p.filter(function(_,i){ return i !== 3; }).join("\n\n"); }
+    var parts = ["Hi " + ctx.first + ",", whyMe, company + " " + challenge, whyNow, cta];
+    if(mods.shorter){ parts.splice(3,1); }                 /* drop why-now */
     if(mods.longer && ctx.fit && ctx.fit.reasons && ctx.fit.reasons.length){
-      msg = msg.replace(cta, "Specifically: " + ctx.fit.reasons.join("; ") + ".\n\n" + cta);
+      parts.splice(3, 0, "Specifically: " + ctx.fit.reasons.join("; ") + ".");
     }
-    if(mods.personal && ctx.company){
-      msg = msg.replace("Hi " + ctx.first + ",\n\n", "Hi " + ctx.first + ",\n\nI'll be direct about why you specifically: " + (ctx.company ? ctx.company : "your background") + " is exactly the environment this role draws from.\n\n");
-    }
-    return msg;
+    return parts.join("\n\n") + signoff();
   }
 
+  /* ---------- Follow-ups: shorter each time, curiosity intact ---------- */
   function followUps(ctx, style){
-    var v = VOICE; var rand = mkRand("fu|" + ctx.first + ctx.roleTitle + style);
+    var rand = mkRand("fu|" + ctx.first + ctx.roleTitle + style);
+    var so = signoff();
     return [
-      { day:3, label:"Follow-up 1", text:"Hi " + ctx.first + ",\n\nFollowing up on my note about the " + (ctx.roleTitle||"role") + ". One detail I didn't mention: " + pick(rand, v.why_now).toLowerCase() + ". Worth a quick call?\n\nEither way, I'd appreciate a yes or no so I'm not cluttering your inbox." },
-      { day:7, label:"Follow-up 2", text:"Hi " + ctx.first + ",\n\nNo pitch this time — just context. " + pick(rand, v.mission).charAt(0).toUpperCase() + pick(rand, v.mission).slice(1) + " is the actual day-to-day here, and the hiring manager is personally reviewing every profile I send. Yours would go to the top of that list." },
-      { day:14, label:"Follow-up 3", text:"Hi " + ctx.first + ",\n\nTiming is usually the real obstacle, not interest. If now isn't right, tell me when to circle back — 3 months, 6 months — and I will. If it's a hard no, that's useful too." },
-      { day:21, label:"Breakup", text:"Hi " + ctx.first + ",\n\nI'll close the loop here — last note from me on this one. If anything changes, my line is always open, and I'll think of you first when the next exceptional " + (ctx.title || ctx.roleTitle || "opportunity") + " search crosses my desk.\n\nWishing you the best either way." }
+      { day:3, label:"Follow-up 1", text:"Hi " + ctx.first + ",\n\nOne thing I left out: " + pick(rand, VOICE.whyNow).toLowerCase() + ". If that changes anything, you know the three things to send." + so },
+      { day:7, label:"Follow-up 2", text:"Hi " + ctx.first + ",\n\nNo pitch. Just this: the hiring manager personally reviews every profile I submit, and yours would go first. A yes or no either way helps us both." + so },
+      { day:14, label:"Follow-up 3", text:"Hi " + ctx.first + ",\n\nTiming beats interest — it usually does. Tell me when to circle back: three months, six, or never. All three are useful answers." + so },
+      { day:21, label:"Breakup", text:"Hi " + ctx.first + ",\n\nClosing the loop — last note from me on this search. When the next exceptional one crosses my desk, I'll think of you first. My line stays open." + so }
     ];
   }
 
-  /* ---------- Scoring (heuristic, honest) ---------- */
+  /* ---------- Scoring (honest, measured) ---------- */
   function scoreMsg(msg, ctx){
     function stars(x){ return Math.max(1, Math.min(5, Math.round(x))); }
+    var wc = words(msg);
     var personalTokens = 0;
     [ctx.first, ctx.title, ctx.company].concat(ctx.skills).forEach(function(t){
       if(t && t !== "{first name}" && msg.indexOf(t) >= 0){ personalTokens++; }
     });
+    var banned = BANNED.filter(function(b){ return msg.toLowerCase().indexOf(b) >= 0; });
     var pers = stars(1 + personalTokens * 0.9);
-    var exec = stars(3 + (/decade|ownership|mandate|standard|consequential|confidential/i.test(msg) ? 1.2 : 0) - (/!|amazing|exciting opportunity|perfect fit/i.test(msg) ? 1.5 : 0));
-    var miss = stars(2 + (VOICE.values.filter(function(w){ return msg.toLowerCase().indexOf(w) >= 0; }).length));
-    var cta  = stars(3 + (/reply|call|15 minutes|availability/i.test(msg) ? 1.4 : 0));
-    var sents = msg.split(/[.!?]\s/).length;
-    var clar = stars(5 - Math.max(0, (msg.length - 1400) / 400));
-    var overall = stars((pers + exec + miss + cta + clar) / 5);
-    var rate = Math.min(44, Math.round(6 + pers*3.2 + exec*2.4 + miss*1.8 + cta*2.2 + (ctx.fit && ctx.fit.score >= 70 ? 6 : 0)));
+    var exec = stars(4 + (banned.length ? -2.5 : 0) - (/!|amazing/i.test(msg) ? 1.5 : 0));
+    var miss = stars(2 + (VOICE.values.filter(function(w){ return msg.toLowerCase().indexOf(w) >= 0; }).length) + (/mission|matters|decade|define/i.test(msg) ? 1 : 0));
+    var curi = stars(3 + (/one reason|left out|don't send many|stopped|short list|rare/i.test(msg) ? 1.4 : 0) + (wc <= 150 ? .6 : -1));
+    var brev = stars(wc >= 75 && wc <= 150 ? 5 : (wc < 75 ? 3.5 : Math.max(1, 5 - (wc - 150) / 40)));
+    var overall = stars((pers + exec + miss + curi + brev) / 5);
+    var rate = Math.min(46, Math.round(8 + pers*3 + exec*2.6 + curi*2.6 + brev*1.6 + (ctx.fit && ctx.fit.score >= 70 ? 6 : 0) - banned.length*6));
     var coach = [];
-    coach.push(personalTokens >= 3 ? "✓ Strong personalization — " + personalTokens + " candidate-specific details" : "△ Add more candidate-specific detail (title, company, skills)");
-    coach.push(exec >= 4 ? "✓ Executive tone — ownership language, no sales words" : "△ Tone could be more executive — try 'More Executive'");
-    coach.push(miss >= 4 ? "✓ Client mission clearly present" : "△ Mission could be stronger — try 'More Mission-Focused'");
-    coach.push(cta >= 4 ? "✓ Clear, low-friction call to action" : "△ CTA could be simpler");
-    coach.push(msg.length <= 1900 ? "✓ Within LinkedIn InMail limits (" + msg.length + "/1900)" : "✗ Over InMail limit (" + msg.length + "/1900) — use 'Shorter'");
+    coach.push(wc >= 75 && wc <= 150 ? "✓ " + wc + " words — inside the 75–150 executive window" : (wc < 75 ? "△ " + wc + " words — could earn one more specific line" : "✗ " + wc + " words — over 150; use 'Shorter'"));
+    coach.push(banned.length === 0 ? "✓ Zero recruiter clichés" : "✗ Banned phrase detected: “" + banned[0] + "” — regenerate");
+    coach.push(personalTokens >= 3 ? "✓ Written for this one person — " + personalTokens + " specific details" : "△ Add specificity — try 'More Personal'");
+    coach.push(/reply with/i.test(msg) ? "✓ Three-item CTA: resume, target comp, availability" : "△ CTA drifted — regenerate");
+    coach.push(miss >= 4 ? "✓ Mission carries the message" : "△ Try the Mission style for this audience");
     if(ctx.fit){ coach.push("✓ TalentFit " + ctx.fit.score + "% (" + ctx.fit.verdict + ") factored into targeting"); }
-    return { personalization:pers, executiveTone:exec, missionAlignment:miss, engagement:cta, clarity:clar,
+    return { personalization:pers, executiveTone:exec, missionAlignment:miss, engagement:curi, clarity:brev,
              overall:overall, responseRate:rate, coach:coach };
   }
 
-  /* ---------- Optional AI mode (recruiter's own Anthropic key) ---------- */
+  /* ---------- Optional AI mode ---------- */
   function aiKey(){ try{ return localStorage.getItem("tb_anthropic_key") || ""; }catch(e){ return ""; } }
   async function aiGenerate(ctx, style, current){
     var key = aiKey(); if(!key){ throw new Error("no-key"); }
-    var sys = "You are TalentOutreach, the outreach engine inside TalentBase, writing as a Fortune-100-caliber executive recruiter for " + VOICE.client + ". Voice: " + VOICE.values.join(", ") + ". Framework, in order: Recognition (why THIS person), Mission (why this company), Opportunity (why this role), Future (why now), CTA. Style: " + style + ". Hard rules: under 1900 characters, no exclamation marks, no 'exciting opportunity', no emojis, never sound like AI or an agency. It must read as written exclusively for this one person.";
-    var user = "DATA:\n" + JSON.stringify({ candidate: ctx.cand ? { name:ctx.first, title:ctx.title, company:ctx.company, skills:ctx.skills } : null, role: { title:ctx.roleTitle, official:ctx.roleOfficial, location:ctx.loc, comp:ctx.comp, program:ctx.program }, talentfit: ctx.fit }, null, 1)
-      + (current ? "\n\nCURRENT DRAFT (beat it — more specific, more human, higher predicted response):\n" + current : "")
+    var sys = "You are TalentOutreach inside TalentBase, writing as an elite executive recruiter for " + VOICE.client + ". Structure: Why me (recognition — the first two sentences must stop a passive executive from scrolling), Why this (company in ONE sentence selling mission/impact/future — never history; role as a challenge: own/build/define/lead — never a job description), Why now (one line), then a CTA asking for exactly three things: resume, target compensation, availability. HARD RULES: 75-150 words total. Style: " + style + " (Executive = Fortune 500 tone; Mission = purpose and impact; Direct = brief and confident). BANNED: 'I came across', 'I hope you're doing well', 'exciting opportunity', 'fifteen minutes', 'lines up well', 'stable funded role', 'hands-on work', exclamation marks, emojis, anything a staffing agency would write. Tone: Apple, Palantir, SpaceX. Create curiosity; leave them wanting more; then stop.";
+    var user = "DATA:\n" + JSON.stringify({ candidate: ctx.cand ? { name:ctx.first, title:ctx.title, company:ctx.company, skills:ctx.skills } : null, role: { title:ctx.roleTitle, location:ctx.loc }, talentfit: ctx.fit }, null, 1)
+      + (current ? "\n\nCURRENT DRAFT (beat it — sharper recognition, more curiosity, same length discipline):\n" + current : "")
       + "\n\nReturn ONLY the message text.";
     var res = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
       headers:{ "content-type":"application/json", "x-api-key":key,
                 "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" },
-      body: JSON.stringify({ model:"claude-sonnet-4-5", max_tokens:1200,
-        system:sys, messages:[{ role:"user", content:user }] })
+      body: JSON.stringify({ model:"claude-sonnet-4-5", max_tokens:900, system:sys, messages:[{ role:"user", content:user }] })
     });
     if(!res.ok){ throw new Error("API " + res.status); }
     var j = await res.json();
     return (j.content && j.content[0] && j.content[0].text || "").trim();
   }
 
-  /* ---------- UI ---------- */
+  /* ---------- UI (unchanged structure; three styles) ---------- */
   function starRow(n){
     var s = el("span","tor-stars");
     for(var i=1;i<=5;i++){ s.appendChild(el("i","tor-star" + (i<=n ? " on" : ""), "★")); }
     return s;
   }
-
   function buildPanel(c, r){
     var ctx = buildCtx(c, r);
     var state = { style:"Executive", variant:0, mods:{}, tab:"inmail", msg:"", fus:[] };
-
     var w = el("div","tor");
     var head = el("div","tor-head");
     head.appendChild(el("span","tor-logo","TalentOutreach™"));
     head.appendChild(el("span","tor-sub","Outreach Intelligence · " + VOICE.client + (ctx.cand ? " → " + (ctx.cand.firstName||"") + " " + (ctx.cand.lastName||"") : "")));
     w.appendChild(head);
-
-    /* tone chips */
     var tones = el("div","tor-tones");
     STYLES.forEach(function(st){
       var t = el("button","tor-tone" + (st === state.style ? " on" : ""), st); t.type = "button";
@@ -6283,8 +6256,6 @@ function makeSourcingBtn(r, tr){
       tones.appendChild(t);
     });
     w.appendChild(tones);
-
-    /* tabs */
     var tabs = el("div","tor-tabs");
     var TABS = [["inmail","LinkedIn InMail · Day 0"],["email","Cold Email"],["fu0","Follow-up · Day 3"],["fu1","Follow-up · Day 7"],["fu2","Follow-up · Day 14"],["fu3","Breakup · Day 21"]];
     TABS.forEach(function(tb){
@@ -6293,10 +6264,8 @@ function makeSourcingBtn(r, tr){
       tabs.appendChild(b);
     });
     w.appendChild(tabs);
-
-    var ta = document.createElement("textarea"); ta.className = "tor-msg"; ta.readOnly = false;
+    var ta = document.createElement("textarea"); ta.className = "tor-msg";
     w.appendChild(ta);
-
     var act = el("div","tor-actions");
     var cp = el("button","btn sm","Copy Message"); cp.type = "button";
     cp.addEventListener("click", function(){ try{ navigator.clipboard.writeText(ta.value); cp.textContent = "Copied ✓"; setTimeout(function(){ cp.textContent = "Copy Message"; },1500); }catch(e){} });
@@ -6305,7 +6274,6 @@ function makeSourcingBtn(r, tr){
     imp.addEventListener("click", function(){ improve(); });
     act.appendChild(imp);
     var aiTag = el("span","tor-aitag", aiKey() ? "AI mode: on (Claude)" : "Engine mode · add an Anthropic API key for AI mode");
-    aiTag.title = "Click to set / clear your Anthropic API key (stored only in this browser)";
     aiTag.style.cursor = "pointer";
     aiTag.addEventListener("click", function(){
       var k = prompt("Anthropic API key for AI mode (stored only in this browser; leave empty to clear):", aiKey());
@@ -6313,14 +6281,8 @@ function makeSourcingBtn(r, tr){
     });
     act.appendChild(aiTag);
     w.appendChild(act);
-
-    /* modifiers */
     var modsRow = el("div","tor-mods");
-    [["More Executive", function(){ state.style="Executive"; }],
-     ["More Mission-Focused", function(){ state.style="Mission-Driven"; }],
-     ["More Technical", function(){ state.style="Technical"; }],
-     ["More Personal", function(){ state.mods.personal = true; }],
-     ["More Direct", function(){ state.style="Direct"; }],
+    [["More Personal", function(){ state.mods.personal = true; }],
      ["Shorter", function(){ state.mods.shorter = true; state.mods.longer = false; }],
      ["Longer", function(){ state.mods.longer = true; state.mods.shorter = false; }],
      ["↻ Regenerate", function(){ state.variant++; }]
@@ -6330,11 +6292,8 @@ function makeSourcingBtn(r, tr){
       modsRow.appendChild(b);
     });
     w.appendChild(modsRow);
-
-    /* scores */
     var sc = el("div","tor-score");
     w.appendChild(sc);
-
     function paintScores(msg){
       var s = scoreMsg(msg, ctx);
       sc.innerHTML = "";
@@ -6349,7 +6308,7 @@ function makeSourcingBtn(r, tr){
       hero.appendChild(ov);
       sc.appendChild(hero);
       var grid = el("div","tor-score-grid");
-      [["Personalization",s.personalization],["Executive Tone",s.executiveTone],["Mission Alignment",s.missionAlignment],["Engagement",s.engagement],["Clarity",s.clarity]].forEach(function(pair){
+      [["Personalization",s.personalization],["Executive Tone",s.executiveTone],["Mission Alignment",s.missionAlignment],["Curiosity",s.engagement],["Brevity",s.clarity]].forEach(function(pair){
         var rowEl = el("div","tor-score-row");
         rowEl.appendChild(el("span","tor-score-k", pair[0]));
         rowEl.appendChild(starRow(pair[1]));
@@ -6361,15 +6320,13 @@ function makeSourcingBtn(r, tr){
       s.coach.forEach(function(line){ coach.appendChild(el("div","tor-coach-l", line)); });
       sc.appendChild(coach);
     }
-
     function currentText(){
       if(state.tab === "inmail"){ return state.msg; }
-      if(state.tab === "email"){ return "Subject: " + (ctx.roleTitle || "A confidential search") + " — worth 15 minutes?\n\n" + state.msg; }
+      if(state.tab === "email"){ return "Subject: " + (ctx.roleTitle || "A confidential search") + " — why you, specifically\n\n" + state.msg; }
       var i = parseInt(state.tab.slice(2), 10);
       return (state.fus[i] || {}).text || "";
     }
     function paint(){ ta.value = currentText(); paintScores(state.tab === "inmail" || state.tab === "email" ? state.msg : ta.value); }
-
     function regen(keepMsg){
       if(!keepMsg){ state.msg = compose(ctx, state.style, "v" + state.variant, state.mods); }
       state.fus = followUps(ctx, state.style);
@@ -6391,13 +6348,11 @@ function makeSourcingBtn(r, tr){
       }
       paint(); imp.disabled = false; imp.textContent = was;
     }
-
     regen(false);
     return w;
   }
   window.buildTalentOutreach = buildPanel;
 
-  /* ---------- Mount 1: candidate edit modal (after TalentFit) ---------- */
   if(typeof openDetail === "function"){
     var _openDetail = openDetail;
     window.openDetail = function(c){
@@ -6418,8 +6373,6 @@ function makeSourcingBtn(r, tr){
       }catch(eM){}
     };
   }
-
-  /* ---------- Mount 2: Sourcing Toolkit (per req) ---------- */
   if(typeof buildSourcingToolkit === "function"){
     var _bst = buildSourcingToolkit;
     window.buildSourcingToolkit = function(r){
@@ -6456,6 +6409,13 @@ function makeSourcingBtn(r, tr){
 .ent-progs-l{ font-weight:700; color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.5px; }
 .ent-team{ font-size:11px; color:var(--muted); margin-bottom:12px; border-top:1px solid var(--line); padding-top:10px; }
 .tb-subprog{ margin-left:14px; font-size:12px; display:flex; justify-content:space-between; }
+
+.tb-creed{ border:1px solid var(--line); border-left:4px solid var(--gold); border-radius:12px;
+  background:var(--panel); padding:16px 20px; margin:2px 0 16px; box-shadow:var(--shadow-sm); }
+.tb-creed-t{ font-size:11px; font-weight:700; letter-spacing:1.2px; color:var(--gold); margin-bottom:4px; }
+.tb-creed-l{ font-size:16px; font-weight:700; letter-spacing:-.2px; color:var(--ink); }
+.tb-creed-m{ font-size:12px; font-weight:600; color:var(--muted); margin-top:3px; letter-spacing:.3px; }
+
 .ppl-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:12px; }
 .ppl-card{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 16px; box-shadow:var(--shadow-sm);
   display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
@@ -6622,7 +6582,7 @@ function makeSourcingBtn(r, tr){
   }
   function renderRecruiters(){
     var host = document.getElementById("list"); host.innerHTML = "";
-    document.getElementById("viewTitle").textContent = "Recruiter Directory";
+    document.getElementById("viewTitle").textContent = "Enterprise Talent Team";
     var byRec = {};
     Object.keys(META).forEach(function(id){ var m = META[id];
       if(!m.r || m.r === "Not Assigned"){ return; }
@@ -6631,7 +6591,12 @@ function makeSourcingBtn(r, tr){
       if(m.s === "Open"){ b.open++; } if(m.m === "TalentBench"){ b.bench++; }
       b.reqs.push({id:id, t:m.t, d:m.d, m:m.m, s:m.s});
     });
-    document.getElementById("viewMeta").textContent = Object.keys(byRec).length + " recruiters · assignments per " + ASOF;
+    document.getElementById("viewMeta").textContent = Object.keys(byRec).length + " recruiters";
+    var creed = el("div","tb-creed");
+    creed.appendChild(el("div","tb-creed-t","ENTERPRISE TALENT TEAM"));
+    creed.appendChild(el("div","tb-creed-l","One Team. One Standard. One Recruiting Engine."));
+    creed.appendChild(el("div","tb-creed-m","United We Hire. Divided We Lose."));
+    host.appendChild(creed);
     var grid = el("div","ppl-grid");
     Object.keys(byRec).sort().forEach(function(name){
       var b = byRec[name];
