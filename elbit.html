@@ -525,7 +525,7 @@ input::placeholder, textarea::placeholder{ color:#9aa1b5; }
  <div id="tabs"></div>
 
  <div style="margin:14px 10px 0;padding:8px 10px;background:#f0f1f6;border-radius:8px;border:1px solid #e2e5ef;">
-  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#676d86;margin-bottom:3px;">Workspace</div>
+  
   <div style="font-size:12px;font-weight:600;color:#111318;">🟦 Elbit Systems of America</div>
  </div>
  <h3>Filters</h3>
@@ -5406,7 +5406,7 @@ function makeSourcingBtn(r, tr){
 .tb-prog-strap-t{ font-size:13px; font-weight:600; color:var(--ink); }
 .tb-prog-strap-s{ font-size:12px; color:var(--muted); letter-spacing:.2px; }
 .tb-prog-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; margin-bottom:24px; }
-.tb-prog-card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px;
+.tb-prog-card{ display:flex; flex-direction:column; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px;
   box-shadow:var(--shadow-sm); position:relative; overflow:hidden;
   transition:transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
 .tb-prog-card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-md); }
@@ -5417,7 +5417,7 @@ function makeSourcingBtn(r, tr){
 .tb-prog-kpis{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px 14px; margin-bottom:16px; }
 .tb-prog-kv{ font-size:20px; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; letter-spacing:-.2px; line-height:1.1; }
 .tb-prog-kl{ font-size:10px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--muted); margin-top:2px; }
-.tb-prog-open{ width:100%; }
+.tb-prog-open{ width:100%; margin-top:auto; }
 .tb-prog-dir{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:var(--shadow-sm); }
 .tb-prog-dir-t{ font-size:12px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; color:var(--ink); margin-bottom:4px; }
 .tb-prog-dir-s{ font-size:12px; color:var(--muted); margin-bottom:12px; }
@@ -5963,6 +5963,7 @@ function makeSourcingBtn(r, tr){
         TB_PROGRAMS.forEach(function(p){
           var st = programStats(p.name);
           var t = el("div","vtab tb-prog-tab" + (window.TB_PROGRAM === p.name ? " tb-prog-on" : ""));
+          t.title = st.reqs + " Open Requisitions — not TalentBench, not filled/closed/cancelled. Sidebar badges always mean Open Requisitions.";
           t.appendChild(el("span", null, p.icon + " " + p.name));
           var cnt = el("span","count", String(st.reqs));
           t.appendChild(cnt);
@@ -6497,7 +6498,8 @@ function makeSourcingBtn(r, tr){
     var strip = el("div","ent-strip");
     [["Departments", names.length],["Open Jobs", tot.open],["Active Candidates", tot.cands],
      ["TalentBench", tot.bench],["Interviews", tot.iv],["Offers", tot.of]].forEach(function(k){
-      var t = el("div","ent-kpi");
+      var STIPS = {"Departments":"Active departments in this client workspace.","Open Jobs":"Open Jobs = requisitions not on TalentBench and not filled, closed, or cancelled. Same rule on every screen.","Active Candidates":"Unique candidates tagged to any requisition, enterprise-wide.","TalentBench":"Requisitions delivered via TalentBench sourcing (a delivery model).","Interviews":"Active candidates currently in any interviewing stage.","Offers":"Active candidates currently at offer pending or accepted."};
+      var t = el("div","ent-kpi"); t.title = STIPS[k[0]] || "";
       t.appendChild(el("div","ent-kpi-v", String(k[1])));
       t.appendChild(el("div","ent-kpi-l", k[0]));
       strip.appendChild(t);
@@ -6516,11 +6518,12 @@ function makeSourcingBtn(r, tr){
       card.appendChild(hd);
       var anchor = el("div","ent-anchor");
       anchor.appendChild(el("span","ent-anchor-v", String(s.open)));
-      anchor.appendChild(el("span","ent-anchor-l","Open Jobs"));
+      var al = el("span","ent-anchor-l","Open Jobs"); al.title = "Open Jobs = requisitions not on TalentBench and not filled, closed, or cancelled. Same rule on every screen."; anchor.appendChild(al);
       card.appendChild(anchor);
       var sec = el("div","ent-secondary");
+      var TIPS = {"Candidates":"Active Candidates = unique candidates tagged to this department's requisitions.","TalentBench":"TalentBench = requisitions delivered via TalentBench sourcing (a delivery model), grouped under this department.","Interviews":"Interviews = active candidates currently in any interviewing stage.","Offers":"Offers = active candidates currently at offer pending or accepted."};
       [["Candidates",s.candidates],["TalentBench",s.bench],["Interviews",s.interviews],["Offers",s.offers]].forEach(function(k){
-        var d2 = el("div","ent-sec-kpi");
+        var d2 = el("div","ent-sec-kpi"); d2.title = TIPS[k[0]] || "";
         d2.appendChild(el("span","ent-sec-v", String(k[1])));
         d2.appendChild(el("span","ent-sec-l", k[0]));
         sec.appendChild(d2);
@@ -6530,7 +6533,8 @@ function makeSourcingBtn(r, tr){
       if(progKeys.length){
         var pr = el("div","ent-progs");
         pr.appendChild(el("span","ent-progs-l","Programs: "));
-        pr.appendChild(el("span",null, progKeys.map(function(k){ return k + " " + s.programs[k]; }).join(" · ")));
+        pr.appendChild(el("span",null, progKeys.map(function(k){ return k + " (" + s.programs[k] + ")"; }).join(" · ")));
+        pr.title = "Programs are initiatives inside this department. Counts are the program's requisitions — a subset of the department total, never added twice.";
         card.appendChild(pr);
       }
       var tm = el("div","ent-team");
@@ -6538,7 +6542,7 @@ function makeSourcingBtn(r, tr){
       tm.textContent = "TA Manager: — · Recruiters: " + recCount + " · Hiring Managers: " + (team.hmCount||0);
       tm.title = "Team per " + ASOF + " — open the People directory for details";
       card.appendChild(tm);
-      var ob = el("button","btn gold tb-prog-open","Enter Workspace →"); ob.type = "button";
+      var ob = el("button","btn gold tb-prog-open","Enter Department →"); ob.type = "button";
       ob.addEventListener("click", function(){ TB_setProgram(p.name); try{ ui.view = "all"; }catch(e){} try{ refresh(); }catch(e){} });
       card.appendChild(ob);
       grid.appendChild(card);
@@ -6712,6 +6716,16 @@ function makeSourcingBtn(r, tr){
       return;
     }
     _prevRenderList();
+    try{
+      if(window.TB_PROGRAM && typeof tbIsClosedReq === "function"){
+        var mEl2 = document.getElementById("viewMeta");
+        if(mEl2 && /candidate/i.test(mEl2.textContent) && mEl2.textContent.indexOf("supporting") < 0){
+          var openN = REQS.filter(function(r){ return reqProgram(r) === window.TB_PROGRAM && !r.bench && !tbIsClosedReq(r); }).length;
+          mEl2.textContent = mEl2.textContent.replace(/candidates?/i, function(w){ return "active " + w.toLowerCase(); })
+                           + " · supporting " + openN + " open requisition" + (openN === 1 ? "" : "s");
+        }
+      }
+    }catch(eCtx){}
   };
 
   /* ============ NAV LAYER ============ */
