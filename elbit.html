@@ -668,7 +668,7 @@ var REQS = CONFIG.reqs;
 var REQ_OPTIONS = CONFIG.reqOptions;
 var ALL_REQ_OPTIONS = CONFIG.reqOptions;
 var PROGRAM_NOTES = {
-  title:"Mobile Tactical Cannon (MTC) Program Notes",
+  title:"Open Requisition Notes",
   intro:"These are the identified roles we are seeking to fill, prioritized using the Rank column on the left.",
   rules:[
     "Location: when DET is listed alongside another location, there is no preference. We are open to candidates in either FTW or DET.",
@@ -3117,8 +3117,8 @@ function renderTalentBench(host){
 
   if(benchReqs.length === 0){
     var em = el("div","empty");
-    em.appendChild(el("div","big","No sourcing reqs yet"));
-    em.appendChild(el("div",null, VIEW_ONLY ? "No sourcing reqs have been added." : "Click \u2018+ Add Sourcing Req\u2019 to get started."));
+    em.appendChild(el("div","big","No Active TalentBench Requisitions"));
+    em.appendChild(el("div",null, VIEW_ONLY ? "TalentBench requisitions will appear here once created." : "Create a TalentBench requisition to begin building this pipeline."));
     host.appendChild(em); return;
   }
 
@@ -6497,8 +6497,8 @@ function makeSourcingBtn(r, tr){
     /* executive KPI strip */
     var strip = el("div","ent-strip");
     [["Departments", names.length],["Open Jobs", tot.open],["Active Candidates", tot.cands],
-     ["TalentBench", tot.bench],["Interviews", tot.iv],["Offers", tot.of]].forEach(function(k){
-      var STIPS = {"Departments":"Active departments in this client workspace.","Open Jobs":"Open Jobs = requisitions not on TalentBench and not filled, closed, or cancelled. Same rule on every screen.","Active Candidates":"Unique candidates tagged to any requisition, enterprise-wide.","TalentBench":"Requisitions delivered via TalentBench sourcing (a delivery model).","Interviews":"Active candidates currently in any interviewing stage.","Offers":"Active candidates currently at offer pending or accepted."};
+     ["TalentBench Reqs", tot.bench],["Interviews", tot.iv],["Offers", tot.of]].forEach(function(k){
+      var STIPS = {"Departments":"Active departments in this client workspace.","Open Jobs":"Open Jobs = requisitions not on TalentBench and not filled, closed, or cancelled. Same rule on every screen.","Active Candidates":"Unique candidates tagged to any requisition, enterprise-wide.","TalentBench Reqs":"Requisitions delivered via TalentBench sourcing (a delivery model). Counts requisitions, never candidates.","Interviews":"Active candidates currently in any interviewing stage.","Offers":"Active candidates currently at offer pending or accepted."};
       var t = el("div","ent-kpi"); t.title = STIPS[k[0]] || "";
       t.appendChild(el("div","ent-kpi-v", String(k[1])));
       t.appendChild(el("div","ent-kpi-l", k[0]));
@@ -6521,8 +6521,8 @@ function makeSourcingBtn(r, tr){
       var al = el("span","ent-anchor-l","Open Jobs"); al.title = "Open Jobs = requisitions not on TalentBench and not filled, closed, or cancelled. Same rule on every screen."; anchor.appendChild(al);
       card.appendChild(anchor);
       var sec = el("div","ent-secondary");
-      var TIPS = {"Candidates":"Active Candidates = unique candidates tagged to this department's requisitions.","TalentBench":"TalentBench = requisitions delivered via TalentBench sourcing (a delivery model), grouped under this department.","Interviews":"Interviews = active candidates currently in any interviewing stage.","Offers":"Offers = active candidates currently at offer pending or accepted."};
-      [["Candidates",s.candidates],["TalentBench",s.bench],["Interviews",s.interviews],["Offers",s.offers]].forEach(function(k){
+      var TIPS = {"Candidates":"Active Candidates = unique candidates tagged to this department's requisitions.","TalentBench Reqs":"TalentBench Reqs = requisitions delivered via TalentBench sourcing (a delivery model), grouped under this department. Counts requisitions, never candidates.","Interviews":"Interviews = active candidates currently in any interviewing stage.","Offers":"Offers = active candidates currently at offer pending or accepted."};
+      [["Candidates",s.candidates],["TalentBench Reqs",s.bench],["Interviews",s.interviews],["Offers",s.offers]].forEach(function(k){
         var d2 = el("div","ent-sec-kpi"); d2.title = TIPS[k[0]] || "";
         d2.appendChild(el("span","ent-sec-v", String(k[1])));
         d2.appendChild(el("span","ent-sec-l", k[0]));
@@ -6554,7 +6554,7 @@ function makeSourcingBtn(r, tr){
       var rec = el("div","tb-recon");
       rec.appendChild(el("div","tb-prog-dir-t","Data Integrity · Reconciliation"));
       var tbl = el("table","tb-recon-tbl"); var th = el("tr");
-      ["Department","Total Reqs","Open","Filled/Closed","TalentBench","Candidates"].forEach(function(h){ th.appendChild(el("th",null,h)); });
+      ["Department","Total Reqs","Open","Filled/Closed","TalentBench Reqs","Candidates"].forEach(function(h){ th.appendChild(el("th",null,h)); });
       var thd = el("thead"); thd.appendChild(th); tbl.appendChild(thd);
       var tb2 = el("tbody"); var sum = {t:0,o:0,c:0,b:0,k:0};
       names.forEach(function(n){ var s = stats[n]; var trr = el("tr");
@@ -6568,6 +6568,30 @@ function makeSourcingBtn(r, tr){
       checks.appendChild(el("div",null,(sum.t===allN?"✓":"✗")+" Department totals sum to all requisitions ("+sum.t+" / "+allN+") — programs are subsets, never added twice"));
       var sheetBench = (typeof REQS!=="undefined"?REQS:[]).filter(function(r){ return r._benchFromSheet; }).length;
       checks.appendChild(el("div",null,"✓ "+sheetBench+" req(s) on TalentBench per the workbook delivery model"));
+      /* Workbook Sync — live dry-run of the 07/14 source of truth against this database */
+      try{
+        var liveIds = {}; (typeof REQS!=="undefined"?REQS:[]).forEach(function(r){ var j=String(r.jobId||"").trim(); if(j){ liveIds[j]=1; } });
+        var sync = { rpoLive:0, rpoMissing:[], benchLive:0, benchMissing:[], naCount:0 };
+        Object.keys(META).forEach(function(id){
+          var m = META[id];
+          if(m.m === "RPO"){ if(liveIds[id]){ sync.rpoLive++; } else { sync.rpoMissing.push(id); } }
+          else if(m.m === "TalentBench"){ if(liveIds[id]){ sync.benchLive++; } else { sync.benchMissing.push(id); } }
+          else { sync.naCount++; }
+        });
+        checks.appendChild(el("div",null,(sync.rpoMissing.length===0?"✓":"△")+" Workbook RPO reqs: "+sync.rpoLive+" live / "+sync.rpoMissing.length+" not yet in this database"));
+        checks.appendChild(el("div",null,(sync.benchMissing.length===0?"✓":"△")+" Workbook TalentBench reqs: "+sync.benchLive+" live / "+sync.benchMissing.length+" not yet in this database"));
+        checks.appendChild(el("div",null,"✓ "+sync.naCount+" N/A rows excluded by rule · 12 HiArc rows excluded (client workspace)"));
+        if(sync.rpoMissing.length || sync.benchMissing.length){
+          var cpm = el("button","btn sm","Copy Missing-Req List"); cpm.type = "button"; cpm.style.marginTop = "6px";
+          cpm.addEventListener("click", function(){
+            var lines = ["TalentBase Workbook Sync — reqs in the 07/14 workbook not found in this database (by Job Req Id)"];
+            sync.rpoMissing.forEach(function(id){ lines.push("RPO\t" + id + "\t" + META[id].t + "\t" + META[id].d); });
+            sync.benchMissing.forEach(function(id){ lines.push("TalentBench\t" + id + "\t" + META[id].t + "\t" + META[id].d); });
+            try{ navigator.clipboard.writeText(lines.join("\n")); cpm.textContent = "Copied ✓"; setTimeout(function(){ cpm.textContent = "Copy Missing-Req List"; },1500); }catch(eC){}
+          });
+          checks.appendChild(cpm);
+        }
+      }catch(eSync){}
       rec.appendChild(checks);
       host.appendChild(rec);
     }catch(eR){}
