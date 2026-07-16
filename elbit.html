@@ -5328,9 +5328,9 @@ function refresh(){ renderTabs(); renderList(); }
 
 document.getElementById("loginBtn").addEventListener("click", function(){ doLogin(); });
 document.getElementById("loginPass").addEventListener("keydown", function(e){ if(e.key === "Enter"){ doLogin(); } });
-document.getElementById("signoutBtn").addEventListener("click", async function(){ if(sb){ await sb.auth.signOut(); } window.location.reload(); });
+document.getElementById("signoutBtn").addEventListener("click", async function(){ try{ sessionStorage.removeItem("tb_ctx"); }catch(eC){} if(sb){ await sb.auth.signOut(); } window.location.reload(); });
 
-document.getElementById("tabs").addEventListener("click", function(e){ var tog = e.target.closest("[data-section-toggle]"); if(tog){ var sname = tog.getAttribute("data-section-toggle"); sectionCollapsed[sname] = !sectionCollapsed[sname]; renderTabs(); return; } var b = e.target.closest("[data-view]"); if(!b){ return; } ui.view = b.getAttribute("data-view"); refresh(); });
+document.getElementById("tabs").addEventListener("click", function(e){ var tog = e.target.closest("[data-section-toggle]"); if(tog){ var sname = tog.getAttribute("data-section-toggle"); sectionCollapsed[sname] = !sectionCollapsed[sname]; renderTabs(); return; } var b = e.target.closest("[data-view]"); if(!b){ return; } var tv = b.getAttribute("data-view"); if(tv === "guide"){ /* Getting Started returns to the ENTERPRISE home — clear stale department/program scope */ try{ window.TB_SUBPROGRAM = ""; if(typeof window.TB_setProgram === "function"){ window.TB_setProgram(""); } else { window.TB_PROGRAM = ""; } }catch(eG){} } ui.view = tv; refresh(); });
 document.getElementById("list").addEventListener("click", function(e){
   if(e.target.closest("[data-stop]")){ return; }
   var addr = e.target.closest("[data-reqadd]"); if(addr){ openReqModal(null); return; }
@@ -7018,16 +7018,17 @@ function makeSourcingBtn(r, tr){
   }
   var _prevRenderList = window.renderList;
   window.renderList = function(){
-    if(!TB_CTX_RESTORED){
-      TB_CTX_RESTORED = true;
-      try{
-        var ctx = JSON.parse(sessionStorage.getItem("tb_ctx") || "null");
-        if(ctx && ctx.v && typeof ui !== "undefined" && ui.view === "guide"){
-          ui.view = ctx.v; window.TB_PROGRAM = ctx.p || ""; window.TB_SUBPROGRAM = ctx.sp || "";
-          try{ renderTabs(); }catch(eT){}
-        }
-      }catch(eR){}
-    }
+    /* LANDING-PAGE FIX (routing correction):
+       The block below used to restore the previous session's view on the
+       FIRST render after sign-in, silently replacing the authoritative
+       default (ui.view = "guide" / Getting Started) with whatever page was
+       open last — typically the Enterprise Overview. That made the metrics
+       dashboard the de-facto landing page.
+       The one authoritative default is "guide". Navigation is only changed
+       when the user intentionally clicks a page during the current session.
+       Context saving (tbSaveCtx) is retained for diagnostics, but it is no
+       longer allowed to override the landing route at boot. */
+    if(!TB_CTX_RESTORED){ TB_CTX_RESTORED = true; }
     tbSaveCtx();
     var v = (typeof ui !== "undefined") ? ui.view : "";
     if(v === "tb_programs"){ renderOverview(); return; }
