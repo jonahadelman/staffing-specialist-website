@@ -1093,7 +1093,8 @@ function renderFollowUpWorklist(host){
   upcoming.sort(function(a,b){ return (a.nextFollowUp||"").localeCompare(b.nextFollowUp||""); });
   noFu.sort(function(a,b){ return fullName(a).localeCompare(fullName(b)); });
 
-  document.getElementById("viewMeta").textContent = "Follow-Up Worklist";
+  var dueN = overdue.length + dueToday.length + upcoming.length;
+  document.getElementById("viewMeta").textContent = dueN + " follow-up" + (dueN === 1 ? "" : "s") + " due (" + overdue.length + " overdue · " + dueToday.length + " today · " + upcoming.length + " upcoming) · " + noFu.length + " active without a scheduled follow-up";
 
   var strip = el("div"); strip.style.cssText = "display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-size:13px;font-weight:700";
   function chip(label, n, colorVar){ var w = el("span"); w.style.cssText = "display:inline-flex;align-items:center;gap:6px;color:" + cssVar(colorVar); var dot = el("span"); dot.style.cssText = "width:9px;height:9px;border-radius:2px;display:inline-block;background:" + cssVar(colorVar); w.appendChild(dot); w.appendChild(document.createTextNode(label + ": " + n)); return w; }
@@ -1103,7 +1104,7 @@ function renderFollowUpWorklist(host){
   host.appendChild(strip);
 
   var banner = el("div"); banner.style.cssText = "font-size:12px;color:var(--muted);margin-bottom:14px;font-style:italic";
-  banner.textContent = "Showing all active candidates. Filters are intentionally disabled in this view.";
+  banner.textContent = "Triage worklist: due follow-ups shown first; candidates with no scheduled follow-up are in the collapsed section below. Filter dropdowns are intentionally disabled here; search still applies.";
   host.appendChild(banner);
 
   if(overdue.length + dueToday.length + upcoming.length + noFu.length === 0){
@@ -1138,8 +1139,23 @@ function renderFollowUpWorklist(host){
   section("Overdue", overdue, "--red");
   section("Due Today", dueToday, "--yellow");
   section("Upcoming", upcoming, "--green");
-  section("No Follow-Up Scheduled", noFu, "--muted");
   table.appendChild(tb); host.appendChild(table);
+  /* The sidebar badge counts DUE follow-ups only. Candidates without a
+     scheduled follow-up stay available, but behind an explicit, collapsed
+     section so the visible list reconciles with the badge. */
+  if(noFu.length){
+    var nfWrap = el("details"); nfWrap.style.cssText = "margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:0 14px;background:var(--panel)";
+    var nfSum = el("summary"); nfSum.style.cssText = "cursor:pointer;padding:12px 0;font-weight:700;font-size:13px;color:var(--muted)";
+    nfSum.textContent = "No Follow-Up Scheduled (" + noFu.length + " active candidate" + (noFu.length === 1 ? "" : "s") + ") — not counted in the badge";
+    nfWrap.appendChild(nfSum);
+    var nfTable = el("table"); var nfHead = el("thead"); var nfTr = el("tr");
+    ["Candidate","Title / Company","Discipline","Status","Target Reqs","Follow Up","Owner","Action"].forEach(function(h){ nfTr.appendChild(el("th", null, h)); });
+    nfHead.appendChild(nfTr); nfTable.appendChild(nfHead);
+    var nfTb = el("tbody");
+    noFu.forEach(function(c){ nfTb.appendChild(fuRowFor(c)); });
+    nfTable.appendChild(nfTb); nfWrap.appendChild(nfTable);
+    host.appendChild(nfWrap);
+  }
 }
 function renderManagers(host){
   // Editable directory backed by the Supabase managers table. Reqs owned are matched
@@ -6523,8 +6539,15 @@ function makeSourcingBtn(r, tr){
     host.innerHTML = "";
     var tEl = document.getElementById("viewTitle"); if(tEl){ tEl.textContent = "Enterprise Overview"; }
     var names = (window.TB_PROGRAMS||[]).map(function(p){ return p.name; });
-    var stats = {}; var tot = {open:0,bench:0,cands:0,iv:0,of:0};
-    names.forEach(function(n){ var s = deptStats(n); stats[n]=s; tot.open+=s.open; tot.bench+=s.bench; tot.cands+=s.candidates; tot.iv+=s.interviews; tot.of+=s.offers; });
+    var stats = {}; names.forEach(function(n){ stats[n] = deptStats(n); });
+    /* Enterprise tiles come from the central selectors on the FULL dataset —
+       never from summing department cards. Requisitions partition cleanly by
+       department, but a candidate can support reqs in more than one department
+       and must still count once at the enterprise level. */
+    var entC = window.TB_METRICS ? TB_METRICS.counts("","") : null;
+    var tot = entC
+      ? { open: entC.openReqs, bench: entC.benchReqs, cands: entC.activeCandidates, iv: entC.candidatesInterviewing, of: entC.offersPending }
+      : (function(){ var t = {open:0,bench:0,cands:0,iv:0,of:0}; names.forEach(function(n){ var s = stats[n]; t.open+=s.open; t.bench+=s.bench; t.cands+=s.candidates; t.iv+=s.interviews; t.of+=s.offers; }); return t; })();
     var mEl = document.getElementById("viewMeta"); if(mEl){ mEl.textContent = names.length + " departments · " + tot.open + " open requisitions · Enterprise-wide"; }
 
     /* Enterprise Recruiting Snapshot — the ONE authoritative enterprise summary.
@@ -6606,8 +6629,12 @@ function makeSourcingBtn(r, tr){
         [n,s.total,s.open,s.closed,s.bench,s.candidates].forEach(function(v,ix){ trr.appendChild(el("td", ix===0?"nm":null, String(v))); });
         tb2.appendChild(trr); sum.t+=s.total; sum.o+=s.open; sum.c+=s.closed; sum.b+=s.bench; sum.k+=s.candidates; });
       var er = el("tr","tb-recon-ent");
-      ["Enterprise", sum.t, sum.o, sum.c, sum.b, sum.k].forEach(function(v,ix){ er.appendChild(el("td", ix===0?"nm":null, String(v))); });
+      var entUniqueCands = (window.TB_METRICS ? TB_METRICS.counts("","").activeCandidates : sum.k);
+      ["Enterprise", sum.t, sum.o, sum.c, sum.b, entUniqueCands].forEach(function(v,ix){ er.appendChild(el("td", ix===0?"nm":null, String(v))); });
       tb2.appendChild(er); tbl.appendChild(tb2); rec.appendChild(tbl);
+      if(window.TB_METRICS && entUniqueCands !== sum.k){
+        rec.appendChild(el("div","tb-prog-dir-s","Candidates: a candidate supporting requisitions in more than one department counts in each department's row; the Enterprise row shows UNIQUE active candidates (" + entUniqueCands + "), so it is intentionally less than the column sum (" + sum.k + ")."));
+      }
       var allN = (typeof REQS !== "undefined" ? REQS.length : 0);
       var checks = el("div","tb-recon-checks");
       checks.appendChild(el("div",null,(sum.t===allN?"✓":"✗")+" Department totals sum to all requisitions ("+sum.t+" / "+allN+") — programs are subsets, never added twice"));
@@ -6880,7 +6907,8 @@ function makeSourcingBtn(r, tr){
             pk.forEach(function(p){
               var pt = el("div","vtab tb-subprog" + (window.TB_SUBPROGRAM === p ? " tb-prog-on" : ""));
               pt.appendChild(el("span",null,"↳ " + p));
-              pt.appendChild(el("span","count", String(s.programs[p])));
+              /* navigation, not a dashboard — counts live on cards and view headers */
+              pt.title = p + " — " + s.programs[p] + " requisition" + (s.programs[p] === 1 ? "" : "s") + " in " + window.TB_PROGRAM;
               pt.addEventListener("click", function(){ setSub(p); });
               after.parentNode.insertBefore(pt, after.nextSibling);
               after = pt;
