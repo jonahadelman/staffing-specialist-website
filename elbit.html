@@ -5396,5 +5396,318 @@ function makeSourcingBtn(r, tr){
   return b;
 }
 </script>
+
+<style id="tb-programs-css">
+/* ── Recruiting Programs layer ── */
+#tbProgramsNav{ margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--line); }
+.tb-prog-tab{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.tb-prog-tab.tb-prog-on{ background:var(--gold-dim); color:var(--gold); font-weight:600; }
+.tb-prog-strap{ display:flex; flex-direction:column; gap:2px; margin:2px 0 18px; }
+.tb-prog-strap-t{ font-size:13px; font-weight:600; color:var(--ink); }
+.tb-prog-strap-s{ font-size:12px; color:var(--muted); letter-spacing:.2px; }
+.tb-prog-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; margin-bottom:24px; }
+.tb-prog-card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px;
+  box-shadow:var(--shadow-sm); position:relative; overflow:hidden;
+  transition:transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.tb-prog-card:hover{ transform:translateY(-2px); box-shadow:var(--shadow-md); }
+.tb-prog-card::before{ content:""; position:absolute; inset:0 auto 0 0; width:4px; background:var(--prog-c, var(--gold)); }
+.tb-prog-hd{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.tb-prog-ic{ font-size:20px; }
+.tb-prog-nm{ font-size:15px; font-weight:700; letter-spacing:-.1px; color:var(--ink); }
+.tb-prog-kpis{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px 14px; margin-bottom:16px; }
+.tb-prog-kv{ font-size:20px; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; letter-spacing:-.2px; line-height:1.1; }
+.tb-prog-kl{ font-size:10px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--muted); margin-top:2px; }
+.tb-prog-open{ width:100%; }
+.tb-prog-dir{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:var(--shadow-sm); }
+.tb-prog-dir-t{ font-size:12px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; color:var(--ink); margin-bottom:4px; }
+.tb-prog-dir-s{ font-size:12px; color:var(--muted); margin-bottom:12px; }
+.tb-prog-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.tb-prog-chip{ font-size:12px; font-weight:600; color:var(--ink); background:var(--panel2);
+  border:1px solid var(--line); border-radius:999px; padding:5px 12px; }
+.tb-prog-chip.dim{ color:var(--muted); font-weight:500; }
+.tb-prog-badge{ display:inline-block; font-size:11px; font-weight:700; color:var(--gold); background:var(--gold-dim);
+  border-radius:999px; padding:3px 10px; margin-left:10px; vertical-align:2px; letter-spacing:.2px; }
+</style>
+
+<script id="tb-programs">
+/* ============================================================
+   TalentBase Enterprise — Recruiting Programs layer (additive)
+   Wraps existing renderers; no existing function is modified.
+   Remove this <script> block and the app is exactly as before.
+   ============================================================ */
+(function(){
+  "use strict";
+  if(typeof window === "undefined"){ return; }
+
+  /* ---------- Program registry ---------- */
+  var TB_PROGRAMS = [
+    { name:"Chief Technology Office", icon:"🧠", accent:"--purple" },
+    { name:"Corporate",               icon:"🏢", accent:"--gray"   },
+    { name:"Electronic Systems",      icon:"📡", accent:"--cyan"   },
+    { name:"Integrated Solutions",    icon:"🔗", accent:"--teal"   },
+    { name:"Warfighter Systems",      icon:"🛡️", accent:"--gold" }
+  ];
+  var PROGRAM_NAMES = TB_PROGRAMS.map(function(p){ return p.name; });
+
+  /* ---------- Centralized recruiter directory (enterprise resources) ---------- */
+  var TB_RECRUITER_DIRECTORY = [
+    { name:"Holly Abessinio",     programs:["*"] },
+    { name:"Christopher Brannan", programs:["*"] },
+    { name:"Schanna Brewer",      programs:["*"] },
+    { name:"Earl (EJ) Demaree",   programs:["*"] },
+    { name:"Jason Greer",         programs:["*"] },
+    { name:"Anna Hodges",         programs:["*"] },
+    { name:"Taylor Jones",        programs:["*"] },
+    { name:"Bradley Loomis",      programs:["*"] },
+    { name:"Amy Vella",           programs:["*"] },
+    { name:"Shelley Woodcock",    programs:["*"] },
+    { name:"Amie Zick",           programs:["*"] }
+  ];
+  window.TB_RECRUITER_DIRECTORY = TB_RECRUITER_DIRECTORY;
+  window.TB_PROGRAMS = TB_PROGRAMS;
+
+  /* Merge roster into OWNERS (dedupe, keep existing values so no record orphans,
+     keep "Unassigned" last). Purely additive to the dropdowns. */
+  try{
+    if(typeof OWNERS !== "undefined" && OWNERS && OWNERS.length){
+      var una = OWNERS.indexOf("Unassigned") >= 0;
+      var merged = OWNERS.filter(function(o){ return o !== "Unassigned"; });
+      TB_RECRUITER_DIRECTORY.forEach(function(rr){
+        if(merged.indexOf(rr.name) < 0){ merged.push(rr.name); }
+      });
+      if(una){ merged.push("Unassigned"); }
+      OWNERS.length = 0;
+      merged.forEach(function(o){ OWNERS.push(o); });
+    }
+  }catch(e0){}
+
+  /* ---------- Req -> Program mapping (migration rules) ----------
+     Order of precedence:
+     1. r.program (future DB column — wins the moment it exists)
+     2. TB_PROGRAM_OVERRIDES by Job ID or "Title – Loc" label
+     3. Keyword rules on role/title/JD
+     4. Site rules
+     5. Fallback: Corporate                                        */
+  var TB_PROGRAM_OVERRIDES = {
+    /* "1289": "Warfighter Systems",            <- by Job ID       */
+    /* "Chief Engineer – FTW/DET": "..."   <- by label        */
+  };
+  window.TB_PROGRAM_OVERRIDES = TB_PROGRAM_OVERRIDES;
+
+  function reqProgram(r){
+    if(!r){ return "Corporate"; }
+    if(r.program && PROGRAM_NAMES.indexOf(r.program) >= 0){ return r.program; }
+    var jid = String(r.jobId || "").trim();
+    if(jid && TB_PROGRAM_OVERRIDES[jid]){ return TB_PROGRAM_OVERRIDES[jid]; }
+    var lbl = (r.title || "") + " – " + (r.loc || "");
+    if(TB_PROGRAM_OVERRIDES[lbl]){ return TB_PROGRAM_OVERRIDES[lbl]; }
+    var hay = ((r.title||"") + " " + (r.role||"") + " " + (r.partner||"") + " " + String(r.jd||"").slice(0,2000)).toLowerCase();
+    if(/\bmtc\b|cannon|iron fist|artillery|turret|warfighter|ground combat/.test(hay)){ return "Warfighter Systems"; }
+    if(/chief technology|\bcto\b|innovation lab|research fellow/.test(hay)){ return "Chief Technology Office"; }
+    if(/\bhr\b|human resources|finance|accounting|legal|contracts|payroll|facilities|talent acquisition/.test(hay)){ return "Corporate"; }
+    if(/integrated solutions|\bils\b|logistics|sustainment|field service|depot/.test(hay)){ return "Integrated Solutions"; }
+    if(/electronic systems|\bew\b|electronic warfare|radar|sensor|night vision|c4isr/.test(hay)){ return "Electronic Systems"; }
+    var site = String(r.loc || "").split(/[\/,\s]/)[0].trim().toUpperCase();
+    if(site === "MMO" || site === "NH" || site === "MERRIMACK" || site === "ROA"){ return "Electronic Systems"; }
+    if(site === "FWO" || site === "FTW" || site === "DET" || site === "CHS" || site === "YUMA" || site === "TAO"){ return "Warfighter Systems"; }
+    return "Corporate";
+  }
+  window.reqProgram = reqProgram;
+
+  function reqLabels(r){
+    return [(r.title||"") + " – " + (r.loc||""), (r.title||"") + " - " + (r.loc||"")];
+  }
+  function programLabelSet(name){
+    var set = {};
+    (typeof REQS !== "undefined" ? REQS : []).forEach(function(r){
+      if(reqProgram(r) === name){ reqLabels(r).forEach(function(l){ set[l] = 1; }); }
+    });
+    return set;
+  }
+  function candProgram(c){
+    var rs = (c && c.reqs) || [];
+    for(var i=0;i<rs.length;i++){
+      for(var j=0;j<(typeof REQS !== "undefined" ? REQS : []).length;j++){
+        var lb = reqLabels(REQS[j]);
+        if(rs[i] === lb[0] || rs[i] === lb[1]){ return reqProgram(REQS[j]); }
+      }
+    }
+    return null;
+  }
+  window.candProgram = candProgram;
+
+  /* ---------- Active program state ---------- */
+  window.TB_PROGRAM = "";   /* "" = Enterprise (everything, exactly as today) */
+
+  function setProgram(name){
+    window.TB_PROGRAM = name || "";
+    try{ if(typeof BOARD !== "undefined" && BOARD.clearScoreCache){ BOARD.clearScoreCache(); } }catch(eB){}
+    try{ refresh(); }catch(eR){}
+  }
+  window.TB_setProgram = setProgram;
+
+  /* ---------- Program counts ---------- */
+  function programStats(name){
+    var reqs = (typeof REQS !== "undefined" ? REQS : []).filter(function(r){ return reqProgram(r) === name; });
+    var open = reqs.filter(function(r){ return !r.bench; }).length;
+    var bench = reqs.filter(function(r){ return !!r.bench; }).length;
+    var labels = {};
+    reqs.forEach(function(r){ reqLabels(r).forEach(function(l){ labels[l] = 1; }); });
+    var cands = ((typeof state !== "undefined" && state.candidates) || []).filter(function(c){
+      return (c.reqs||[]).some(function(l){ return labels[l]; });
+    });
+    var interviews = cands.filter(function(c){ return /interview/i.test(c.status||""); }).length;
+    var offers = cands.filter(function(c){ return /offer/i.test(c.status||""); }).length;
+    var cid = {}; cands.forEach(function(c){ cid[c.id] = 1; });
+    var acts = ((typeof state !== "undefined" && state.activities) || []).filter(function(a){
+      return cid[a.candidateId] || cid[a.candidate_id] || cid[a.cand_id];
+    }).length;
+    return { reqs:open, bench:bench, candidates:cands.length, interviews:interviews, offers:offers, activity:acts };
+  }
+
+  /* ---------- Filtered render (the whole point) ----------
+     One wrapper around renderList covers every view the router
+     dispatches: reqs, bench, pipeline, dashboards, calendar,
+     candidates, reports. Globals are swapped for the duration of
+     the synchronous render and always restored.                  */
+  function withProgramScope(fn){
+    var name = window.TB_PROGRAM;
+    if(!name){ return fn(); }
+    var oR = REQS, oO = REQ_OPTIONS, oA = (typeof ALL_REQ_OPTIONS !== "undefined") ? ALL_REQ_OPTIONS : null;
+    var oC = state.candidates, oAct = state.activities, oIR = state.interviewRequests;
+    try{
+      var keep = oR.filter(function(r){ return reqProgram(r) === name; });
+      REQS = keep;
+      REQ_OPTIONS = keep.filter(function(r){ return !r.bench; }).map(function(r){ return r.title + " – " + r.loc; });
+      if(oA !== null){ ALL_REQ_OPTIONS = keep.map(function(r){ return r.title + " – " + r.loc; }); }
+      var labels = {}; keep.forEach(function(r){ reqLabels(r).forEach(function(l){ labels[l] = 1; }); });
+      state.candidates = oC.filter(function(c){ return (c.reqs||[]).some(function(l){ return labels[l]; }); });
+      var cid = {}; state.candidates.forEach(function(c){ cid[c.id] = 1; });
+      state.activities = (oAct||[]).filter(function(a){ return cid[a.candidateId] || cid[a.candidate_id]; });
+      state.interviewRequests = (oIR||[]).filter(function(q){ return !q.candidateId || cid[q.candidateId]; });
+      return fn();
+    } finally {
+      REQS = oR; REQ_OPTIONS = oO; if(oA !== null){ ALL_REQ_OPTIONS = oA; }
+      state.candidates = oC; state.activities = oAct; state.interviewRequests = oIR;
+    }
+  }
+
+  /* ---------- Programs Home (the new homepage view) ---------- */
+  function renderProgramsHome(){
+    var host = document.getElementById("list"); if(!host){ return; }
+    host.innerHTML = "";
+    var tEl = document.getElementById("viewTitle"); if(tEl){ tEl.textContent = "Recruiting Programs"; }
+    var totalOpen = 0, totalC = 0;
+    var statsByName = {};
+    TB_PROGRAMS.forEach(function(p){ var st = programStats(p.name); statsByName[p.name] = st; totalOpen += st.reqs; totalC += st.candidates; });
+    var mEl = document.getElementById("viewMeta"); if(mEl){ mEl.textContent = totalOpen + " open reqs · " + totalC + " candidates across " + TB_PROGRAMS.length + " programs"; }
+
+    var strap = el("div","tb-prog-strap");
+    strap.appendChild(el("span","tb-prog-strap-t","Elbit Systems of America · Enterprise Recruiting Operating System"));
+    strap.appendChild(el("span","tb-prog-strap-s","We Build Recruiting Organizations™"));
+    host.appendChild(strap);
+
+    var grid = el("div","tb-prog-grid");
+    TB_PROGRAMS.forEach(function(p){
+      var st = statsByName[p.name];
+      var card = el("div","tb-prog-card");
+      card.style.setProperty("--prog-c", "var(" + p.accent + ")");
+      var hd = el("div","tb-prog-hd");
+      hd.appendChild(el("span","tb-prog-ic", p.icon));
+      hd.appendChild(el("span","tb-prog-nm", p.name));
+      card.appendChild(hd);
+      var kp = el("div","tb-prog-kpis");
+      [["Open Reqs",st.reqs],["Candidates",st.candidates],["TalentBench",st.bench],
+       ["Interviews",st.interviews],["Offers",st.offers],["Activity",st.activity]].forEach(function(pair){
+        var k = el("div","tb-prog-kpi");
+        k.appendChild(el("div","tb-prog-kv", String(pair[1])));
+        k.appendChild(el("div","tb-prog-kl", pair[0]));
+        kp.appendChild(k);
+      });
+      card.appendChild(kp);
+      var ob = el("button","btn gold tb-prog-open","Open Workspace →"); ob.type = "button";
+      ob.addEventListener("click", function(){ setProgram(p.name); try{ ui.view = "all"; }catch(e){} try{ refresh(); }catch(e){} });
+      card.appendChild(ob);
+      grid.appendChild(card);
+    });
+    host.appendChild(grid);
+
+    /* Enterprise recruiter directory */
+    var dir = el("div","tb-prog-dir");
+    dir.appendChild(el("div","tb-prog-dir-t","Recruiter Directory · Enterprise Resources"));
+    dir.appendChild(el("div","tb-prog-dir-s","One centralized roster. Recruiters serve across all Programs — no duplicate records."));
+    var chips = el("div","tb-prog-chips");
+    TB_RECRUITER_DIRECTORY.forEach(function(rr){
+      var ch = el("span","tb-prog-chip", rr.name);
+      chips.appendChild(ch);
+    });
+    chips.appendChild(el("span","tb-prog-chip dim","Not Assigned"));
+    dir.appendChild(chips);
+    host.appendChild(dir);
+  }
+
+  /* ---------- Wrap renderList (router) ---------- */
+  if(typeof renderList === "function"){
+    var _renderList = renderList;
+    window.renderList = function(){
+      if(typeof ui !== "undefined" && ui.view === "tb_programs"){ renderProgramsHome(); return; }
+      withProgramScope(function(){ _renderList(); });
+      if(window.TB_PROGRAM){
+        var tEl = document.getElementById("viewTitle");
+        if(tEl && tEl.textContent.indexOf(window.TB_PROGRAM) !== 0){
+          tEl.textContent = window.TB_PROGRAM + " · " + tEl.textContent;
+        }
+      }
+    };
+  }
+
+  /* ---------- Wrap renderTabs (sidebar nav) ---------- */
+  if(typeof renderTabs === "function"){
+    var _renderTabs = renderTabs;
+    window.renderTabs = function(){
+      _renderTabs();
+      try{
+        var host = document.getElementById("tabs"); if(!host){ return; }
+        var old = document.getElementById("tbProgramsNav"); if(old){ old.parentNode.removeChild(old); }
+        var sec = el("div"); sec.id = "tbProgramsNav";
+        var h = el("h3", null, "Recruiting Programs"); sec.appendChild(h);
+        var home = el("div","vtab" + ((typeof ui !== "undefined" && ui.view === "tb_programs") ? " active" : ""), "⭐ Programs Home");
+        home.setAttribute("data-view","tb_programs");
+        sec.appendChild(home);
+        var ent = el("div","vtab tb-prog-tab" + (!window.TB_PROGRAM ? " tb-prog-on" : ""), "🌐 Enterprise (All)");
+        ent.addEventListener("click", function(){ setProgram(""); });
+        sec.appendChild(ent);
+        TB_PROGRAMS.forEach(function(p){
+          var st = programStats(p.name);
+          var t = el("div","vtab tb-prog-tab" + (window.TB_PROGRAM === p.name ? " tb-prog-on" : ""));
+          t.appendChild(el("span", null, p.icon + " " + p.name));
+          var cnt = el("span","count", String(st.reqs));
+          t.appendChild(cnt);
+          t.addEventListener("click", function(){ setProgram(window.TB_PROGRAM === p.name ? "" : p.name); });
+          sec.appendChild(t);
+        });
+        host.insertBefore(sec, host.firstChild);
+      }catch(eT){}
+    };
+  }
+
+  /* ---------- Program badge on req view modal ---------- */
+  if(typeof viewReq === "function"){
+    var _viewReq = viewReq;
+    window.viewReq = function(r){
+      _viewReq(r);
+      try{
+        var mh = document.querySelector("#modal .mhead");
+        if(mh && !mh.querySelector(".tb-prog-badge")){
+          var bg = el("span","tb-prog-badge", reqProgram(r));
+          var h2 = mh.querySelector("h2");
+          if(h2){ h2.appendChild(bg); } else { mh.appendChild(bg); }
+        }
+      }catch(eV){}
+    };
+  }
+})();
+
+</script>
 </body>
 </html>
