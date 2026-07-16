@@ -5958,7 +5958,10 @@ function makeSourcingBtn(r, tr){
         home.setAttribute("data-view","tb_programs");
         sec.appendChild(home);
         var ent = el("div","vtab tb-prog-tab" + (!window.TB_PROGRAM ? " tb-prog-on" : ""), "🌐 Enterprise (All)");
-        ent.addEventListener("click", function(){ setProgram(""); });
+        ent.addEventListener("click", function(){
+          try{ if(typeof ui !== "undefined" && String(ui.view).indexOf("tb_people_") === 0){ ui.view = "tb_programs"; } }catch(eE){}
+          (window.TB_setProgram || setProgram)("");
+        });
         sec.appendChild(ent);
         TB_PROGRAMS.forEach(function(p){
           var st = programStats(p.name);
@@ -5967,7 +5970,15 @@ function makeSourcingBtn(r, tr){
           t.appendChild(el("span", null, p.icon + " " + p.name));
           var cnt = el("span","count", String(st.reqs));
           t.appendChild(cnt);
-          t.addEventListener("click", function(){ setProgram(window.TB_PROGRAM === p.name ? "" : p.name); });
+          t.addEventListener("click", function(){
+            var target = (window.TB_PROGRAM === p.name ? "" : p.name);
+            try{
+              if(typeof ui !== "undefined" && (ui.view === "tb_programs" || String(ui.view).indexOf("tb_people_") === 0)){
+                ui.view = target ? "all" : "tb_programs";   /* entering a department lands on its candidates; leaving returns to Overview */
+              }
+            }catch(eNavV){}
+            (window.TB_setProgram || setProgram)(target);
+          });
           sec.appendChild(t);
         });
         host.insertBefore(sec, host.firstChild);
@@ -6717,8 +6728,23 @@ function makeSourcingBtn(r, tr){
   }
 
   /* ============ ROUTER LAYER (chains over the Departments layer) ============ */
+  var TB_CTX_RESTORED = false;
+  function tbSaveCtx(){
+    try{ sessionStorage.setItem("tb_ctx", JSON.stringify({ v: (typeof ui !== "undefined" ? ui.view : ""), p: window.TB_PROGRAM || "", sp: window.TB_SUBPROGRAM || "" })); }catch(e){}
+  }
   var _prevRenderList = window.renderList;
   window.renderList = function(){
+    if(!TB_CTX_RESTORED){
+      TB_CTX_RESTORED = true;
+      try{
+        var ctx = JSON.parse(sessionStorage.getItem("tb_ctx") || "null");
+        if(ctx && ctx.v && typeof ui !== "undefined" && ui.view === "guide"){
+          ui.view = ctx.v; window.TB_PROGRAM = ctx.p || ""; window.TB_SUBPROGRAM = ctx.sp || "";
+          try{ renderTabs(); }catch(eT){}
+        }
+      }catch(eR){}
+    }
+    tbSaveCtx();
     var v = (typeof ui !== "undefined") ? ui.view : "";
     if(v === "tb_programs"){ renderOverview(); return; }
     if(v === "tb_people_rec"){ renderRecruiters(); return; }
