@@ -1686,6 +1686,12 @@ function renderGuide(host){
   var activeCands=cands.filter(function(c){ return c.status!=="Archived"&&c.status!=="Offer Accepted - Hired"; });
   var interviewing=cands.filter(function(c){ return ["Interviewing Stage 1","Interviewing Stage 2","Interviewing Stage 3","Panel / Final Interview","Interviewing"].indexOf(c.status)!==-1; });
   var isHiarc=ORG==="hiarc";
+  /* Scoped home header: what am I looking at + how many records (the layer
+     wrappers prefix the department/program name to this title). */
+  if(window.TB_PROGRAM){
+    var _ht = document.getElementById("viewTitle"); if(_ht){ _ht.textContent = "Home"; }
+    document.getElementById("viewMeta").textContent = activeCands.length + " active candidate" + (activeCands.length === 1 ? "" : "s") + " · supporting " + openReqs.length + " open requisition" + (openReqs.length === 1 ? "" : "s");
+  }
 
   /* ── shared design system helpers ── */
   function d(css){ var e=document.createElement("div"); if(css)e.style.cssText=css; return e; }
@@ -1854,7 +1860,7 @@ function renderGuide(host){
   /* ══ 2. TODAY'S WORK ══ */
   var twWrap=d("margin-bottom:32px;");
   twWrap.appendChild(sh("Today's Work"));
-  var twGrid=d("display:grid;grid-template-columns:repeat(5,1fr);gap:12px;");
+  var twGrid=d("display:grid;grid-template-columns:repeat(4,1fr);gap:12px;");
 
   function workCard(val,label,sub,viewId,color,action){
     var c=d("background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:22px 18px 16px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;");
@@ -1867,8 +1873,9 @@ function renderGuide(host){
     return c;
   }
 
-  [[interviewing.length,"Currently Interviewing","Candidates in interview stages","interviewing","var(--gold)","Open"],
-   [irsWeek.length,"Interviews This Week","Scheduled requests","calendar","var(--gold)","Open"],
+  /* Action tiles only — "Candidates Interviewing" lives once, in the
+     Recruiting Snapshot below (one meaning, one place). */
+  [[irsWeek.length,"Interviews This Week","Scheduled requests","calendar","var(--gold)","Open"],
    [irs.length,"Interview Requests","All active requests","interviewrequests","var(--gold)","Open"],
    [submitted.length,"Pending HM Review","Submitted candidates awaiting hiring manager feedback","submitted","var(--gold)","Review"],
    [followUp.length,"Follow-Ups Due","Candidates needing action","followup","var(--gold)","Review"]].forEach(function(a){ twGrid.appendChild(workCard(a[0],a[1],a[2],a[3],a[4],a[5])); });
@@ -1877,7 +1884,7 @@ function renderGuide(host){
 
   /* ══ 3. RECRUITING SNAPSHOT ══ */
   var snapWrap=d("margin-bottom:32px;");
-  snapWrap.appendChild(sh("Recruiting Snapshot — " + (window.TB_PROGRAM ? (window.TB_PROGRAM + (window.TB_SUBPROGRAM ? " / " + window.TB_SUBPROGRAM : "")) : "Enterprise")));
+  snapWrap.appendChild(sh("Recruiting Snapshot — " + (window.TB_SUBPROGRAM ? window.TB_SUBPROGRAM + " Program" : (window.TB_PROGRAM || "Enterprise"))));
   var snapGrid=d("display:grid;grid-template-columns:repeat(5,1fr);gap:12px;");
 
   function snapCard(val,label,viewId,color){
@@ -1901,6 +1908,33 @@ function renderGuide(host){
    [offerP.length,"Offers Pending","offerpending","var(--gold)"]].forEach(function(a){ snapGrid.appendChild(snapCard(a[0],a[1],a[2],a[3])); });
   snapWrap.appendChild(snapGrid);
   wrap.appendChild(snapWrap);
+
+  /* ══ 3b. PROGRAMS INSIDE THIS DEPARTMENT ══
+     Shown only on a department home: each program with its two headline
+     numbers (central selectors), clickable into the program workspace. */
+  if(window.TB_PROGRAM && !window.TB_SUBPROGRAM && window.TB_METRICS && typeof window.tbProgOf === "function"){
+    var progSet = {};
+    REQS.forEach(function(r){ var p = window.tbProgOf(r); if(p){ progSet[p] = 1; } });
+    var progNames = Object.keys(progSet).sort();
+    if(progNames.length){
+      var pgWrap = d("margin-bottom:32px;");
+      pgWrap.appendChild(sh("Programs — " + window.TB_PROGRAM));
+      var pgGrid = d("display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;");
+      progNames.forEach(function(pn){
+        var pc = TB_METRICS.counts(window.TB_PROGRAM, pn);
+        var c = d("background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:20px 18px 16px;cursor:pointer;transition:all .15s;");
+        c.addEventListener("mouseenter",function(){ this.style.boxShadow="0 6px 22px rgba(0,0,0,.1)"; this.style.borderColor="var(--gold)"; this.style.transform="translateY(-2px)"; });
+        c.addEventListener("mouseleave",function(){ this.style.boxShadow=""; this.style.borderColor="var(--line)"; this.style.transform=""; });
+        c.addEventListener("click",function(){ window.TB_SUBPROGRAM = pn; try{ if(typeof BOARD !== "undefined" && BOARD.clearScoreCache){ BOARD.clearScoreCache(); } }catch(e){} refresh(); });
+        c.appendChild(t("div", pn, "font-size:15px;font-weight:800;color:var(--ink);margin-bottom:10px;"));
+        c.appendChild(t("div", pc.openReqs + " Open Requisition" + (pc.openReqs === 1 ? "" : "s"), "font-size:13px;font-weight:600;color:var(--gold);margin-bottom:3px;"));
+        c.appendChild(t("div", pc.activeCandidates + " Active Candidate" + (pc.activeCandidates === 1 ? "" : "s"), "font-size:13px;font-weight:600;color:var(--muted);"));
+        pgGrid.appendChild(c);
+      });
+      pgWrap.appendChild(pgGrid);
+      wrap.appendChild(pgWrap);
+    }
+  }
 
   /* ══ 4. CORE WORKSPACES ══ */
   var wsWrap=d("margin-bottom:32px;");
@@ -6599,10 +6633,11 @@ function makeSourcingBtn(r, tr){
       card.appendChild(sec);
       var progKeys = Object.keys(s.programs);
       if(progKeys.length){
+        /* Executive card: count only. Program detail lives inside the department. */
         var pr = el("div","ent-progs");
         pr.appendChild(el("span","ent-progs-l","Programs: "));
-        pr.appendChild(el("span",null, progKeys.map(function(k){ return k + " (" + s.programs[k] + " req" + (s.programs[k] === 1 ? "" : "s") + ")"; }).join(" · ")));
-        pr.title = "Programs are initiatives inside this department. Counts are the program's requisitions — a subset of the department total, never added twice.";
+        pr.appendChild(el("span",null, String(progKeys.length)));
+        pr.title = progKeys.join(" · ") + " — open the department to see program detail.";
         card.appendChild(pr);
       }
       var tm = el("div","ent-team");
@@ -6611,7 +6646,8 @@ function makeSourcingBtn(r, tr){
       tm.title = "Team per " + ASOF + " — open the People directory for details";
       card.appendChild(tm);
       var ob = el("button","btn gold tb-prog-open","Enter Department →"); ob.type = "button";
-      ob.addEventListener("click", function(){ TB_setProgram(p.name); try{ ui.view = "all"; }catch(e){} try{ refresh(); }catch(e){} });
+      /* Land on the department home (scoped snapshot + programs), not a raw list. */
+      ob.addEventListener("click", function(){ TB_setProgram(p.name); try{ ui.view = "guide"; }catch(e){} try{ refresh(); }catch(e){} });
       card.appendChild(ob);
       grid.appendChild(card);
     });
@@ -6857,10 +6893,20 @@ function makeSourcingBtn(r, tr){
         if(oA !== null){ ALL_REQ_OPTIONS = keep.map(function(r){ return r.title + " – " + r.loc; }); }
         _prevRenderList();
       } finally { REQS = oR; REQ_OPTIONS = oO; if(oA !== null){ ALL_REQ_OPTIONS = oA; } }
+      /* Program pages own their header — one hierarchy level per header.
+         "MTC Program · Open Requisitions", never "Dept / MTC · ...". */
       var tEl = document.getElementById("viewTitle");
-      if(tEl && tEl.textContent.indexOf(window.TB_PROGRAM) === 0 && tEl.textContent.indexOf("/ " + window.TB_SUBPROGRAM) < 0){
-        tEl.textContent = tEl.textContent.replace(window.TB_PROGRAM, window.TB_PROGRAM + " / " + window.TB_SUBPROGRAM);
+      if(tEl && tEl.textContent.indexOf(window.TB_PROGRAM) === 0){
+        tEl.textContent = tEl.textContent.replace(window.TB_PROGRAM + " · ", window.TB_SUBPROGRAM + " Program · ").replace(window.TB_PROGRAM, window.TB_SUBPROGRAM + " Program");
       }
+      /* Program-scope context line: candidates views state what they support. */
+      try{
+        var mSub = document.getElementById("viewMeta");
+        if(mSub && /candidate/i.test(mSub.textContent) && mSub.textContent.indexOf("supporting") < 0 && window.TB_METRICS){
+          var subOpen = TB_METRICS.counts(window.TB_PROGRAM, window.TB_SUBPROGRAM).openReqs;
+          mSub.textContent = mSub.textContent + " · supporting " + subOpen + " open requisition" + (subOpen === 1 ? "" : "s");
+        }
+      }catch(eSubM){}
       return;
     }
     _prevRenderList();
