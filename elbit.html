@@ -522,12 +522,9 @@ input::placeholder, textarea::placeholder{ color:#9aa1b5; }
 
 <div class="wrap layout">
  <aside class="side" id="sideNav">
- <h3>Talent Operations</h3>
+ <h3 id="wsName">Workspace</h3>
  <div id="tabs"></div>
 
- <div style="margin:14px 10px 0;padding:8px 10px;background:#f0f1f6;border-radius:8px;border:1px solid #e2e5ef;">
-  
-  <div style="font-size:12px;font-weight:600;color:#111318;display:flex;align-items:center;gap:7px;"><span style="width:8px;height:8px;border-radius:50%;background:#3B5BFF;flex-shrink:0;"></span>Elbit Systems of America</div>
  </div>
  <h3>Filters</h3>
  <div class="filterbox">
@@ -565,6 +562,11 @@ var CONFIG = {"company": "Elbit", "brand": "Elbit Systems", "subtitle": "Talent 
 /*CONFIG_END*/
 
 var ORG = CONFIG.org;
+/* Workspace identity: the sidebar leads with the CLIENT, not internal jargon */
+try{
+  var __ws = document.getElementById("wsName");
+  if(__ws){ __ws.textContent = (ORG === "hiarc") ? "HiARC" : "Elbit Systems of America"; }
+}catch(eWs){}
 
 /* ============================================================================
    TalentBench Enhancement (ADDITIVE) — Requisition Priority + Sourcing Status
@@ -876,12 +878,12 @@ var VIEWS = [
   { id:"interviewrequests", collapsible:true, name:"Interview Requests", fn:function(){ return true; }, special:"interviewrequests", section:"My Work" },
   { id:"all", collapsible:true, name:"All Candidates", fn:function(){ return true; }, section:"Candidates" },
   { id:"pipeline", collapsible:true, name:"Hiring Pipeline", fn:function(){ return true; }, special:"pipeline", section:"Candidates" },
+  { id:"byreq", collapsible:true, name:"Candidates by Position", fn:function(c){ return c.status !== "Archived"; }, special:"byreq", section:"Candidates" },
+  { id:"bydisc", collapsible:true, name:"Candidates by Function", fn:function(c){ return c.status !== "Archived"; }, group:"discipline", section:"Candidates" },
   { id:"submitted", collapsible:true, name:"Submitted to HM", fn:function(c){ return c.status === "Submitted"; }, section:"Candidates" },
   { id:"offerpending", collapsible:true, name:"Offer Pending", fn:function(c){ return c.status === "Offer Pending"; }, section:"Candidates" },
   { id:"offeraccepted", collapsible:true, name:"Hired", fn:function(c){ return c.status === "Offer Accepted - Hired"; }, section:"Candidates" },
-  { id:"reqs", collapsible:true, name:"Open Requisitions", fn:function(){ return true; }, special:"reqs", section:"Requisitions" },
-  { id:"byreq", collapsible:true, name:"By Requisition", fn:function(c){ return c.status !== "Archived"; }, special:"byreq", section:"Requisitions" },
-  { id:"bydisc", collapsible:true, name:"By Discipline", fn:function(c){ return c.status !== "Archived"; }, group:"discipline", section:"Requisitions" },
+  { id:"reqs", name:"Open Positions", fn:function(){ return true; }, special:"reqs" },
   { id:"talentbench", name:"TalentBench", fn:function(){ return true; }, special:"talentbench" },
   { id:"board", collapsible:true, name:"TalentFit Board", fn:function(){ return true; }, special:"board", section:"Sourcing" },
   { id:"resumecheck", collapsible:true, name:"Resume Review", fn:function(){ return true; }, special:"resumecheck", section:"Sourcing" },
@@ -889,10 +891,10 @@ var VIEWS = [
   { id:"calendar", collapsible:true, name:"Interview Calendar", fn:function(){ return true; }, special:"calendar", section:"Interview Operations" },
   { id:"interviewing", collapsible:true, name:"Currently Interviewing", fn:function(c){ return c.status === "Interviewing Stage 1" || c.status === "Interviewing Stage 2" || c.status === "Interviewing Stage 3" || c.status === "Panel / Final Interview" || c.status === "Interviewing"; }, section:"Interview Operations" },
   { id:"dashboard", collapsible:true, name:"Analytics Dashboard", fn:function(){ return true; }, special:"dashboard", section:"Analytics" },
-  { id:"managers", collapsible:true, name:"Hiring Managers", fn:function(){ return true; }, special:"managers", section:"Organization" },
-  { id:"tarejected", name:"TA Rejected", fn:function(c){ return c.status === "TA Rejected"; }, section:"Closed & Archived", collapsible:true },
-  { id:"hmrejected", name:"HM Rejected", fn:function(c){ return c.status === "HM Rejected"; }, section:"Closed & Archived", collapsible:true },
-  { id:"archive", name:"Archive", fn:function(c){ return c.status === "Archived"; }, section:"Closed & Archived", collapsible:true },
+  { id:"managers", collapsible:true, name:"Hiring Manager Dashboard", fn:function(){ return true; }, special:"managers", section:"Organization" },
+  { id:"tarejected", hidden:true, name:"TA Rejected", fn:function(c){ return c.status === "TA Rejected"; }, section:"Closed & Archived", collapsible:true },
+  { id:"hmrejected", hidden:true, name:"HM Rejected", fn:function(c){ return c.status === "HM Rejected"; }, section:"Closed & Archived", collapsible:true },
+  { id:"archive", hidden:true, name:"Archive", fn:function(c){ return c.status === "Archived"; }, section:"Closed & Archived", collapsible:true },
   { id:"activecandidates", hidden:true, name:"Active Candidates", fn:function(c){ return window.TB_METRICS ? TB_METRICS.isActiveCand(c) : (c.status !== "Archived" && c.status !== "Offer Accepted - Hired"); } },
   { id:"allactive", hidden:true, name:"All Active Requisitions", fn:function(){ return true; }, special:"activedir" },
   { id:"closedreqs", hidden:true, name:"Closed Requisitions", fn:function(){ return true; }, special:"closeddir" }
@@ -975,7 +977,7 @@ function prioTag(text, varname){ var w = el("span"); w.style.cssText = "display:
 function toast(msg){ var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); }, 1900); }
 
 /* ---------- sidebar ---------- */
-var sectionCollapsed = { "Sourcing": true, "Analytics": true, "Organization": true, "Closed & Archived": true };
+var sectionCollapsed = { "Sourcing": true, "Analytics": true, "Organization": true };
 function fuState(){
   var any = false, overdue = false;
   state.candidates.forEach(function(c){ var fr = followUp(c); if(fr.label !== ""){ any = true; if(fr.label === "Overdue"){ overdue = true; } } });
@@ -6360,8 +6362,7 @@ function makeSourcingBtn(r, tr){
           });
           sec.appendChild(t);
         });
-        var tbAnchor = host.querySelector('[data-section-toggle="Analytics"]');
-        if(tbAnchor){ host.insertBefore(sec, tbAnchor); } else { host.appendChild(sec); }
+        host.insertBefore(sec, host.firstChild); /* workspace identity + departments lead the nav */
       }catch(eT){}
     };
   }
@@ -7299,7 +7300,9 @@ function makeSourcingBtn(r, tr){
     try{
       var nav = document.getElementById("tbProgramsNav"); if(!nav){ return; }
       /* terminology: this layer organizes DEPARTMENTS */
-      var h3 = nav.querySelector("h3"); if(h3){ h3.textContent = "Organization"; }
+      var h3 = nav.querySelector("h3"); if(h3){ h3.textContent = (typeof ORG !== "undefined" && ORG === "hiarc") ? "HiARC" : "Elbit Systems of America"; }
+      /* the injected workspace block provides the client heading — hide the static one */
+      try{ var wsn = document.getElementById("wsName"); if(wsn){ wsn.style.display = "none"; } }catch(eWsn){}
       nav.querySelectorAll(".vtab").forEach(function(t){
         if(t.textContent.indexOf("Programs Home") >= 0){ t.textContent = "Departments"; }
         if(t.textContent.indexOf("Enterprise (All)") >= 0){ t.textContent = "All Departments"; }
@@ -7328,7 +7331,7 @@ function makeSourcingBtn(r, tr){
       if(!document.getElementById("tbPeopleNav")){
         var sec = el("div"); sec.id = "tbPeopleNav";
         /* no separate heading — Recruiters & Hiring Managers live under Organization */
-        [["tb_people_rec","Recruiters"],["tb_people_hm","Hiring Managers"]].forEach(function(pv){
+        [["tb_people_rec","Recruiter Dashboard"],["tb_people_hm","Hiring Manager Dashboard"]].forEach(function(pv){
           var t = el("div","vtab" + ((typeof ui !== "undefined" && ui.view === pv[0]) ? " active" : ""), pv[1]);
           t.setAttribute("data-view", pv[0]);
           sec.appendChild(t);
@@ -7478,6 +7481,9 @@ function makeSourcingBtn(r, tr){
 /* One hover language everywhere */
 .cardtable tr.click:hover,.mgrcards tr:hover,.ircards tr:hover,.ppl-card:hover,.hm-card:hover,.tb-prog-card:hover{
   box-shadow:var(--shadow-md); transform:translateY(-2px); border-color:var(--gold); }
+/* Standalone anchors: Open Positions (blue) · TalentBench (purple) — one dot each */
+.vtab[data-view="reqs"] span::before{ content:""; display:inline-block; width:7px; height:7px;
+  border-radius:50%; background:var(--blue); margin-right:8px; vertical-align:1px; }
 /* TalentBench: restrained purple identity — one dot, no star */
 .vtab[data-view="talentbench"] span::before{ content:""; display:inline-block; width:7px; height:7px;
   border-radius:50%; background:var(--purple); margin-right:8px; vertical-align:1px; }
