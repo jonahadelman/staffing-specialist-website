@@ -344,7 +344,8 @@
 }
 html{ -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
 body{ font-family:var(--font); }
-::selection{ background:var(--gold-dim); color:var(--ink); }
+::selection{ background:#B9C8FF; color:var(--ink); }
+input::selection, textarea::selection{ background:#B9C8FF; color:var(--ink); }
 
 /* ---------- Typography: 7 sizes, 5 weights, defined roles ---------- */
 .toolbar .title{ font-size:18px; font-weight:700; letter-spacing:-.2px; }
@@ -526,7 +527,7 @@ input::placeholder, textarea::placeholder{ color:#9aa1b5; }
 
  <div style="margin:14px 10px 0;padding:8px 10px;background:#f0f1f6;border-radius:8px;border:1px solid #e2e5ef;">
   
-  <div style="font-size:12px;font-weight:600;color:#111318;">🟩 HiARC</div>
+  <div style="font-size:12px;font-weight:600;color:#111318;display:flex;align-items:center;gap:7px;"><span style="width:8px;height:8px;border-radius:50%;background:#16a34a;flex-shrink:0;"></span>HiARC</div>
  </div>
  <h3>Filters</h3>
  <div class="filterbox">
@@ -974,7 +975,7 @@ function prioTag(text, varname){ var w = el("span"); w.style.cssText = "display:
 function toast(msg){ var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); }, 1900); }
 
 /* ---------- sidebar ---------- */
-var sectionCollapsed = { "Sourcing": true, "Interview Operations": true, "Analytics": true, "Organization": true, "Closed & Archived": true };
+var sectionCollapsed = { "Sourcing": true, "Analytics": true, "Organization": true, "Closed & Archived": true };
 function fuState(){
   var any = false, overdue = false;
   state.candidates.forEach(function(c){ var fr = followUp(c); if(fr.label !== ""){ any = true; if(fr.label === "Overdue"){ overdue = true; } } });
@@ -1074,7 +1075,7 @@ function groupBlock(tb, sub, label){
 }
 function rowFor(c){
   var tr = el("tr","click"); tr.setAttribute("data-id", c.id);
-  var td1 = el("td"); var nmEl = el("div","nm", fullName(c)); if(c.opportunity){ var stEl = el("span", null, "\u2605 "); stEl.style.color = cssVar("--gold"); stEl.title = "Opportunity Hire"; nmEl.insertBefore(stEl, nmEl.firstChild); } if(c.dayforceBadge){ var dfEl = el("span", null, " \u2605"); dfEl.style.color = cssVar("--green"); dfEl.title = "Applied to Dayforce"; nmEl.appendChild(dfEl); } td1.appendChild(nmEl); td1.appendChild(el("div","sub2", c.email || c.phone || "")); tr.appendChild(td1);
+  var td1 = el("td"); var nmEl = el("div","nm", fullName(c)); if(c.opportunity){ var stEl = el("span", "flagchip", "Opportunity"); stEl.style.cssText = "margin-left:7px;font-size:9.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:" + cssVar("--gold") + ";background:" + cssVar("--gold") + "1f;border-radius:5px;padding:1px 6px;vertical-align:1px"; stEl.title = "Opportunity Hire"; nmEl.appendChild(stEl); } if(c.dayforceBadge){ var dfEl = el("span", "flagchip", "Dayforce"); dfEl.style.cssText = "margin-left:5px;font-size:9.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:" + cssVar("--green") + ";background:" + cssVar("--green") + "1f;border-radius:5px;padding:1px 6px;vertical-align:1px"; dfEl.title = "Applied to Dayforce"; nmEl.appendChild(dfEl); } td1.appendChild(nmEl); td1.appendChild(el("div","sub2", c.email || c.phone || "")); tr.appendChild(td1);
   var td2 = el("td"); td2.appendChild(el("div", null, c.title || "")); td2.appendChild(el("div","sub2", c.company || "")); tr.appendChild(td2);
   tr.appendChild(el("td","sub2", c.discipline || "-"));
   var td4 = el("td"); td4.appendChild(pill(c.status, STATUS_COLOR[c.status] || "--gray")); tr.appendChild(td4);
@@ -3872,7 +3873,7 @@ function openDetail(c){
     g.appendChild(roField("Location", c.location)); g.appendChild(roField("Discipline", c.discipline));
     g.appendChild(roField("Current Title", c.title)); g.appendChild(roField("Current Company", c.company));
     g.appendChild(roField("Status", c.status)); g.appendChild(roField("Priority", c.priority));
-    if(c.opportunity){ g.appendChild(roField("Flag", "\u2605 Opportunity Hire")); } if(c.dayforceBadge){ g.appendChild(roField("Dayforce", "\u2605 Applied to Dayforce")); }
+    if(c.opportunity){ g.appendChild(roField("Flag", "Opportunity Hire")); } if(c.dayforceBadge){ g.appendChild(roField("Dayforce", "Applied to Dayforce")); }
     g.appendChild(roField("Source", c.source)); g.appendChild(roField("Recruiter", c.owner));
     g.appendChild(roField("Date Received", c.dateReceived)); g.appendChild(roField("Next Follow Up", c.nextFollowUp));
     var sk = el("div","fld full"); sk.appendChild(el("label", null, "Skills")); var skb = el("div"); skb.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;";
@@ -3880,7 +3881,7 @@ function openDetail(c){
     if(!(c.skills||[]).length){ skb.appendChild(el("span","sub2","-")); }
     sk.appendChild(skb); g.appendChild(sk);
     var rqv = el("div","fld full"); rqv.appendChild(el("label", null, "Target Reqs")); var rb = el("div");
-    (c.reqs||[]).forEach(function(r){ var rObj = REQS.filter(function(x){ return (x.title+" – "+x.loc) === r; })[0]; var jid = (rObj && rObj.jobId && /^\d/.test(rObj.jobId)) ? " (▸ "+rObj.jobId+")" : ""; rb.appendChild(el("span","tag gold", r+jid)); }); if(!(c.reqs||[]).length){ rb.appendChild(el("span","sub2","-")); }
+    (c.reqs||[]).forEach(function(r){ var rObj = REQS.filter(function(x){ return (x.title+" – "+x.loc) === r; })[0]; var jid = (rObj && rObj.jobId && /^\d/.test(rObj.jobId)) ? " (Req "+rObj.jobId+")" : ""; rb.appendChild(el("span","tag gold", r+jid)); }); if(!(c.reqs||[]).length){ rb.appendChild(el("span","sub2","-")); }
     rqv.appendChild(rb); g.appendChild(rqv);
     if(c.resumeLink){ var rl = roField("Resume Link", c.resumeLink); rl.className="fld full"; g.appendChild(rl); }
     if(c.linkedin){ var li = el("div","fld full"); li.appendChild(el("label", null, "LinkedIn")); var la = el("a","tag gold","Open LinkedIn profile"); la.href = c.linkedin; la.target = "_blank"; li.appendChild(la); g.appendChild(li); }
@@ -3898,7 +3899,7 @@ function openDetail(c){
     g.appendChild(field("Date Received","dateReceived",c.dateReceived,"date")); g.appendChild(field("Last Contacted","lastContacted",c.lastContacted,"date"));
     g.appendChild(field("Next Follow Up","nextFollowUp",c.nextFollowUp,"date"));
     var skillsF = field("Skills (comma separated)","skills",(c.skills||[]).join(", ")); skillsF.className = "fld full"; g.appendChild(skillsF); body.appendChild(g);
-    var oppWrap = el("div","fld full"); oppWrap.style.marginTop = "12px"; var oppLab = el("label","reqck"); oppLab.style.fontWeight = "600"; var oppCk = el("input"); oppCk.type = "checkbox"; oppCk.setAttribute("data-oppflag","1"); if(c.opportunity){ oppCk.checked = true; } oppLab.appendChild(oppCk); var oppTx = el("span", null, "\u2605 Opportunity Hire \u2013 high potential, no current opening"); oppTx.style.color = cssVar("--gold"); oppLab.appendChild(oppTx); oppWrap.appendChild(oppLab); body.appendChild(oppWrap); var dfWrap = el("div","fld full"); dfWrap.style.marginTop = "10px"; var dfLab = el("label","reqck"); dfLab.style.fontWeight = "600"; var dfCk = el("input"); dfCk.type = "checkbox"; dfCk.setAttribute("data-dayforce","1"); if(c.dayforceBadge){ dfCk.checked = true; } dfLab.appendChild(dfCk); var dfTx = el("span", null, "\u2605 Applied to Dayforce (confirmed applied on careers portal)"); dfTx.style.color = cssVar("--green"); dfLab.appendChild(dfTx); dfWrap.appendChild(dfLab); body.appendChild(dfWrap);
+    var oppWrap = el("div","fld full"); oppWrap.style.marginTop = "12px"; var oppLab = el("label","reqck"); oppLab.style.fontWeight = "600"; var oppCk = el("input"); oppCk.type = "checkbox"; oppCk.setAttribute("data-oppflag","1"); if(c.opportunity){ oppCk.checked = true; } oppLab.appendChild(oppCk); var oppTx = el("span", null, "Opportunity Hire \u2013 high potential, no current opening"); oppTx.style.color = cssVar("--gold"); oppLab.appendChild(oppTx); oppWrap.appendChild(oppLab); body.appendChild(oppWrap); var dfWrap = el("div","fld full"); dfWrap.style.marginTop = "10px"; var dfLab = el("label","reqck"); dfLab.style.fontWeight = "600"; var dfCk = el("input"); dfCk.type = "checkbox"; dfCk.setAttribute("data-dayforce","1"); if(c.dayforceBadge){ dfCk.checked = true; } dfLab.appendChild(dfCk); var dfTx = el("span", null, "Applied to Dayforce (confirmed applied on careers portal)"); dfTx.style.color = cssVar("--green"); dfLab.appendChild(dfTx); dfWrap.appendChild(dfLab); body.appendChild(dfWrap);
     var rqWrap = el("div","fld full"); rqWrap.style.marginTop = "12px"; rqWrap.appendChild(el("label", null, "Target Reqs (tag one or more)"));
     var rg = el("div","reqgrid");
     ALL_REQ_OPTIONS.forEach(function(r, ri){ var rObjC = REQS[ri]; var jidC = (rObjC && rObjC.jobId && rObjC.jobId.match(/^\d/)) ? " – Req "+rObjC.jobId : ""; var lab = el("label","reqck"); var ck = el("input"); ck.type = "checkbox"; ck.setAttribute("data-reqopt", r); if((c.reqs||[]).indexOf(r) !== -1){ ck.checked = true; } lab.appendChild(ck); lab.appendChild(el("span", null, r+jidC)); rg.appendChild(lab); });
@@ -4811,6 +4812,10 @@ function renderInterviewRequests(host){
     var act = el("td"); act.style.whiteSpace = "nowrap";
     var actw = el("div"); actw.style.cssText = "display:flex;gap:8px;align-items:center";
     var vw = el("button","btn sm ghost","View"); vw.setAttribute("data-irview", r.id); actw.appendChild(vw);
+    /* Grid = summary, workspace = details: the whole card is the click target.
+       Reuses the exact same View wiring — no new logic. */
+    tr.style.cursor = "pointer";
+    tr.addEventListener("click", function(e){ if(e.target.closest("button,a")){ return; } vw.click(); });
     if(!VIEW_ONLY){
       var ed = el("button","btn sm ghost","Edit"); ed.setAttribute("data-iredit", r.id); actw.appendChild(ed);
       var dl = el("button","btn sm danger","Delete"); dl.setAttribute("data-irdel", r.id); actw.appendChild(dl);
@@ -4855,7 +4860,18 @@ async function saveInterviewRequest(){
   var m = document.getElementById("modal");
   function v(k){ var e = m.querySelector("[data-field='" + k + "']"); return e ? e.value : ""; }
   function ck(k){ var e = m.querySelector("[data-field='" + k + "']"); return e ? !!e.checked : false; }
-  var cand = v("irCandidate").trim(); if(!cand){ toast("Candidate required"); return; }
+  var cand = v("irCandidate").trim();
+  if(!cand){
+    toast("Candidate required \u2014 pick who this interview is for (top of the form)");
+    var cEl = m.querySelector("[data-field='irCandidate']");
+    if(cEl){
+      try{ cEl.scrollIntoView({ block:"center", behavior:"smooth" }); }catch(eSv){ cEl.scrollIntoView(); }
+      cEl.focus();
+      cEl.style.borderColor = "var(--red)"; cEl.style.boxShadow = "0 0 0 3px rgba(220,38,38,.15)";
+      cEl.addEventListener("input", function once(){ cEl.style.borderColor = ""; cEl.style.boxShadow = ""; cEl.removeEventListener("input", once); });
+    }
+    return;
+  }
   var candId = null; var key = cand.toLowerCase();
   (state.candidates || []).forEach(function(c){ if(fullName(c).toLowerCase() === key){ candId = c.id; } });
   var roleVal = v("irRole").trim(); var reqIdVal = null;
@@ -6646,7 +6662,7 @@ function makeSourcingBtn(r, tr){
     var cp = el("button","btn sm","Copy Message"); cp.type = "button";
     cp.addEventListener("click", function(){ try{ navigator.clipboard.writeText(ta.value); cp.textContent = "Copied ✓"; setTimeout(function(){ cp.textContent = "Copy Message"; },1500); }catch(e){} });
     act.appendChild(cp);
-    var imp = el("button","btn sm gold","✨ Improve"); imp.type = "button";
+    var imp = el("button","btn sm gold","Improve"); imp.type = "button";
     imp.addEventListener("click", function(){ improve(); });
     act.appendChild(imp);
     var aiTag = el("span","tor-aitag", aiKey() ? "AI mode: on (Claude)" : "Engine mode · add an Anthropic API key for AI mode");
@@ -6736,7 +6752,7 @@ function makeSourcingBtn(r, tr){
       try{
         var tfit = document.querySelector("#modal .tfit");
         if(tfit && !document.querySelector("#modal .tor-launch")){
-          var btn = el("button","btn sm gold tor-launch","✉️ TalentOutreach™ — generate outreach"); btn.type = "button";
+          var btn = el("button","btn sm gold tor-launch","TalentOutreach™ — generate outreach"); btn.type = "button";
           btn.addEventListener("click", function(){
             if(document.querySelector("#modal .tor")){ return; }
             var best = null;
@@ -6754,7 +6770,7 @@ function makeSourcingBtn(r, tr){
     window.buildSourcingToolkit = function(r){
       var w = _bst(r);
       try{
-        var btn = el("button","btn sm gold tor-launch","✉️ Open TalentOutreach™"); btn.type = "button";
+        var btn = el("button","btn sm gold tor-launch","Open TalentOutreach™"); btn.type = "button";
         btn.style.marginLeft = "8px";
         btn.addEventListener("click", function(){
           if(w.querySelector(".tor")){ return; }
@@ -7117,14 +7133,23 @@ function makeSourcingBtn(r, tr){
       st.appendChild(el("span","ppl-stat", ownedLive + " active candidates"));
       card.appendChild(st);
       card.classList.add("click");
+      /* Universal card rule: the grid NEVER resizes. Details open in the
+         workspace modal; close returns to the exact same scroll position. */
       card.addEventListener("click", function(){
-        var ex = card.querySelector(".ppl-detail");
-        if(ex){ ex.parentNode.removeChild(ex); return; }
-        var dt = el("div","ppl-detail");
-        b.reqs.slice(0,40).forEach(function(q){
-          dt.appendChild(el("div","ppl-req","["+q.id+"] "+q.t+" · "+q.d+" · "+q.m));
+        var mo = document.getElementById("modal"); mo.innerHTML = "";
+        var mhead = el("div","mhead");
+        mhead.appendChild(el("h2", null, name));
+        var mx = el("button","x","\u00d7"); mx.setAttribute("data-close","1"); mhead.appendChild(mx); mo.appendChild(mhead);
+        var mbody = el("div","mbody");
+        var sub = el("div", null, b.open + " open reqs · " + b.bench + " TalentBench · " + ownedLive + " active candidates");
+        sub.style.cssText = "font-size:12px;color:var(--muted);margin-bottom:12px"; mbody.appendChild(sub);
+        b.reqs.slice(0,80).forEach(function(q){
+          var rw = el("div","ppl-req","["+q.id+"] "+q.t+" · "+q.d+" · "+q.m);
+          rw.style.cssText = "padding:7px 10px;margin-bottom:5px;background:var(--bg);border:1px solid var(--line);border-radius:7px;font-size:12px";
+          mbody.appendChild(rw);
         });
-        card.appendChild(dt);
+        mo.appendChild(mbody);
+        document.getElementById("scrim").classList.add("open");
       });
       grid.appendChild(card);
     });
@@ -7380,6 +7405,79 @@ function makeSourcingBtn(r, tr){
 .vtab:active, tr.click:active{ transform:scale(.995); }
 /* No layout shift on hover-lift cards */
 .cardtable tr.click, .mgrcards tr, .ircards tr{ will-change:transform; }
+/* ═══ COMPACT CARD SYSTEM — recruiter card (.ppl-card) is the universal
+   standard: 12px radius · 14/16 padding · shadow-sm · lift-on-hover.
+   Every grid card matches its footprint. Grids never resize on click. ═══ */
+/* Candidate cards: denser, same fields, faster scan */
+.cardtable tbody{ grid-template-columns:repeat(auto-fill,minmax(min(100%,310px),1fr)); gap:10px; }
+.cardtable tr.click{ border-radius:12px; padding:12px 14px; }
+.cardtable td:nth-child(1) .nm{ font-size:14.5px; }
+.cardtable td:nth-child(2){ margin-top:8px; }
+.cardtable td:nth-child(3){ margin-top:10px; padding-top:10px; }
+.cardtable td:nth-child(3),.cardtable td:nth-child(5),.cardtable td:nth-child(6),.cardtable td:nth-child(7){ margin-top:5px; }
+/* Hiring-manager summary cards: align to the standard footprint */
+.hm-grid{ grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; }
+.hm-card{ border-radius:12px; padding:13px 14px 36px; min-height:168px; gap:5px; }
+.hm-card-nm{ font-size:14.5px; }
+.hm-stat-v{ font-size:15px; }
+/* HM master cards */
+.mgrcards tbody{ grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr)); gap:10px; }
+.mgrcards tr{ border-radius:12px; padding:12px 14px; }
+.mgrcards td:nth-child(1){ font-size:14.5px; }
+/* Interview Request cards: scan fields only — format/panel/length/presentation
+   live in the detail workspace (click any card), not on the card */
+.ircards tbody{ grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr)); gap:10px; }
+.ircards tr{ border-radius:12px; padding:12px 14px; }
+.ircards td:nth-child(1){ font-size:14.5px; }
+.ircards td:nth-child(4),.ircards td:nth-child(5),.ircards td:nth-child(6),.ircards td:nth-child(7){ display:none; }
+.ircards td:nth-child(2){ margin-top:10px; padding-top:10px; }
+.ircards td:nth-child(10){ margin-top:10px; padding-top:10px; }
+/* Department / program cards */
+.tb-prog-card{ border-radius:12px; padding:14px 16px; }
+/* People cards (recruiter standard — unchanged, referenced here as the spec) */
+.ppl-grid{ grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:10px; }
+/* ═══ EFFICIENT CARDS v2 — grid answers "should I click this?", nothing else.
+   Target: 20-30 records scannable per screen. Details/actions = workspace only. ═══ */
+/* Interview Requests: name · position · HM · date · status. Nothing else. */
+.ircards tbody{ grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr)); gap:9px; }
+.ircards tr{ padding:10px 13px; }
+.ircards td:nth-child(10){ display:none; }             /* actions → workspace */
+.ircards td:nth-child(3){ grid-row:2; margin-top:1px; }
+.ircards td:nth-child(2){ grid-row:3; margin-top:8px; padding-top:0; border-top:0; }
+.ircards td:nth-child(8){ grid-row:4; margin-top:3px; }
+.ircards td:nth-child(2)::before{ content:"HM"; flex:0 0 26px; }
+.ircards td:nth-child(8)::before{ content:""; flex:0 0 0; display:none; }
+.ircards td:nth-child(1){ font-size:14px; }
+.ircards td{ font-size:12.5px; }
+/* Candidates: name · title@company · status · target req · follow-up/owner */
+.cardtable tbody{ grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr)); gap:9px; }
+.cardtable tr.click{ padding:10px 13px; }
+.cardtable td:nth-child(1) .nm{ font-size:14px; }
+.cardtable td:nth-child(1) .sub2{ display:none; }      /* email → workspace */
+.cardtable td:nth-child(3){ display:none; }            /* discipline → workspace */
+.cardtable td:nth-child(2){ margin-top:6px; }
+.cardtable td:nth-child(5){ margin-top:8px; padding-top:8px; border-top:1px solid var(--line); }
+.cardtable td:nth-child(5),.cardtable td:nth-child(6),.cardtable td:nth-child(7){ margin-top:4px; }
+.cardtable td:nth-child(5)::before,.cardtable td:nth-child(6)::before,.cardtable td:nth-child(7)::before{ flex:0 0 64px; }
+/* HM summary cards: name · title · stats. Contact info → drawer. */
+.hm-card-contact{ display:none; }
+.hm-card{ min-height:128px; padding:12px 13px 34px; }
+/* Candidate cards: one-line fields, follow-up + owner share a row */
+.cardtable td:nth-child(2), .cardtable td:nth-child(2) .sub2{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cardtable td:nth-child(5) .tag{ max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:inline-block; }
+.cardtable td:nth-child(6){ grid-row:5; grid-column:1; }
+.cardtable td:nth-child(7){ grid-row:5; grid-column:2; justify-self:end; }
+.cardtable td:nth-child(7)::before{ display:none; content:""; flex:0 0 0; }
+.cardtable td:nth-child(6),.cardtable td:nth-child(7){ font-size:12px; }
+.cardtable tbody{ grid-template-columns:repeat(auto-fill,minmax(min(100%,272px),1fr)); }
+/* HM stat tiles: tighter */
+.hm-stat{ padding:5px 2px 4px; }
+.hm-stat-v{ font-size:14px; }
+.hm-card{ min-height:0; }
+.cardtable td:nth-child(6)::before,.cardtable td:nth-child(5)::before{ white-space:nowrap; flex:0 0 auto; margin-right:2px; }
+/* One hover language everywhere */
+.cardtable tr.click:hover,.mgrcards tr:hover,.ircards tr:hover,.ppl-card:hover,.hm-card:hover,.tb-prog-card:hover{
+  box-shadow:var(--shadow-md); transform:translateY(-2px); border-color:var(--gold); }
 /* TalentBench: restrained purple identity — one dot, no star */
 .vtab[data-view="talentbench"] span::before{ content:""; display:inline-block; width:7px; height:7px;
   border-radius:50%; background:var(--purple); margin-right:8px; vertical-align:1px; }
