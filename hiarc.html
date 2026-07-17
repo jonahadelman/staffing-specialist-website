@@ -525,7 +525,6 @@ input::placeholder, textarea::placeholder{ color:#9aa1b5; }
  <h3 id="wsName">Workspace</h3>
  <div id="tabs"></div>
 
- </div>
  <h3>Filters</h3>
  <div class="filterbox">
  <label>Status</label><select class="fil" id="fStatus"></select>
@@ -1030,6 +1029,7 @@ function fillSelect(sel, opts, blank){ sel.innerHTML = ""; var o0 = el("option",
 /* ---------- list ---------- */
 function renderList(){
   document.getElementById("viewTitle").textContent = String(activeView().name || "").replace(/^[^A-Za-z0-9]+\s*/, "");
+  document.getElementById("viewMeta").textContent = ""; /* each view sets its own meta — never inherit the last view's */
   var host = document.getElementById("list"); host.innerHTML = "";
   var v = activeView();
   if(v.special === "reqs"){ renderReqs(host); return; }
@@ -1398,7 +1398,7 @@ function renderReqs(host){
   var canonBase = window.TB_METRICS ? TB_METRICS.canonicalReqEntries(REQS).map(function(e){ return e.req; }) : REQS;
   var ranked = canonBase.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : (!r.bench && !isClosedReq(r)); }).sort(function(a,b){ var ra = (a.rank==null?9999:a.rank), rb = (b.rank==null?9999:b.rank); return (ra - rb) || (a.title||"").localeCompare(b.title||""); });
   var rankedCount = ranked.filter(function(r){ return r.rank != null; }).length;
-  document.getElementById("viewMeta").textContent = ranked.length + " requisition" + (ranked.length === 1 ? "" : "s") + " · " + rankedCount + " ranked";
+  document.getElementById("viewMeta").textContent = ranked.length + " open position" + (ranked.length === 1 ? "" : "s") + " · " + rankedCount + " ranked";
   if(typeof PROGRAM_NOTES !== "undefined" && PROGRAM_NOTES){
     var pn = el("details","prognotes"); pn.style.cssText = "border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:10px;padding:0 16px;margin:0 0 16px;background:var(--panel)"; pn.open = PROGNOTES_OPEN; pn.addEventListener("toggle", function(){ PROGNOTES_OPEN = pn.open; });
     var sm = el("summary"); sm.style.cssText = "cursor:pointer;padding:13px 0;font-weight:700;color:var(--gold);font-size:13px"; sm.textContent = PROGRAM_NOTES.title;
@@ -1409,7 +1409,7 @@ function renderReqs(host){
     (PROGRAM_NOTES.rules||[]).forEach(function(rule){ var li = el("li", null, rule); li.style.marginBottom = "5px"; ul2.appendChild(li); });
     inner.appendChild(ul2); inner.appendChild(buildTeamNotes("priolist")); pn.appendChild(inner); host.appendChild(pn);
   }
-  if(!VIEW_ONLY){ var bar = el("div"); bar.style.marginBottom = "12px"; var addb = el("button","btn gold sm","+ Add Req"); addb.setAttribute("data-reqadd","1"); bar.appendChild(addb); host.appendChild(bar); }
+  if(!VIEW_ONLY){ var bar = el("div"); bar.style.marginBottom = "12px"; var addb = el("button","btn gold sm","+ Add Position"); addb.setAttribute("data-reqadd","1"); bar.appendChild(addb); host.appendChild(bar); }
   if(REQS.length === 0){ var emp = el("div","empty"); emp.appendChild(el("div","big","No requisitions yet")); emp.appendChild(el("div", null, "Add a req and set its Rank, Priority, and Status to build the work queue.")); host.appendChild(emp); return; }
   var table = el("table"); var thead = el("thead"); var htr = el("tr");
   ["Rank","Status","Req ID","Role / Title","Location","Hiring Manager","Candidates","JD"].forEach(function(h){ htr.appendChild(el("th", null, h)); });
@@ -1957,7 +1957,7 @@ function renderGuide(host){
      wrappers prefix the department/program name to this title). */
   if(window.TB_PROGRAM){
     var _ht = document.getElementById("viewTitle"); if(_ht){ _ht.textContent = "Home"; }
-    document.getElementById("viewMeta").textContent = activeCands.length + " active candidate" + (activeCands.length === 1 ? "" : "s") + " · supporting " + openReqs.length + " open requisition" + (openReqs.length === 1 ? "" : "s");
+    document.getElementById("viewMeta").textContent = activeCands.length + " active candidate" + (activeCands.length === 1 ? "" : "s") + " · supporting " + openReqs.length + " open position" + (openReqs.length === 1 ? "" : "s");
   }
 
   /* ── shared design system helpers ── */
@@ -3445,7 +3445,7 @@ function renderTalentBench(host){
   var showSrc = TB_FLAGS.sourcingStatus;
   var partners = Array.from(new Set(benchReqs.map(function(r){ return r.partner || "Unassigned"; }))).sort();
   var total = benchReqs.length;
-  document.getElementById("viewMeta").textContent = total + " TalentBench req" + (total !== 1 ? "s" : "") + (partners.length ? " | " + partners.join(", ") : "");
+  document.getElementById("viewMeta").textContent = total + " TalentBench position" + (total !== 1 ? "s" : "") + (partners.length ? " | " + partners.join(", ") : "");
 
   var slogan = el("div"); slogan.style.cssText = "font-size:12px;color:var(--muted);font-style:italic;margin:-4px 0 14px 0";
   slogan.textContent = "Your best recruiter just got a team. \u2003TalentBench\u2122 \u00b7 Powered by TSS\u2122";
@@ -3467,7 +3467,7 @@ function renderTalentBench(host){
   if(benchReqs.length === 0){
     var em = el("div","empty");
     em.appendChild(el("div","big","No Active TalentBench Requisitions"));
-    em.appendChild(el("div",null, VIEW_ONLY ? "TalentBench requisitions will appear here once created." : "Create a TalentBench requisition to begin building this pipeline."));
+    em.appendChild(el("div",null, VIEW_ONLY ? "TalentBench positions will appear here once created." : "Create a TalentBench position to begin building this pipeline."));
     host.appendChild(em); return;
   }
 
@@ -3636,7 +3636,7 @@ function openBenchReqModal(existing){
 
   body.appendChild(g);
   var foot = el("div","mfoot");
-  var sav = el("button","btn gold", existing ? "Save Changes" : "Add Req");
+  var sav = el("button","btn gold", existing ? "Save Changes" : "Add Position");
   sav.setAttribute("data-benchsave", editId || "new");
   foot.appendChild(sav);
   body.appendChild(foot);
@@ -4494,7 +4494,7 @@ function openReqModal(existing){
   editReqId = existing ? existing.id : null;
   var r = existing || { title:"", role:"", loc:"", disc:"Other", urgency:"Open", priority:"", reqStatus:"", rank:null, desiredStart:"", contingent:"No", compMin:"", compMax:"", compTarget:"", eicp:"", openings:1, hm:"", jobId:"", jd:"", jdLink:"" };
   openId = null; var m = document.getElementById("modal"); m.className = "modal"; m.innerHTML = "";
-  var head = el("div","mhead"); head.appendChild(el("h2", null, existing ? "Edit Requisition" : "Add Requisition"));
+  var head = el("div","mhead"); head.appendChild(el("h2", null, existing ? "Edit Position" : "Add Position"));
   var x = el("button","x","\u00d7"); x.setAttribute("data-close","1"); head.appendChild(x); m.appendChild(head);
   var body = el("div","mbody"); var g = el("div","grid2");
   var tf = field("Role (official / internal)","reqTitle",r.title); tf.className = "fld full"; g.appendChild(tf);
@@ -4547,9 +4547,9 @@ function openReqModal(existing){
   body.appendChild(g); m.appendChild(body);
   var foot = el("div","mfoot"); foot.appendChild(el("div")); var right = el("div","right");
   var cancel = el("button","btn ghost","Cancel"); cancel.setAttribute("data-close","1");
-  var save = el("button","btn gold", existing ? "Save Req" : "Add Req"); save.setAttribute("data-reqsave","1");
+  var save = el("button","btn gold", existing ? "Save Position" : "Add Position"); save.setAttribute("data-reqsave","1");
   right.appendChild(cancel); right.appendChild(save); foot.appendChild(right); m.appendChild(foot);
-  if(existing && !VIEW_ONLY){ var delReqBtn = el("button","btn sm danger","Delete Req"); delReqBtn.type="button"; delReqBtn.addEventListener("click", function(){ if(confirm("Delete this requisition? This cannot be undone.")){ var id=editReqId; closeModal(); deleteReq(id); } }); foot.firstChild.appendChild(delReqBtn); }
+  if(existing && !VIEW_ONLY){ var delReqBtn = el("button","btn sm danger","Delete Position"); delReqBtn.type="button"; delReqBtn.addEventListener("click", function(){ if(confirm("Delete this position permanently? Closing or archiving is usually safer \u2014 this cannot be undone.")){ var id=editReqId; closeModal(); deleteReq(id); } }); foot.firstChild.appendChild(delReqBtn); }
   document.getElementById("scrim").classList.add("open");
 }
 var editMgrId = null;
@@ -5019,8 +5019,8 @@ function viewReq(r){
   var jdWrap = el("div","fld full"); jdWrap.appendChild(el("label", null, "Job Description")); if(r.jd && String(r.jd).trim()){ jdWrap.appendChild(renderJD(r.jd)); } else { jdWrap.appendChild(el("div","roval","-")); } g.appendChild(jdWrap);
   body.appendChild(g); m.appendChild(body);
   var foot = el("div","mfoot"); foot.appendChild(el("div")); var right = el("div","right");
-  if(!VIEW_ONLY && r.bench){ var db = el("button","btn","Delete Req"); db.style.cssText = "color:var(--red,#e55);border-color:var(--red,#e55)"; db.setAttribute("data-benchdel", r.id); right.appendChild(db); var ebn = el("button","btn","Edit"); ebn.setAttribute("data-reqedit", r.id); right.appendChild(ebn); }
-  if(!VIEW_ONLY && !r.bench){ var delB = el("button","btn sm danger","Delete Req"); delB.type="button"; delB.style.marginRight="8px"; delB.addEventListener("click", function(){ if(confirm("Delete this requisition? This cannot be undone.")){ closeModal(); deleteReq(r.id); } }); foot.firstChild.appendChild(delB); var eb = el("button","btn","Edit"); eb.setAttribute("data-reqedit", r.id); right.appendChild(eb); }
+  if(!VIEW_ONLY && r.bench){ var db = el("button","btn","Delete Position"); db.style.cssText = "color:var(--red,#e55);border-color:var(--red,#e55)"; db.setAttribute("data-benchdel", r.id); right.appendChild(db); var ebn = el("button","btn","Edit"); ebn.setAttribute("data-reqedit", r.id); right.appendChild(ebn); }
+  if(!VIEW_ONLY && !r.bench){ var delB = el("button","btn sm danger","Delete Position"); delB.type="button"; delB.style.marginRight="8px"; delB.addEventListener("click", function(){ if(confirm("Delete this position permanently? Closing or archiving is usually safer \u2014 this cannot be undone.")){ closeModal(); deleteReq(r.id); } }); foot.firstChild.appendChild(delB); var eb = el("button","btn","Edit"); eb.setAttribute("data-reqedit", r.id); right.appendChild(eb); }
   /* Position lifecycle quick actions (confirmation-gated) */
   if(!VIEW_ONLY){
     var closedNow = /(filled|closed|cancell?ed|archived)/i.test(r.reqStatus || "");
