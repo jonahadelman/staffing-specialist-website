@@ -502,7 +502,7 @@ input::placeholder, textarea::placeholder{ color:#9aa1b5; }
       <div class="brand-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><rect width="32" height="32" rx="7" fill="#3B5BFF"/><rect x="7" y="8" width="18" height="4" rx="2" fill="#F8FAFC"/><rect x="14" y="8" width="4" height="16" rx="2" fill="#F8FAFC"/><circle cx="23" cy="10" r="2.5" fill="#8EA2FF"/></svg></div>
       <div class="brand-text">
         <span class="brand-name">TalentBase TES</span>
-        <span class="brand-sub">Recruiting Command Center · Powered by TSS™</span>
+        <span class="brand-sub">Recruiting Command Center · Powered by TSS™</span><!-- TalentBase Enterprise v2.0 – Intelligence Layer (branch) -->
       </div>
       <span class="vobadge" id="voBadge" style="display:none">View Only</span>
      </div>
@@ -875,16 +875,17 @@ var VIEWS = [
   { id:"guide", name:"Command Center", fn:function(){ return true; }, special:"guide" },
   { id:"followup", collapsible:true, name:"Follow-Ups Due", fn:function(c){ return followUp(c).label !== ""; }, section:"My Work" },
   { id:"interviewrequests", collapsible:true, name:"Interview Requests", fn:function(){ return true; }, special:"interviewrequests", section:"My Work" },
-  { id:"all", collapsible:true, name:"All Candidates", fn:function(){ return true; }, section:"Candidates" },
+  { id:"all", collapsible:true, name:"Candidate Library", fn:function(){ return true; }, section:"Candidates" },
+  { id:"board", collapsible:true, name:"TalentFit", fn:function(){ return true; }, special:"board", section:"Candidates" },
+  { id:"autoslate", collapsible:true, name:"AutoSlate", fn:function(){ return true; }, special:"autoslate", section:"Candidates" },
   { id:"pipeline", collapsible:true, name:"Hiring Pipeline", fn:function(){ return true; }, special:"pipeline", section:"Candidates" },
-  { id:"byreq", collapsible:true, name:"Candidates by Position", fn:function(c){ return c.status !== "Archived"; }, special:"byreq", section:"Candidates" },
-  { id:"bydisc", collapsible:true, name:"Candidates by Function", fn:function(c){ return c.status !== "Archived"; }, group:"discipline", section:"Candidates" },
   { id:"submitted", collapsible:true, name:"Submitted to HM", fn:function(c){ return c.status === "Submitted"; }, section:"Candidates" },
-  { id:"offerpending", collapsible:true, name:"Offer Pending", fn:function(c){ return c.status === "Offer Pending"; }, section:"Candidates" },
+  { id:"offerpending", collapsible:true, name:"Offers", fn:function(c){ return c.status === "Offer Pending"; }, section:"Candidates" },
   { id:"offeraccepted", collapsible:true, name:"Hired", fn:function(c){ return c.status === "Offer Accepted - Hired"; }, section:"Candidates" },
   { id:"reqs", name:"Open Positions", fn:function(){ return true; }, special:"reqs" },
   { id:"talentbench", name:"TalentBench", fn:function(){ return true; }, special:"talentbench" },
-  { id:"board", collapsible:true, name:"TalentFit Board", fn:function(){ return true; }, special:"board", section:"Sourcing" },
+  { id:"byreq", collapsible:true, name:"Candidates by Position", fn:function(c){ return c.status !== "Archived"; }, special:"byreq", section:"Sourcing" },
+  { id:"bydisc", collapsible:true, name:"Candidates by Function", fn:function(c){ return c.status !== "Archived"; }, group:"discipline", section:"Sourcing" },
   { id:"resumecheck", collapsible:true, name:"Resume Review", fn:function(){ return true; }, special:"resumecheck", section:"Sourcing" },
   { id:"dayforcebadged", collapsible:true, name:"Dayforce Badged", fn:function(c){ return c.dayforceBadge === true && c.status !== "Archived"; }, section:"Sourcing" },
   { id:"calendar", collapsible:true, name:"Interview Calendar", fn:function(){ return true; }, special:"calendar", section:"Interview Operations" },
@@ -969,6 +970,16 @@ function clearSearchFilters(){
   ["q","fStatus","fDiscipline","fReq","fOwner","fPriority"].forEach(function(id){ var elx = document.getElementById(id); if(elx){ elx.value = ""; } });
   renderList();
 }
+/* Defect fix (v2.0 audit): protocol-less web links (e.g. "linkedin.com/in/x")
+   rendered as broken relative URLs. Normalize for href use; bare filenames are
+   display-only labels for uploaded resumes and are not linkified. */
+function normalizeWebLink(v){
+  v = String(v || "").trim();
+  if(!v){ return ""; }
+  if(/^https?:\/\//i.test(v)){ return v; }
+  if(/^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)+([\/?#]|$)/i.test(v)){ return "https://" + v; }
+  return ""; /* not a web link (e.g. a filename) — do not linkify */
+}
 function el(tag, cls, txt){ var e = document.createElement(tag); if(cls){ e.className = cls; } if(txt !== undefined && txt !== null){ e.textContent = txt; } return e; }
 function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 function pill(text, varname){ var p = el("span","pill",text); var col = cssVar(varname); p.style.color = col; p.style.borderColor = "transparent"; p.style.background = col + "2e"; p.style.borderRadius = "6px"; return p; }
@@ -1010,7 +1021,8 @@ function renderTabs(){
        action views (Follow-Up Due, Interview Requests), scoped to the current
        department/program so the number always equals the drill-down list. */
     var count = "";
-    if(window.TB_METRICS && (v.id === "followup" || v.special === "interviewrequests")){
+    if(v.id === "all"){ count = (state.candidates || []).length; } /* Candidate Library size — the product statement */
+    else if(window.TB_METRICS && (v.id === "followup" || v.special === "interviewrequests")){
       if(!window.__TB_ACTION_COUNTS){ window.__TB_ACTION_COUNTS = TB_METRICS.counts(window.TB_PROGRAM || "", window.TB_SUBPROGRAM || ""); }
       count = (v.id === "followup") ? window.__TB_ACTION_COUNTS.followUpDue : window.__TB_ACTION_COUNTS.interviewRequests;
     } else if(!window.TB_METRICS && v.id === "followup"){
@@ -1020,7 +1032,12 @@ function renderTabs(){
     }
     var fu = (v.id === "followup") ? fuState() : "";
     var b = el("button","vtab" + (v.id===ui.view ? " active" : "") + (fu ? " fu-" + fu : ""));
-    b.appendChild(el("span", null, v.name)); if(count !== "" && count !== null){ b.appendChild(el("span","count", String(count))); }
+    if(v.id === "all"){
+      var lw = el("span"); lw.appendChild(el("span", null, v.name));
+      var sub = el("span", null, "Enterprise Talent Pool"); sub.style.cssText = "display:block;font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.2px";
+      lw.appendChild(sub); b.appendChild(lw);
+    } else { b.appendChild(el("span", null, v.name)); }
+    if(count !== "" && count !== null){ b.appendChild(el("span","count", String(count))); }
     b.setAttribute("data-view", v.id); box.appendChild(b);
   });
 }
@@ -1039,6 +1056,7 @@ function renderList(){
   if(v.special === "interviewrequests"){ renderInterviewRequests(host); return; }
   if(v.special === "calendar"){ renderCalendar(host); return; }
   if(v.special === "board"){ renderBoard(host); return; }
+  if(v.special === "autoslate"){ renderAutoSlate(host); return; }
   if(v.special === "pipeline"){ renderPipeline(host); return; }
   if(v.special === "dashboard"){ renderDashboard(host); return; }
   if(v.special === "guide"){ renderGuide(host); return; }
@@ -1046,7 +1064,7 @@ function renderList(){
   if(v.special === "talentbench"){ renderTalentBench(host); return; }
   if(v.id === "followup" && window.TALENTBASE_FU_WORKLIST){ renderFollowUpWorklist(host); return; }
   var rows = pipelineSort(currentList());
-  document.getElementById("viewMeta").textContent = rows.length + (rows.length === 1 ? " unique candidate" : " unique candidates");
+  document.getElementById("viewMeta").textContent = (ui.view === "all") ? (rows.length + " enterprise candidate" + (rows.length === 1 ? "" : "s") + " in the library") : (rows.length + (rows.length === 1 ? " unique candidate" : " unique candidates"));
   if(rows.length === 0){
     var filtersOn = !!(ui.q && ui.q.trim()) || !!ui.fStatus || !!ui.fDiscipline || !!ui.fReq || !!ui.fOwner || !!ui.fPriority;
     var em = el("div","empty");
@@ -1902,6 +1920,309 @@ var BOARD = (function(){
   return {render:render, scoreCandidate:scoreCandidate, clearScoreCache:clearScoreCache};
 })();
 
+/* ═══ AutoSlate™ v1 (Intelligence Layer) — ranked hiring-manager slates with
+   confidence scores, reasoned fits, selection, and one-click submission packages.
+   Read-only against the database: packages are generated client-side. ═══ */
+var SLATE_DISPO_KEY = function(){ return "tb_slate_dispo_" + (typeof ORG !== "undefined" ? ORG : "x"); };
+function slateDispoAll(){ try{ return JSON.parse(localStorage.getItem(SLATE_DISPO_KEY()) || "{}"); }catch(e){ return {}; } }
+function slateDispoSet(candId, reqId, d){
+  var m = slateDispoAll(); m[candId + "|" + reqId] = { d: d, t: new Date().toISOString() };
+  try{ localStorage.setItem(SLATE_DISPO_KEY(), JSON.stringify(m)); }catch(e){}
+}
+function slateDispoClear(){ try{ localStorage.removeItem(SLATE_DISPO_KEY()); }catch(e){} }
+function renderAutoSlate(host){
+  document.getElementById("viewTitle").textContent = "AutoSlate™ — Ranked Hiring Manager Slates";
+  host.innerHTML = "";
+  var DISPO = slateDispoAll();
+  /* refresh line: slates are recomputed from live data on every visit */
+  var now = new Date();
+  var rl = el("div"); rl.style.cssText = "display:flex;align-items:center;gap:12px;margin-bottom:12px";
+  var rt = el("span", null, "Last TalentFit refresh: Today " + now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
+  rt.style.cssText = "font-size:12px;color:var(--muted)";
+  var rb = el("button","btn sm ghost","Refresh TalentFit"); rb.type = "button";
+  rb.title = "Re-score every candidate against every open position (runs automatically when you open this page)";
+  rb.addEventListener("click", function(){ if(typeof BOARD !== "undefined" && BOARD.clearScoreCache){ BOARD.clearScoreCache(); } renderList(); toast("TalentFit rescored all candidates"); });
+  var dispoN = Object.keys(DISPO).length;
+  rl.appendChild(rt); rl.appendChild(rb);
+  if(dispoN){
+    var dc = el("button","btn sm ghost", dispoN + " dispositioned hidden \u00b7 Clear"); dc.type = "button";
+    dc.addEventListener("click", function(){ slateDispoClear(); renderList(); toast("Dispositions cleared"); });
+    rl.appendChild(dc);
+  }
+  host.appendChild(rl);
+  var activeReqs = REQS.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isActiveReq(r) : true; });
+  var cands = (state.candidates || []).filter(function(c){ return window.TB_METRICS ? TB_METRICS.isActiveCand(c) : (c.status !== "Archived"); });
+  if(!activeReqs.length || !cands.length){
+    var em = el("div","empty"); em.appendChild(el("div","big","Nothing to slate yet"));
+    em.appendChild(el("div", null, "AutoSlate builds ranked candidate slates automatically once open positions and active candidates exist."));
+    host.appendChild(em); return;
+  }
+  var byReq = {}, stretchByReq = {};
+  cands.forEach(function(c){
+    var sc = BOARD.scoreCandidate(c);
+    (sc.results || []).forEach(function(res){
+      var key = res.req && res.req.id; if(!key){ return; }
+      if(res.verdict === "strong" || res.verdict === "moderate"){
+        if(DISPO[c.id + "|" + key]){ return; } /* dispositioned: filtered before counts so displayed = drill-down */
+        (byReq[key] = byReq[key] || []).push({ c: c, score: res.score, verdict: res.verdict, reasons: res.reasons || [] });
+      } else if(res.verdict === "stretch"){ stretchByReq[key] = (stretchByReq[key] || 0) + 1; }
+    });
+  });
+  var byHm = {};
+  activeReqs.forEach(function(r){ var hm = (r.hm || "Unassigned").trim() || "Unassigned"; (byHm[hm] = byHm[hm] || []).push(r); });
+  /* Displayed = drill-down: every number on this page counts the SLATED rows
+     (top 5 per position), never the raw match pool. */
+  var slates = {}; var totalMatches = 0, totalStrong = 0, hmWithSlates = 0;
+  Object.keys(byHm).forEach(function(hm){
+    slates[hm] = byHm[hm].map(function(r){ return { r: r, list: (byReq[r.id] || []).sort(function(a, b){ return b.score - a.score; }).slice(0, 5) }; })
+                          .filter(function(x){ return x.list.length; });
+    slates[hm].forEach(function(x){ x.list.forEach(function(m){ totalMatches++; if(m.verdict === "strong") totalStrong++; }); });
+  });
+
+  /* ── executive metrics: operational row + business-impact row ── */
+  var reqStrong = {}; var slScores = []; var contactIds = {};
+  Object.keys(slates).forEach(function(hm){ slates[hm].forEach(function(x){ x.list.forEach(function(m){
+    slScores.push(m.score);
+    if(m.verdict === "strong"){ reqStrong[x.r.id] = (reqStrong[x.r.id] || 0) + 1; }
+    if(m.c.status === "New" || m.c.status === "Sourced"){ contactIds[m.c.id] = 1; }
+  }); }); });
+  var slatedReqIds = {};
+  Object.keys(slates).forEach(function(hm){ slates[hm].forEach(function(x){ slatedReqIds[x.r.id] = 1; }); });
+  var posReady = Object.keys(reqStrong).length;
+  var posModerateOnly = Object.keys(slatedReqIds).filter(function(id){ return !reqStrong[id]; }).length;
+  var posNoViable = activeReqs.length - Object.keys(slatedReqIds).length;
+  var readyContact = Object.keys(contactIds).length;
+  var avgScore = slScores.length ? Math.round(slScores.reduce(function(a, b){ return a + b; }, 0) / slScores.length) : 0;
+  function tile(v, label, accent, hero){
+    var c = el("div");
+    c.style.cssText = hero
+      ? "background:rgba(21,128,61,.07);border:1.5px solid var(--green);border-radius:12px;padding:12px 15px"
+      : "background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 15px" + (accent ? ";border-left:3px solid " + accent : "");
+    var vv = el("div", null, String(v)); vv.style.cssText = "font-size:" + (hero ? "30px" : "22px") + ";font-weight:800;color:" + (hero ? "var(--green)" : (accent || "var(--ink)")) + ";font-variant-numeric:tabular-nums";
+    var l = el("div", null, label); l.style.cssText = "font-size:11.5px;font-weight:" + (hero ? "700;color:var(--green)" : "400;color:var(--muted)") + ";margin-top:2px";
+    c.appendChild(vv); c.appendChild(l); return c;
+  }
+  var strip = el("div"); strip.style.cssText = "display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px;margin-bottom:10px";
+  strip.appendChild(tile(activeReqs.length, "Active Positions"));
+  strip.appendChild(tile(Object.keys(byHm).length, "Hiring Managers"));
+  strip.appendChild(tile(totalMatches, "Ranked Candidate Matches"));
+  strip.appendChild(tile(totalStrong, "Strong Fits Ready for Review", null, true));
+  host.appendChild(strip);
+  var strip2 = el("div"); strip2.style.cssText = "display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px;margin-bottom:20px";
+  strip2.appendChild(tile(posReady, "Positions With Strong Matches", "var(--blue)"));
+  strip2.appendChild(tile(posModerateOnly, "Positions With Moderate Matches Only", posModerateOnly ? "var(--orange)" : null));
+  strip2.appendChild(tile(posNoViable, "Positions With No Viable Candidates", posNoViable ? "var(--red)" : null));
+  strip2.appendChild(tile(readyContact, "Candidates Ready to Contact", "var(--blue)"));
+  strip2.appendChild(tile(avgScore + "%", "Average TalentFit Score"));
+  host.appendChild(strip2);
+
+  var hms = Object.keys(byHm).sort(function(a, b){
+    function n(h){ return slates[h].reduce(function(t, x){ return t + x.list.length; }, 0); }
+    return n(b) - n(a) || a.localeCompare(b);
+  });
+  hms.forEach(function(hm){
+    var reqsWith = slates[hm];
+    if(!reqsWith.length){ return; }
+    hmWithSlates++;
+    var nAll = 0, nStr = 0, nMod = 0, nStretch = 0;
+    byHm[hm].forEach(function(r){ nStretch += (stretchByReq[r.id] || 0); });
+    reqsWith.forEach(function(x){ x.list.forEach(function(m){ nAll++; if(m.verdict === "strong") nStr++; else nMod++; }); });
+    var sec = el("div"); sec.className = "aslate-sec"; sec.style.cssText = "margin-bottom:26px";
+    /* HM summary header */
+    var hd = el("div"); hd.style.cssText = "display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:9px;padding-bottom:7px;border-bottom:2px solid var(--line)";
+    var nmEl = el("span", null, hm); nmEl.style.cssText = "font-size:15px;font-weight:800;color:var(--ink)";
+    hd.appendChild(nmEl);
+    [[byHm[hm].length + " open positions", "var(--muted)"], [nAll + " slated", "var(--muted)"],
+     [nStr + " strong", "var(--green)"], [nMod + " moderate", "var(--cyan)"], [nStretch + " stretch", "var(--orange)"]].forEach(function(x){
+      var sp = el("span", null, x[1] === "var(--muted)" ? x[0] : "● " + x[0]); sp.style.cssText = "font-size:12px;font-weight:600;color:" + x[1]; hd.appendChild(sp);
+    });
+    var selWrap = el("span"); selWrap.style.cssText = "margin-left:auto;display:flex;gap:7px";
+    var selTop = el("button","btn sm ghost","Select Top 3"); selTop.type = "button"; selTop.title = "Check the top 3 candidates on each of this manager's positions";
+    var selStr = el("button","btn sm ghost","Select Strong Fits"); selStr.type = "button"; selStr.title = "Check every Strong fit on this manager's slate";
+    var pkg = el("button","btn sm gold","Generate Submission Package"); pkg.type = "button";
+    pkg.title = "Builds the hiring-manager email, candidate spreadsheet, and summaries for every checked candidate";
+    selWrap.appendChild(selTop); selWrap.appendChild(selStr); selWrap.appendChild(pkg); hd.appendChild(selWrap);
+    selTop.addEventListener("click", function(){
+      sec.querySelectorAll("[data-slsel]").forEach(function(ck){ ck.checked = false; });
+      sec.querySelectorAll(".aslate-blk").forEach(function(blk){
+        Array.prototype.slice.call(blk.querySelectorAll("[data-slsel]"), 0, 3).forEach(function(ck){ if(ck.closest("[data-slrow]").style.display !== "none"){ ck.checked = true; } });
+      });
+      toast("Top 3 per position selected");
+    });
+    selStr.addEventListener("click", function(){
+      var n = 0;
+      sec.querySelectorAll("[data-slsel]").forEach(function(ck){ var on = ck.__sl && ck.__sl.verdict === "strong" && ck.closest("[data-slrow]").style.display !== "none"; ck.checked = on; if(on) n++; });
+      toast(n + " strong fit" + (n === 1 ? "" : "s") + " selected");
+    });
+    sec.appendChild(hd);
+    reqsWith.forEach(function(x){
+      var blk = el("div"); blk.className = "aslate-blk"; blk.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 14px;margin-bottom:9px";
+      var t = el("div", null); t.style.cssText = "font-weight:700;font-size:13px;margin-bottom:4px";
+      t.textContent = x.r.title + " – " + x.r.loc + (x.r.jobId ? "  (Req " + x.r.jobId + ")" : "");
+      blk.appendChild(t);
+      /* TalentFit Summary — deterministic synthesis from the scoring reasons */
+      var top = x.list[0];
+      var needsRelo = function(m){ return (m.reasons || []).some(function(rr){ return /relocation/i.test(rr); }); };
+      var sm = x.list.length + " candidate" + (x.list.length === 1 ? "" : "s") + " meet" + (x.list.length === 1 ? "s" : "") + " the requirements. ";
+      sm += fullName(top.c) + " is the strongest overall fit (" + top.score + "%) — " + (top.reasons || []).slice(0, 3).join(", ") + ".";
+      if(x.list[1]){ var m2 = x.list[1]; sm += " " + fullName(m2.c) + (needsRelo(m2) ? " is technically qualified but would require relocation" : " is a close second at " + m2.score + "%") + "."; }
+      if(x.list[2]){ sm += " " + fullName(x.list[2].c) + " is a " + (x.list[2].verdict === "strong" ? "strong alternative" : "lower-confidence match") + "."; }
+      var smWrap = document.createElement("details"); smWrap.style.cssText = "margin:5px 0 7px";
+      var smSum = document.createElement("summary");
+      smSum.textContent = "TalentFit Summary";
+      smSum.style.cssText = "cursor:pointer;font-weight:700;color:var(--purple);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;padding:2px 0;list-style-position:inside";
+      var smEl = el("div", null, sm); smEl.style.cssText = "font-size:12px;line-height:1.55;color:var(--muted);background:var(--panel2);border-left:3px solid var(--purple);border-radius:0 8px 8px 0;padding:8px 11px;margin-top:4px";
+      smWrap.appendChild(smSum); smWrap.appendChild(smEl);
+      blk.appendChild(smWrap);
+      /* next-action recommendation */
+      var risk = (top.verdict === "strong" && !needsRelo(top)) ? ["Low", "var(--green)"] : ["Medium", "var(--orange)"];
+      var when = (top.verdict === "strong" && (top.c.status === "New" || top.c.status === "Sourced")) ? "Today" : "This week";
+      var na = el("div"); na.style.cssText = "display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-bottom:8px";
+      (function(){
+        var sp = el("span", null, "Recommended Next Candidate: ");
+        var lk = el("b", null, fullName(top.c) + " (" + top.score + "%)");
+        lk.style.cssText = "color:var(--gold);cursor:pointer;text-decoration:underline;text-underline-offset:2px";
+        lk.setAttribute("role","link"); lk.tabIndex = 0; lk.title = "Open " + fullName(top.c) + "\u2019s profile";
+        lk.addEventListener("click", function(){ openDetail(top.c); });
+        lk.addEventListener("keydown", function(ev){ if(ev.key === "Enter"){ openDetail(top.c); } });
+        sp.appendChild(lk); na.appendChild(sp);
+      })();
+      [["Candidate risk", risk[0], risk[1]], ["Time to contact", when, "var(--ink)"]].forEach(function(kv){
+        var sp = el("span", null, kv[0] + ": "); var b = el("b", null, kv[1]); b.style.color = kv[2]; sp.appendChild(b); na.appendChild(sp);
+      });
+      blk.appendChild(na);
+      x.list.forEach(function(mch, i){
+        var row = el("div"); row.style.cssText = "display:flex;align-items:center;gap:10px;padding:6px 2px;border-radius:7px";
+        row.setAttribute("data-slrow","1");
+        var ck = el("input"); ck.type = "checkbox"; ck.setAttribute("data-slsel","1"); ck.style.cssText = "flex:0 0 auto;accent-color:var(--gold)";
+        ck.__sl = { c: mch.c, score: mch.score, verdict: mch.verdict, reasons: mch.reasons, req: x.r };
+        var rk = el("span", null, "#" + (i + 1)); rk.style.cssText = "flex:0 0 24px;font-weight:800;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums";
+        var nm = el("span", null, fullName(mch.c)); nm.style.cssText = "font-weight:700;font-size:13.5px;min-width:145px;color:var(--ink)";
+        var pctWrap = el("span"); pctWrap.style.cssText = "flex:0 0 70px;display:flex;flex-direction:column;gap:2px";
+        var pct = el("span", null, mch.score + "%"); pct.style.cssText = "font-weight:800;font-size:15.5px;line-height:1;font-variant-numeric:tabular-nums;color:" + (mch.verdict === "strong" ? "var(--green)" : "var(--cyan)");
+        var bar = el("span"); bar.style.cssText = "display:block;width:60px;height:4px;border-radius:3px;background:var(--line);overflow:hidden";
+        var fill = el("span"); fill.style.cssText = "display:block;height:100%;width:" + mch.score + "%;border-radius:3px;background:" + (mch.verdict === "strong" ? "var(--green)" : "var(--cyan)");
+        bar.appendChild(fill); pctWrap.appendChild(pct); pctWrap.appendChild(bar);
+        var vd = el("span", null, mch.verdict === "strong" ? "Strong fit" : "Moderate fit");
+        vd.style.cssText = "font-size:10.5px;font-weight:700;border-radius:999px;padding:2px 9px;" + (mch.verdict === "strong" ? "color:var(--green);background:rgba(21,128,61,.1)" : "color:var(--cyan);background:rgba(8,145,178,.1)");
+        var why = el("span"); why.style.cssText = "flex:1;display:flex;gap:6px;flex-wrap:wrap;overflow:hidden";
+        (mch.reasons || []).slice(0, 4).forEach(function(rr){
+          var chip = el("span", null, "✓ " + rr); chip.style.cssText = "font-size:11px;color:var(--muted);background:var(--panel2);border-radius:5px;padding:1px 7px;white-space:nowrap";
+          why.appendChild(chip);
+        });
+        var act = el("span"); act.style.cssText = "flex:0 0 auto;display:flex;gap:6px";
+        var vw = el("button","btn sm ghost","Review Profile"); vw.type = "button";
+        vw.addEventListener("click", function(ev){ ev.stopPropagation(); openDetail(mch.c); });
+        var sk = el("button","btn sm ghost","Disposition \u25BE"); sk.type = "button";
+        sk.title = "Hold, defer, or rule out this candidate for this position \u2014 remembered for future slates";
+        sk.addEventListener("click", function(ev){
+          ev.stopPropagation();
+          var oldM = document.getElementById("irMenu"); if(oldM){ oldM.remove(); }
+          var mn = el("div"); mn.id = "irMenu"; mn.setAttribute("role","menu");
+          [["Hold \u2014 keep warm", "hold"], ["Later \u2014 revisit next cycle", "later"], ["Not a Fit for this position", "notfit", "danger"]].forEach(function(it){
+            var bi = el("button","ir-mi" + (it[2] ? " ir-mi-" + it[2] : ""), it[0]); bi.type = "button";
+            bi.addEventListener("click", function(e2){
+              e2.stopPropagation(); mn.remove();
+              slateDispoSet(mch.c.id, x.r.id, it[1]);
+              row.style.display = "none";
+              toast(fullName(mch.c) + " \u2014 " + (it[1] === "hold" ? "on hold" : it[1] === "later" ? "deferred" : "ruled out") + " for this position");
+            });
+            mn.appendChild(bi);
+          });
+          document.body.appendChild(mn);
+          var rc = sk.getBoundingClientRect();
+          mn.style.top = Math.min(window.innerHeight - mn.offsetHeight - 8, rc.bottom + 4) + "px";
+          mn.style.left = Math.max(8, rc.right - mn.offsetWidth) + "px";
+          function away(e3){ if(!mn.contains(e3.target)){ mn.remove(); document.removeEventListener("mousedown", away); } }
+          document.addEventListener("mousedown", away);
+        });
+        act.appendChild(vw); act.appendChild(sk);
+        row.appendChild(ck); row.appendChild(rk); row.appendChild(nm); row.appendChild(pctWrap); row.appendChild(vd); row.appendChild(why); row.appendChild(act);
+        blk.appendChild(row);
+      });
+      sec.appendChild(blk);
+    });
+    pkg.addEventListener("click", function(){ buildSubmissionPackage(hm, sec); });
+    host.appendChild(sec);
+  });
+  document.getElementById("viewMeta").textContent = activeReqs.length + " active positions · " + hmWithSlates + " hiring managers with slates · " + totalMatches + " ranked matches · " + totalStrong + " strong fits";
+  if(!hmWithSlates){
+    var em2 = el("div","empty"); em2.appendChild(el("div","big","No Strong or Moderate fits yet"));
+    em2.appendChild(el("div", null, "Slates appear automatically as TalentFit finds candidates matching open positions."));
+    host.appendChild(em2);
+  }
+}
+/* Submission Package: formatted HM email + candidate CSV, generated client-side from checked rows */
+function buildSubmissionPackage(hm, sec){
+  var sel = [];
+  sec.querySelectorAll("[data-slsel]").forEach(function(ck){ if(ck.checked && ck.__sl && ck.closest("[data-slrow]").style.display !== "none"){ sel.push(ck.__sl); } });
+  if(!sel.length){ toast("Check at least one candidate to build the package."); return; }
+  var mgr = (typeof MANAGERS !== "undefined" ? MANAGERS : []).filter(function(m){ return m.name === hm || (m.name||"").indexOf(hm.split(" ")[0]) === 0; })[0];
+  var first = hm.split(" ")[0];
+  var lines = ["Hi " + first + ",", "", "Sending you " + sel.length + " ranked candidate" + (sel.length === 1 ? "" : "s") + " for your open position" + (sel.length === 1 ? "" : "s") + " — scored and slated by TalentFit. Highlights below; resumes available on request.", ""];
+  sel.forEach(function(m, i){
+    lines.push((i + 1) + ". " + fullName(m.c) + " — " + m.req.title + (m.req.jobId ? " (Req " + m.req.jobId + ")" : ""));
+    lines.push("   Fit: " + m.score + "% (" + (m.verdict === "strong" ? "Strong" : "Moderate") + ") · " + (m.reasons || []).slice(0, 3).join(" · "));
+    if(m.c.title || m.c.company){ lines.push("   Currently: " + [m.c.title, m.c.company].filter(Boolean).join(" at ")); }
+    if(m.c.summary){ lines.push("   " + String(m.c.summary).split(/(?<=\.)\s/)[0]); }
+    lines.push("");
+  });
+  lines.push("Happy to set up time this week — just tell me who you want to meet.", "", "Best,", (typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email.split("@")[0].replace(/^\w/, function(ch){ return ch.toUpperCase(); }) : "");
+  var emailTxt = lines.join("\n");
+  var csv = "Rank,Candidate,Fit %,Verdict,Position,Req,Current Title,Company,Location,Email,Phone,Resume Link\n" + sel.map(function(m, i){
+    function q(v){ v = String(v == null ? "" : v); return '"' + v.replace(/"/g, '""') + '"'; }
+    return [i + 1, q(fullName(m.c)), m.score, m.verdict, q(m.req.title), q(m.req.jobId || ""), q(m.c.title), q(m.c.company), q(m.c.location), q(m.c.email), q(m.c.phone), q(m.c.resumeLink || "")].join(",");
+  }).join("\n");
+  var mo = document.getElementById("modal"); mo.className = "modal"; mo.innerHTML = "";
+  var head = el("div","mhead"); head.appendChild(el("h2", null, "Submission Package — " + hm));
+  var x = el("button","x","×"); x.setAttribute("data-close","1"); head.appendChild(x); mo.appendChild(head);
+  var body = el("div","mbody");
+  var nRes = sel.filter(function(m){ return m.c.resumeLink || m.c.resumePath; }).length;
+  var readMin = Math.max(1, Math.round(emailTxt.split(/\s+/).length / 200) + nRes);
+  var pv = el("div"); pv.style.cssText = "display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;margin-bottom:12px;background:var(--panel2);border-radius:9px;padding:10px 13px";
+  [["\u2713 " + sel.length + " candidate" + (sel.length === 1 ? "" : "s") + " selected", "var(--green)", 700],
+   [(mgr && mgr.email) ? "To: " + mgr.email : "No HM email on file", (mgr && mgr.email) ? "var(--ink)" : "var(--orange)", 500],
+   ["Resumes linked: " + nRes + " of " + sel.length, "var(--ink)", 500],
+   ["Estimated read time: " + readMin + " min", "var(--muted)", 500]].forEach(function(x){
+    var sp = el("span", null, x[0]); sp.style.cssText = "color:" + x[1] + ";font-weight:" + x[2]; pv.appendChild(sp);
+  });
+  body.appendChild(pv);
+  var lbl = el("div", null, "Email preview \u2014 edit before copying if you like"); lbl.style.cssText = "font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px";
+  body.appendChild(lbl);
+  var ta = el("textarea"); ta.value = emailTxt; ta.style.cssText = "width:100%;min-height:300px;font:12.5px/1.5 ui-monospace,monospace;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:12px;color:var(--ink)";
+  body.appendChild(ta);
+  var lbl2 = el("div", null, "Spreadsheet preview (" + sel.length + " row" + (sel.length === 1 ? "" : "s") + ")"); lbl2.style.cssText = "font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 5px";
+  body.appendChild(lbl2);
+  var tbl = el("table"); tbl.style.cssText = "width:100%;border-collapse:collapse;font-size:11.5px";
+  var thr = el("tr"); ["#","Candidate","Fit","Position","Req"].forEach(function(h){ var th = el("th", null, h); th.style.cssText = "text-align:left;padding:4px 8px;border-bottom:1px solid var(--line);color:var(--muted);font-size:10px;text-transform:uppercase"; thr.appendChild(th); });
+  tbl.appendChild(thr);
+  sel.slice(0, 6).forEach(function(m, i){
+    var tr = el("tr");
+    [i + 1, fullName(m.c), m.score + "%", m.req.title, m.req.jobId || "-"].forEach(function(v){ var td = el("td", null, String(v)); td.style.cssText = "padding:4px 8px;border-bottom:1px solid var(--line)"; tr.appendChild(td); });
+    tbl.appendChild(tr);
+  });
+  if(sel.length > 6){ var mr = el("div", null, "+ " + (sel.length - 6) + " more in the download"); mr.style.cssText = "font-size:11px;color:var(--muted);padding:5px 8px"; body.appendChild(tbl); body.appendChild(mr); } else { body.appendChild(tbl); }
+  mo.appendChild(body);
+  var foot = el("div","mfoot"); foot.appendChild(el("div")); var right = el("div","right");
+  var cp = el("button","btn","Copy Email"); cp.type = "button";
+  cp.addEventListener("click", function(){ ta.select(); document.execCommand("copy"); toast("Email copied — paste into your mail client"); });
+  var dl = el("button","btn","Download Spreadsheet (CSV)"); dl.type = "button";
+  dl.addEventListener("click", function(){
+    var blob = new Blob([csv], { type: "text/csv" }); var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "Submission_" + hm.replace(/\W+/g, "_") + "_" + new Date().toISOString().slice(0, 10) + ".csv";
+    document.body.appendChild(a); a.click(); a.remove(); toast("Spreadsheet downloaded");
+  });
+  var em = el("button","btn","Email Hiring Manager"); em.type = "button";
+  em.title = mgr && mgr.email ? "Opens your mail client addressed to " + mgr.email : "No email on file for this manager \u2014 add one in the Hiring Manager Dashboard";
+  em.addEventListener("click", function(){
+    if(!(mgr && mgr.email)){ toast("No email on file for " + hm + " \u2014 add one in the Hiring Manager Dashboard"); return; }
+    var subj = "Candidate Submissions \u2014 " + sel.length + " ranked candidate" + (sel.length === 1 ? "" : "s");
+    window.location.href = "mailto:" + encodeURIComponent(mgr.email) + "?subject=" + encodeURIComponent(subj) + "&body=" + encodeURIComponent(ta.value).slice(0, 6000);
+  });
+  var dn = el("button","btn gold","Done"); dn.setAttribute("data-close","1");
+  right.appendChild(cp); right.appendChild(dl); right.appendChild(em); right.appendChild(dn); foot.appendChild(right); mo.appendChild(foot);
+  document.getElementById("scrim").classList.add("open");
+}
 function renderBoard(host){ BOARD.render(host); }
 
 function initialsOf(s){ s=String(s||"").split("@")[0]; var p=s.split(/[._\-\s]+/).filter(Boolean); return ((((p[0]||"")[0])||"")+(((p[1]||"")[0])||"")).toUpperCase()||"?"; }
@@ -5217,7 +5538,7 @@ function buildSubmissionHTML(cands, reqTitle){
     h += "<div class='lbl'>Why " + submHesc(first) + " Fits</div><div class='sum'>" + submHesc(fitTxt) + "</div>";
     if((c.skills||[]).length){ h += "<div class='lbl'>Key Skills</div><div class='sk'>" + submHesc((c.skills||[]).join(" \u00b7 ")) + "</div>"; }
     if((c.reqs||[]).length){ h += "<div class='lbl'>Targeted Role</div><div class='sk'>" + submHesc((c.reqs||[]).join("; ")) + "</div>"; }
-    if(c.resumeLink){ h += "<div class='lbl'>Resume</div><div class='sk'><a href='" + submHesc(c.resumeLink) + "'>" + submHesc(c.resumeLink) + "</a></div>"; }
+    if(c.resumeLink){ var rlHref = normalizeWebLink(c.resumeLink); h += "<div class='lbl'>Resume</div><div class='sk'>" + (rlHref ? "<a href='" + submHesc(rlHref) + "' target='_blank' rel='noopener'>" + submHesc(c.resumeLink) + "</a>" : submHesc(c.resumeLink)) + "</div>"; }
     else if(c.resumeFileName){ h += "<div class='lbl'>Resume</div><div class='sk'>On file (available on request)</div>"; }
     h += "</div>";
     // plain text version
