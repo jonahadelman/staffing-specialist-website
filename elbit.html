@@ -4817,7 +4817,11 @@ function renderInterviewRequests(host){
     /* Grid = summary, workspace = details: the whole card is the click target.
        Reuses the exact same View wiring — no new logic. */
     tr.style.cursor = "pointer";
-    tr.addEventListener("click", function(e){ if(e.target.closest("button,a")){ return; } vw.click(); });
+    tr.addEventListener("click", function(e){ if(e.target.closest("button,a,.ir-kebab")){ return; } vw.click(); });
+    /* Standard three-dot action menu on every Interview Request card */
+    var kb = el("button","ir-kebab","\u22EF"); kb.type = "button"; kb.title = "Actions";
+    kb.setAttribute("data-irmenu", r.id); kb.setAttribute("aria-label","Interview request actions"); kb.setAttribute("aria-haspopup","menu");
+    var ndEl = tr.querySelector("td"); if(ndEl){ ndEl.style.position = "relative"; ndEl.appendChild(kb); }
     if(!VIEW_ONLY){
       var ed = el("button","btn sm ghost","Edit"); ed.setAttribute("data-iredit", r.id); actw.appendChild(ed);
       var dl = el("button","btn sm danger","Delete"); dl.setAttribute("data-irdel", r.id); actw.appendChild(dl);
@@ -4885,7 +4889,56 @@ async function saveInterviewRequest(){
   if(id){ await run(sb.from("interview_requests").update(row).eq("id", id), "Interview request updated"); }
   else{ await run(sb.from("interview_requests").insert(row), "Interview request added"); }
 }
-async function deleteInterviewRequest(id){ if(!window.confirm("Delete this interview request? This cannot be undone.")){ return; } await run(sb.from("interview_requests").delete().eq("id", id), "Interview request deleted"); }
+async function deleteInterviewRequest(id){
+  var rec = (state.interviewRequests||[]).filter(function(x){ return x.id === id; })[0];
+  if(rec && rec.status === "Completed"){ toast("Completed interviews are part of the record and cannot be deleted."); return; }
+  if(!window.confirm("Delete this interview request? This cannot be undone.")){ return; }
+  await run(sb.from("interview_requests").delete().eq("id", id), "Interview request deleted");
+}
+async function duplicateInterviewRequest(id){
+  var r = (state.interviewRequests||[]).filter(function(x){ return x.id === id; })[0];
+  if(!r){ return; }
+  var row = { org:ORG, candidate_name:r.candidateName, candidate_id:r.candidateId || null, hiring_manager:r.hiringManager || "",
+    role:r.role || "", req_id:r.reqId || null, format:r.format || "", panel_members:r.panelMembers || "",
+    length_minutes:(r.lengthMinutes != null && r.lengthMinutes !== "" ? r.lengthMinutes : null),
+    presentation_required:!!r.presentationRequired, presentation_notes:r.presentationNotes || "",
+    notes:r.notes || "", interview_date:null, time_zone:r.timeZone || "Eastern (ET)", status:"Requested" };
+  await run(sb.from("interview_requests").insert(row), "Interview request duplicated \u2014 set the new date");
+}
+async function cancelInterviewRequest(id){
+  var r = (state.interviewRequests||[]).filter(function(x){ return x.id === id; })[0];
+  if(!r){ return; }
+  if(r.status === "Completed"){ toast("Completed interviews cannot be cancelled."); return; }
+  if(!window.confirm("Cancel this interview" + (r.candidateName ? " with " + r.candidateName : "") + "?")){ return; }
+  await run(sb.from("interview_requests").update({ status:"Cancelled" }).eq("id", id), "Interview cancelled");
+}
+function openIrActionMenu(anchor, id){
+  var r = (state.interviewRequests||[]).filter(function(x){ return x.id === id; })[0];
+  if(!r){ return; }
+  var old = document.getElementById("irMenu"); if(old){ old.remove(); }
+  var mn = el("div"); mn.id = "irMenu"; mn.setAttribute("role","menu");
+  var done = (r.status === "Completed");
+  var items = [["View details", function(){ openInterviewRequestDetail(r); }]];
+  if(!VIEW_ONLY && !done){
+    items.push(["Edit", function(){ openInterviewRequestModal(r); }]);
+    items.push(["Reschedule", function(){ openInterviewRequestModal(r); setTimeout(function(){ var d = document.querySelector("#modal [data-field=irDate]"); if(d){ d.scrollIntoView({block:"center"}); d.focus(); } }, 60); }]);
+  }
+  if(!VIEW_ONLY){ items.push(["Duplicate", function(){ duplicateInterviewRequest(id); }]); }
+  if(!VIEW_ONLY && !done && r.status !== "Cancelled"){ items.push(["Cancel interview", function(){ cancelInterviewRequest(id); }, "warn"]); }
+  if(!VIEW_ONLY && !done){ items.push(["Delete\u2026", function(){ deleteInterviewRequest(id); }, "danger"]); }
+  items.forEach(function(it){
+    var b = el("button","ir-mi" + (it[2] ? " ir-mi-" + it[2] : ""), it[0]); b.type = "button"; b.setAttribute("role","menuitem");
+    b.addEventListener("click", function(ev){ ev.stopPropagation(); mn.remove(); it[1](); });
+    mn.appendChild(b);
+  });
+  document.body.appendChild(mn);
+  var rc = anchor.getBoundingClientRect();
+  mn.style.top = Math.min(window.innerHeight - mn.offsetHeight - 8, rc.bottom + 4) + "px";
+  mn.style.left = Math.max(8, Math.min(window.innerWidth - mn.offsetWidth - 8, rc.right - mn.offsetWidth)) + "px";
+  function away(ev){ if(!mn.contains(ev.target)){ mn.remove(); document.removeEventListener("mousedown", away); } }
+  document.addEventListener("mousedown", away);
+  document.addEventListener("keydown", function esc(ev){ if(ev.key === "Escape"){ mn.remove(); document.removeEventListener("keydown", esc); } });
+}
 function openInterviewRequestDetail(existing){
   if(!existing){ return; }
   var r = existing;
@@ -4968,7 +5021,24 @@ function viewReq(r){
   var foot = el("div","mfoot"); foot.appendChild(el("div")); var right = el("div","right");
   if(!VIEW_ONLY && r.bench){ var db = el("button","btn","Delete Req"); db.style.cssText = "color:var(--red,#e55);border-color:var(--red,#e55)"; db.setAttribute("data-benchdel", r.id); right.appendChild(db); var ebn = el("button","btn","Edit"); ebn.setAttribute("data-reqedit", r.id); right.appendChild(ebn); }
   if(!VIEW_ONLY && !r.bench){ var delB = el("button","btn sm danger","Delete Req"); delB.type="button"; delB.style.marginRight="8px"; delB.addEventListener("click", function(){ if(confirm("Delete this requisition? This cannot be undone.")){ closeModal(); deleteReq(r.id); } }); foot.firstChild.appendChild(delB); var eb = el("button","btn","Edit"); eb.setAttribute("data-reqedit", r.id); right.appendChild(eb); }
-  var cb = el("button","btn gold","Close"); cb.setAttribute("data-close","1"); right.appendChild(cb);
+  /* Position lifecycle quick actions (confirmation-gated) */
+  if(!VIEW_ONLY){
+    var closedNow = /(filled|closed|cancell?ed|archived)/i.test(r.reqStatus || "");
+    if(closedNow){
+      var ro = el("button","btn","Reopen Position"); ro.type = "button";
+      ro.addEventListener("click", async function(){ if(confirm("Reopen this position? It will return to active views.")){ closeModal(); await run(sb.from("reqs").update({ req_status:"Open" }).eq("id", r.id), "Position reopened"); } });
+      right.insertBefore(ro, right.firstChild);
+    } else if(r.bench){
+      var pr = el("button","btn","Promote to Open Position"); pr.type = "button"; pr.title = "Move this TalentBench position into Open Positions";
+      pr.addEventListener("click", async function(){ if(confirm("Promote \"" + r.title + "\" from TalentBench to Open Positions?")){ closeModal(); await run(sb.from("reqs").update({ bench:false }).eq("id", r.id), "Promoted to Open Positions"); } });
+      right.insertBefore(pr, right.firstChild);
+    } else {
+      var cl = el("button","btn","Close Position"); cl.type = "button";
+      cl.addEventListener("click", async function(){ if(confirm("Close \"" + r.title + "\"? It moves out of active views; all candidates and history are preserved.")){ closeModal(); await run(sb.from("reqs").update({ req_status:"Closed" }).eq("id", r.id), "Position closed"); } });
+      right.insertBefore(cl, right.firstChild);
+    }
+  }
+  var cb = el("button","btn gold","Done"); cb.setAttribute("data-close","1"); right.appendChild(cb);
   foot.appendChild(right); m.appendChild(foot);
   document.getElementById("scrim").classList.add("open");
 }
@@ -5542,6 +5612,7 @@ document.getElementById("list").addEventListener("click", function(e){
   var irvwr = e.target.closest("[data-irview]"); if(irvwr){ var irv = (state.interviewRequests||[]).filter(function(x){ return x.id === irvwr.getAttribute("data-irview"); })[0]; if(irv){ openInterviewRequestDetail(irv); } return; }
   var iredr = e.target.closest("[data-iredit]"); if(iredr){ var irx = (state.interviewRequests||[]).filter(function(x){ return x.id === iredr.getAttribute("data-iredit"); })[0]; if(irx){ openInterviewRequestModal(irx); } return; }
   var irdelr = e.target.closest("[data-irdel]"); if(irdelr){ deleteInterviewRequest(irdelr.getAttribute("data-irdel")); return; }
+  var irmn = e.target.closest("[data-irmenu]"); if(irmn){ e.stopPropagation(); openIrActionMenu(irmn, irmn.getAttribute("data-irmenu")); return; }
   var edr = e.target.closest("[data-reqedit]"); if(edr){ e.stopPropagation(); var er = REQS.filter(function(x){ return x.id === edr.getAttribute("data-reqedit"); })[0]; if(er){ openReqModal(er); } return; }
   var subr = e.target.closest("[data-submitreq]"); if(subr){ submitReq(subr.getAttribute("data-submitreq")); return; }
   var delr = e.target.closest("[data-reqdel]"); if(delr){ deleteReq(delr.getAttribute("data-reqdel")); return; }
@@ -7478,6 +7549,18 @@ function makeSourcingBtn(r, tr){
 .hm-stat-v{ font-size:14px; }
 .hm-card{ min-height:0; }
 .cardtable td:nth-child(6)::before,.cardtable td:nth-child(5)::before{ white-space:nowrap; flex:0 0 auto; margin-right:2px; }
+/* Interview Request action menu */
+.ir-kebab{ position:absolute; top:-4px; right:-6px; width:26px; height:22px; border:0; background:transparent;
+  color:var(--muted); font-size:15px; line-height:1; border-radius:6px; cursor:pointer; opacity:0; transition:opacity .12s, background .12s; }
+.ircards tr:hover .ir-kebab, .ir-kebab:focus-visible{ opacity:1; }
+.ir-kebab:hover{ background:var(--panel2); color:var(--ink); }
+#irMenu{ position:fixed; z-index:900; min-width:190px; background:var(--panel); border:1px solid var(--line);
+  border-radius:10px; box-shadow:var(--shadow-lg); padding:5px; animation:tb-modal-in 120ms ease-out; }
+#irMenu .ir-mi{ display:block; width:100%; text-align:left; background:transparent; border:0; border-radius:7px;
+  padding:8px 11px; font-size:13px; color:var(--ink); cursor:pointer; }
+#irMenu .ir-mi:hover{ background:var(--panel2); }
+#irMenu .ir-mi-danger{ color:var(--red); }
+#irMenu .ir-mi-warn{ color:var(--orange); }
 /* One hover language everywhere */
 .cardtable tr.click:hover,.mgrcards tr:hover,.ircards tr:hover,.ppl-card:hover,.hm-card:hover,.tb-prog-card:hover{
   box-shadow:var(--shadow-md); transform:translateY(-2px); border-color:var(--gold); }
