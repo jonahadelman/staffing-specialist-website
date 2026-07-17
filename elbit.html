@@ -870,31 +870,31 @@ function withinDays(c,n){ return ageDays(c) <= n; }
 /* ---------- views ---------- */
 window.TALENTBASE_FU_WORKLIST = true;
 var VIEWS = [
-  { id:"guide", name:"\u2302 Command Center", fn:function(){ return true; }, special:"guide" },
-  { id:"all", name:"All Candidates", fn:function(){ return true; } },
-  { id:"activecandidates", hidden:true, name:"Active Candidates", fn:function(c){ return window.TB_METRICS ? TB_METRICS.isActiveCand(c) : (c.status !== "Archived" && c.status !== "Offer Accepted - Hired"); } },
-  { id:"allactive", hidden:true, name:"All Active Requisitions", fn:function(){ return true; }, special:"activedir" },
-  { id:"closedreqs", hidden:true, name:"Closed Requisitions", fn:function(){ return true; }, special:"closeddir" },
-  { id:"followup", collapsible:true, name:"Follow Up Due", fn:function(c){ return followUp(c).label !== ""; }, section:"Priority Actions" },
-  { id:"pipeline", collapsible:true, name:"\u2630 Hiring Pipeline", fn:function(){ return true; }, special:"pipeline", section:"Pipeline Operations" },
-  { id:"dashboard", collapsible:true, name:"\u25A6 Dashboard", fn:function(){ return true; }, special:"dashboard", section:"Pipeline Operations" },
-  { id:"submitted", collapsible:true, name:"Submitted to HM", fn:function(c){ return c.status === "Submitted"; }, section:"Pipeline Operations" },
-  { id:"interviewrequests", collapsible:true, name:"Interview Requests", fn:function(){ return true; }, special:"interviewrequests", section:"Pipeline Operations" },
-  { id:"calendar", collapsible:true, name:"Interview Calendar", fn:function(){ return true; }, special:"calendar", section:"Pipeline Operations" },
-  { id:"interviewing", collapsible:true, name:"Currently Interviewing", fn:function(c){ return c.status === "Interviewing Stage 1" || c.status === "Interviewing Stage 2" || c.status === "Interviewing Stage 3" || c.status === "Panel / Final Interview" || c.status === "Interviewing"; }, section:"Pipeline Operations" },
-  { id:"offerpending", collapsible:true, name:"Offer Pending", fn:function(c){ return c.status === "Offer Pending"; }, section:"Pipeline Operations" },
-  { id:"offeraccepted", collapsible:true, name:"Offer Accepted - Hired", fn:function(c){ return c.status === "Offer Accepted - Hired"; }, section:"Pipeline Operations" },
-  { id:"board", collapsible:true, name:"\u2605 TalentFit Board", fn:function(){ return true; }, special:"board", section:"Sourcing Intelligence" },
-  { id:"resumecheck", collapsible:true, name:"Resume Check", fn:function(){ return true; }, special:"resumecheck", section:"Sourcing Intelligence" },
-  { id:"dayforcebadged", collapsible:true, name:"\u2605 Dayforce Badged", fn:function(c){ return c.dayforceBadge === true && c.status !== "Archived"; }, section:"Sourcing Intelligence" },
-  { id:"talentbench", collapsible:true, name:"\u2605 TalentBench", fn:function(){ return true; }, special:"talentbench", section:"TalentBench" },
+  { id:"guide", name:"Command Center", fn:function(){ return true; }, special:"guide" },
+  { id:"followup", collapsible:true, name:"Follow-Ups Due", fn:function(c){ return followUp(c).label !== ""; }, section:"My Work" },
+  { id:"interviewrequests", collapsible:true, name:"Interview Requests", fn:function(){ return true; }, special:"interviewrequests", section:"My Work" },
+  { id:"all", collapsible:true, name:"All Candidates", fn:function(){ return true; }, section:"Candidates" },
+  { id:"pipeline", collapsible:true, name:"Hiring Pipeline", fn:function(){ return true; }, special:"pipeline", section:"Candidates" },
+  { id:"submitted", collapsible:true, name:"Submitted to HM", fn:function(c){ return c.status === "Submitted"; }, section:"Candidates" },
+  { id:"offerpending", collapsible:true, name:"Offer Pending", fn:function(c){ return c.status === "Offer Pending"; }, section:"Candidates" },
+  { id:"offeraccepted", collapsible:true, name:"Hired", fn:function(c){ return c.status === "Offer Accepted - Hired"; }, section:"Candidates" },
   { id:"reqs", collapsible:true, name:"Open Requisitions", fn:function(){ return true; }, special:"reqs", section:"Requisitions" },
-  { id:"byreq", collapsible:true, name:"By Req", fn:function(c){ return c.status !== "Archived"; }, special:"byreq", section:"Requisitions" },
+  { id:"byreq", collapsible:true, name:"By Requisition", fn:function(c){ return c.status !== "Archived"; }, special:"byreq", section:"Requisitions" },
   { id:"bydisc", collapsible:true, name:"By Discipline", fn:function(c){ return c.status !== "Archived"; }, group:"discipline", section:"Requisitions" },
-  { id:"managers", collapsible:true, name:"Hiring Managers", fn:function(){ return true; }, special:"managers", section:"People & Reference" },
+  { id:"talentbench", name:"TalentBench", fn:function(){ return true; }, special:"talentbench" },
+  { id:"board", collapsible:true, name:"TalentFit Board", fn:function(){ return true; }, special:"board", section:"Sourcing" },
+  { id:"resumecheck", collapsible:true, name:"Resume Review", fn:function(){ return true; }, special:"resumecheck", section:"Sourcing" },
+  { id:"dayforcebadged", collapsible:true, name:"Dayforce Badged", fn:function(c){ return c.dayforceBadge === true && c.status !== "Archived"; }, section:"Sourcing" },
+  { id:"calendar", collapsible:true, name:"Interview Calendar", fn:function(){ return true; }, special:"calendar", section:"Interview Operations" },
+  { id:"interviewing", collapsible:true, name:"Currently Interviewing", fn:function(c){ return c.status === "Interviewing Stage 1" || c.status === "Interviewing Stage 2" || c.status === "Interviewing Stage 3" || c.status === "Panel / Final Interview" || c.status === "Interviewing"; }, section:"Interview Operations" },
+  { id:"dashboard", collapsible:true, name:"Analytics Dashboard", fn:function(){ return true; }, special:"dashboard", section:"Analytics" },
+  { id:"managers", collapsible:true, name:"Hiring Managers", fn:function(){ return true; }, special:"managers", section:"Organization" },
   { id:"tarejected", name:"TA Rejected", fn:function(c){ return c.status === "TA Rejected"; }, section:"Closed & Archived", collapsible:true },
   { id:"hmrejected", name:"HM Rejected", fn:function(c){ return c.status === "HM Rejected"; }, section:"Closed & Archived", collapsible:true },
-  { id:"archive", name:"Archive", fn:function(c){ return c.status === "Archived"; }, section:"Closed & Archived", collapsible:true }
+  { id:"archive", name:"Archive", fn:function(c){ return c.status === "Archived"; }, section:"Closed & Archived", collapsible:true },
+  { id:"activecandidates", hidden:true, name:"Active Candidates", fn:function(c){ return window.TB_METRICS ? TB_METRICS.isActiveCand(c) : (c.status !== "Archived" && c.status !== "Offer Accepted - Hired"); } },
+  { id:"allactive", hidden:true, name:"All Active Requisitions", fn:function(){ return true; }, special:"activedir" },
+  { id:"closedreqs", hidden:true, name:"Closed Requisitions", fn:function(){ return true; }, special:"closeddir" }
 ];
 function activeView(){ for(var i=0;i<VIEWS.length;i++){ if(VIEWS[i].id===ui.view){ return VIEWS[i]; } } return VIEWS[0]; }
 function candHaystack(c){
@@ -974,7 +974,7 @@ function prioTag(text, varname){ var w = el("span"); w.style.cssText = "display:
 function toast(msg){ var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); }, 1900); }
 
 /* ---------- sidebar ---------- */
-var sectionCollapsed = { "Closed & Archived": true, "Priority Actions": true, "Pipeline Operations": true, "Sourcing Intelligence": true, "TalentBench": true, "Requisitions": true, "People & Reference": true };
+var sectionCollapsed = { "Sourcing": true, "Interview Operations": true, "Analytics": true, "Organization": true, "Closed & Archived": true };
 function fuState(){
   var any = false, overdue = false;
   state.candidates.forEach(function(c){ var fr = followUp(c); if(fr.label !== ""){ any = true; if(fr.label === "Overdue"){ overdue = true; } } });
@@ -994,6 +994,13 @@ function renderTabs(){
       var isCollapsed = coll && sectionCollapsed[sec] && actSec !== sec;
       var h = el("h3","sech" + (coll ? " toggle" : ""), (coll ? (isCollapsed ? "\u25B8 " : "\u25BE ") : "") + sec);
       if(coll){ h.setAttribute("data-section-toggle", sec); }
+      /* Urgent counts must survive collapse: aggregate Follow-Ups + Interview
+         Requests on the My Work header while its items are hidden. */
+      if(isCollapsed && sec === "My Work" && window.TB_METRICS){
+        if(!window.__TB_ACTION_COUNTS){ window.__TB_ACTION_COUNTS = TB_METRICS.counts(window.TB_PROGRAM || "", window.TB_SUBPROGRAM || ""); }
+        var agg = (window.__TB_ACTION_COUNTS.followUpDue || 0) + (window.__TB_ACTION_COUNTS.interviewRequests || 0);
+        if(agg > 0){ var aggB = el("span","count secount" + (fuState() === "red" ? " urgent" : ""), String(agg)); h.appendChild(aggB); }
+      }
       box.appendChild(h);
     }
     if(v.collapsible && sectionCollapsed[v.section] && actSec !== v.section){ return; }
@@ -6310,10 +6317,10 @@ function makeSourcingBtn(r, tr){
         var old = document.getElementById("tbProgramsNav"); if(old){ old.parentNode.removeChild(old); }
         var sec = el("div"); sec.id = "tbProgramsNav";
         var h = el("h3", null, "Recruiting Programs"); sec.appendChild(h);
-        var home = el("div","vtab" + ((typeof ui !== "undefined" && ui.view === "tb_programs") ? " active" : ""), "⭐ Programs Home");
+        var home = el("div","vtab" + ((typeof ui !== "undefined" && ui.view === "tb_programs") ? " active" : ""), "Programs Home");
         home.setAttribute("data-view","tb_programs");
         sec.appendChild(home);
-        var ent = el("div","vtab tb-prog-tab" + (!window.TB_PROGRAM ? " tb-prog-on" : ""), "🌐 Enterprise (All)");
+        var ent = el("div","vtab tb-prog-tab" + (!window.TB_PROGRAM ? " tb-prog-on" : ""), "Enterprise (All)");
         ent.addEventListener("click", function(){
           try{ if(typeof ui !== "undefined" && String(ui.view).indexOf("tb_people_") === 0){ ui.view = "tb_programs"; } }catch(eE){}
           (window.TB_setProgram || setProgram)("");
@@ -6325,7 +6332,7 @@ function makeSourcingBtn(r, tr){
           /* Sidebar is navigation — no numeric badges. Counts live on the
              Overview cards and in each view header, scoped and labeled. */
           t.title = p.name + " — " + st.reqs + " open requisition" + (st.reqs === 1 ? "" : "s") + ". Full metrics on the Overview page.";
-          t.appendChild(el("span", null, p.icon + " " + p.name));
+          t.appendChild(el("span", null, p.name)); /* icons live on cards; nav stays typographic */
           t.addEventListener("click", function(){
             var target = (window.TB_PROGRAM === p.name ? "" : p.name);
             try{
@@ -6337,7 +6344,8 @@ function makeSourcingBtn(r, tr){
           });
           sec.appendChild(t);
         });
-        host.insertBefore(sec, host.firstChild);
+        var tbAnchor = host.querySelector('[data-section-toggle="Analytics"]');
+        if(tbAnchor){ host.insertBefore(sec, tbAnchor); } else { host.appendChild(sec); }
       }catch(eT){}
     };
   }
@@ -7266,10 +7274,10 @@ function makeSourcingBtn(r, tr){
     try{
       var nav = document.getElementById("tbProgramsNav"); if(!nav){ return; }
       /* terminology: this layer organizes DEPARTMENTS */
-      var h3 = nav.querySelector("h3"); if(h3){ h3.textContent = "Enterprise"; }
+      var h3 = nav.querySelector("h3"); if(h3){ h3.textContent = "Organization"; }
       nav.querySelectorAll(".vtab").forEach(function(t){
-        if(t.textContent.indexOf("Programs Home") >= 0){ t.textContent = "⭐ Overview"; }
-        if(t.textContent.indexOf("Enterprise (All)") >= 0){ t.textContent = "🌐 All Departments"; }
+        if(t.textContent.indexOf("Programs Home") >= 0){ t.textContent = "Departments"; }
+        if(t.textContent.indexOf("Enterprise (All)") >= 0){ t.textContent = "All Departments"; }
       });
       /* program child tabs under the active department */
       if(window.TB_PROGRAM){
@@ -7294,21 +7302,21 @@ function makeSourcingBtn(r, tr){
       /* PEOPLE section */
       if(!document.getElementById("tbPeopleNav")){
         var sec = el("div"); sec.id = "tbPeopleNav";
-        sec.appendChild(el("h3",null,"Talent Acquisition"));
-        [["tb_people_rec","🤝 Recruiters"],["tb_people_hm","👔 Hiring Managers"]].forEach(function(pv){
+        /* no separate heading — Recruiters & Hiring Managers live under Organization */
+        [["tb_people_rec","Recruiters"],["tb_people_hm","Hiring Managers"]].forEach(function(pv){
           var t = el("div","vtab" + ((typeof ui !== "undefined" && ui.view === pv[0]) ? " active" : ""), pv[1]);
           t.setAttribute("data-view", pv[0]);
           sec.appendChild(t);
         });
         nav.parentNode.insertBefore(sec, nav.nextSibling);
       }
-      /* remove the duplicate People & Reference section — Talent Acquisition is the single destination */
+      /* remove the duplicate core Organization section — the injected Organization block is the single destination */
       try{
         var tabsHost = document.getElementById("tabs");
         var kids = Array.prototype.slice.call(tabsHost.children);
         for(var ki = 0; ki < kids.length; ki++){
           var kEl = kids[ki];
-          if(kEl.tagName === "H3" && kEl.textContent.indexOf("People & Reference") >= 0){
+          if(kEl.tagName === "H3" && kEl.getAttribute("data-section-toggle") === "Organization"){
             var toKill = [kEl]; var kj = ki + 1;
             while(kj < kids.length && kids[kj].tagName !== "H3"){ toKill.push(kids[kj]); kj++; }
             toKill.forEach(function(x){ if(x.parentNode){ x.parentNode.removeChild(x); } });
@@ -7372,6 +7380,13 @@ function makeSourcingBtn(r, tr){
 .vtab:active, tr.click:active{ transform:scale(.995); }
 /* No layout shift on hover-lift cards */
 .cardtable tr.click, .mgrcards tr, .ircards tr{ will-change:transform; }
+/* TalentBench: restrained purple identity — one dot, no star */
+.vtab[data-view="talentbench"] span::before{ content:""; display:inline-block; width:7px; height:7px;
+  border-radius:50%; background:var(--purple); margin-right:8px; vertical-align:1px; }
+/* Urgent count on a collapsed section header */
+h3.sech .secount{ float:right; background:var(--panel2); border:1px solid var(--line); border-radius:20px;
+  padding:0 7px; font-size:11px; color:var(--muted); letter-spacing:0; text-transform:none; }
+h3.sech .secount.urgent{ color:var(--red); border-color:var(--red); background:rgba(220,38,38,.07); font-weight:700; }
 @media (prefers-reduced-motion:reduce){
   #modal .modal, .scrim{ animation:none; }
   .tb-skel{ animation:none; background:var(--panel2); }
