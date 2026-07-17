@@ -501,7 +501,7 @@ input::placeholder, textarea::placeholder{ color:#9aa1b5; }
       <div class="brand-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><rect width="32" height="32" rx="7" fill="#3B5BFF"/><rect x="7" y="8" width="18" height="4" rx="2" fill="#F8FAFC"/><rect x="14" y="8" width="4" height="16" rx="2" fill="#F8FAFC"/><circle cx="23" cy="10" r="2.5" fill="#8EA2FF"/></svg></div>
       <div class="brand-text">
         <span class="brand-name">TalentBase TES</span>
-        <span class="brand-sub">Talent Experience System · Powered by TSS™</span>
+        <span class="brand-sub">Recruiting Command Center · Powered by TSS™</span>
       </div>
       <span class="vobadge" id="voBadge" style="display:none">View Only</span>
      </div>
@@ -521,7 +521,7 @@ input::placeholder, textarea::placeholder{ color:#9aa1b5; }
 
 <div class="wrap layout">
  <aside class="side" id="sideNav">
- <h3>Views</h3>
+ <h3>Talent Operations</h3>
  <div id="tabs"></div>
 
  <div style="margin:14px 10px 0;padding:8px 10px;background:#f0f1f6;border-radius:8px;border:1px solid #e2e5ef;">
@@ -870,31 +870,31 @@ function withinDays(c,n){ return ageDays(c) <= n; }
 /* ---------- views ---------- */
 window.TALENTBASE_FU_WORKLIST = true;
 var VIEWS = [
-  { id:"guide", name:"\u2139 Getting Started", fn:function(){ return true; }, special:"guide" },
+  { id:"guide", name:"\u2302 Command Center", fn:function(){ return true; }, special:"guide" },
   { id:"all", name:"All Candidates", fn:function(){ return true; } },
   { id:"activecandidates", hidden:true, name:"Active Candidates", fn:function(c){ return window.TB_METRICS ? TB_METRICS.isActiveCand(c) : (c.status !== "Archived" && c.status !== "Offer Accepted - Hired"); } },
   { id:"allactive", hidden:true, name:"All Active Requisitions", fn:function(){ return true; }, special:"activedir" },
   { id:"closedreqs", hidden:true, name:"Closed Requisitions", fn:function(){ return true; }, special:"closeddir" },
-  { id:"followup", collapsible:true, name:"Follow Up Due", fn:function(c){ return followUp(c).label !== ""; }, section:"Action" },
-  { id:"pipeline", collapsible:true, name:"\u2630 Hiring Pipeline", fn:function(){ return true; }, special:"pipeline", section:"Pipeline" },
-  { id:"dashboard", collapsible:true, name:"\u25A6 Dashboard", fn:function(){ return true; }, special:"dashboard", section:"Pipeline" },
-  { id:"submitted", collapsible:true, name:"Submitted to HM", fn:function(c){ return c.status === "Submitted"; }, section:"Pipeline" },
-  { id:"interviewrequests", collapsible:true, name:"Interview Requests", fn:function(){ return true; }, special:"interviewrequests", section:"Pipeline" },
-  { id:"calendar", collapsible:true, name:"Interview Calendar", fn:function(){ return true; }, special:"calendar", section:"Pipeline" },
-  { id:"interviewing", collapsible:true, name:"Currently Interviewing", fn:function(c){ return c.status === "Interviewing Stage 1" || c.status === "Interviewing Stage 2" || c.status === "Interviewing Stage 3" || c.status === "Panel / Final Interview" || c.status === "Interviewing"; }, section:"Pipeline" },
-  { id:"offerpending", collapsible:true, name:"Offer Pending", fn:function(c){ return c.status === "Offer Pending"; }, section:"Pipeline" },
-  { id:"offeraccepted", collapsible:true, name:"Offer Accepted - Hired", fn:function(c){ return c.status === "Offer Accepted - Hired"; }, section:"Pipeline" },
-  { id:"board", collapsible:true, name:"\u2605 TalentFit Board", fn:function(){ return true; }, special:"board", section:"Sourcing & Review" },
-  { id:"resumecheck", collapsible:true, name:"Resume Check", fn:function(){ return true; }, special:"resumecheck", section:"Sourcing & Review" },
-  { id:"dayforcebadged", collapsible:true, name:"\u2605 Dayforce Badged", fn:function(c){ return c.dayforceBadge === true && c.status !== "Archived"; }, section:"Sourcing & Review" },
+  { id:"followup", collapsible:true, name:"Follow Up Due", fn:function(c){ return followUp(c).label !== ""; }, section:"Priority Actions" },
+  { id:"pipeline", collapsible:true, name:"\u2630 Hiring Pipeline", fn:function(){ return true; }, special:"pipeline", section:"Pipeline Operations" },
+  { id:"dashboard", collapsible:true, name:"\u25A6 Dashboard", fn:function(){ return true; }, special:"dashboard", section:"Pipeline Operations" },
+  { id:"submitted", collapsible:true, name:"Submitted to HM", fn:function(c){ return c.status === "Submitted"; }, section:"Pipeline Operations" },
+  { id:"interviewrequests", collapsible:true, name:"Interview Requests", fn:function(){ return true; }, special:"interviewrequests", section:"Pipeline Operations" },
+  { id:"calendar", collapsible:true, name:"Interview Calendar", fn:function(){ return true; }, special:"calendar", section:"Pipeline Operations" },
+  { id:"interviewing", collapsible:true, name:"Currently Interviewing", fn:function(c){ return c.status === "Interviewing Stage 1" || c.status === "Interviewing Stage 2" || c.status === "Interviewing Stage 3" || c.status === "Panel / Final Interview" || c.status === "Interviewing"; }, section:"Pipeline Operations" },
+  { id:"offerpending", collapsible:true, name:"Offer Pending", fn:function(c){ return c.status === "Offer Pending"; }, section:"Pipeline Operations" },
+  { id:"offeraccepted", collapsible:true, name:"Offer Accepted - Hired", fn:function(c){ return c.status === "Offer Accepted - Hired"; }, section:"Pipeline Operations" },
+  { id:"board", collapsible:true, name:"\u2605 TalentFit Board", fn:function(){ return true; }, special:"board", section:"Sourcing Intelligence" },
+  { id:"resumecheck", collapsible:true, name:"Resume Check", fn:function(){ return true; }, special:"resumecheck", section:"Sourcing Intelligence" },
+  { id:"dayforcebadged", collapsible:true, name:"\u2605 Dayforce Badged", fn:function(c){ return c.dayforceBadge === true && c.status !== "Archived"; }, section:"Sourcing Intelligence" },
   { id:"talentbench", collapsible:true, name:"\u2605 TalentBench", fn:function(){ return true; }, special:"talentbench", section:"TalentBench" },
-  { id:"reqs", collapsible:true, name:"Open Requisitions", fn:function(){ return true; }, special:"reqs", section:"Reqs" },
-  { id:"byreq", collapsible:true, name:"By Req", fn:function(c){ return c.status !== "Archived"; }, special:"byreq", section:"Reqs" },
-  { id:"bydisc", collapsible:true, name:"By Discipline", fn:function(c){ return c.status !== "Archived"; }, group:"discipline", section:"Reqs" },
+  { id:"reqs", collapsible:true, name:"Open Requisitions", fn:function(){ return true; }, special:"reqs", section:"Requisitions" },
+  { id:"byreq", collapsible:true, name:"By Req", fn:function(c){ return c.status !== "Archived"; }, special:"byreq", section:"Requisitions" },
+  { id:"bydisc", collapsible:true, name:"By Discipline", fn:function(c){ return c.status !== "Archived"; }, group:"discipline", section:"Requisitions" },
   { id:"managers", collapsible:true, name:"Hiring Managers", fn:function(){ return true; }, special:"managers", section:"People & Reference" },
-  { id:"tarejected", name:"TA Rejected", fn:function(c){ return c.status === "TA Rejected"; }, section:"Closed", collapsible:true },
-  { id:"hmrejected", name:"HM Rejected", fn:function(c){ return c.status === "HM Rejected"; }, section:"Closed", collapsible:true },
-  { id:"archive", name:"Archive", fn:function(c){ return c.status === "Archived"; }, section:"Closed", collapsible:true }
+  { id:"tarejected", name:"TA Rejected", fn:function(c){ return c.status === "TA Rejected"; }, section:"Closed & Archived", collapsible:true },
+  { id:"hmrejected", name:"HM Rejected", fn:function(c){ return c.status === "HM Rejected"; }, section:"Closed & Archived", collapsible:true },
+  { id:"archive", name:"Archive", fn:function(c){ return c.status === "Archived"; }, section:"Closed & Archived", collapsible:true }
 ];
 function activeView(){ for(var i=0;i<VIEWS.length;i++){ if(VIEWS[i].id===ui.view){ return VIEWS[i]; } } return VIEWS[0]; }
 function candHaystack(c){
@@ -974,7 +974,7 @@ function prioTag(text, varname){ var w = el("span"); w.style.cssText = "display:
 function toast(msg){ var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); }, 1900); }
 
 /* ---------- sidebar ---------- */
-var sectionCollapsed = { "Closed": true, "Action": true, "Pipeline": true, "Sourcing & Review": true, "TalentBench": true, "Reqs": true, "People & Reference": true };
+var sectionCollapsed = { "Closed & Archived": true, "Priority Actions": true, "Pipeline Operations": true, "Sourcing Intelligence": true, "TalentBench": true, "Requisitions": true, "People & Reference": true };
 function fuState(){
   var any = false, overdue = false;
   state.candidates.forEach(function(c){ var fr = followUp(c); if(fr.label !== ""){ any = true; if(fr.label === "Overdue"){ overdue = true; } } });
@@ -1019,7 +1019,7 @@ function fillSelect(sel, opts, blank){ sel.innerHTML = ""; var o0 = el("option",
 
 /* ---------- list ---------- */
 function renderList(){
-  document.getElementById("viewTitle").textContent = activeView().name;
+  document.getElementById("viewTitle").textContent = String(activeView().name || "").replace(/^[^A-Za-z0-9]+\s*/, "");
   var host = document.getElementById("list"); host.innerHTML = "";
   var v = activeView();
   if(v.special === "reqs"){ renderReqs(host); return; }
@@ -2345,7 +2345,7 @@ async function handleDocUpload(file){
 async function loadUploadedDocs(){
   var host = document.getElementById("docList");
   if(!host){ return; }
-  host.textContent = "Loading...";
+  host.innerHTML = '<div class="tb-skel" style="height:14px;width:62%"></div><div class="tb-skel" style="height:14px;width:48%"></div><div class="tb-skel" style="height:14px;width:55%"></div>';
   if(!sb){ host.textContent = "Not connected."; return; }
   var res = await sb.storage.from("resumes").list(docFolder(), { limit: 1000, sortBy: { column: "created_at", order: "desc" } });
   if(res.error){ host.textContent = "Could not load documents: " + res.error.message; return; }
@@ -2420,7 +2420,7 @@ async function handleStratUpload(file){
 async function loadStrategyDocs(){
   var host = document.getElementById("stratList");
   if(!host){ return; }
-  host.textContent = "Loading...";
+  host.innerHTML = '<div class="tb-skel" style="height:14px;width:62%"></div><div class="tb-skel" style="height:14px;width:48%"></div><div class="tb-skel" style="height:14px;width:55%"></div>';
   if(!sb){ host.textContent = "Not connected."; return; }
   var res = await sb.storage.from("resumes").list(stratFolder(), { limit: 1000, sortBy: { column: "created_at", order: "desc" } });
   if(res.error){ host.textContent = "Could not load strategies: " + res.error.message; return; }
@@ -2688,8 +2688,9 @@ async function renderTBAnalytics(host){
   hdr.textContent = "TalentBench Sourcing Analytics";
   wrap.appendChild(hdr);
 
-  var loading = el("div",null,"Loading sourcing data\u2026");
-  loading.style.cssText = "font-size:12px;color:var(--muted);padding:8px 0";
+  var loading = el("div");
+  loading.innerHTML = '<div class="tb-skel" style="height:12px;width:44%"></div><div class="tb-skel" style="height:12px;width:36%"></div>';
+  loading.style.cssText = "padding:8px 0";
   wrap.appendChild(loading);
   host.appendChild(wrap);
 
@@ -7312,7 +7313,7 @@ function makeSourcingBtn(r, tr){
         }
       }catch(ePR){}
       /* de-jargon the core heading */
-      document.querySelectorAll(".side h3, #tabs h3").forEach(function(h){ if((h.textContent||"").trim().toLowerCase() === "views"){ h.textContent = "Workspace"; } });
+      document.querySelectorAll(".side h3, #tabs h3").forEach(function(h){ if((h.textContent||"").trim().toLowerCase() === "views" || (h.textContent||"").trim().toLowerCase() === "workspace"){ h.textContent = "Talent Operations"; } });
     }catch(eNav){}
   };
 
@@ -7334,6 +7335,44 @@ function makeSourcingBtn(r, tr){
 })();
 
 </script>
+
+
+<style id="tb-ux2">
+/* ============================================================
+   TalentBase UX 2.0 — "Lights Out" layer. Additive only.
+   Motion, loading skeletons, nav rhythm, badge semantics.
+   Color language (STATUS_COLOR): green=healthy/hired,
+   blue=in progress, purple=interviewing/TalentBench,
+   orange=needs attention, red=urgent/rejected, gray=inactive.
+   ============================================================ */
+/* Workspace modal entrance: fixed background, content settles in */
+@keyframes tb-modal-in{ from{ opacity:0; transform:translateY(6px) scale(.985); } to{ opacity:1; transform:none; } }
+@keyframes tb-scrim-in{ from{ opacity:0; } to{ opacity:1; } }
+#modal .modal, #stageScrim .modal{ animation:tb-modal-in 180ms cubic-bezier(.2,.7,.3,1); }
+.scrim{ animation:tb-scrim-in 140ms ease-out; }
+/* Slide-over workspace (HM drawer) already animates; align its timing */
+#hmDrawer{ transition-timing-function:cubic-bezier(.2,.7,.3,1); }
+/* Loading skeletons */
+@keyframes tb-shimmer{ from{ background-position:200% 0; } to{ background-position:-200% 0; } }
+.tb-skel{ border-radius:7px; margin:7px 0;
+  background:linear-gradient(90deg,var(--panel2) 25%,#e9ecf5 50%,var(--panel2) 75%);
+  background-size:200% 100%; animation:tb-shimmer 1.3s linear infinite; }
+/* Left navigation: executive rhythm */
+.side h3.sech{ margin-top:18px; padding-top:14px; border-top:1px solid var(--line); }
+.side h3.sech:first-child{ margin-top:6px; border-top:0; padding-top:0; }
+.vtab .count{ font-variant-numeric:tabular-nums; min-width:26px; text-align:center; }
+.vtab{ line-height:1.45; }
+/* Page title: executive scale, glyph-free (set in JS) */
+.toolbar .title{ font-weight:700; }
+/* Subtle press feedback everywhere */
+.vtab:active, tr.click:active{ transform:scale(.995); }
+/* No layout shift on hover-lift cards */
+.cardtable tr.click, .mgrcards tr, .ircards tr{ will-change:transform; }
+@media (prefers-reduced-motion:reduce){
+  #modal .modal, .scrim{ animation:none; }
+  .tb-skel{ animation:none; background:var(--panel2); }
+}
+</style>
 
 <style id="tb-reqpicker-css">
 .rqp-ctrl{ margin:6px 0 8px; }
