@@ -888,12 +888,14 @@ var VIEWS = [
      Start My Day absorbs Dashboard + Today's Focus + Daily Checklist + Weekly
      Goals; Notes holds My Notes + Team Notes as tabs. The absorbed views stay
      routable (hidden) so nothing breaks. */
+  { id:"tb_ws_manager", collapsible:true, name:"Team Health", fn:function(){ return true; }, special:"tb_ws_manager", section:"My Work", ws:"manager" },
   { id:"guide", collapsible:true, name:"Start My Day", fn:function(){ return true; }, special:"guide", section:"My Work" },
   { id:"calendar", collapsible:true, name:"Interview Calendar", fn:function(){ return true; }, special:"calendar", section:"My Work" },
   { id:"interviewrequests", collapsible:true, name:"Interview Requests", fn:function(){ return true; }, special:"interviewrequests", section:"My Work" },
   { id:"followup", collapsible:true, name:"Follow-Ups Due", fn:function(c){ return followUp(c).label !== ""; }, section:"My Work" },
   { id:"tb_notes", collapsible:true, name:"Notes", fn:function(){ return true; }, special:"tb_notes", section:"My Work" },
   { id:"tb_brief", collapsible:true, name:"Staffing Brief", fn:function(){ return true; }, special:"tb_brief", section:"My Work" },
+  /* v3.0 WORKSTATION VIEWS — shown only to their assigned workstation (TB_WS_FILTER) */
   { id:"tb_checklist", hidden:true, name:"My Daily Checklist", fn:function(){ return true; }, special:"tb_checklist" },
   { id:"tb_goals", hidden:true, name:"Weekly Goals", fn:function(){ return true; }, special:"tb_goals" },
   { id:"tb_mynotes", hidden:true, name:"My Notes", fn:function(){ return true; }, special:"tb_mynotes" },
@@ -912,6 +914,13 @@ var VIEWS = [
   { id:"dashboard", collapsible:true, name:"Analytics Dashboard", fn:function(){ return true; }, special:"dashboard", section:"Analytics" },
   { id:"tb_people_rec", collapsible:true, name:"Recruiter Dashboard", fn:function(){ return true; }, section:"Analytics" },
   { id:"tb_people_hm", collapsible:true, name:"Hiring Manager Dashboard", fn:function(){ return true; }, section:"Analytics" },
+  { id:"tb_hm_review", collapsible:true, name:"Candidates Awaiting Review", fn:function(){ return true; }, special:"tb_hm", section:"My Hiring", ws:"hm" },
+  { id:"tb_hm_positions", collapsible:true, name:"My Open Positions", fn:function(){ return true; }, special:"tb_hm", section:"My Hiring", ws:"hm" },
+  { id:"tb_hm_interviews", collapsible:true, name:"Upcoming Interviews", fn:function(){ return true; }, special:"tb_hm", section:"My Hiring", ws:"hm" },
+  { id:"tb_hm_feedback", collapsible:true, name:"Pending Feedback", fn:function(){ return true; }, special:"tb_hm", section:"My Hiring", ws:"hm" },
+  { id:"tb_hm_offers", collapsible:true, name:"Offers", fn:function(){ return true; }, special:"tb_hm", section:"My Hiring", ws:"hm" },
+  { id:"tb_hm_hires", collapsible:true, name:"Recent Hires", fn:function(){ return true; }, special:"tb_hm", section:"My Hiring", ws:"hm" },
+  { id:"tb_ws_admin", collapsible:true, name:"Platform Status", fn:function(){ return true; }, special:"tb_ws_admin", section:"Platform", ws:"admin" },
   { id:"managers", hidden:true, name:"Hiring Manager Directory", fn:function(){ return true; }, special:"managers" },
   { id:"byreq", hidden:true, name:"Candidates by Position", fn:function(c){ return c.status !== "Archived"; }, special:"byreq" },
   { id:"bydisc", hidden:true, name:"Candidates by Function", fn:function(c){ return c.status !== "Archived"; }, group:"discipline" },
@@ -1035,6 +1044,7 @@ function renderTabs(){
   window.__TB_ACTION_COUNTS = null; /* recompute action badges once per render */
   VIEWS.forEach(function(v){
     if(v.hidden){ return; } /* routable but not shown in nav (e.g. Active Candidates drill-down) */
+    if(window.TB_WS_FILTER && !window.TB_WS_FILTER(v)){ return; } /* workstation routing decides what this user's nav contains */
     var sec = v.section || "";
     if(sec && sec !== lastSection){
       lastSection = sec;
@@ -1180,7 +1190,7 @@ function renderRecruiterBoard(host){
   }).filter(Boolean).sort(function(a,b){ return b.active - a.active; });
   document.getElementById("viewMeta").textContent = rows.length + " recruiter" + (rows.length === 1 ? "" : "s") + " with candidates · every number equals its drill-down · click a row to open that recruiter's desk";
   if(!rows.length){ host.appendChild(el("div","empty")).appendChild(el("div","big","No recruiter activity yet")); return; }
-  var table = el("table","cardtable"); var thead = el("thead"); var htr = el("tr");
+  var table = el("table","tb-plain"); var thead = el("thead"); var htr = el("tr");
   ["Recruiter","Active Candidates","Submitted","Interviewing","Interviews Scheduled","Offers","Hired","Overdue Follow-Ups"].forEach(function(h){ htr.appendChild(el("th", null, h)); });
   thead.appendChild(htr); table.appendChild(thead);
   var tb = el("tbody");
@@ -1481,48 +1491,129 @@ function renderTeamNotesView(host){
 }
 
 function renderLeadershipBrief(host){
+  /* ═══ EXECUTIVE COMMAND CENTER (v3.0 redesign) — not a report: a health read.
+     Premium, quiet, decisive. Every figure equals its drill-down. ═══ */
   var cands = state.candidates || [], irs = state.interviewRequests || [];
   var canon = window.TB_METRICS ? TB_METRICS.canonicalReqEntries(REQS).map(function(e){ return e.req; }) : REQS;
   var openReqs = canon.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : !r.bench; });
   var offers = cands.filter(function(c){ return c.status === "Offer Pending"; });
   var submitted = cands.filter(function(c){ return c.status === "Submitted"; });
   var interviewing = cands.filter(function(c){ return ["Interviewing Stage 1","Interviewing Stage 2","Interviewing Stage 3","Panel / Final Interview","Interviewing"].indexOf(c.status) !== -1; });
-  var mo = todayISO().slice(0,7);
-  var hiredMTD = cands.filter(function(c){ return c.status === "Offer Accepted - Hired"; });
-  function reqTagged(r){ var tag = r.title + " – " + r.loc; return cands.filter(function(c){ return (c.reqs||[]).indexOf(tag) !== -1 && c.status !== "Archived"; }).length; }
-  var starving = openReqs.filter(function(r){ return reqTagged(r) === 0; });
-  var now = new Date(); var ws = new Date(now); ws.setDate(now.getDate() - now.getDay()); var we = new Date(ws); we.setDate(ws.getDate() + 7);
-  var irsWeek = irs.filter(function(ir){ if(!ir.interviewDate){ return false; } var d = new Date(ir.interviewDate); return d >= ws && d < we; });
-  document.getElementById("viewMeta").textContent = "Prepared live for the staffing meeting · every number matches its screen · read-only";
-  var wrap = el("div"); wrap.style.cssText = "max-width:860px";
-  var strip = el("div"); strip.style.cssText = "display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px";
-  [["Open Requisitions", openReqs.length],["Active Interviews This Week", irsWeek.length],["Currently Interviewing", interviewing.length],["Submitted, Awaiting HM", submitted.length],["Offers Pending", offers.length],["Hired", hiredMTD.length]].forEach(function(m){
-    var b = el("div"); b.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 18px;min-width:130px";
-    var n = el("div", null, String(m[1])); n.style.cssText = "font-size:24px;font-weight:800;color:var(--ink)";
-    b.appendChild(n); b.appendChild(el("div","hint", m[0])); strip.appendChild(b);
+  var hired = cands.filter(function(c){ return c.status === "Offer Accepted - Hired"; });
+  var fuAll = cands.filter(function(c){ return followUp(c).label !== ""; });
+  var fuOver = cands.filter(function(c){ return followUp(c).label === "Overdue"; });
+  function reqTag(r){ return r.title + " – " + r.loc; }
+  function reqCandN(r){ var tag = reqTag(r); return cands.filter(function(c){ return (c.reqs||[]).indexOf(tag) !== -1 && c.status !== "Archived"; }).length; }
+  var starving = openReqs.filter(function(r){ return reqCandN(r) === 0; });
+  var critical = openReqs.filter(function(r){ return reqCandN(r) === 0 || /high|critical|urgent/i.test(String(r.priority || "") + " " + String(r.urgency || "")); }).slice(0, 40);
+  var now = new Date(); var ws7 = new Date(now); ws7.setDate(now.getDate() - 7);
+  var acts7 = (state.activities || []).filter(function(a){ var d = Date.parse(a.date || ""); return d && d >= ws7.getTime(); }).length;
+  var new7 = cands.filter(function(c){ var d = Date.parse(c.dateReceived || ""); return d && d >= ws7.getTime(); }).length;
+  var wkS = new Date(now); wkS.setDate(now.getDate() - now.getDay()); var wkE = new Date(wkS); wkE.setDate(wkS.getDate() + 7);
+  var irsWeek = irs.filter(function(ir){ if(!ir.interviewDate){ return false; } var d = new Date(ir.interviewDate); return d >= wkS && d < wkE; });
+  /* HMs waiting */
+  var hmWait = {};
+  submitted.forEach(function(c){ (c.reqs||[]).forEach(function(tag){ REQS.forEach(function(r){ if(reqTag(r) === tag && r.hm){ hmWait[r.hm] = (hmWait[r.hm] || 0) + 1; } }); }); });
+  var hmWaitKeys = Object.keys(hmWait).sort(function(a,b){ return hmWait[b] - hmWait[a]; });
+  /* Health score: coverage 40 · responsiveness 25 · pipeline motion 20 · offer flow 15 */
+  var coverage = openReqs.length ? (openReqs.length - starving.length) / openReqs.length : 1;
+  var responsiveness = fuAll.length ? 1 - (fuOver.length / fuAll.length) : 1;
+  var motion = Math.min(1, (interviewing.length + irsWeek.length) / Math.max(1, Math.round(openReqs.length * 0.35)));
+  var offerFlow = Math.min(1, (offers.length + hired.length) / Math.max(1, Math.round(openReqs.length * 0.12)));
+  var score = Math.round(coverage * 40 + responsiveness * 25 + motion * 20 + offerFlow * 15);
+  var grade = score >= 80 ? ["Healthy","--green"] : score >= 60 ? ["Stable — watch the flags","--gold"] : score >= 40 ? ["Strained","--orange"] : ["At Risk","--red"];
+  document.getElementById("viewTitle").textContent = "";
+  document.getElementById("viewMeta").textContent = "";
+
+  var wrap = el("div"); wrap.style.cssText = "max-width:1020px";
+  /* executive header */
+  var head = el("div"); head.style.cssText = "display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin:2px 0 22px;flex-wrap:wrap";
+  var hl = el("div");
+  var h1 = el("div", null, "Recruiting Health"); h1.style.cssText = "font-size:27px;font-weight:800;letter-spacing:-.4px;color:var(--ink)";
+  hl.appendChild(h1);
+  hl.appendChild(el("div","hint", tbClientDisplayName() + " · " + new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric" }) + " · prepared live for the staffing meeting"));
+  head.appendChild(hl);
+  var hs = el("div"); hs.style.cssText = "text-align:right";
+  var sc = el("div", null, String(score)); sc.style.cssText = "font-size:40px;font-weight:800;line-height:1;letter-spacing:-1px;color:" + cssVar(grade[1]);
+  sc.title = "Executive Health Score — requisition coverage (40) + follow-up responsiveness (25) + interview motion (20) + offer flow (15)";
+  hs.appendChild(sc);
+  hs.appendChild(el("div","hint", grade[0]));
+  head.appendChild(hs);
+  wrap.appendChild(head);
+  /* unified KPI strip — one row, no second-tier cards */
+  var strip = el("div"); strip.style.cssText = "display:grid;grid-template-columns:repeat(6,1fr);gap:0;border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden;margin-bottom:22px";
+  [["Open Reqs", openReqs.length, "Canonical open requisitions — same rule on every screen"],
+   ["Interviews This Wk", irsWeek.length, "Interview requests dated this week"],
+   ["Interviewing", interviewing.length, "Candidates in an interviewing-stage status"],
+   ["Awaiting HM", submitted.length, "Submitted candidates waiting on hiring-manager decisions"],
+   ["Offers", offers.length, "Offer Pending"],
+   ["Hired", hired.length, "Offer Accepted - Hired"]].forEach(function(m, i){
+    var b = el("div"); b.style.cssText = "padding:15px 16px;" + (i ? "border-left:1px solid var(--line)" : ""); b.title = m[2];
+    var n = el("div", null, String(m[1])); n.style.cssText = "font-size:23px;font-weight:800;letter-spacing:-.5px";
+    b.appendChild(n);
+    var l = el("div", null, m[0]); l.style.cssText = "font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-top:3px";
+    b.appendChild(l); strip.appendChild(b);
   });
   wrap.appendChild(strip);
-  function section(title, rows, empty){
-    var c = tbDeskCard(); c.style.cssText += ";margin-bottom:14px;max-width:860px";
-    var h = el("div", null, title); h.style.cssText = "font-weight:700;font-size:13px;color:var(--gold);margin-bottom:8px"; c.appendChild(h);
-    if(!rows.length){ c.appendChild(el("div","hint", empty)); }
-    rows.forEach(function(r){ var li = el("div", null, "· " + r); li.style.cssText = "font-size:13px;padding:3px 0;color:var(--ink)"; c.appendChild(li); });
-    wrap.appendChild(c);
+  function exSection(title, sub){
+    var c = el("div"); c.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;margin-bottom:16px";
+    var h = el("div", null, title); h.style.cssText = "font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--gray)";
+    c.appendChild(h);
+    if(sub){ var s2 = el("div","hint", sub); s2.style.margin = "3px 0 0"; c.appendChild(s2); }
+    var body = el("div"); body.style.marginTop = "10px"; c.appendChild(body);
+    wrap.appendChild(c); return body;
   }
-  section("Offers in Motion", offers.map(function(c){ return fullName(c) + " — " + ((c.reqs||[])[0] || c.title || "") + " (" + (c.owner || "unowned") + ")"; }), "No offers pending.");
-  section("Awaiting Hiring Manager Feedback", submitted.map(function(c){ return fullName(c) + " — " + ((c.reqs||[])[0] || "") + " (" + (c.owner || "unowned") + ")"; }), "Nothing submitted is waiting on feedback.");
-  section("Interviews This Week", irsWeek.map(function(ir){ return (ir.candidateName || "") + " — " + (ir.interviewDate || "") + " " + (ir.role || "") + (ir.hiringManager ? " (with " + ir.hiringManager + ")" : ""); }), "No interviews scheduled this week.");
-  section("Requisitions With No Candidates Tagged", starving.map(function(r){ return (r.jobId ? r.jobId + " · " : "") + r.title + " – " + r.loc + " (" + (r.hm || "no HM") + ")"; }), "Every open requisition has candidates in play.");
+  function exRow(host2, txt, accentVar){
+    var li = el("div"); li.style.cssText = "display:flex;gap:10px;align-items:baseline;padding:5px 0;font-size:13.5px;color:var(--ink)";
+    if(accentVar){ var d = el("span"); d.style.cssText = "width:7px;height:7px;border-radius:50%;flex-shrink:0;position:relative;top:-1px;background:" + cssVar(accentVar); li.appendChild(d); }
+    li.appendChild(el("span", null, txt)); host2.appendChild(li); return li;
+  }
+  /* top hiring bottlenecks */
+  var bn = exSection("Top Hiring Bottlenecks", "Where hiring momentum is being lost right now");
+  var bottlenecks = [];
+  if(starving.length){ bottlenecks.push([starving.length + " open requisition" + (starving.length === 1 ? "" : "s") + " with zero candidates in play", "--red"]); }
+  if(hmWaitKeys.length){ bottlenecks.push([hmWaitKeys.length + " hiring manager" + (hmWaitKeys.length === 1 ? "" : "s") + " sitting on " + submitted.length + " submittal" + (submitted.length === 1 ? "" : "s") + " — " + hmWaitKeys.slice(0,3).map(function(h){ return h + " (" + hmWait[h] + ")"; }).join(", "), "--orange"]); }
+  if(fuOver.length){ bottlenecks.push([fuOver.length + " overdue follow-up" + (fuOver.length === 1 ? "" : "s") + " — candidates at risk of going cold", "--yellow"]); }
+  var stalledIRs = irs.filter(function(ir){ if(ir.status !== "Requested"){ return false; } var d = Date.parse(ir.createdAt || ""); return d && (Date.now() - d) > 5 * 86400000; });
+  if(stalledIRs.length){ bottlenecks.push([stalledIRs.length + " interview request" + (stalledIRs.length === 1 ? "" : "s") + " unscheduled for more than 5 days", "--purple"]); }
+  if(!bottlenecks.length){ bn.appendChild(el("div","hint","No structural bottlenecks. Momentum is with us.")); }
+  bottlenecks.slice(0, 5).forEach(function(b){ exRow(bn, b[0], b[1]); });
+  /* momentum */
+  var mo = exSection("Recruiting Momentum", "Last 7 days");
+  exRow(mo, acts7 + " recruiter touchpoints logged (calls, emails, interviews, notes)");
+  exRow(mo, new7 + " new candidate" + (new7 === 1 ? "" : "s") + " entered the pipeline");
+  exRow(mo, irsWeek.length + " interview" + (irsWeek.length === 1 ? "" : "s") + " on the calendar this week");
+  /* offers in motion */
+  var om = exSection("Offers in Motion", null);
+  if(!offers.length){ om.appendChild(el("div","hint","No offers pending.")); }
+  offers.forEach(function(c){ exRow(om, fullName(c) + " — " + ((c.reqs||[])[0] || c.title || "") + " (" + (c.owner || "unowned") + ")", "--gold"); });
+  /* critical requisitions */
+  var cr = exSection("Critical Requisitions", "Zero-coverage or flagged priority");
+  if(!critical.length){ cr.appendChild(el("div","hint","Nothing critical. Every open requisition has candidates in play.")); }
+  critical.slice(0, 8).forEach(function(r){ exRow(cr, (r.jobId ? r.jobId + " · " : "") + r.title + " – " + r.loc + " (" + (r.hm || "no HM") + ") — " + reqCandN(r) + " in play", reqCandN(r) === 0 ? "--red" : "--orange"); });
+  if(critical.length > 8){ cr.appendChild(el("div","hint","+ " + (critical.length - 8) + " more in Open Requisitions.")); }
+  /* executive summary — deterministic, from the same numbers as everything above */
+  var es = exSection("Executive Summary", null);
+  var sum = [];
+  sum.push("Recruiting is " + grade[0].toLowerCase().replace(" — watch the flags","") + " at " + score + "/100 across " + openReqs.length + " open requisitions.");
+  sum.push(((openReqs.length - starving.length)) + " of " + openReqs.length + " requisitions have candidates in play" + (starving.length ? "; " + starving.length + " need sourcing attention" : "") + ".");
+  sum.push(interviewing.length + " candidates are interviewing, " + submitted.length + " await hiring-manager decisions, and " + offers.length + " offer" + (offers.length === 1 ? " is" : "s are") + " in motion.");
+  if(fuOver.length){ sum.push("Follow-up hygiene needs attention: " + fuOver.length + " overdue."); }
+  var p = el("div", null, sum.join(" ")); p.style.cssText = "font-size:14px;line-height:1.7;color:var(--ink)";
+  es.appendChild(p);
+  /* copy for the meeting */
   var copy = el("button","btn gold","Copy Brief");
   copy.addEventListener("click", function(){
-    var lines = ["TSS Leadership Brief — " + tbClientDisplayName() + " — " + todayISO(), ""];
-    lines.push("Open requisitions: " + openReqs.length + " · Interviews this week: " + irsWeek.length + " · Interviewing: " + interviewing.length + " · Submitted awaiting HM: " + submitted.length + " · Offers pending: " + offers.length + " · Hired: " + hiredMTD.length, "");
-    lines.push("OFFERS IN MOTION:"); offers.length ? offers.forEach(function(c){ lines.push("- " + fullName(c) + " — " + ((c.reqs||[])[0] || "")); }) : lines.push("- none");
-    lines.push("", "AWAITING HM FEEDBACK:"); submitted.length ? submitted.forEach(function(c){ lines.push("- " + fullName(c) + " — " + ((c.reqs||[])[0] || "")); }) : lines.push("- none");
-    lines.push("", "REQS WITH NO CANDIDATES:"); starving.length ? starving.forEach(function(r){ lines.push("- " + (r.jobId ? r.jobId + " · " : "") + r.title + " – " + r.loc); }) : lines.push("- none");
+    var lines = ["TSS Recruiting Health — " + tbClientDisplayName() + " — " + todayISO(), "Health Score: " + score + "/100 (" + grade[0] + ")", ""];
+    lines.push("Open reqs: " + openReqs.length + " · Interviews this week: " + irsWeek.length + " · Interviewing: " + interviewing.length + " · Awaiting HM: " + submitted.length + " · Offers: " + offers.length + " · Hired: " + hired.length, "");
+    lines.push("BOTTLENECKS:"); bottlenecks.length ? bottlenecks.forEach(function(b){ lines.push("- " + b[0]); }) : lines.push("- none");
+    lines.push("", "OFFERS IN MOTION:"); offers.length ? offers.forEach(function(c){ lines.push("- " + fullName(c) + " — " + ((c.reqs||[])[0] || "")); }) : lines.push("- none");
+    lines.push("", "CRITICAL REQUISITIONS:"); critical.length ? critical.slice(0, 10).forEach(function(r){ lines.push("- " + (r.jobId ? r.jobId + " · " : "") + r.title + " – " + r.loc + " (" + reqCandN(r) + " in play)"); }) : lines.push("- none");
+    lines.push("", "SUMMARY: " + sum.join(" "));
     try{ navigator.clipboard.writeText(lines.join("\n")); toast("Brief copied — paste into your staffing-meeting email."); }catch(e){ toast("Could not copy on this browser."); }
   });
-  wrap.appendChild(copy); host.appendChild(wrap);
+  wrap.appendChild(copy);
+  host.appendChild(wrap);
 }
 
 function renderTodaysFocus(host){
@@ -6630,6 +6721,15 @@ function makeSourcingBtn(r, tr){
 <style id="tb-programs-css">
 /* ── Recruiting Programs layer ── */
 #tbProgramsNav{ margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--line); }
+/* Plain data table — for boards that are genuinely tabular (recruiter workload),
+   NOT the candidate compact-card system */
+table.tb-plain{ width:100%; border-collapse:separate; border-spacing:0; background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden }
+table.tb-plain th{ text-align:left; font-size:10.5px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; color:var(--gray); padding:10px 14px; border-bottom:1px solid var(--line); background:var(--panel2) }
+table.tb-plain td{ padding:10px 14px; font-size:13.5px; color:var(--ink); border-bottom:1px solid var(--line) }
+table.tb-plain tr:last-child td{ border-bottom:0 }
+table.tb-plain tr.click{ cursor:pointer; transition:background .12s }
+table.tb-plain tr.click:hover td{ background:var(--panel2) }
+table.tb-plain .nm{ font-weight:700 }
 /* ═══ Recruiter Workstation sidebar typography — the nav reads like chapters ═══ */
 .tb-client-name{
   font-size:12.5px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
@@ -9279,6 +9379,448 @@ body.tb-overlay-open{ overflow:hidden; }
       try{ renderEnterpriseLibrary(); return; }catch(e){ /* fall through to standard view */ }
     }
     _prevRL();
+  };
+})();
+</script>
+
+<script id="tb-workstations">
+/* ═══════════════════════════════════════════════════════════════════════════
+   TALENTBASE v3.0 — WORKSTATION LAYER (the Recruiting Operating System)
+   One engine, five workstations. Every login resolves
+   Organization → Program → Role → Workstation, never a hardcoded user.
+   Dayforce stays the System of Record; TalentBase is the System of Execution.
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function(){
+  "use strict";
+  if(typeof window === "undefined"){ return; }
+
+  /* ---------- 1. WORKSTATION ASSIGNMENTS (first-class, config-driven) ----------
+     Explicit assignments win; rules cover everyone else. Programs scope which
+     departments a user works — "*" means all. */
+  window.TB_WORKSTATION_ASSIGNMENTS = window.TB_WORKSTATION_ASSIGNMENTS || {
+    "jonah.adelman1979@gmail.com": { workstation: "admin",     programs: "*" },
+    /* examples per the v3.0 assignment model — activate by matching real logins:
+       "amy@...":     { workstation: "recruiter", programs: ["MTC","SlingWorks"] },
+       "anthony@...": { workstation: "admin",     programs: "*" },
+       "nicole@...":  { workstation: "executive", programs: "*" }  */
+  };
+  var WS_HOME = { recruiter:"guide", manager:"tb_ws_manager", hm:"tb_hm_review", executive:"tb_brief", admin:"tb_ws_admin" };
+  var WS_LABEL = { recruiter:"Recruiter Workstation", manager:"Recruiting Manager Workstation", hm:"Hiring Manager Workstation", executive:"Executive Workstation", admin:"Administrator Workstation" };
+
+  function tbResolveWorkstation(){
+    if(window.TB_WORKSTATION_OVERRIDE){ return window.TB_WORKSTATION_OVERRIDE; } /* admin View-as */
+    var email = ((typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) || "").toLowerCase();
+    var cfg = window.TB_WORKSTATION_ASSIGNMENTS[email];
+    if(cfg && cfg.workstation){ return cfg.workstation; }
+    var first = email.split("@")[0].split(/[._+\-]/)[0];
+    if(first === "jonah" || first === "anthony"){ return "admin"; }
+    if(first === "nicole"){ return "executive"; }
+    if(typeof MANAGERS !== "undefined" && MANAGERS.some(function(m){ return (m.email || "").toLowerCase() === email; })){ return "hm"; }
+    if(typeof VIEW_ONLY !== "undefined" && VIEW_ONLY){ return "executive"; } /* read-only accounts get the executive experience */
+    return "recruiter";
+  }
+  window.TB_WS = null;
+
+  var EXEC_VIEWS = { tb_brief:1, dashboard:1, reqs:1, talentbench:1, all:1, tb_people_hm:1, tb_people_rec:1 };
+  window.TB_WS_FILTER = function(v){
+    var ws = window.TB_WS || "recruiter";
+    if(ws === "hm"){ return v.ws === "hm"; }
+    if(ws === "executive"){ return !v.ws && EXEC_VIEWS[v.id]; }
+    if(ws === "manager"){ return !v.ws || v.ws === "manager"; }
+    if(ws === "admin"){ return !v.ws || v.ws === "admin"; }
+    return !v.ws; /* recruiter: the flagship experience, nothing bolted on */
+  };
+
+  function isAdmin(){ return (window.TB_WS === "admin") || (!window.TB_WORKSTATION_OVERRIDE && tbResolveWorkstation() === "admin"); }
+  function hmName(){
+    var email = ((CURRENT_USER && CURRENT_USER.email) || "").toLowerCase();
+    var m = (typeof MANAGERS !== "undefined" ? MANAGERS : []).filter(function(x){ return (x.email || "").toLowerCase() === email; })[0];
+    if(m){ return m.name; }
+    return window.TB_HM_PREVIEW || ""; /* admin View-as previews the first HM */
+  }
+
+  /* ---------- 2. CANDIDATE OWNERSHIP (claim → own → transfer, history kept) ---------- */
+  var LOCKED_STATUSES = { "Submitted":1, "Interviewing Stage 1":1, "Interviewing Stage 2":1, "Interviewing Stage 3":1, "Panel / Final Interview":1, "Interviewing":1, "Offer Pending":1 };
+  function meOwnerName(){
+    var first = ((CURRENT_USER && CURRENT_USER.email) || "").split("@")[0].split(/[._+\-]/)[0].toLowerCase();
+    var hit = (typeof OWNERS !== "undefined" ? OWNERS : []).filter(function(o){ return o.toLowerCase() === first; })[0];
+    return hit || (first ? first.charAt(0).toUpperCase() + first.slice(1) : "");
+  }
+  function ownerIsMe(c){ return (c.owner || "") !== "" && c.owner !== "Unassigned" && c.owner.toLowerCase() === meOwnerName().toLowerCase(); }
+  function unclaimed(c){ return !c.owner || c.owner === "Unassigned"; }
+  async function logOwnership(c, text){
+    try{ if(!sb){ return; } await sb.from("activities").insert({ org: ORG, candidate_id: c.id, type: "Note", date: todayISO(), notes: "[Ownership] " + text, owner: meOwnerName() }); await loadData(); }catch(e){}
+  }
+  window.tbClaimCandidate = async function(c){
+    var me = meOwnerName(); if(!me){ toast("Sign in to claim candidates."); return; }
+    var res = await sb.from("candidates").update({ owner: me }).eq("id", c.id);
+    if(res.error){ toast("Claim failed: " + res.error.message.slice(0, 60)); return; }
+    await logOwnership(c, "Claimed by " + me + ".");
+    closeModal(); toast(fullName(c) + " is now on your desk."); refresh();
+  };
+  window.tbTransferCandidate = async function(c){
+    var to = window.prompt("Transfer " + fullName(c) + " to which recruiter?\n\n" + OWNERS.join(" · "), "");
+    if(!to){ return; }
+    var match = OWNERS.filter(function(o){ return o.toLowerCase() === to.trim().toLowerCase(); })[0];
+    if(!match){ toast("No recruiter named “" + to + "”."); return; }
+    var res = await sb.from("candidates").update({ owner: match }).eq("id", c.id);
+    if(res.error){ toast("Transfer failed: " + res.error.message.slice(0, 60)); return; }
+    await logOwnership(c, "Transferred from " + (c.owner || "Unassigned") + " to " + match + ".");
+    closeModal(); toast(fullName(c) + " transferred to " + match + "."); refresh();
+  };
+  /* enforce ownership on the candidate record — chained over the library layer */
+  if(typeof openDetail === "function"){
+    var _od = window.openDetail;
+    window.openDetail = function(c){
+      var ws = window.TB_WS || "recruiter";
+      if(!c || c._xorg || isAdmin() || ws === "executive" || ws === "hm"){ _od(c); tbOwnershipChrome(c, false); return; }
+      var lockedToOther = !unclaimed(c) && !ownerIsMe(c);
+      if(!lockedToOther){ _od(c); tbOwnershipChrome(c, false); return; }
+      /* another recruiter's candidate: view, recommend, request transfer — never edit */
+      var was = VIEW_ONLY; VIEW_ONLY = true;
+      try{ _od(c); } finally { VIEW_ONLY = was; }
+      tbOwnershipChrome(c, true);
+    };
+  }
+  function tbOwnershipChrome(c, lockedToOther){
+    try{
+      if(!c || c._xorg){ return; }
+      var mh = document.querySelector("#modal .mhead h2"); if(!mh){ return; }
+      var ws = window.TB_WS || "recruiter";
+      if(lockedToOther){
+        var ob = el("span", null, "Owned by " + c.owner + (LOCKED_STATUSES[c.status] ? " · in process" : ""));
+        ob.style.cssText = "margin-left:10px;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--orange);background:rgba(234,88,12,.09);border-radius:5px;padding:2px 8px;vertical-align:3px";
+        mh.appendChild(ob);
+        var foot = document.querySelector("#modal .mfoot .right");
+        if(foot){
+          var rq = el("button","btn","Request Transfer"); rq.type = "button";
+          rq.title = "Logs a transfer request on the record — " + c.owner + " and the recruiting manager see it";
+          rq.addEventListener("click", function(){ logOwnership(c, "Transfer requested by " + meOwnerName() + "."); toast("Transfer request logged for " + c.owner + "."); });
+          var rec = el("button","btn ghost","Recommend"); rec.type = "button";
+          rec.title = "Recommend this candidate for a requisition — logged on the record";
+          rec.addEventListener("click", function(){ var w = window.prompt("Recommend " + fullName(c) + " — for which requisition / why?", ""); if(w){ logOwnership(c, "Recommended by " + meOwnerName() + ": " + w); toast("Recommendation logged."); } });
+          foot.insertBefore(rq, foot.firstChild); foot.insertBefore(rec, foot.firstChild);
+        }
+      } else if(unclaimed(c) && (ws === "recruiter" || ws === "manager" || ws === "admin")){
+        var foot2 = document.querySelector("#modal .mfoot .right");
+        if(foot2 && !VIEW_ONLY && c.id){
+          var cl = el("button","btn gold","Claim Candidate"); cl.type = "button";
+          cl.title = "Put this candidate on your desk — ownership is logged on the record";
+          cl.addEventListener("click", function(){ tbClaimCandidate(c); });
+          foot2.insertBefore(cl, foot2.firstChild);
+        }
+      } else if((ownerIsMe(c) || isAdmin()) && c.id && !VIEW_ONLY){
+        var foot3 = document.querySelector("#modal .mfoot .right");
+        if(foot3){
+          var tr = el("button","btn ghost sm","Transfer"); tr.type = "button";
+          tr.title = "Hand this candidate to another recruiter — ownership history is kept on the record";
+          tr.addEventListener("click", function(){ tbTransferCandidate(c); });
+          foot3.insertBefore(tr, foot3.firstChild);
+        }
+      }
+    }catch(e){}
+  }
+
+  /* ---------- 3. CANDIDATE INTELLIGENCE (computed live, zero DB writes) ---------- */
+  var DISC_RULES = [
+    ["Program Management", /program manager|project manager|\bpmp\b|\bpmo\b|program management|scrum master/i],
+    ["Systems Engineering", /systems engineer|sys\.? eng|model.based|mbse|requirements engineer|integration lead/i],
+    ["Engineering Leadership", /chief engineer|director.{0,12}engineering|engineering manager|vp.{0,10}engineering|head of engineering/i],
+    ["Software", /software|developer|devops|full.?stack|embedded|c\+\+|java|python|rtos/i],
+    ["Electrical / Hardware", /electrical|hardware|fpga|pcb|circuit|power electronics|\bee\b/i],
+    ["Mechanical / Hardware", /mechanical|structural|thermal|\bcad\b|solidworks|creo/i],
+    ["Test & Evaluation", /test engineer|test technician|\bt&e\b|verification|validation|flight test/i],
+    ["Configuration Management", /configuration (analyst|manag)|\bcm\b analyst|data management/i],
+    ["Manufacturing", /manufactur|production engineer|assembler|technician|industrial engineer|\bnpi\b/i],
+    ["Quality", /quality|qa engineer|\bcapa\b|supplier quality|mission assurance/i],
+    ["Supply Chain", /supply chain|procurement|buyer|logistics|material/i],
+    ["Cyber / DevSecOps", /cyber|security engineer|devsecops|\bisso\b|\brmf\b/i]
+  ];
+  window.tbInferDiscipline = function(c){
+    var hay = ((c.title || "") + " " + ((c.skills || []).join(" ")) + " " + (c.company || "") + " " + String(c.resumeText || "").slice(0, 1500)).toLowerCase();
+    for(var i = 0; i < DISC_RULES.length; i++){ if(DISC_RULES[i][1].test(hay)){ return DISC_RULES[i][0]; } }
+    return "";
+  };
+  window.tbIntelligence = function(){
+    var out = { uncategorized: [], inferred: 0 };
+    (state.candidates || []).forEach(function(c){
+      if(!c.discipline || c.discipline === "Other" || c.discipline === ""){
+        var d = tbInferDiscipline(c);
+        if(d){ c._inferredDisc = d; out.inferred++; }
+        out.uncategorized.push(c);
+      }
+    });
+    return out;
+  };
+  /* NEW badge: fresh, unclaimed talent flowing into the workstation */
+  if(typeof rowFor === "function"){
+    var _rf = window.rowFor;
+    window.rowFor = function(c){
+      var tr = _rf(c);
+      try{
+        if(c && !c._xorg && unclaimed(c)){
+          var d = Date.parse(c.dateReceived || "");
+          if(d && (Date.now() - d) < 7 * 86400000){
+            var nm = tr.querySelector(".nm");
+            if(nm){
+              var nb = el("span", null, "NEW");
+              nb.style.cssText = "margin-left:6px;font-size:8.5px;font-weight:800;letter-spacing:.6px;border-radius:4px;padding:1px 5px;vertical-align:1px;color:#fff;background:var(--green)";
+              nb.title = "Arrived in the last 7 days and unclaimed — open the record to claim it";
+              nm.appendChild(nb);
+            }
+          }
+        }
+        if(c && !c._xorg && c._inferredDisc && (!c.discipline || c.discipline === "Other")){
+          var dsc = tr.querySelectorAll("td")[2];
+          if(dsc && /^(-|Other)?$/.test(dsc.textContent.trim())){ dsc.textContent = c._inferredDisc; dsc.title = "Suggested by Candidate Intelligence — not yet written to the record"; dsc.style.fontStyle = "italic"; }
+        }
+      }catch(e){}
+      return tr;
+    };
+  }
+
+  /* ---------- 4. WORKSTATION RENDERERS ---------- */
+  function wsCard(css){ var c = el("div"); c.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;" + (css || ""); return c; }
+  function wsHead(txt){ var h = el("div", null, txt); h.style.cssText = "font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--gray);margin-bottom:10px"; return h; }
+  function goBtn(label, view){ var b = el("button","btn sm ghost", label); b.addEventListener("click", function(){ ui.view = view; refresh(); }); return b; }
+
+  /* Recruiting Manager — Team Health */
+  window.renderWsManager = function(host){
+    var cands = state.candidates || [], irs = state.interviewRequests || [];
+    document.getElementById("viewTitle").textContent = "";
+    document.getElementById("viewMeta").textContent = "";
+    var wrap = el("div"); wrap.style.cssText = "max-width:1060px";
+    var h1 = el("div", null, "Team Health"); h1.style.cssText = "font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.3px;margin-bottom:2px";
+    wrap.appendChild(h1);
+    wrap.appendChild(el("div","hint", new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric" }) + " · every number equals its drill-down"));
+    /* who needs help: coaching flags */
+    var flags = [];
+    var byOwner = {};
+    cands.forEach(function(c){ var o = c.owner || "Unassigned"; (byOwner[o] = byOwner[o] || []).push(c); });
+    Object.keys(byOwner).forEach(function(o){
+      if(o === "Unassigned"){ return; }
+      var mine = byOwner[o];
+      var overdue = mine.filter(function(c){ return followUp(c).label === "Overdue"; }).length;
+      var stale = mine.filter(function(c){ return c.status === "Submitted"; }).length;
+      if(overdue >= 5){ flags.push(o + " — " + overdue + " overdue follow-ups (coaching: pipeline hygiene)"); }
+      if(stale >= 8){ flags.push(o + " — " + stale + " submittals awaiting HM feedback (help: chase feedback)"); }
+    });
+    var unclaimedN = cands.filter(function(c){ return unclaimed(c) && c.status !== "Archived"; }).length;
+    if(unclaimedN > 0){ flags.push(unclaimedN + " unclaimed candidates need an owner"); }
+    var stalledIRs = irs.filter(function(ir){ if(ir.status !== "Requested"){ return false; } var d = Date.parse(ir.createdAt || ""); return d && (Date.now() - d) > 5 * 86400000; });
+    if(stalledIRs.length){ flags.push(stalledIRs.length + " interview request" + (stalledIRs.length === 1 ? "" : "s") + " stalled > 5 days"); }
+    var fc = wsCard("margin:16px 0"); fc.appendChild(wsHead("Who Needs Help Today"));
+    if(!flags.length){ fc.appendChild(el("div","hint","No coaching flags. The desk is healthy.")); }
+    flags.slice(0, 8).forEach(function(f){ var li = el("div", null, "· " + f); li.style.cssText = "font-size:13.5px;padding:4px 0;color:var(--ink)"; fc.appendChild(li); });
+    wrap.appendChild(fc);
+    /* workload board (canonical) */
+    var wb = wsCard("margin-bottom:16px"); wb.appendChild(wsHead("Recruiter Workload — click a row to open that desk"));
+    var inner = el("div"); wb.appendChild(inner);
+    var origMeta = document.getElementById("viewMeta").textContent;
+    renderRecruiterBoard(inner);
+    document.getElementById("viewMeta").textContent = origMeta;
+    wrap.appendChild(wb);
+    /* offer forecast */
+    var offers = cands.filter(function(c){ return c.status === "Offer Pending"; });
+    var oc = wsCard(); oc.appendChild(wsHead("Offer Forecast"));
+    if(!offers.length){ oc.appendChild(el("div","hint","No offers in motion.")); }
+    offers.forEach(function(c){ var li = el("div", null, "· " + fullName(c) + " — " + ((c.reqs||[])[0] || "") + " (" + (c.owner || "unowned") + ")"); li.style.cssText = "font-size:13.5px;padding:4px 0"; oc.appendChild(li); });
+    oc.appendChild(goBtn("Open Offers", "offerpending"));
+    wrap.appendChild(oc);
+    host.appendChild(wrap);
+  };
+
+  /* Hiring Manager — six scoped views, read-only, nothing recruiter-side */
+  window.renderWsHM = function(host){
+    var me = hmName();
+    var v = ui.view;
+    document.getElementById("viewMeta").textContent = me ? ("Your hiring desk · read-only · your recruiter handles the rest") : "";
+    if(!me){
+      var em = el("div","empty"); em.appendChild(el("div","big","No hiring-manager profile matched"));
+      em.appendChild(el("div", null, "Your login isn't linked to a hiring manager record yet — ask your recruiter to add your email."));
+      host.appendChild(em); return;
+    }
+    var myReqs = REQS.filter(function(r){ return (r.hm || "") === me; });
+    var myTags = {}; myReqs.forEach(function(r){ myTags[r.title + " – " + r.loc] = 1; });
+    function mineCands(){ return (state.candidates || []).filter(function(c){ return (c.reqs || []).some(function(t){ return myTags[t]; }); }); }
+    var irs = (state.interviewRequests || []).filter(function(ir){ return (ir.hiringManager || "") === me; });
+    var wrap = el("div"); wrap.style.cssText = "max-width:1020px";
+    function candTable(rows, empty){
+      if(!rows.length){ var e2 = el("div","hint", empty); wrap.appendChild(e2); return; }
+      var table = el("table","cardtable"); var tb = el("tbody");
+      pipelineSort(rows).forEach(function(c){ tb.appendChild(rowFor(c)); });
+      table.appendChild(tb); wrap.appendChild(table);
+    }
+    if(v === "tb_hm_review"){
+      var h1 = el("div", null, "Candidates Awaiting Your Review"); h1.style.cssText = "font-size:24px;font-weight:800;letter-spacing:-.3px;margin-bottom:12px";
+      wrap.appendChild(h1);
+      candTable(mineCands().filter(function(c){ return c.status === "Submitted"; }), "Nothing waiting on you. Your recruiter will submit the next slate here.");
+    } else if(v === "tb_hm_positions"){
+      var open = myReqs.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : !r.bench; });
+      document.getElementById("viewTitle").textContent = "My Open Positions";
+      if(!open.length){ wrap.appendChild(el("div","hint","No open positions right now.")); }
+      open.forEach(function(r){
+        var c2 = wsCard("margin-bottom:10px");
+        var t2 = el("div", null, (r.jobId ? r.jobId + " · " : "") + r.title + " – " + r.loc); t2.style.cssText = "font-weight:700;font-size:14.5px";
+        c2.appendChild(t2);
+        var tag = r.title + " – " + r.loc;
+        var n = (state.candidates || []).filter(function(c){ return (c.reqs||[]).indexOf(tag) !== -1 && c.status !== "Archived"; }).length;
+        c2.appendChild(el("div","hint", n + " candidate" + (n === 1 ? "" : "s") + " in play"));
+        wrap.appendChild(c2);
+      });
+    } else if(v === "tb_hm_interviews"){
+      document.getElementById("viewTitle").textContent = "Upcoming Interviews";
+      var up = irs.filter(function(ir){ return (ir.interviewDate || "") >= todayISO() && ir.status !== "Cancelled"; });
+      if(!up.length){ wrap.appendChild(el("div","hint","No interviews scheduled.")); }
+      up.forEach(function(ir){ var li = el("div", null, "· " + (ir.interviewDate || "") + " — " + (ir.candidateName || "") + " (" + (ir.role || "") + ")"); li.style.cssText = "font-size:13.5px;padding:5px 0"; wrap.appendChild(li); });
+    } else if(v === "tb_hm_feedback"){
+      document.getElementById("viewTitle").textContent = "Pending Feedback";
+      wrap.appendChild(el("div","hint","Submitted candidates waiting on your decision — your recruiter is holding these for you."));
+      candTable(mineCands().filter(function(c){ return c.status === "Submitted"; }), "Nothing outstanding — you're caught up.");
+    } else if(v === "tb_hm_offers"){
+      document.getElementById("viewTitle").textContent = "Offers";
+      candTable(mineCands().filter(function(c){ return c.status === "Offer Pending"; }), "No offers in motion on your positions.");
+    } else if(v === "tb_hm_hires"){
+      document.getElementById("viewTitle").textContent = "Recent Hires";
+      candTable(mineCands().filter(function(c){ return c.status === "Offer Accepted - Hired"; }), "No hires yet — they'll land here.");
+    }
+    host.appendChild(wrap);
+  };
+
+  /* Administrator — Platform Status */
+  window.renderWsAdmin = function(host){
+    document.getElementById("viewTitle").textContent = "";
+    document.getElementById("viewMeta").textContent = "";
+    var wrap = el("div"); wrap.style.cssText = "max-width:1060px";
+    var h1 = el("div", null, "Platform Status"); h1.style.cssText = "font-size:26px;font-weight:800;letter-spacing:-.3px;margin-bottom:2px";
+    wrap.appendChild(h1);
+    wrap.appendChild(el("div","hint", tbClientDisplayName() + " workspace · " + WS_LABEL[window.TB_WS || "admin"]));
+    var strip = el("div"); strip.style.cssText = "display:flex;gap:14px;flex-wrap:wrap;margin:16px 0";
+    [["Candidates", (state.candidates||[]).length], ["Requisitions", REQS.length], ["Interview Requests", (state.interviewRequests||[]).length], ["Hiring Managers", (state.managers||MANAGERS||[]).length], ["Activities", (state.activities||[]).length]].forEach(function(m){
+      var b = wsCard("min-width:130px;padding:12px 18px");
+      var n = el("div", null, String(m[1])); n.style.cssText = "font-size:24px;font-weight:800";
+      b.appendChild(n); b.appendChild(el("div","hint", m[0])); strip.appendChild(b);
+    });
+    wrap.appendChild(strip);
+    /* feature flags */
+    var ff = wsCard("margin-bottom:14px"); ff.appendChild(wsHead("Feature Flags"));
+    [["TB_ENTERPRISE_LIBRARY_V1", window.TB_ENTERPRISE_LIBRARY_V1 === true], ["TB_ACTIVE_REQUISITIONS_V1", window.TB_ACTIVE_REQUISITIONS_V1 === true]].forEach(function(f){
+      var li = el("div"); li.style.cssText = "display:flex;gap:10px;align-items:center;padding:4px 0;font-size:13.5px";
+      var dot = el("span"); dot.style.cssText = "width:9px;height:9px;border-radius:50%;background:" + (f[1] ? "var(--green)" : "var(--gray)");
+      li.appendChild(dot); li.appendChild(el("span", null, f[0] + " — " + (f[1] ? "ON" : "OFF") + " (set in the deployed file; rollback = flip the flag)"));
+      ff.appendChild(li);
+    });
+    wrap.appendChild(ff);
+    /* view-as (approved v3.0 amendment: admin sees what each role sees) */
+    var va = wsCard("margin-bottom:14px"); va.appendChild(wsHead("View As — preview any workstation"));
+    var row = el("div"); row.style.cssText = "display:flex;gap:8px;flex-wrap:wrap";
+    [["recruiter","Recruiter"],["manager","Recruiting Manager"],["hm","Hiring Manager"],["executive","Executive"],["admin","Administrator"]].forEach(function(w){
+      var b = el("button","btn sm" + ((window.TB_WS === w[0]) ? " gold" : " ghost"), w[1]);
+      b.addEventListener("click", function(){
+        window.TB_WORKSTATION_OVERRIDE = w[0];
+        if(w[0] === "hm" && !hmName()){ window.TB_HM_PREVIEW = (MANAGERS[0] || {}).name || ""; }
+        tbApplyWorkstation(true);
+      });
+      row.appendChild(b);
+    });
+    va.appendChild(row);
+    va.appendChild(el("div","hint","Preview only — your admin rights return when you switch back."));
+    wrap.appendChild(va);
+    /* candidate intelligence */
+    var intel = tbIntelligence();
+    var ic = wsCard("margin-bottom:14px"); ic.appendChild(wsHead("Candidate Intelligence"));
+    ic.appendChild(el("div", null, intel.uncategorized.length + " candidates without a firm discipline · " + intel.inferred + " classified live by the intelligence rules (shown in italics on cards — zero database writes)")).style.fontSize = "13.5px";
+    if(intel.inferred > 0){
+      var ap = el("button","btn sm","Apply " + intel.inferred + " classifications to the database"); ap.style.marginTop = "10px";
+      ap.title = "Writes the inferred discipline onto records that have none. Explicit, logged, reversible by editing the record.";
+      ap.addEventListener("click", async function(){
+        if(!window.confirm("Write inferred disciplines onto " + intel.inferred + " candidate records that currently have none?\n\nOnly blank/Other disciplines are touched. Every other field is untouched.")){ return; }
+        var n = 0;
+        for(var i = 0; i < state.candidates.length; i++){
+          var c = state.candidates[i];
+          if(c._inferredDisc && (!c.discipline || c.discipline === "Other" || c.discipline === "")){
+            var r = await sb.from("candidates").update({ discipline: c._inferredDisc }).eq("id", c.id);
+            if(!r.error){ n++; }
+          }
+        }
+        toast(n + " records classified."); await loadData(); refresh();
+      });
+      ic.appendChild(ap);
+    }
+    wrap.appendChild(ic);
+    /* recent platform activity */
+    var lg = wsCard(); lg.appendChild(wsHead("Recent Activity (latest 10)"));
+    (state.activities || []).slice(0, 10).forEach(function(a){
+      var li = el("div", null, "· " + (a.date || "") + " — " + a.type + (a.owner ? " (" + a.owner + ")" : "") + ": " + String(a.notes || "").slice(0, 80));
+      li.style.cssText = "font-size:12.5px;padding:3px 0;color:var(--muted)";
+      lg.appendChild(li);
+    });
+    wrap.appendChild(lg);
+    host.appendChild(wrap);
+  };
+
+  /* ---------- 5. ROUTING: nav filter application + landing + chrome ---------- */
+  window.tbApplyWorkstation = function(rerender){
+    window.TB_WS = tbResolveWorkstation();
+    var ws = window.TB_WS;
+    /* executive + hm are read-only experiences regardless of DB role */
+    if(typeof window.TB_ORIG_VO === "undefined"){ window.TB_ORIG_VO = VIEW_ONLY; }
+    VIEW_ONLY = (ws === "executive" || ws === "hm") ? true : window.TB_ORIG_VO;
+    if(ws === "executive"){ try{ sectionCollapsed["Analytics"] = false; }catch(eSC){} }
+    /* topbar: recruiters recruit; admins administer */
+    try{
+      var adminBtns = ["importBtn","exportBtn","dayforceBtn","bulkBtn"], recruitBtns = ["fromResumeBtn","addBtn"];
+      adminBtns.forEach(function(id){ var b = document.getElementById(id); if(b){ b.style.display = (ws === "admin") ? "" : "none"; } });
+      recruitBtns.forEach(function(id){ var b = document.getElementById(id); if(b){ b.style.display = (ws === "recruiter" || ws === "manager" || ws === "admin") ? "" : "none"; } });
+      var fb = document.querySelector(".side .filterbox"); var fh = fb ? fb.previousElementSibling : null;
+      var showF = (ws !== "hm" && ws !== "executive");
+      if(fb){ fb.style.display = showF ? "" : "none"; } if(fh && /Candidate Filters/.test(fh.textContent)){ fh.style.display = showF ? "" : "none"; }
+    }catch(e){}
+    if(rerender){ ui.view = WS_HOME[ws] || "guide"; refresh(); }
+  };
+  /* landing: route the first screen by workstation, once, after data arrives */
+  var wsBoot = setInterval(function(){
+    if(typeof state === "undefined" || !state.candidates || !state.candidates.length || typeof CURRENT_USER === "undefined" || !CURRENT_USER){ return; }
+    clearInterval(wsBoot);
+    window.tbApplyWorkstation(false);
+    try{ tbIntelligence(); }catch(eInt){}
+    var home = WS_HOME[window.TB_WS] || "guide";
+    if(window.TB_WS !== "recruiter" && ui.view === "guide"){ ui.view = home; }
+    refresh();
+  }, 600);
+  /* nav labeling per workstation */
+  var _rt = window.renderTabs;
+  window.renderTabs = function(){
+    _rt();
+    try{
+      var ws = window.TB_WS;
+      if(ws === "executive"){
+        var bt = document.querySelector('#tabs .vtab[data-view="tb_brief"] span');
+        if(bt){ bt.textContent = "Recruiting Health"; }
+        var h3s = document.querySelectorAll("#tabs h3.sech");
+        h3s.forEach(function(h){ if(/My Work/.test(h.textContent)){ h.childNodes[0].textContent = h.childNodes[0].textContent.replace("My Work", "Executive"); } });
+      }
+      /* workstation identity under the client name */
+      if(ws && ws !== "recruiter"){
+        var co = document.querySelector(".tb-client-name");
+        if(co && !document.getElementById("tbWsTag")){
+          var tag = el("div", null, WS_LABEL[ws]); tag.id = "tbWsTag";
+          tag.style.cssText = "font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gold);padding:0 16px 8px";
+          co.parentNode.insertBefore(tag, co.nextSibling);
+        } else if(document.getElementById("tbWsTag")){ document.getElementById("tbWsTag").textContent = WS_LABEL[ws]; }
+      } else {
+        var t0 = document.getElementById("tbWsTag"); if(t0){ t0.remove(); }
+      }
+    }catch(e){}
+  };
+  /* dispatch the workstation views */
+  var _rl = window.renderList;
+  window.renderList = function(){
+    var v = (typeof ui !== "undefined") ? ui.view : "";
+    if(v === "tb_ws_manager"){ var h1 = document.getElementById("list"); h1.innerHTML = ""; document.getElementById("viewTitle").textContent = ""; document.getElementById("viewMeta").textContent = ""; renderWsManager(h1); return; }
+    if(v && v.indexOf("tb_hm_") === 0){ var h2 = document.getElementById("list"); h2.innerHTML = ""; document.getElementById("viewTitle").textContent = ""; document.getElementById("viewMeta").textContent = ""; renderWsHM(h2); return; }
+    if(v === "tb_ws_admin"){ var h3 = document.getElementById("list"); h3.innerHTML = ""; renderWsAdmin(h3); return; }
+    _rl();
   };
 })();
 </script>
