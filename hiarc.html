@@ -843,7 +843,7 @@ async function loadInterviewRequests(){
 }
 async function reloadNotesSoft(){
   await loadNotes();
-  if((ui.view === "priolist" || ui.view === "tb_teamnotes") && !NOTES_EDITING){ refresh(); }
+  if((ui.view === "priolist" || ui.view === "tb_teamnotes" || ui.view === "tb_notes") && !NOTES_EDITING){ refresh(); }
 }
 async function reloadSoft(){ await loadData(); refresh(); }
 function wireRealtime(){
@@ -884,22 +884,27 @@ window.TALENTBASE_FU_WORKLIST = true;
    Sourcing groupings (by Position / by Function / Resume Review / Dayforce)
    left navigation and became filters + hidden routable views. */
 var VIEWS = [
-  { id:"guide", collapsible:true, name:"Dashboard", fn:function(){ return true; }, special:"guide", section:"My Command Center" },
-  { id:"calendar", collapsible:true, name:"Interview Calendar", fn:function(){ return true; }, special:"calendar", section:"My Command Center" },
-  { id:"interviewrequests", collapsible:true, name:"Interview Requests", fn:function(){ return true; }, special:"interviewrequests", section:"My Command Center" },
-  { id:"followup", collapsible:true, name:"Follow-Ups Due", fn:function(c){ return followUp(c).label !== ""; }, section:"My Command Center" },
-  { id:"tb_checklist", collapsible:true, name:"My Daily Checklist", fn:function(){ return true; }, special:"tb_checklist", section:"My Command Center" },
-  { id:"tb_goals", collapsible:true, name:"Weekly Goals", fn:function(){ return true; }, special:"tb_goals", section:"My Command Center" },
-  { id:"tb_mynotes", collapsible:true, name:"My Notes", fn:function(){ return true; }, special:"tb_mynotes", section:"My Command Center" },
-  { id:"tb_teamnotes", collapsible:true, name:"Team Notes", fn:function(){ return true; }, special:"tb_teamnotes", section:"My Command Center" },
-  { id:"tb_brief", collapsible:true, name:"TSS Leadership Brief", fn:function(){ return true; }, special:"tb_brief", section:"My Command Center" },
-  { id:"tb_focus", collapsible:true, name:"Today's Focus", fn:function(){ return true; }, special:"tb_focus", section:"My Command Center" },
-  { id:"all", collapsible:true, name:"Candidate Library", fn:function(){ return true; }, section:"Candidates" },
+  /* MY WORK — six items a recruiter can memorize in a day (founder 2026-07-18):
+     Start My Day absorbs Dashboard + Today's Focus + Daily Checklist + Weekly
+     Goals; Notes holds My Notes + Team Notes as tabs. The absorbed views stay
+     routable (hidden) so nothing breaks. */
+  { id:"guide", collapsible:true, name:"Start My Day", fn:function(){ return true; }, special:"guide", section:"My Work" },
+  { id:"calendar", collapsible:true, name:"Interview Calendar", fn:function(){ return true; }, special:"calendar", section:"My Work" },
+  { id:"interviewrequests", collapsible:true, name:"Interview Requests", fn:function(){ return true; }, special:"interviewrequests", section:"My Work" },
+  { id:"followup", collapsible:true, name:"Follow-Ups Due", fn:function(c){ return followUp(c).label !== ""; }, section:"My Work" },
+  { id:"tb_notes", collapsible:true, name:"Notes", fn:function(){ return true; }, special:"tb_notes", section:"My Work" },
+  { id:"tb_brief", collapsible:true, name:"Staffing Brief", fn:function(){ return true; }, special:"tb_brief", section:"My Work" },
+  { id:"tb_checklist", hidden:true, name:"My Daily Checklist", fn:function(){ return true; }, special:"tb_checklist" },
+  { id:"tb_goals", hidden:true, name:"Weekly Goals", fn:function(){ return true; }, special:"tb_goals" },
+  { id:"tb_mynotes", hidden:true, name:"My Notes", fn:function(){ return true; }, special:"tb_mynotes" },
+  { id:"tb_teamnotes", hidden:true, name:"Team Notes", fn:function(){ return true; }, special:"tb_teamnotes" },
+  { id:"tb_focus", hidden:true, name:"Today's Focus", fn:function(){ return true; }, special:"tb_focus" },
+  { id:"all", collapsible:true, name:"Enterprise Talent", fn:function(){ return true; }, section:"Candidates" },
   { id:"board", collapsible:true, name:"TalentFit", fn:function(){ return true; }, special:"board", section:"Candidates" },
   { id:"autoslate", collapsible:true, name:"AutoSlate", fn:function(){ return true; }, special:"autoslate", section:"Candidates" },
   { id:"pipeline", collapsible:true, name:"Hiring Pipeline", fn:function(){ return true; }, special:"pipeline", section:"Candidates" },
-  { id:"submitted", collapsible:true, name:"Submitted to Hiring Managers", fn:function(c){ return c.status === "Submitted"; }, section:"Candidates" },
-  { id:"interviewing", collapsible:true, name:"Currently Interviewing", fn:function(c){ return c.status === "Interviewing Stage 1" || c.status === "Interviewing Stage 2" || c.status === "Interviewing Stage 3" || c.status === "Panel / Final Interview" || c.status === "Interviewing"; }, section:"Candidates" },
+  { id:"submitted", collapsible:true, name:"Submitted", fn:function(c){ return c.status === "Submitted"; }, section:"Candidates" },
+  { id:"interviewing", collapsible:true, name:"Interviewing", fn:function(c){ return c.status === "Interviewing Stage 1" || c.status === "Interviewing Stage 2" || c.status === "Interviewing Stage 3" || c.status === "Panel / Final Interview" || c.status === "Interviewing"; }, section:"Candidates" },
   { id:"offerpending", collapsible:true, name:"Offers", fn:function(c){ return c.status === "Offer Pending"; }, section:"Candidates" },
   { id:"offeraccepted", collapsible:true, name:"Hired", fn:function(c){ return c.status === "Offer Accepted - Hired"; }, section:"Candidates" },
   { id:"reqs", collapsible:true, name:"Open Requisitions", fn:function(){ return true; }, special:"reqs", section:"Open Requisitions" },
@@ -1039,10 +1044,10 @@ function renderTabs(){
       if(coll){ h.setAttribute("data-section-toggle", sec); }
       /* Urgent counts must survive collapse: aggregate Follow-Ups + Interview
          Requests on the My Work header while its items are hidden. */
-      if(isCollapsed && sec === "My Command Center" && window.TB_METRICS){
+      if(isCollapsed && sec === "My Work" && window.TB_METRICS){
         if(!window.__TB_ACTION_COUNTS){ window.__TB_ACTION_COUNTS = TB_METRICS.counts(window.TB_PROGRAM || "", window.TB_SUBPROGRAM || ""); }
         var agg = (window.__TB_ACTION_COUNTS.followUpDue || 0) + (window.__TB_ACTION_COUNTS.interviewRequests || 0);
-        if(agg > 0){ var aggB = el("span","count secount" + (fuState() === "red" ? " urgent" : ""), String(agg)); h.appendChild(aggB); }
+        if(agg > 0){ var aggB = el("span","count secount" + (fuState() === "red" ? " urgent" : ""), String(agg)); aggB.title = (window.__TB_ACTION_COUNTS.followUpDue || 0) + " follow-up" + ((window.__TB_ACTION_COUNTS.followUpDue || 0) === 1 ? "" : "s") + " due + " + (window.__TB_ACTION_COUNTS.interviewRequests || 0) + " interview request" + ((window.__TB_ACTION_COUNTS.interviewRequests || 0) === 1 ? "" : "s") + " — expand " + sec + " to work them"; h.appendChild(aggB); }
       }
       box.appendChild(h);
     }
@@ -1062,12 +1067,15 @@ function renderTabs(){
     }
     var fu = (v.id === "followup") ? fuState() : "";
     var b = el("button","vtab" + (v.id===ui.view ? " active" : "") + (fu ? " fu-" + fu : ""));
-    if(v.id === "all"){
-      var lw = el("span"); lw.appendChild(el("span", null, v.name));
-      var sub = el("span", null, "Enterprise Talent Pool"); sub.style.cssText = "display:block;font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.2px";
-      lw.appendChild(sub); b.appendChild(lw);
-    } else { b.appendChild(el("span", null, v.name)); }
-    if(count !== "" && count !== null){ b.appendChild(el("span","count", String(count))); }
+    b.appendChild(el("span", null, v.name));
+    if(count !== "" && count !== null){
+      var cb = el("span","count", String(count));
+      /* every badge explains itself (Monday-morning audit: no mystery numbers) */
+      if(v.id === "all"){ cb.title = count + " candidate" + (count === 1 ? "" : "s") + " across every workspace you can access — equals the All Statuses total inside Enterprise Talent"; }
+      else if(v.id === "followup"){ cb.title = count + " candidate" + (count === 1 ? "" : "s") + " with a scheduled follow-up: overdue, due today, or upcoming"; }
+      else if(v.special === "interviewrequests"){ cb.title = count + " interview request" + (count === 1 ? "" : "s") + " on the books"; }
+      b.appendChild(cb);
+    }
     b.setAttribute("data-view", v.id); box.appendChild(b);
   });
 }
@@ -1089,7 +1097,8 @@ function renderList(){
   if(v.special === "autoslate"){ renderAutoSlate(host); return; }
   if(v.special === "pipeline"){ renderPipeline(host); return; }
   if(v.special === "dashboard"){ renderDashboard(host); return; }
-  if(v.special === "guide"){ renderGuide(host); return; }
+  if(v.special === "guide"){ renderStartMyDay(host); return; }
+  if(v.special === "tb_notes"){ renderNotesView(host); return; }
   if(v.special === "resumecheck"){ renderResumeCheck(host); return; }
   if(v.special === "talentbench"){ renderTalentBench(host); return; }
   /* Analytics people dashboards: in Elbit the departments layer intercepts
@@ -1187,6 +1196,186 @@ function renderRecruiterBoard(host){
     tb.appendChild(tr);
   });
   table.appendChild(tb); host.appendChild(table);
+}
+
+/* ═══ START MY DAY — the recruiter's one morning screen (founder 2026-07-18):
+   Today's Priorities + My Checklist + Weekly Goals, merged. Everything a
+   recruiter needs before the first call, no second click required. ═══ */
+function renderStartMyDay(host){
+  var cands = state.candidates || [], irs = state.interviewRequests || [];
+  var today = todayISO();
+  var hr = new Date().getHours();
+  var greet = hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening";
+  var who = (CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email.split("@")[0].split(/[._]/)[0] : "";
+  who = who ? who.charAt(0).toUpperCase() + who.slice(1) : "";
+  document.getElementById("viewTitle").textContent = "";
+  document.getElementById("viewMeta").textContent = "";
+
+  var wrap = el("div"); wrap.style.cssText = "max-width:1020px";
+  var hero = el("div"); hero.style.cssText = "margin:2px 0 18px";
+  var h1 = el("div", null, greet + (who ? ", " + who : "")); h1.style.cssText = "font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.3px";
+  hero.appendChild(h1);
+  hero.appendChild(el("div","hint", new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric" }) + " · " + tbClientDisplayName()));
+  wrap.appendChild(hero);
+
+  /* ── Today's Priorities ── */
+  var irsToday = irs.filter(function(ir){ return (ir.interviewDate || "").slice(0,10) === today && ir.status !== "Cancelled"; });
+  /* CANONICAL follow-up count — identical to the sidebar badge and the
+     Follow-Ups Due view: any candidate with a scheduled follow-up label. */
+  var fuDue = cands.filter(function(c){ return followUp(c).label !== ""; });
+  var fuOverdue = cands.filter(function(c){ return followUp(c).label === "Overdue"; });
+  var submitted = cands.filter(function(c){ return c.status === "Submitted"; });
+  var hmOwe = {}; submitted.forEach(function(c){ (c.reqs||[]).forEach(function(tag){ REQS.forEach(function(r){ if((r.title + " – " + r.loc) === tag && r.hm){ hmOwe[r.hm] = 1; } }); }); });
+  var hmOweN = Object.keys(hmOwe).length;
+  var offers = cands.filter(function(c){ return c.status === "Offer Pending"; });
+  var canon = window.TB_METRICS ? TB_METRICS.canonicalReqEntries(REQS).map(function(e){ return e.req; }) : REQS;
+  var openReqs = canon.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : !r.bench; });
+  var starving = openReqs.filter(function(r){ var tag = r.title + " – " + r.loc; return !cands.some(function(c){ return (c.reqs||[]).indexOf(tag) !== -1 && c.status !== "Archived"; }); });
+
+  var pc = el("div"); pc.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:16px";
+  var pt = el("div", null, "Today's Priorities"); pt.style.cssText = "font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--gray);margin-bottom:10px";
+  pc.appendChild(pt);
+  function prio(colorVar, n, label, view, always, tip){
+    if(!n && !always){ return; }
+    var row = el("div"); row.style.cssText = "display:flex;align-items:center;gap:11px;padding:7px 2px;cursor:pointer;border-radius:8px";
+    if(tip){ row.title = tip; }
+    row.addEventListener("mouseenter", function(){ row.style.background = "var(--panel2)"; });
+    row.addEventListener("mouseleave", function(){ row.style.background = ""; });
+    var dot = el("span"); dot.style.cssText = "width:10px;height:10px;border-radius:50%;flex-shrink:0;background:" + cssVar(colorVar);
+    var tx = el("span", null, n + " " + label); tx.style.cssText = "font-size:14px;font-weight:600;color:var(--ink)";
+    var go = el("span", null, "→"); go.style.cssText = "margin-left:auto;color:var(--muted);font-weight:700";
+    row.appendChild(dot); row.appendChild(tx); row.appendChild(go);
+    row.addEventListener("click", function(){ ui.view = view; refresh(); });
+    pc.appendChild(row);
+  }
+  prio("--red", irsToday.length, "interview" + (irsToday.length === 1 ? "" : "s") + " today", "calendar", true,
+    "Interview requests dated today. Opens the Interview Calendar.");
+  prio("--yellow", fuDue.length, "follow-up" + (fuDue.length === 1 ? "" : "s") + " due" + (fuOverdue.length ? " (" + fuOverdue.length + " overdue)" : ""), "followup", true,
+    "Candidates with a scheduled follow-up — overdue, due today, or upcoming. Same number as the sidebar badge and the Follow-Ups Due list.");
+  prio("--green", hmOweN, "hiring manager" + (hmOweN === 1 ? "" : "s") + " owe" + (hmOweN === 1 ? "s" : "") + " feedback (" + submitted.length + " submittal" + (submitted.length === 1 ? "" : "s") + ")", "submitted", false,
+    "Hiring managers with submitted candidates awaiting a decision. Opens the Submitted list.");
+  prio("--orange", offers.length, "offer" + (offers.length === 1 ? "" : "s") + " in motion", "offerpending", false,
+    "Candidates at Offer Pending. Opens the Offers list.");
+  prio("--blue", starving.length, "requisition" + (starving.length === 1 ? "" : "s") + " need" + (starving.length === 1 ? "s" : "") + " candidates", "autoslate", false,
+    "Open requisitions with zero active candidates tagged. Opens AutoSlate to work the slates.");
+  if(!irsToday.length && !fuDue.length && !hmOweN && !offers.length && !starving.length){
+    pc.appendChild(el("div","hint","Clear board. Get ahead: refresh TalentFit and work the slates."));
+  }
+  wrap.appendChild(pc);
+
+  /* ── Checklist + Weekly Goals, side by side ── */
+  var grid = el("div"); grid.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:16px";
+  if(window.innerWidth < 900){ grid.style.gridTemplateColumns = "1fr"; }
+
+  /* My Checklist (same storage as before — nothing a recruiter saved is lost) */
+  var data = tbDeskLoad("checklist", { items: [] });
+  var cl = el("div"); cl.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px";
+  var ct = el("div", null, "My Checklist"); ct.style.cssText = "font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--gray);margin-bottom:10px";
+  cl.appendChild(ct);
+  var row = el("div"); row.style.cssText = "display:flex;gap:8px;margin-bottom:10px";
+  var inp = el("input"); inp.type = "text"; inp.placeholder = "Add a task…"; inp.style.cssText = "flex:1;min-width:0;padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:13px";
+  function addTask(){ var t = inp.value.trim(); if(!t){ return; } data.items.unshift({ id: Date.now() + "" + Math.floor(Math.random()*1e4), text: t, done: false }); tbDeskSave("checklist", data); renderList(); }
+  inp.addEventListener("keydown", function(e){ if(e.key === "Enter"){ addTask(); } });
+  var ab = el("button","btn gold sm","Add"); ab.addEventListener("click", addTask);
+  row.appendChild(inp); row.appendChild(ab); cl.appendChild(row);
+  if(!data.items.length){ cl.appendChild(el("div","hint","Nothing on the list yet.")); }
+  data.items.slice(0, 12).forEach(function(it){
+    var li = el("div"); li.style.cssText = "display:flex;align-items:center;gap:9px;padding:6px 2px;border-bottom:1px solid var(--line)";
+    var cb = el("input"); cb.type = "checkbox"; cb.checked = !!it.done;
+    cb.addEventListener("change", function(){ it.done = cb.checked; tbDeskSave("checklist", data); renderList(); });
+    var tx = el("span", null, it.text); tx.style.cssText = "flex:1;font-size:13px;color:" + (it.done ? "var(--muted)" : "var(--ink)") + (it.done ? ";text-decoration:line-through" : "");
+    var dl = el("button","btn sm ghost","✕"); dl.title = "Remove"; dl.addEventListener("click", function(){ data.items = data.items.filter(function(x){ return x.id !== it.id; }); tbDeskSave("checklist", data); renderList(); });
+    li.appendChild(cb); li.appendChild(tx); li.appendChild(dl); cl.appendChild(li);
+  });
+  if(data.items.length > 12){ cl.appendChild(el("div","hint","+ " + (data.items.length - 12) + " more below the fold — clear completed to tidy up.")); }
+  if(data.items.some(function(i){ return i.done; })){
+    var cc = el("button","btn sm ghost","Clear completed"); cc.style.marginTop = "10px";
+    cc.addEventListener("click", function(){ data.items = data.items.filter(function(i){ return !i.done; }); tbDeskSave("checklist", data); renderList(); });
+    cl.appendChild(cc);
+  }
+  grid.appendChild(cl);
+
+  /* Weekly Goals with progress bars (n / target) */
+  var wk = tbWeekStart();
+  var all = tbDeskLoad("goals", {});
+  var goals = all[wk] || [];
+  var gl = el("div"); gl.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px";
+  var gt = el("div", null, "Weekly Goals"); gt.style.cssText = "font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--gray);margin-bottom:10px";
+  gl.appendChild(gt);
+  var grow = el("div"); grow.style.cssText = "display:flex;gap:8px;margin-bottom:10px";
+  var gi = el("input"); gi.type = "text"; gi.placeholder = "Goal… (e.g. Submittals)"; gi.style.cssText = "flex:1;min-width:0;padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:13px";
+  var gn = el("input"); gn.type = "number"; gn.min = "1"; gn.placeholder = "#"; gn.title = "Weekly target (optional — leave blank for a simple check-off goal)";
+  gn.style.cssText = "width:56px;padding:8px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:13px";
+  function addGoal(){ var t = gi.value.trim(); if(!t){ return; } var tgt = parseInt(gn.value) || 0; goals.push({ id: Date.now() + "" + Math.floor(Math.random()*1e4), text: t, target: tgt, n: 0, done: false }); all[wk] = goals; tbDeskSave("goals", all); renderList(); }
+  gi.addEventListener("keydown", function(e){ if(e.key === "Enter"){ addGoal(); } });
+  var gb = el("button","btn gold sm","Add"); gb.addEventListener("click", addGoal);
+  grow.appendChild(gi); grow.appendChild(gn); grow.appendChild(gb); gl.appendChild(grow);
+  if(!goals.length){ gl.appendChild(el("div","hint","Week of " + wk + ". What does a good week look like?")); }
+  goals.forEach(function(g){
+    var li = el("div"); li.style.cssText = "padding:7px 2px;border-bottom:1px solid var(--line)";
+    var top = el("div"); top.style.cssText = "display:flex;align-items:center;gap:9px";
+    if(g.target > 0){
+      var minus = el("button","btn sm ghost","−"); minus.title = "Log one less";
+      var plus = el("button","btn sm ghost","+"); plus.title = "Log progress";
+      minus.addEventListener("click", function(){ g.n = Math.max(0, (g.n || 0) - 1); all[wk] = goals; tbDeskSave("goals", all); renderList(); });
+      plus.addEventListener("click", function(){ g.n = (g.n || 0) + 1; all[wk] = goals; tbDeskSave("goals", all); renderList(); });
+      var lab = el("span", null, (g.n || 0) + " / " + g.target + "  " + g.text);
+      var hit = (g.n || 0) >= g.target;
+      lab.style.cssText = "flex:1;font-size:13px;font-weight:600;color:" + (hit ? "var(--green)" : "var(--ink)");
+      var dl2 = el("button","btn sm ghost","✕"); dl2.title = "Remove"; dl2.addEventListener("click", function(){ all[wk] = goals.filter(function(x){ return x.id !== g.id; }); tbDeskSave("goals", all); renderList(); });
+      top.appendChild(minus); top.appendChild(plus); top.appendChild(lab); top.appendChild(dl2); li.appendChild(top);
+      var track = el("div"); track.style.cssText = "height:6px;border-radius:999px;background:var(--panel2);margin:6px 2px 2px;overflow:hidden";
+      var fill = el("div"); fill.style.cssText = "height:100%;border-radius:999px;width:" + Math.min(100, Math.round(100 * (g.n || 0) / g.target)) + "%;background:" + (hit ? "var(--green)" : "var(--gold)") + ";transition:width .2s";
+      track.appendChild(fill); li.appendChild(track);
+    } else {
+      var cb2 = el("input"); cb2.type = "checkbox"; cb2.checked = !!g.done;
+      cb2.addEventListener("change", function(){ g.done = cb2.checked; all[wk] = goals; tbDeskSave("goals", all); renderList(); });
+      var tx2 = el("span", null, g.text); tx2.style.cssText = "flex:1;font-size:13px;color:" + (g.done ? "var(--muted)" : "var(--ink)") + (g.done ? ";text-decoration:line-through" : "");
+      var dl3 = el("button","btn sm ghost","✕"); dl3.addEventListener("click", function(){ all[wk] = goals.filter(function(x){ return x.id !== g.id; }); tbDeskSave("goals", all); renderList(); });
+      top.appendChild(cb2); top.appendChild(tx2); top.appendChild(dl3); li.appendChild(top);
+    }
+    gl.appendChild(li);
+  });
+  grid.appendChild(gl);
+  wrap.appendChild(grid);
+  host.appendChild(wrap);
+}
+
+/* ═══ NOTES — one place to write: My Notes + Team Notes as tabs ═══ */
+var NOTES_VIEW_TAB = "my";
+function renderNotesView(host){
+  var isMy = NOTES_VIEW_TAB === "my";
+  var teamN = state.notes.filter(function(n){ return (n.context||"") === "teamboard"; }).length;
+  document.getElementById("viewMeta").textContent = isMy ? "Private scratchpad · autosaves · never shared" : (teamN + " posted · shared with everyone in this workspace");
+  var wrap = el("div"); wrap.style.cssText = "max-width:860px";
+  var bar = el("div"); bar.style.cssText = "display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--line)";
+  [["my","My Notes"],["team","Team Notes"]].forEach(function(tdef){
+    var on = NOTES_VIEW_TAB === tdef[0];
+    var tab = el("button", null, tdef[1] + (tdef[0] === "team" && teamN ? " (" + teamN + ")" : ""));
+    tab.type = "button";
+    tab.style.cssText = "background:transparent;border:0;border-bottom:2px solid " + (on ? "var(--gold)" : "transparent") + ";color:" + (on ? "var(--ink)" : "var(--muted)") + ";font:inherit;font-size:13.5px;font-weight:" + (on ? "700" : "600") + ";padding:8px 14px;cursor:pointer";
+    tab.addEventListener("click", function(){ NOTES_VIEW_TAB = tdef[0]; renderList(); });
+    bar.appendChild(tab);
+  });
+  wrap.appendChild(bar);
+  var card = tbDeskCard(); card.style.maxWidth = "860px";
+  if(isMy){
+    var data = tbDeskLoad("mynotes", { text: "", updated: "" });
+    var ta = el("textarea"); ta.value = data.text || ""; ta.placeholder = "Type anything… phone screens, intake notes, reminders.";
+    ta.style.cssText = "width:100%;min-height:380px;resize:vertical;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:13.5px;line-height:1.6";
+    var saved = el("div","hint", data.updated ? "Last saved " + data.updated.slice(0,16).replace("T"," ") : ""); saved.style.marginTop = "8px";
+    var t0 = null;
+    ta.addEventListener("input", function(){
+      if(t0){ clearTimeout(t0); }
+      t0 = setTimeout(function(){ data.text = ta.value; data.updated = new Date().toISOString(); tbDeskSave("mynotes", data); saved.textContent = "Saved " + data.updated.slice(11,16); }, 350);
+    });
+    card.appendChild(ta); card.appendChild(saved);
+  } else {
+    var tn = buildTeamNotes("teamboard");
+    tn.style.marginTop = "0"; tn.style.borderTop = "0"; tn.style.paddingTop = "0";
+    card.appendChild(tn);
+  }
+  wrap.appendChild(card); host.appendChild(wrap);
 }
 
 /* ═══════════════ MY COMMAND CENTER — recruiter desk views ═══════════════
@@ -1890,7 +2079,7 @@ async function addProgramNote(context){
   if(res.error){ toast(res.error.message || "Could not post note."); return; }
   NOTES_COMPOSE = "";
   await loadNotes();
-  if(ui.view === "priolist" || ui.view === "talentbench" || ui.view === "tb_teamnotes"){ refresh(); }
+  if(ui.view === "priolist" || ui.view === "talentbench" || ui.view === "tb_teamnotes" || ui.view === "tb_notes"){ refresh(); }
   toast("Note posted.");
 }
 async function saveProgramNote(id, text){
@@ -1901,7 +2090,7 @@ async function saveProgramNote(id, text){
   if(res.error){ toast(res.error.message || "Could not save note."); return; }
   NOTES_EDITING = null;
   await loadNotes();
-  if(ui.view === "priolist" || ui.view === "talentbench" || ui.view === "tb_teamnotes"){ refresh(); }
+  if(ui.view === "priolist" || ui.view === "talentbench" || ui.view === "tb_teamnotes" || ui.view === "tb_notes"){ refresh(); }
   toast("Note updated.");
 }
 async function deleteProgramNote(id){
@@ -1910,7 +2099,7 @@ async function deleteProgramNote(id){
   if(res.error){ toast(res.error.message || "Could not delete note."); return; }
   if(NOTES_EDITING === id){ NOTES_EDITING = null; }
   await loadNotes();
-  if(ui.view === "priolist" || ui.view === "talentbench" || ui.view === "tb_teamnotes"){ refresh(); }
+  if(ui.view === "priolist" || ui.view === "talentbench" || ui.view === "tb_teamnotes" || ui.view === "tb_notes"){ refresh(); }
   toast("Note deleted.");
 }
 
@@ -8175,9 +8364,12 @@ function makeSourcingBtn(r, tr){
 /* TalentBench: restrained purple identity — one dot, no star */
 .vtab[data-view="talentbench"] span::before{ content:""; display:inline-block; width:7px; height:7px;
   border-radius:50%; background:var(--purple); margin-right:8px; vertical-align:1px; }
-/* Urgent count on a collapsed section header */
-h3.sech .secount{ float:right; background:var(--panel2); border:1px solid var(--line); border-radius:20px;
-  padding:0 7px; font-size:11px; color:var(--muted); letter-spacing:0; text-transform:none; }
+/* Urgent count on a collapsed section header — flex keeps the pill ON the
+   heading's line at any heading length (a floated pill used to wrap below
+   the text and bleed into the section beneath). */
+h3.sech{ display:flex; align-items:center; gap:8px; white-space:nowrap; }
+h3.sech .secount{ margin-left:auto; flex-shrink:0; background:var(--panel2); border:1px solid var(--line); border-radius:20px;
+  padding:0 7px; font-size:11px; line-height:17px; color:var(--muted); letter-spacing:0; text-transform:none; }
 h3.sech .secount.urgent{ color:var(--red); border-color:var(--red); background:rgba(220,38,38,.07); font-weight:700; }
 @media (prefers-reduced-motion:reduce){
   #modal .modal, .scrim{ animation:none; }
@@ -8995,9 +9187,9 @@ body.tb-overlay-open{ overflow:hidden; }
       ["enterprise", "Enterprise", function(){ return true; }],
       ["elbit", orgLabel(ORG), function(c){ return !c._xorg; }],
       ["hiarc", XORG.orgs.length ? orgLabel(XORG.orgs[0]) : "Other", function(c){ return !!c._xorg; }],
-      ["shared", "Shared", function(c){ return !!c._shared; }],
+      ["shared", "Shared Candidates", function(c){ return !!c._shared; }],
       ["recent", "Recently Added", function(c){ var d = Date.parse(c.dateReceived || ""); return d && (now - d) < recentMs; }],
-      ["mine", "My Candidates", function(c){ return (c.owner || "").toLowerCase().indexOf(meFirst) === 0 && meFirst; }]
+      ["mine", "Owned By Me", function(c){ return (c.owner || "").toLowerCase().indexOf(meFirst) === 0 && meFirst; }]
     ];
   }
   /* availability dimension — founder-approved; defaults to Available so nobody
@@ -9015,7 +9207,7 @@ body.tb-overlay-open{ overflow:hidden; }
   }
   window.renderEnterpriseLibrary = function(){
     var host = document.getElementById("list"); host.innerHTML = "";
-    document.getElementById("viewTitle").textContent = "Candidate Library";
+    document.getElementById("viewTitle").textContent = "Enterprise Talent";
     var pool = (state.candidates || []).concat(XORG.loaded ? XORG.cands : []);
     var defs = libFilters(); var avails = libAvail();
     var fdef = defs.filter(function(d){ return d[0] === LIB_FILTER; })[0] || defs[0];
@@ -9027,13 +9219,30 @@ body.tb-overlay-open{ overflow:hidden; }
     ban.appendChild(bt);
     ban.appendChild(document.createTextNode("This library contains candidates from all workspaces you are authorized to access. Candidates from another workspace remain read-only until explicitly adopted into your workspace."));
     host.appendChild(ban);
+    /* context strip — the user should never have to do math between the
+       sidebar total and the filtered chips (Monday-morning audit, Bug #2) */
+    var availableN = pool.filter(function(c){ return availCat(c) === "available"; }).length;
+    var sharedN = pool.filter(function(c){ return !!c._shared; }).length;
+    var ctx = el("div"); ctx.style.cssText = "display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin-bottom:10px";
+    function ctxStat(n, label, tip){
+      var w = el("span"); w.style.cssText = "font-size:13px;color:var(--muted)"; w.title = tip;
+      var b = el("b", null, String(n)); b.style.cssText = "font-size:17px;font-weight:800;color:var(--ink);margin-right:5px";
+      w.appendChild(b); w.appendChild(document.createTextNode(label));
+      return w;
+    }
+    ctx.appendChild(ctxStat(pool.length, "total candidates", "Every candidate across all " + (1 + XORG.orgs.length) + " workspaces — the same number as the sidebar and the All Statuses chip."));
+    ctx.appendChild(el("span","hint","·"));
+    ctx.appendChild(ctxStat(availableN, "available now", "Open talent — not mid-process at any client, not hired. This is what the chips below show under the default Available filter."));
+    if(sharedN){ ctx.appendChild(el("span","hint","·")); ctx.appendChild(ctxStat(sharedN, "shared across workspaces", "Candidates who exist in more than one workspace — shown once, local record preferred.")); }
+    host.appendChild(ctx);
     /* chip rows with dynamic counts — every count equals exactly what clicking it shows */
-    function chipRow(list, current, setter, poolFor){
+    function chipRow(list, current, setter, poolFor, tipFor){
       var bar = el("div"); bar.style.cssText = "display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px;align-items:center";
       list.forEach(function(d){
         var n = poolFor(d).length;
         var on = current === d[0];
         var ch = el("button", null, d[1] + " " + n); ch.type = "button";
+        if(tipFor){ ch.title = tipFor(d, n); }
         ch.style.cssText = "border-radius:999px;padding:5px 13px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid " +
           (on ? "var(--gold);background:var(--gold);color:#fff" : "var(--line);background:var(--panel);color:var(--ink)");
         ch.addEventListener("click", function(){ setter(d[0]); renderList(); });
@@ -9041,14 +9250,18 @@ body.tb-overlay-open{ overflow:hidden; }
       });
       return bar;
     }
-    host.appendChild(chipRow(defs, LIB_FILTER, function(v){ LIB_FILTER = v; }, function(d){ return pool.filter(function(c){ return d[2](c) && adef[2](c); }); }));
+    host.appendChild(chipRow(defs, LIB_FILTER, function(v){ LIB_FILTER = v; },
+      function(d){ return pool.filter(function(c){ return d[2](c) && adef[2](c); }); },
+      function(d, n){ return n + " " + d[1] + " candidate" + (n === 1 ? "" : "s") + " under the current availability filter (" + adef[1] + "). Switch Availability to All Statuses for workspace totals."; }));
     var avLab = el("span", null, "Availability:"); avLab.style.cssText = "font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-right:2px";
-    var avRow = chipRow(avails, LIB_AVAIL, function(v){ LIB_AVAIL = v; }, function(d){ return pool.filter(function(c){ return d[2](c) && fdef[2](c); }); });
+    var avRow = chipRow(avails, LIB_AVAIL, function(v){ LIB_AVAIL = v; },
+      function(d){ return pool.filter(function(c){ return d[2](c) && fdef[2](c); }); },
+      function(d, n){ return d[0] === "allstatus" ? (n + " candidates in the current scope with no availability filter — with Enterprise scope this equals the sidebar total.") : (n + " " + d[1] + " candidate" + (n === 1 ? "" : "s") + " within the current scope (" + fdef[1] + ")."); });
     avRow.insertBefore(avLab, avRow.firstChild); avRow.style.marginBottom = "14px";
     host.appendChild(avRow);
     var rows = pool.filter(function(c){ return fdef[2](c) && adef[2](c) && matchesSearch(c) && passFilters(c); });
     rows = pipelineSort(rows);
-    document.getElementById("viewMeta").textContent = pool.length + " enterprise candidates across " + (1 + XORG.orgs.length) + " workspaces · " + rows.length + " shown (" + adef[1].toLowerCase() + ") · one record, one resume, zero copies";
+    document.getElementById("viewMeta").textContent = pool.length + " candidates across " + (1 + XORG.orgs.length) + " workspaces · showing " + rows.length + " (" + fdef[1] + " · " + adef[1] + ") · one record, one resume, zero copies";
     if(!rows.length){
       var em = el("div","empty"); em.appendChild(el("div","big","No candidates match"));
       em.appendChild(el("div", null, "Adjust the library filter, availability, search, or filters."));
