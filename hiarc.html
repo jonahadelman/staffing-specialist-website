@@ -1630,7 +1630,12 @@ function renderLeadershipBrief(host){
    ["Awaiting HM", submitted.length, "Submitted candidates waiting on hiring-manager decisions"],
    ["Offers", offers.length, "Offer Pending"],
    ["Hired", hired.length, "Offer Accepted - Hired"]].forEach(function(m, i){
-    var b = el("div"); b.style.cssText = "padding:15px 16px;" + (i ? "border-left:1px solid var(--line)" : ""); b.title = m[2];
+    var KPI_VIEWS = ["reqs","calendar","interviewing","submitted","offerpending","offeraccepted"];
+    var b = el("div"); b.style.cssText = "padding:15px 16px;cursor:pointer;transition:background .12s;" + (i ? "border-left:1px solid var(--line)" : "");
+    b.title = m[2] + " — click to open exactly these records";
+    b.addEventListener("mouseenter", function(){ b.style.background = "var(--panel2)"; });
+    b.addEventListener("mouseleave", function(){ b.style.background = ""; });
+    b.addEventListener("click", function(){ ui.view = KPI_VIEWS[i]; refresh(); });
     var n = el("div", null, String(m[1])); n.style.cssText = "font-size:23px;font-weight:800;letter-spacing:-.5px";
     b.appendChild(n);
     var l = el("div", null, m[0]); l.style.cssText = "font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-top:3px";
@@ -9838,6 +9843,37 @@ body.tb-overlay-open{ overflow:hidden; }
       ic.appendChild(ap);
     }
     wrap.appendChild(ic);
+    /* duplicate watch — one version of the truth, checked continuously */
+    var dupes = [];
+    (function(){
+      var byKey = {};
+      (state.candidates || []).forEach(function(c){
+        var e = (c.email || "").trim().toLowerCase();
+        var n = ((c.firstName || "") + " " + (c.lastName || "")).trim().toLowerCase();
+        if(e){ (byKey["e:" + e] = byKey["e:" + e] || []).push(fullName(c)); }
+        if(n){ (byKey["n:" + n] = byKey["n:" + n] || []).push(fullName(c)); }
+      });
+      Object.keys(byKey).forEach(function(k){ if(byKey[k].length > 1 && (k.charAt(0) === "e" || !Object.keys(byKey).some(function(k2){ return k2.charAt(0) === "e" && byKey[k2].length > 1 && byKey[k2][0] === byKey[k][0]; }))){ dupes.push("Candidate: " + byKey[k][0] + " ×" + byKey[k].length + (k.charAt(0) === "e" ? " (same email)" : " (same name)")); } });
+      /* managers: same last name where one first name is a prefix of the other (Sam / Samridh) */
+      var ms = state.managers || [];
+      for(var i = 0; i < ms.length; i++){ for(var j = i + 1; j < ms.length; j++){
+        var a = (ms[i].name || "").trim().toLowerCase().split(/\s+/), b = (ms[j].name || "").trim().toLowerCase().split(/\s+/);
+        if(a.length > 1 && b.length > 1 && a[a.length-1] === b[b.length-1] && (a[0].indexOf(b[0]) === 0 || b[0].indexOf(a[0]) === 0)){
+          dupes.push("Hiring manager: " + ms[i].name + " / " + ms[j].name + " — likely the same person");
+        }
+      } }
+    })();
+    var dc = wsCard("margin-bottom:14px"); dc.appendChild(wsHead("Duplicate Watch"));
+    if(!dupes.length){
+      var okRow = el("div"); okRow.style.cssText = "display:flex;gap:9px;align-items:center;font-size:13.5px";
+      var okDot = el("span"); okDot.style.cssText = "width:9px;height:9px;border-radius:50%;background:var(--green)";
+      okRow.appendChild(okDot); okRow.appendChild(el("span", null, "One version of the truth — no duplicate candidates or hiring managers detected."));
+      dc.appendChild(okRow);
+    } else {
+      dupes.slice(0, 8).forEach(function(d){ var li = el("div", null, "· " + d); li.style.cssText = "font-size:13.5px;padding:4px 0;color:var(--red);font-weight:600"; dc.appendChild(li); });
+      dc.appendChild(el("div","hint","Open each record, keep the complete one, and delete the empty one. Nobody should ever ask which record is real."));
+    }
+    wrap.appendChild(dc);
     /* recent platform activity */
     var lg = wsCard(); lg.appendChild(wsHead("Recent Activity (latest 10)"));
     (state.activities || []).slice(0, 10).forEach(function(a){
