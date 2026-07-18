@@ -846,13 +846,34 @@ async function reloadNotesSoft(){
   if((ui.view === "priolist" || ui.view === "tb_teamnotes" || ui.view === "tb_notes") && !NOTES_EDITING){ refresh(); }
 }
 async function reloadSoft(){ await loadData(); refresh(); }
+/* ── Realtime storm control (launch certification fix) ──
+   Every DB change fires one realtime event; a bulk import fires one PER ROW.
+   Unthrottled, that meant hundreds of consecutive full reloads + sidebar
+   rebuilds — navigation felt frozen and clicks landed on replaced DOM.
+   Bursts now coalesce: leading reload when quiet, then at most one trailing
+   reload per 1.2s window, never overlapping. Direct calls (after a save)
+   remain immediate. */
+window.__TB_RT_STATS = { events: 0, reloads: 0 };
+var _rtTimer = null, _rtLast = 0, _rtRunning = false, _rtQueued = false;
+async function _rtReloadNow(){
+  if(_rtRunning){ _rtQueued = true; return; }
+  _rtRunning = true; window.__TB_RT_STATS.reloads++;
+  try{ await loadData(); refresh(); } finally { _rtRunning = false; if(_rtQueued){ _rtQueued = false; _rtReloadNow(); } }
+}
+function rtReload(){
+  window.__TB_RT_STATS.events++;
+  var now = Date.now();
+  if(now - _rtLast > 4000 && !_rtTimer){ _rtLast = now; _rtReloadNow(); return; }
+  if(_rtTimer){ clearTimeout(_rtTimer); }
+  _rtTimer = setTimeout(function(){ _rtTimer = null; _rtLast = Date.now(); _rtReloadNow(); }, 1200);
+}
 function wireRealtime(){
   sb.channel("rt-" + ORG)
-    .on("postgres_changes", { event:"*", schema:"public", table:"candidates", filter:"org=eq." + ORG }, function(){ reloadSoft(); })
-    .on("postgres_changes", { event:"*", schema:"public", table:"activities", filter:"org=eq." + ORG }, function(){ reloadSoft(); })
-    .on("postgres_changes", { event:"*", schema:"public", table:"reqs", filter:"org=eq." + ORG }, function(){ reloadSoft(); })
+    .on("postgres_changes", { event:"*", schema:"public", table:"candidates", filter:"org=eq." + ORG }, function(){ rtReload(); })
+    .on("postgres_changes", { event:"*", schema:"public", table:"activities", filter:"org=eq." + ORG }, function(){ rtReload(); })
+    .on("postgres_changes", { event:"*", schema:"public", table:"reqs", filter:"org=eq." + ORG }, function(){ rtReload(); })
     .on("postgres_changes", { event:"*", schema:"public", table:"program_notes", filter:"org=eq." + ORG }, function(){ reloadNotesSoft(); })
-    .on("postgres_changes", { event:"*", schema:"public", table:"interview_requests", filter:"org=eq." + ORG }, function(){ reloadSoft(); })
+    .on("postgres_changes", { event:"*", schema:"public", table:"interview_requests", filter:"org=eq." + ORG }, function(){ rtReload(); })
     .subscribe();
 }
 async function run(promise, okMsg){
@@ -896,6 +917,7 @@ var VIEWS = [
   { id:"tb_notes", collapsible:true, name:"Notes", fn:function(){ return true; }, special:"tb_notes", section:"My Work" },
   { id:"tb_brief", collapsible:true, name:"Staffing Brief", fn:function(){ return true; }, special:"tb_brief", section:"My Work" },
   /* v3.0 WORKSTATION VIEWS — shown only to their assigned workstation (TB_WS_FILTER) */
+  { id:"tb_recs", hidden:true, name:"Recommended to Me", fn:function(){ return true; }, special:"tb_recs" },
   { id:"tb_checklist", hidden:true, name:"My Daily Checklist", fn:function(){ return true; }, special:"tb_checklist" },
   { id:"tb_goals", hidden:true, name:"Weekly Goals", fn:function(){ return true; }, special:"tb_goals" },
   { id:"tb_mynotes", hidden:true, name:"My Notes", fn:function(){ return true; }, special:"tb_mynotes" },
@@ -1117,6 +1139,7 @@ function renderList(){
      views never fall through to the raw candidate list. */
   if(v.id === "tb_people_hm"){ renderManagers(host); return; }
   if(v.id === "tb_people_rec"){ renderRecruiterBoard(host); return; }
+  if(v.special === "tb_recs"){ renderRecQueue(host); return; }
   if(v.special === "tb_checklist"){ renderChecklist(host); return; }
   if(v.special === "tb_goals"){ renderWeeklyGoals(host); return; }
   if(v.special === "tb_mynotes"){ renderMyNotes(host); return; }
@@ -1349,6 +1372,9 @@ function renderStartMyDay(host){
     "Candidates at Offer Pending. Opens the Offers list.");
   prio("--blue", starving.length, "requisition" + (starving.length === 1 ? "" : "s") + " need" + (starving.length === 1 ? "s" : "") + " candidates", "autoslate", false,
     "Open requisitions with zero active candidates tagged. Opens AutoSlate to work the slates.");
+  var recsN = 0; try{ recsN = (typeof tbRecsForMe === "function") ? tbRecsForMe().length : 0; }catch(eRc){}
+  prio("--purple", recsN, "candidate" + (recsN === 1 ? "" : "s") + " recommended to you", "tb_recs", false,
+    "Teammates recommended these candidates for your requisitions. Accept to add them to your desk, or decline — they see your call either way.");
   if(!irsToday.length && !fuDue.length && !hmOweN && !offers.length && !starving.length){
     pc.appendChild(el("div","hint","Clear board. Get ahead: refresh TalentFit and work the slates."));
   }
@@ -6554,7 +6580,14 @@ document.getElementById("loginBtn").addEventListener("click", function(){ doLogi
 document.getElementById("loginPass").addEventListener("keydown", function(e){ if(e.key === "Enter"){ doLogin(); } });
 document.getElementById("signoutBtn").addEventListener("click", async function(){ try{ sessionStorage.removeItem("tb_ctx"); }catch(eC){} if(sb){ await sb.auth.signOut(); } window.location.reload(); });
 
-document.getElementById("tabs").addEventListener("click", function(e){ var tog = e.target.closest("[data-section-toggle]"); if(tog){ var sname = tog.getAttribute("data-section-toggle"); sectionCollapsed[sname] = !sectionCollapsed[sname]; renderTabs(); return; } var b = e.target.closest("[data-view]"); if(!b){ return; } var tv = b.getAttribute("data-view"); if(tv === "guide"){ /* Getting Started returns to the ENTERPRISE home — clear stale department/program scope */ try{ window.TB_SUBPROGRAM = ""; if(typeof window.TB_setProgram === "function"){ window.TB_setProgram(""); } else { window.TB_PROGRAM = ""; } }catch(eG){} } ui.view = tv; refresh(); });
+/* Navigation fires on pointerdown: it feels instant, and a realtime re-render
+   can never swallow the interaction (a rebuilt node between mousedown and
+   mouseup produces NO click). Synthetic .click() and keyboard still work via
+   the click fallback, which skips only when pointerdown just handled it. */
+function tbNavHandle(e){ var tog = e.target.closest("[data-section-toggle]"); if(tog){ var sname = tog.getAttribute("data-section-toggle"); sectionCollapsed[sname] = !sectionCollapsed[sname]; renderTabs(); return; } var b = e.target.closest("[data-view]"); if(!b){ return; } var tv = b.getAttribute("data-view"); if(tv === "guide"){ try{ window.TB_SUBPROGRAM = ""; if(typeof window.TB_setProgram === "function"){ window.TB_setProgram(""); } else { window.TB_PROGRAM = ""; } }catch(eG){} } ui.view = tv; refresh(); }
+var _tbNavTs = 0;
+document.getElementById("tabs").addEventListener("pointerdown", function(e){ if(e.button !== 0){ return; } _tbNavTs = Date.now(); tbNavHandle(e); });
+document.getElementById("tabs").addEventListener("click", function(e){ if(Date.now() - _tbNavTs < 450){ return; } tbNavHandle(e); });
 document.getElementById("list").addEventListener("click", function(e){
   if(e.target.closest("[data-stop]")){ return; }
   var addr = e.target.closest("[data-reqadd]"); if(addr){ openReqModal(null); return; }
@@ -9586,8 +9619,8 @@ body.tb-overlay-open{ overflow:hidden; }
           rq.title = "Logs a transfer request on the record — " + c.owner + " and the recruiting manager see it";
           rq.addEventListener("click", function(){ logOwnership(c, "Transfer requested by " + meOwnerName() + "."); toast("Transfer request logged for " + c.owner + "."); });
           var rec = el("button","btn ghost","Recommend"); rec.type = "button";
-          rec.title = "Recommend this candidate for a requisition — logged on the record";
-          rec.addEventListener("click", function(){ var w = window.prompt("Recommend " + fullName(c) + " — for which requisition / why?", ""); if(w){ logOwnership(c, "Recommended by " + meOwnerName() + ": " + w); toast("Recommendation logged."); } });
+          rec.title = "Recommend this candidate for a requisition — it routes to that requisition\u2019s recruiter as actionable work";
+          rec.addEventListener("click", function(){ tbRecommendCandidate(c); });
           foot.insertBefore(rq, foot.firstChild); foot.insertBefore(rec, foot.firstChild);
         }
       } else if(unclaimed(c) && (ws === "recruiter" || ws === "manager" || ws === "admin")){
@@ -9667,6 +9700,110 @@ body.tb-overlay-open{ overflow:hidden; }
       return tr;
     };
   }
+
+  /* ---------- 3b. RECOMMENDATION WORKFLOW (launch certification) ----------
+     A recommendation is routed work, not a note: pick the requisition, the
+     system determines that req's recruiter, and it lands in their
+     "Recommended to Me" queue with a full status trail —
+     Recommended → Accepted (claimed) / Declined. History lives on the record. */
+  function tbRecParse(a){
+    var m = /^\[Recommendation\] to:(.+?) req:(.+?) status:(\w+) by:(.+?)(?: — ([\s\S]*))?$/.exec((a.notes || "").trim());
+    return m ? { to: m[1], req: m[2], status: m[3], by: m[4], reason: m[5] || "", date: a.date || "", candidateId: a.candidateId } : null;
+  }
+  function tbRecStateFor(candidateId){
+    var recs = (state.activities || []).filter(function(a){ return a.candidateId === candidateId; }).map(tbRecParse).filter(Boolean);
+    if(!recs.length){ return null; }
+    /* a decision (Accepted/Declined) always supersedes the pending Recommended
+       for the same recruiter+req — independent of same-day sort order */
+    var pending = recs.filter(function(r){ return r.status === "Recommended"; });
+    var open = pending.filter(function(p){
+      return !recs.some(function(r){ return r.status !== "Recommended" && r.to === p.to && r.req === p.req; });
+    });
+    if(open.length){ return open[0]; }
+    var decided = recs.filter(function(r){ return r.status !== "Recommended"; });
+    return decided.length ? decided[0] : recs[0];
+  }
+  function tbRecPendingFor(candidateId){
+    var r = tbRecStateFor(candidateId);
+    return (r && r.status === "Recommended") ? r : null;
+  }
+  function tbReqRecruiter(reqTag){
+    var counts = {};
+    (state.candidates || []).forEach(function(c){
+      if((c.reqs || []).indexOf(reqTag) !== -1 && c.owner && c.owner !== "Unassigned" && c.status !== "Archived"){ counts[c.owner] = (counts[c.owner] || 0) + 1; }
+    });
+    var best = Object.keys(counts).sort(function(a,b){ return counts[b] - counts[a]; })[0];
+    return best || null;
+  }
+  window.tbRecommendCandidate = async function(c){
+    var open = REQS.filter(function(r){ return !r.bench && (window.TB_METRICS ? TB_METRICS.isOpenReq(r) : true); });
+    var pick = window.prompt("Recommend " + fullName(c) + " for which requisition?\n\nType a req # or part of the title:", "");
+    if(!pick){ return; }
+    var p = pick.trim().toLowerCase();
+    var req = open.filter(function(r){ return String(r.jobId || "").toLowerCase() === p; })[0] ||
+              open.filter(function(r){ return (r.title + " – " + r.loc).toLowerCase().indexOf(p) !== -1 || (r.title || "").toLowerCase().indexOf(p) !== -1; })[0];
+    if(!req){ toast("No open requisition matches “" + pick + "”."); return; }
+    var tag = req.title + " – " + req.loc;
+    var toRec = tbReqRecruiter(tag);
+    if(!toRec){
+      var ask = window.prompt("No recruiter is working " + tag + " yet. Send this recommendation to which recruiter?\n\n" + OWNERS.join(" · "), "");
+      if(!ask){ return; }
+      toRec = OWNERS.filter(function(o){ return o.toLowerCase() === ask.trim().toLowerCase(); })[0];
+      if(!toRec){ toast("No recruiter named “" + ask + "”."); return; }
+    }
+    var why = window.prompt("Why is " + fullName(c) + " right for " + tag + "? (goes to " + toRec + ")", "") || "";
+    var res = await sb.from("activities").insert({ org: ORG, candidate_id: c.id, type: "Note", date: todayISO(),
+      notes: "[Recommendation] to:" + toRec + " req:" + tag + " status:Recommended by:" + meOwnerName() + (why ? " — " + why : ""), owner: meOwnerName() });
+    if(res.error){ toast("Could not send: " + res.error.message.slice(0, 60)); return; }
+    await loadData();
+    toast("Recommended to " + toRec + " — it\u2019s in their queue now."); refresh();
+  };
+  window.tbRecsForMe = function(){
+    var me = meOwnerName().toLowerCase();
+    var out = [];
+    (state.candidates || []).forEach(function(c){
+      var r = tbRecPendingFor(c.id);
+      if(r && r.to.toLowerCase() === me){ out.push({ c: c, rec: r }); }
+    });
+    return out;
+  };
+  window.tbRecRespond = async function(item, accept){
+    var r = item.rec, c = item.c;
+    var status = accept ? "Accepted" : "Declined";
+    var res = await sb.from("activities").insert({ org: ORG, candidate_id: c.id, type: "Note", date: todayISO(),
+      notes: "[Recommendation] to:" + r.to + " req:" + r.req + " status:" + status + " by:" + meOwnerName(), owner: meOwnerName() });
+    if(res.error){ toast("Could not update: " + res.error.message.slice(0, 60)); return; }
+    if(accept && (!c.owner || c.owner === "Unassigned")){ await sb.from("candidates").update({ owner: meOwnerName() }).eq("id", c.id); }
+    await loadData();
+    toast(accept ? (fullName(c) + " accepted — on your desk, ready to work " + r.req) : "Declined — " + r.by + " can see the call you made.");
+    refresh();
+  };
+  window.renderRecQueue = function(host){
+    var items = tbRecsForMe();
+    document.getElementById("viewTitle").textContent = "Recommended to Me";
+    document.getElementById("viewMeta").textContent = items.length + " candidate" + (items.length === 1 ? "" : "s") + " recommended to you · accept to claim, decline to pass — either way the recommender sees your call";
+    if(!items.length){
+      var em = el("div","empty"); em.appendChild(el("div","big","No recommendations waiting"));
+      em.appendChild(el("div", null, "When a teammate recommends a candidate for one of your requisitions, they land here."));
+      host.appendChild(em); return;
+    }
+    items.forEach(function(it){
+      var card = el("div"); card.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:12px;max-width:860px";
+      var top = el("div"); top.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap";
+      var left = el("div");
+      var nm = el("div", null, fullName(it.c)); nm.style.cssText = "font-weight:700;font-size:15px;cursor:pointer"; nm.title = "Open the full record";
+      nm.addEventListener("click", function(){ openDetail(it.c); });
+      left.appendChild(nm);
+      left.appendChild(el("div","hint", "For " + it.rec.req + " · recommended by " + it.rec.by + (it.rec.date ? " · " + it.rec.date : "")));
+      if(it.rec.reason){ var why = el("div", null, "\u201c" + it.rec.reason + "\u201d"); why.style.cssText = "font-size:13px;color:var(--ink);margin-top:6px;font-style:italic"; left.appendChild(why); }
+      top.appendChild(left);
+      var act = el("div"); act.style.cssText = "display:flex;gap:8px";
+      var acc = el("button","btn gold sm","Accept — Add to My Desk"); acc.addEventListener("click", function(){ tbRecRespond(it, true); });
+      var dec = el("button","btn ghost sm","Decline"); dec.addEventListener("click", function(){ tbRecRespond(it, false); });
+      act.appendChild(acc); act.appendChild(dec); top.appendChild(act);
+      card.appendChild(top); host.appendChild(card);
+    });
+  };
 
   /* ---------- 4. WORKSTATION RENDERERS ---------- */
   function wsCard(css){ var c = el("div"); c.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;" + (css || ""); return c; }
