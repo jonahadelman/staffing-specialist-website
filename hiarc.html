@@ -901,7 +901,9 @@ var VIEWS = [
   { id:"tb_mynotes", hidden:true, name:"My Notes", fn:function(){ return true; }, special:"tb_mynotes" },
   { id:"tb_teamnotes", hidden:true, name:"Team Notes", fn:function(){ return true; }, special:"tb_teamnotes" },
   { id:"tb_focus", hidden:true, name:"Today's Focus", fn:function(){ return true; }, special:"tb_focus" },
-  { id:"all", collapsible:true, name:"Enterprise Talent", fn:function(){ return true; }, section:"Candidates" },
+  { id:"reqs", collapsible:true, name:"Open Requisitions", fn:function(){ return true; }, special:"reqs", section:"Open Requisitions" },
+  { id:"talentbench", collapsible:true, name:"TalentBench", fn:function(){ return true; }, special:"talentbench", section:"Open Requisitions" },
+  { id:"all", collapsible:true, name:"Candidate Library", fn:function(){ return true; }, section:"Candidates" },
   { id:"board", collapsible:true, name:"TalentFit", fn:function(){ return true; }, special:"board", section:"Candidates" },
   { id:"autoslate", collapsible:true, name:"AutoSlate", fn:function(){ return true; }, special:"autoslate", section:"Candidates" },
   { id:"pipeline", collapsible:true, name:"Hiring Pipeline", fn:function(){ return true; }, special:"pipeline", section:"Candidates" },
@@ -909,8 +911,6 @@ var VIEWS = [
   { id:"interviewing", collapsible:true, name:"Interviewing", fn:function(c){ return c.status === "Interviewing Stage 1" || c.status === "Interviewing Stage 2" || c.status === "Interviewing Stage 3" || c.status === "Panel / Final Interview" || c.status === "Interviewing"; }, section:"Candidates" },
   { id:"offerpending", collapsible:true, name:"Offers", fn:function(c){ return c.status === "Offer Pending"; }, section:"Candidates" },
   { id:"offeraccepted", collapsible:true, name:"Hired", fn:function(c){ return c.status === "Offer Accepted - Hired"; }, section:"Candidates" },
-  { id:"reqs", collapsible:true, name:"Open Requisitions", fn:function(){ return true; }, special:"reqs", section:"Open Requisitions" },
-  { id:"talentbench", collapsible:true, name:"TalentBench", fn:function(){ return true; }, special:"talentbench", section:"Open Requisitions" },
   { id:"dashboard", collapsible:true, name:"Analytics Dashboard", fn:function(){ return true; }, special:"dashboard", section:"Analytics" },
   { id:"tb_people_rec", collapsible:true, name:"Recruiter Dashboard", fn:function(){ return true; }, section:"Analytics" },
   { id:"tb_people_hm", collapsible:true, name:"Hiring Manager Dashboard", fn:function(){ return true; }, section:"Analytics" },
@@ -1081,7 +1081,7 @@ function renderTabs(){
     if(count !== "" && count !== null){
       var cb = el("span","count", String(count));
       /* every badge explains itself (Monday-morning audit: no mystery numbers) */
-      if(v.id === "all"){ cb.title = count + " candidate" + (count === 1 ? "" : "s") + " across every workspace you can access — equals the All Statuses total inside Enterprise Talent"; }
+      if(v.id === "all"){ cb.title = count + " candidate" + (count === 1 ? "" : "s") + " across every workspace you can access — equals the All Statuses total inside the Candidate Library"; }
       else if(v.id === "followup"){ cb.title = count + " candidate" + (count === 1 ? "" : "s") + " with a scheduled follow-up: overdue, due today, or upcoming"; }
       else if(v.special === "interviewrequests"){ cb.title = count + " interview request" + (count === 1 ? "" : "s") + " on the books"; }
       b.appendChild(cb);
@@ -1211,21 +1211,102 @@ function renderRecruiterBoard(host){
 /* ═══ START MY DAY — the recruiter's one morning screen (founder 2026-07-18):
    Today's Priorities + My Checklist + Weekly Goals, merged. Everything a
    recruiter needs before the first call, no second click required. ═══ */
+window.TB_HERO_ART = { defense: "<svg xmlns='http://www.w3.org/2000/svg' width='1400' height='420' viewBox='0 0 1400 420'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#101a28'/><stop offset='.6' stop-color='#182a41'/><stop offset='1' stop-color='#0c141f'/></linearGradient><linearGradient id='scr' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#9cc4f2' stop-opacity='.85'/><stop offset='1' stop-color='#4a79b4' stop-opacity='.55'/></linearGradient><radialGradient id='glow' cx='.5' cy='.42' r='.75'><stop offset='0' stop-color='#4a79b4' stop-opacity='.28'/><stop offset='1' stop-color='#4a79b4' stop-opacity='0'/></radialGradient></defs><rect width='1400' height='420' fill='url(#g)'/><rect width='1400' height='420' fill='url(#glow)'/><g fill='none' stroke='#7fa6d6' stroke-opacity='.35' stroke-width='1.5'><path d='M950 40 A 340 340 0 0 1 1390 210'/><path d='M1010 40 A 300 300 0 0 1 1390 150'/><path d='M880 40 A 400 400 0 0 1 1395 290'/></g><g fill='#cfe2f8' fill-opacity='.55'><circle cx='1085' cy='63' r='4'/><circle cx='1236' cy='108' r='4'/><circle cx='1345' cy='200' r='4'/><circle cx='990' cy='46' r='3'/></g><g stroke='#7fa6d6' stroke-opacity='.28' stroke-width='1.5'><path d='M1085 63 L1236 108 L1345 200' fill='none'/></g><g fill='none' stroke='#5d84b6' stroke-opacity='.22' stroke-width='1.5'><path d='M40 120 H360 M40 150 H300 M40 180 H330'/></g><rect x='40' y='96' width='90' height='8' rx='4' fill='#9cc4f2' fill-opacity='.4'/><rect x='0' y='300' width='1400' height='120' fill='#080d14' fill-opacity='.92'/><g><rect x='120' y='215' width='150' height='92' rx='6' fill='url(#scr)'/><rect x='114' y='305' width='162' height='10' rx='3' fill='#0b1119'/><path d='M132 268 L152 250 L172 262 L196 236 L222 252 L248 230' fill='none' stroke='#0f2036' stroke-opacity='.85' stroke-width='3'/><circle cx='195' cy='352' r='26' fill='#05080d'/><path d='M156 420 C156 384 174 366 195 366 C216 366 234 384 234 420 Z' fill='#05080d'/><rect x='420' y='205' width='170' height='102' rx='6' fill='url(#scr)'/><rect x='413' y='305' width='184' height='10' rx='3' fill='#0b1119'/><g fill='#0f2036' fill-opacity='.8'><rect x='438' y='226' width='58' height='8' rx='3'/><rect x='438' y='244' width='90' height='8' rx='3'/><rect x='438' y='262' width='74' height='8' rx='3'/><circle cx='555' cy='250' r='22' fill='none' stroke='#0f2036' stroke-width='3'/></g><circle cx='505' cy='350' r='26' fill='#05080d'/><path d='M466 420 C466 384 484 366 505 366 C526 366 544 384 544 420 Z' fill='#05080d'/><rect x='740' y='212' width='155' height='95' rx='6' fill='url(#scr)'/><rect x='733' y='305' width='168' height='10' rx='3' fill='#0b1119'/><g stroke='#0f2036' stroke-opacity='.85' stroke-width='3' fill='none'><circle cx='792' cy='252' r='24'/><path d='M792 232 v-8 M792 280 v-8 M768 252 h-8 M824 252 h-8'/></g><circle cx='815' cy='352' r='26' fill='#05080d'/><path d='M776 420 C776 384 794 366 815 366 C836 366 854 384 854 420 Z' fill='#05080d'/></g><g stroke='#9cc4f2' stroke-opacity='.3' stroke-width='1.5' fill='none'><path d='M270 250 L420 250 M590 250 L740 250'/></g><rect x='1020' y='238' width='250' height='66 ' rx='8' fill='#13233a' stroke='#7fa6d6' stroke-opacity='.4'/><g fill='#9cc4f2' fill-opacity='.65'><rect x='1040' y='254' width='42' height='7' rx='3'/><rect x='1040' y='272' width='70' height='7' rx='3'/><rect x='1130' y='254' width='55' height='7' rx='3'/><rect x='1130' y='272' width='40' height='7' rx='3'/><rect x='1200' y='254' width='48' height='7' rx='3'/><rect x='1200' y='272' width='30' height='7' rx='3'/></g></svg>", medical: "<svg xmlns='http://www.w3.org/2000/svg' width='1400' height='420' viewBox='0 0 1400 420'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#ffffff'/><stop offset='.65' stop-color='#eef3f9'/><stop offset='1' stop-color='#dbe5f0'/></linearGradient><linearGradient id='mach' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#f6f9fd'/><stop offset='1' stop-color='#dde7f2'/></linearGradient></defs><rect width='1400' height='420' fill='url(#g)'/><path d='M0 258 L400 258 L430 258 448 208 466 302 484 232 505 258 L1400 258' fill='none' stroke='#111318' stroke-opacity='.5' stroke-width='2.5'/><rect x='0' y='330' width='1400' height='90' fill='#b9c9db' fill-opacity='.55'/><rect x='0' y='324' width='1400' height='8' fill='#9fb3c9' fill-opacity='.5'/><g><rect x='150' y='196' width='210' height='128' rx='10' fill='url(#mach)' stroke='#8fa5bd' stroke-width='1.5'/><rect x='170' y='214' width='110' height='64' rx='5' fill='#111318' fill-opacity='.85'/><path d='M180 252 L196 238 L212 248 L230 228 L248 240 L264 224' fill='none' stroke='#bcd8f5' stroke-width='2.5'/><g fill='#8fa5bd'><circle cx='308' cy='226' r='6'/><circle cx='330' cy='226' r='6'/><rect x='298' y='248' width='46' height='8' rx='4'/><rect x='298' y='266' width='46' height='8' rx='4'/></g><rect x='176' y='292' width='158' height='14' rx='4' fill='#c6d4e4'/></g><g stroke='#37507a' stroke-width='4' fill='none'><path d='M560 324 V268 M540 268 H600 M570 268 C570 240 600 240 600 218 M600 218 a14 14 0 1 1 .1 0'/><path d='M536 324 H646'/></g><g><rect x='760' y='236' width='16' height='88' rx='4' fill='#5d7599' fill-opacity='.85'/><rect x='788' y='252' width='16' height='72' rx='4' fill='#5d7599' fill-opacity='.65'/><rect x='816' y='222' width='16' height='102' rx='4' fill='#5d7599' fill-opacity='.75'/><rect x='752' y='214' width='90' height='12' rx='5' fill='#8fa5bd'/></g><g><rect x='990' y='206' width='230' height='118' rx='10' fill='url(#mach)' stroke='#8fa5bd' stroke-width='1.5'/><circle cx='1058' cy='262' r='34' fill='none' stroke='#111318' stroke-opacity='.6' stroke-width='2.5'/><circle cx='1058' cy='262' r='18' fill='none' stroke='#111318' stroke-opacity='.45' stroke-width='2'/><circle cx='1058' cy='262' r='5' fill='#111318' fill-opacity='.6'/><g fill='#8fa5bd'><rect x='1120' y='232' width='72' height='8' rx='4'/><rect x='1120' y='250' width='54' height='8' rx='4'/><rect x='1120' y='268' width='64' height='8' rx='4'/><rect x='1120' y='286' width='44' height='8' rx='4'/></g></g><g fill='none' stroke='#111318' stroke-width='1.5'><circle cx='1300' cy='96' r='40' stroke-opacity='.25'/><circle cx='1300' cy='96' r='64' stroke-opacity='.15'/></g><g fill='none' stroke='#8fa5bd' stroke-opacity='.4' stroke-width='1.5'><path d='M60 70 H340 M60 96 H300 M60 122 H320'/></g><rect x='60' y='46' width='84' height='8' rx='4' fill='#111318' fill-opacity='.35'/></svg>" };
+
+/* Time-of-day greeting used by every workstation hero */
+function tbGreeting(){
+  var hr = new Date().getHours();
+  var g = hr < 12 ? "Good Morning" : hr < 17 ? "Good Afternoon" : "Good Evening";
+  var who = (typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email.split("@")[0].split(/[._+\-]/)[0] : "";
+  who = who ? who.charAt(0).toUpperCase() + who.slice(1) : "";
+  return g + (who ? ", " + who : "");
+}
+/* Mission of the Day — recruiters build companies. Org-aware, rotates daily, deterministic. */
+function tbMissionOfTheDay(){
+  var shared = [
+    "Every great company is built by the people it hires. Today, you get to shape that future.",
+    "The next great hire starts with the work you do today.",
+    "Behind every successful company is someone who believed in the right candidate before anyone else did. Be that person today.",
+    "Recruiting isn\u2019t filling positions. It\u2019s building organizations.",
+    "The future of this company is sitting in someone\u2019s inbox today. Go find them.",
+    "One conversation can change a candidate\u2019s life \u2014 and your company\u2019s future.",
+    "Great companies are built one exceptional hire at a time."
+  ];
+  var org = (typeof ORG !== "undefined" && ORG === "hiarc") ? [
+    "The engineers you hire today will help create technology that improves lives around the world.",
+    "One great hire can change everything.",
+    "Every device that saves a life was built by someone a recruiter found first."
+  ] : [
+    "The people you hire today will help build the technology that protects those who protect us.",
+    "Every great program begins with one great hire.",
+    "Mission success starts with the right person in the right seat. That\u2019s your work."
+  ];
+  var pool = org.concat(shared);
+  var d = new Date(); var day = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+  return pool[day % pool.length];
+}
 function renderStartMyDay(host){
   var cands = state.candidates || [], irs = state.interviewRequests || [];
   var today = todayISO();
-  var hr = new Date().getHours();
-  var greet = hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening";
-  var who = (CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email.split("@")[0].split(/[._]/)[0] : "";
-  who = who ? who.charAt(0).toUpperCase() + who.slice(1) : "";
   document.getElementById("viewTitle").textContent = "";
   document.getElementById("viewMeta").textContent = "";
 
   var wrap = el("div"); wrap.style.cssText = "max-width:1020px";
-  var hero = el("div"); hero.style.cssText = "margin:2px 0 18px";
-  var h1 = el("div", null, greet + (who ? ", " + who : "")); h1.style.cssText = "font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.3px";
-  hero.appendChild(h1);
-  hero.appendChild(el("div","hint", new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric" }) + " · " + tbClientDisplayName()));
+
+  /* ═══ THE FIRST FIVE SECONDS — walking into headquarters, not opening software ═══ */
+  var irsTodayN = irs.filter(function(ir){ return (ir.interviewDate || "").slice(0,10) === today && ir.status !== "Cancelled"; }).length;
+  var fuN = cands.filter(function(c){ return followUp(c).label !== ""; }).length;
+  var hmSet = {};
+  cands.filter(function(c){ return c.status === "Submitted"; }).forEach(function(c){ (c.reqs||[]).forEach(function(tag){ REQS.forEach(function(r){ if((r.title + " – " + r.loc) === tag && r.hm){ hmSet[r.hm] = 1; } }); }); });
+  var hmN = Object.keys(hmSet).length;
+  var readyN = 0;
+  try{ /* candidates the engine rates a strong fit and nobody is working yet — the magic, surfaced */
+    cands.filter(function(c){ return c.status !== "Archived" && c.status !== "Offer Accepted - Hired"; }).forEach(function(c){
+      var sc = BOARD.scoreCandidate(c);
+      if(sc && sc.length && sc[0].verdict === "strong" && (c.status === "New" || c.status === "Contacted" || !c.owner || c.owner === "Unassigned")){ readyN++; }
+    });
+  }catch(eR){ readyN = -1; }
+
+  var hero = el("div"); hero.style.cssText = "position:relative;border-radius:18px;overflow:hidden;margin:2px 0 20px;border:1px solid var(--line);box-shadow:0 10px 34px rgba(10,18,30,.16)";
+  var bg = el("div"); bg.style.cssText = "position:absolute;inset:-14px;background:url(\"data:image/svg+xml;utf8," + encodeURIComponent(window.TB_HERO_ART[(typeof ORG !== "undefined" && ORG === "hiarc") ? "medical" : "defense"]) + "\") center/cover no-repeat;filter:blur(3px) saturate(1.05)";
+  hero.appendChild(bg);
+  var ov = el("div"); ov.style.cssText = "position:absolute;inset:0;background:linear-gradient(115deg, rgba(7,12,20,.94) 0%, rgba(9,16,27,.86) 42%, rgba(9,16,27,.55) 100%)";
+  hero.appendChild(ov);
+  var hc = el("div"); hc.style.cssText = "position:relative;padding:36px 40px 32px;color:#fff";
+  var wsLine = el("div", null, (window.TB_WS && window.TB_WS !== "recruiter") ? ({manager:"Recruiting Manager Workstation",hm:"Hiring Manager Workstation",executive:"Executive Workstation",admin:"Administrator Workstation"})[window.TB_WS] || "Recruiter Workstation" : "Recruiter Workstation");
+  wsLine.style.cssText = "font-size:10.5px;font-weight:800;letter-spacing:2.4px;text-transform:uppercase;color:#9cc4f2;margin-bottom:10px";
+  hc.appendChild(wsLine);
+  var h1 = el("div", null, tbGreeting()); h1.style.cssText = "font-size:31px;font-weight:800;letter-spacing:-.5px;line-height:1.15";
+  hc.appendChild(h1);
+  var sub = el("div", null, new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric" }) + "  ·  " + tbClientDisplayName() + (window.TB_PROGRAM ? "  ·  " + window.TB_PROGRAM : ""));
+  sub.style.cssText = "font-size:13.5px;color:rgba(255,255,255,.72);margin-top:7px;font-weight:500";
+  hc.appendChild(sub);
+  var mission = el("div", null, tbMissionOfTheDay());
+  mission.style.cssText = "font-size:14.5px;line-height:1.6;color:rgba(255,255,255,.88);max-width:600px;margin:18px 0 22px;font-weight:500";
+  hc.appendChild(mission);
+  var chips = el("div"); chips.style.cssText = "display:flex;gap:10px;flex-wrap:wrap;align-items:center";
+  function heroChip(n, label, view, tip){
+    var b = el("button", null); b.type = "button"; b.title = tip;
+    b.style.cssText = "display:inline-flex;align-items:baseline;gap:7px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(6px);border-radius:999px;padding:8px 16px;color:#fff;font:inherit;cursor:pointer;transition:background .15s";
+    b.addEventListener("mouseenter", function(){ b.style.background = "rgba(255,255,255,.18)"; });
+    b.addEventListener("mouseleave", function(){ b.style.background = "rgba(255,255,255,.10)"; });
+    var nn = el("b", null, String(n)); nn.style.cssText = "font-size:16.5px;font-weight:800";
+    b.appendChild(nn); b.appendChild(el("span", null, label)).style.cssText = "font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85)";
+    b.addEventListener("click", function(){ ui.view = view; refresh(); });
+    chips.appendChild(b);
+  }
+  heroChip(fuN, "Follow-Ups", "followup", "Candidates with a scheduled follow-up — same number as the sidebar badge");
+  heroChip(irsTodayN, "Interviews Today", "calendar", "Interview requests dated today");
+  heroChip(hmN, "Hiring Managers Waiting", "submitted", "Hiring managers with submittals awaiting their decision");
+  if(readyN >= 0){ heroChip(readyN, "Candidates Ready", "autoslate", "Open talent TalentFit rates a strong fit that nobody is working yet — start there"); }
+  var cta = el("button", null, "Start My Day"); cta.type = "button";
+  cta.style.cssText = "margin-left:auto;background:var(--gold);border:0;border-radius:10px;color:#fff;font:inherit;font-size:14px;font-weight:700;padding:11px 26px;cursor:pointer;box-shadow:0 4px 16px rgba(59,91,255,.35);transition:transform .14s,opacity .14s";
+  cta.addEventListener("mouseenter", function(){ cta.style.transform = "translateY(-1px)"; cta.style.opacity = ".92"; });
+  cta.addEventListener("mouseleave", function(){ cta.style.transform = ""; cta.style.opacity = "1"; });
+  cta.addEventListener("click", function(){ var p = document.getElementById("tbPrio"); if(p){ p.scrollIntoView({ behavior: "smooth", block: "start" }); } });
+  chips.appendChild(cta);
+  hc.appendChild(chips);
+  hero.appendChild(hc);
   wrap.appendChild(hero);
 
   /* ── Today's Priorities ── */
@@ -1242,7 +1323,7 @@ function renderStartMyDay(host){
   var openReqs = canon.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : !r.bench; });
   var starving = openReqs.filter(function(r){ var tag = r.title + " – " + r.loc; return !cands.some(function(c){ return (c.reqs||[]).indexOf(tag) !== -1 && c.status !== "Archived"; }); });
 
-  var pc = el("div"); pc.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:16px";
+  var pc = el("div"); pc.id = "tbPrio"; pc.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:16px;scroll-margin-top:70px";
   var pt = el("div", null, "Today's Priorities"); pt.style.cssText = "font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--gray);margin-bottom:10px";
   pc.appendChild(pt);
   function prio(colorVar, n, label, view, always, tip){
@@ -1529,6 +1610,7 @@ function renderLeadershipBrief(host){
   /* executive header */
   var head = el("div"); head.style.cssText = "display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin:2px 0 22px;flex-wrap:wrap";
   var hl = el("div");
+  if(window.TB_WS === "executive"){ var gr = el("div", null, tbGreeting()); gr.style.cssText = "font-size:13px;font-weight:600;color:var(--muted);margin-bottom:2px"; hl.appendChild(gr); }
   var h1 = el("div", null, "Recruiting Health"); h1.style.cssText = "font-size:27px;font-weight:800;letter-spacing:-.4px;color:var(--ink)";
   hl.appendChild(h1);
   hl.appendChild(el("div","hint", tbClientDisplayName() + " · " + new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric" }) + " · prepared live for the staffing meeting"));
@@ -2886,8 +2968,8 @@ function renderGuide(host){
 
   /* ── Profile media: personal backdrop behind the hero + avatar (self-serve, fail-safe) ── */
   var _cu = (typeof CURRENT_USER!=="undefined") ? CURRENT_USER : null;
-  var _svgDefense = "<svg xmlns='http://www.w3.org/2000/svg' width='1400' height='420' viewBox='0 0 1400 420'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#101a28'/><stop offset='.6' stop-color='#182a41'/><stop offset='1' stop-color='#0c141f'/></linearGradient><linearGradient id='scr' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#9cc4f2' stop-opacity='.85'/><stop offset='1' stop-color='#4a79b4' stop-opacity='.55'/></linearGradient><radialGradient id='glow' cx='.5' cy='.42' r='.75'><stop offset='0' stop-color='#4a79b4' stop-opacity='.28'/><stop offset='1' stop-color='#4a79b4' stop-opacity='0'/></radialGradient></defs><rect width='1400' height='420' fill='url(#g)'/><rect width='1400' height='420' fill='url(#glow)'/><g fill='none' stroke='#7fa6d6' stroke-opacity='.35' stroke-width='1.5'><path d='M950 40 A 340 340 0 0 1 1390 210'/><path d='M1010 40 A 300 300 0 0 1 1390 150'/><path d='M880 40 A 400 400 0 0 1 1395 290'/></g><g fill='#cfe2f8' fill-opacity='.55'><circle cx='1085' cy='63' r='4'/><circle cx='1236' cy='108' r='4'/><circle cx='1345' cy='200' r='4'/><circle cx='990' cy='46' r='3'/></g><g stroke='#7fa6d6' stroke-opacity='.28' stroke-width='1.5'><path d='M1085 63 L1236 108 L1345 200' fill='none'/></g><g fill='none' stroke='#5d84b6' stroke-opacity='.22' stroke-width='1.5'><path d='M40 120 H360 M40 150 H300 M40 180 H330'/></g><rect x='40' y='96' width='90' height='8' rx='4' fill='#9cc4f2' fill-opacity='.4'/><rect x='0' y='300' width='1400' height='120' fill='#080d14' fill-opacity='.92'/><g><rect x='120' y='215' width='150' height='92' rx='6' fill='url(#scr)'/><rect x='114' y='305' width='162' height='10' rx='3' fill='#0b1119'/><path d='M132 268 L152 250 L172 262 L196 236 L222 252 L248 230' fill='none' stroke='#0f2036' stroke-opacity='.85' stroke-width='3'/><circle cx='195' cy='352' r='26' fill='#05080d'/><path d='M156 420 C156 384 174 366 195 366 C216 366 234 384 234 420 Z' fill='#05080d'/><rect x='420' y='205' width='170' height='102' rx='6' fill='url(#scr)'/><rect x='413' y='305' width='184' height='10' rx='3' fill='#0b1119'/><g fill='#0f2036' fill-opacity='.8'><rect x='438' y='226' width='58' height='8' rx='3'/><rect x='438' y='244' width='90' height='8' rx='3'/><rect x='438' y='262' width='74' height='8' rx='3'/><circle cx='555' cy='250' r='22' fill='none' stroke='#0f2036' stroke-width='3'/></g><circle cx='505' cy='350' r='26' fill='#05080d'/><path d='M466 420 C466 384 484 366 505 366 C526 366 544 384 544 420 Z' fill='#05080d'/><rect x='740' y='212' width='155' height='95' rx='6' fill='url(#scr)'/><rect x='733' y='305' width='168' height='10' rx='3' fill='#0b1119'/><g stroke='#0f2036' stroke-opacity='.85' stroke-width='3' fill='none'><circle cx='792' cy='252' r='24'/><path d='M792 232 v-8 M792 280 v-8 M768 252 h-8 M824 252 h-8'/></g><circle cx='815' cy='352' r='26' fill='#05080d'/><path d='M776 420 C776 384 794 366 815 366 C836 366 854 384 854 420 Z' fill='#05080d'/></g><g stroke='#9cc4f2' stroke-opacity='.3' stroke-width='1.5' fill='none'><path d='M270 250 L420 250 M590 250 L740 250'/></g><rect x='1020' y='238' width='250' height='66 ' rx='8' fill='#13233a' stroke='#7fa6d6' stroke-opacity='.4'/><g fill='#9cc4f2' fill-opacity='.65'><rect x='1040' y='254' width='42' height='7' rx='3'/><rect x='1040' y='272' width='70' height='7' rx='3'/><rect x='1130' y='254' width='55' height='7' rx='3'/><rect x='1130' y='272' width='40' height='7' rx='3'/><rect x='1200' y='254' width='48' height='7' rx='3'/><rect x='1200' y='272' width='30' height='7' rx='3'/></g></svg>";
-  var _svgMedical = "<svg xmlns='http://www.w3.org/2000/svg' width='1400' height='420' viewBox='0 0 1400 420'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#ffffff'/><stop offset='.65' stop-color='#eef3f9'/><stop offset='1' stop-color='#dbe5f0'/></linearGradient><linearGradient id='mach' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#f6f9fd'/><stop offset='1' stop-color='#dde7f2'/></linearGradient></defs><rect width='1400' height='420' fill='url(#g)'/><path d='M0 258 L400 258 L430 258 448 208 466 302 484 232 505 258 L1400 258' fill='none' stroke='#111318' stroke-opacity='.5' stroke-width='2.5'/><rect x='0' y='330' width='1400' height='90' fill='#b9c9db' fill-opacity='.55'/><rect x='0' y='324' width='1400' height='8' fill='#9fb3c9' fill-opacity='.5'/><g><rect x='150' y='196' width='210' height='128' rx='10' fill='url(#mach)' stroke='#8fa5bd' stroke-width='1.5'/><rect x='170' y='214' width='110' height='64' rx='5' fill='#111318' fill-opacity='.85'/><path d='M180 252 L196 238 L212 248 L230 228 L248 240 L264 224' fill='none' stroke='#bcd8f5' stroke-width='2.5'/><g fill='#8fa5bd'><circle cx='308' cy='226' r='6'/><circle cx='330' cy='226' r='6'/><rect x='298' y='248' width='46' height='8' rx='4'/><rect x='298' y='266' width='46' height='8' rx='4'/></g><rect x='176' y='292' width='158' height='14' rx='4' fill='#c6d4e4'/></g><g stroke='#37507a' stroke-width='4' fill='none'><path d='M560 324 V268 M540 268 H600 M570 268 C570 240 600 240 600 218 M600 218 a14 14 0 1 1 .1 0'/><path d='M536 324 H646'/></g><g><rect x='760' y='236' width='16' height='88' rx='4' fill='#5d7599' fill-opacity='.85'/><rect x='788' y='252' width='16' height='72' rx='4' fill='#5d7599' fill-opacity='.65'/><rect x='816' y='222' width='16' height='102' rx='4' fill='#5d7599' fill-opacity='.75'/><rect x='752' y='214' width='90' height='12' rx='5' fill='#8fa5bd'/></g><g><rect x='990' y='206' width='230' height='118' rx='10' fill='url(#mach)' stroke='#8fa5bd' stroke-width='1.5'/><circle cx='1058' cy='262' r='34' fill='none' stroke='#111318' stroke-opacity='.6' stroke-width='2.5'/><circle cx='1058' cy='262' r='18' fill='none' stroke='#111318' stroke-opacity='.45' stroke-width='2'/><circle cx='1058' cy='262' r='5' fill='#111318' fill-opacity='.6'/><g fill='#8fa5bd'><rect x='1120' y='232' width='72' height='8' rx='4'/><rect x='1120' y='250' width='54' height='8' rx='4'/><rect x='1120' y='268' width='64' height='8' rx='4'/><rect x='1120' y='286' width='44' height='8' rx='4'/></g></g><g fill='none' stroke='#111318' stroke-width='1.5'><circle cx='1300' cy='96' r='40' stroke-opacity='.25'/><circle cx='1300' cy='96' r='64' stroke-opacity='.15'/></g><g fill='none' stroke='#8fa5bd' stroke-opacity='.4' stroke-width='1.5'><path d='M60 70 H340 M60 96 H300 M60 122 H320'/></g><rect x='60' y='46' width='84' height='8' rx='4' fill='#111318' fill-opacity='.35'/></svg>";
+  var _svgDefense = window.TB_HERO_ART.defense;
+  var _svgMedical = window.TB_HERO_ART.medical;
   var _themeSvg = (typeof ORG !== "undefined" && ORG === "hiarc") ? _svgMedical : _svgDefense;
   var _stockBd = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(_themeSvg).replace(/\x27/g, "%27");
   var _bdUrl = (_cu && _cu.backdropUrl) ? String(_cu.backdropUrl).replace(/'/g, "%27") : _stockBd;
@@ -9190,7 +9272,7 @@ body.tb-overlay-open{ overflow:hidden; }
               var b = el("span", null, c._xorg ? orgLabel(c._xorg) : orgLabel(ORG));
               b.style.cssText = "margin-left:7px;font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;border-radius:4px;padding:1px 6px;vertical-align:1px;" +
                 (c._xorg ? "color:#2563eb;background:rgba(37,99,235,.10)" : "color:#15803d;background:rgba(21,128,61,.10)");
-              b.title = c._xorg ? ("Origin: " + orgLabel(c._xorg) + " workspace — referenced, not copied") : ("Origin: " + orgLabel(ORG) + " workspace");
+              b.title = c._xorg ? ("Enterprise candidate — originally sourced by " + orgLabel(c._xorg) + "; one record, one resume") : ("Sourced by " + orgLabel(ORG));
               nm.appendChild(b);
             }
             if(c._shared){
@@ -9223,7 +9305,7 @@ body.tb-overlay-open{ overflow:hidden; }
       try{
         var mh = document.querySelector("#modal .mhead h2");
         if(mh){
-          var ob = el("span", null, "Origin: " + orgLabel(c._xorg)); ob.style.cssText = "margin-left:10px;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#2563eb;background:rgba(37,99,235,.10);border-radius:5px;padding:2px 8px;vertical-align:3px";
+          var ob = el("span", null, "Enterprise Candidate · Originally sourced by " + orgLabel(c._xorg)); ob.style.cssText = "margin-left:10px;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#2563eb;background:rgba(37,99,235,.10);border-radius:5px;padding:2px 8px;vertical-align:3px";
           mh.appendChild(ob);
           var mcat = availCat(c);
           if(XORG_CUE[mcat]){
@@ -9243,13 +9325,13 @@ body.tb-overlay-open{ overflow:hidden; }
         }
         if(foot && !was){
           if(availCat(c) === "available"){
-            var ad = el("button","btn gold","Adopt into " + orgLabel(ORG)); ad.type = "button";
-            ad.title = "Create an " + orgLabel(ORG) + "-owned recruiting record. The original " + orgLabel(c._xorg) + " record is never changed.";
+            var ad = el("button","btn gold","Add to " + orgLabel(ORG) + " Pipeline"); ad.type = "button";
+            ad.title = "Start recruiting this candidate for " + orgLabel(ORG) + " — assign requisitions, add notes, submit to hiring managers. One candidate, one resume: the " + orgLabel(c._xorg) + " record is never changed.";
             ad.addEventListener("click", function(){ adoptCandidate(c); });
             foot.insertBefore(ad, foot.firstChild);
           }else{
             /* founder rule: mid-process / hired candidates are not available talent — no Adopt */
-            var lk = el("span", null, availCat(c) === "offer" ? "Locked — offer pending at " + orgLabel(c._xorg) : "In process at " + orgLabel(c._xorg) + " — not available for adoption");
+            var lk = el("span", null, availCat(c) === "offer" ? "Locked — offer pending at " + orgLabel(c._xorg) : "In process at " + orgLabel(c._xorg) + " — can’t be added to a pipeline right now");
             lk.style.cssText = "font-size:11.5px;font-weight:600;color:var(--muted);margin-right:10px;align-self:center";
             foot.insertBefore(lk, foot.firstChild);
           }
@@ -9258,24 +9340,26 @@ body.tb-overlay-open{ overflow:hidden; }
     };
   }
   window.adoptCandidate = async function(c){
-    var msg = "Adopt " + fullName(c) + " into " + orgLabel(ORG) + "?\n\n" +
-      "• This creates an " + orgLabel(ORG) + "-owned recruiting record.\n" +
-      "• The original " + orgLabel(c._xorg) + " record remains unchanged.\n" +
-      "• Future updates become independent.\n" +
-      "• The resume is referenced — no file is duplicated.";
+    var msg = "Start recruiting " + fullName(c) + " for " + orgLabel(ORG) + "?\n\n" +
+      "• " + fullName(c) + " joins the " + orgLabel(ORG) + " pipeline on your desk.\n" +
+      "• Assign requisitions, add notes, submit to hiring managers.\n" +
+      "• One candidate, one resume — nothing is duplicated.\n" +
+      "• The " + orgLabel(c._xorg) + " record is never changed.";
     if(!window.confirm(msg)){ return; }
     var row = candToRow(c);
     row.org = ORG;
     row.status = "New";
-    row.owner = (typeof OWNERS !== "undefined" && OWNERS.indexOf(row.owner) >= 0) ? row.owner : "Unassigned";
-    row.notes = ((row.notes || "") + "\n[Adopted from " + orgLabel(c._xorg) + " " + new Date().toISOString().slice(0,10) + " — original record unchanged; status there was “" + (c.status || "?") + "”. Resume referenced, not copied.]").trim();
+    var _meFirst = ((CURRENT_USER && CURRENT_USER.email) || "").split("@")[0].split(/[._+\-]/)[0].toLowerCase();
+    var _meOwner = (typeof OWNERS !== "undefined" ? OWNERS : []).filter(function(o){ return o.toLowerCase() === _meFirst; })[0];
+    row.owner = _meOwner || ((typeof OWNERS !== "undefined" && OWNERS.indexOf(row.owner) >= 0) ? row.owner : "Unassigned"); /* the recruiter starting the process owns the candidate */
+    row.notes = ((row.notes || "") + "\n[Added to " + orgLabel(ORG) + " pipeline from " + orgLabel(c._xorg) + " " + new Date().toISOString().slice(0,10) + " — the " + orgLabel(c._xorg) + " record is unchanged; status there was “" + (c.status || "?") + "”. One resume, referenced, not copied.]").trim();
     delete row.id;
     var ins = await sb.from("candidates").insert(row).select().single();
     if(ins.error){ toast("Adopt failed: " + ins.error.message.slice(0, 60)); return; }
     XORG.cands = XORG.cands.filter(function(x){ return x !== c && x.id !== c.id; });
     try{ state.candidates.push(rowToCand(ins.data)); }catch(eP){}
     closeModal();
-    toast(fullName(c) + " adopted into " + orgLabel(ORG) + " — original " + orgLabel(c._xorg) + " record untouched");
+    toast(fullName(c) + " added to the " + orgLabel(ORG) + " pipeline — the " + orgLabel(c._xorg) + " record is untouched");
     try{ renderTabs(); renderList(); }catch(eR){}
   };
 
@@ -9307,7 +9391,7 @@ body.tb-overlay-open{ overflow:hidden; }
   }
   window.renderEnterpriseLibrary = function(){
     var host = document.getElementById("list"); host.innerHTML = "";
-    document.getElementById("viewTitle").textContent = "Enterprise Talent";
+    document.getElementById("viewTitle").textContent = "Candidate Library";
     var pool = (state.candidates || []).concat(XORG.loaded ? XORG.cands : []);
     var defs = libFilters(); var avails = libAvail();
     var fdef = defs.filter(function(d){ return d[0] === LIB_FILTER; })[0] || defs[0];
@@ -9315,9 +9399,9 @@ body.tb-overlay-open{ overflow:hidden; }
     /* information banner — read-only until adopted */
     var ban = el("div");
     ban.style.cssText = "border:1px solid var(--line);border-left:3px solid #2563eb;background:var(--panel);border-radius:8px;padding:9px 13px;margin-bottom:12px;font-size:12px;color:var(--muted);line-height:1.5";
-    var bt = el("b", null, "Enterprise Candidate Library"); bt.style.cssText = "color:var(--ink);margin-right:6px";
+    var bt = el("b", null, "Candidate Library"); bt.style.cssText = "color:var(--ink);margin-right:6px";
     ban.appendChild(bt);
-    ban.appendChild(document.createTextNode("This library contains candidates from all workspaces you are authorized to access. Candidates from another workspace remain read-only until explicitly adopted into your workspace."));
+    ban.appendChild(document.createTextNode("One record. One resume. Zero duplicates. Enterprise-wide visibility — candidates from your other workspaces are read-only until you add them to your pipeline."));
     host.appendChild(ban);
     /* context strip — the user should never have to do math between the
        sidebar total and the filtered chips (Monday-morning audit, Bug #2) */
@@ -9590,6 +9674,8 @@ body.tb-overlay-open{ overflow:hidden; }
     document.getElementById("viewTitle").textContent = "";
     document.getElementById("viewMeta").textContent = "";
     var wrap = el("div"); wrap.style.cssText = "max-width:1060px";
+    var gr = el("div", null, tbGreeting()); gr.style.cssText = "font-size:13px;font-weight:600;color:var(--muted);margin-bottom:2px";
+    wrap.appendChild(gr);
     var h1 = el("div", null, "Team Health"); h1.style.cssText = "font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.3px;margin-bottom:2px";
     wrap.appendChild(h1);
     wrap.appendChild(el("div","hint", new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric" }) + " · every number equals its drill-down"));
@@ -9652,6 +9738,8 @@ body.tb-overlay-open{ overflow:hidden; }
       table.appendChild(tb); wrap.appendChild(table);
     }
     if(v === "tb_hm_review"){
+      var gr = el("div", null, tbGreeting()); gr.style.cssText = "font-size:13px;font-weight:600;color:var(--muted);margin-bottom:2px";
+      wrap.appendChild(gr);
       var h1 = el("div", null, "Candidates Awaiting Your Review"); h1.style.cssText = "font-size:24px;font-weight:800;letter-spacing:-.3px;margin-bottom:12px";
       wrap.appendChild(h1);
       candTable(mineCands().filter(function(c){ return c.status === "Submitted"; }), "Nothing waiting on you. Your recruiter will submit the next slate here.");
@@ -9692,6 +9780,8 @@ body.tb-overlay-open{ overflow:hidden; }
     document.getElementById("viewTitle").textContent = "";
     document.getElementById("viewMeta").textContent = "";
     var wrap = el("div"); wrap.style.cssText = "max-width:1060px";
+    var gr = el("div", null, tbGreeting()); gr.style.cssText = "font-size:13px;font-weight:600;color:var(--muted);margin-bottom:2px";
+    wrap.appendChild(gr);
     var h1 = el("div", null, "Platform Status"); h1.style.cssText = "font-size:26px;font-weight:800;letter-spacing:-.3px;margin-bottom:2px";
     wrap.appendChild(h1);
     wrap.appendChild(el("div","hint", tbClientDisplayName() + " workspace · " + WS_LABEL[window.TB_WS || "admin"]));
