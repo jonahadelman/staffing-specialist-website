@@ -1213,6 +1213,7 @@ function closeHmDrawer(){
   var d = document.getElementById("hmDrawer"), o = document.getElementById("hmDrawerOverlay");
   if(d){ d.classList.remove("open"); }
   if(o){ o.classList.remove("open"); }
+  document.body.classList.remove("tb-overlay-open"); /* restore page scroll */
 }
 function openHmDrawer(m, focusSection){
   var d = document.getElementById("hmDrawer"), o = document.getElementById("hmDrawerOverlay");
@@ -1230,20 +1231,21 @@ function openHmDrawer(m, focusSection){
     });
   }
   var st = hmStats(m.name);
+  document.body.classList.add("tb-overlay-open"); /* page never scrolls behind the drawer */
   d.innerHTML = "";
   var hd = el("div","hmd-head");
   var hleft = el("div");
   hleft.appendChild(el("div","hmd-nm", m.name));
   hleft.appendChild(el("div","hmd-title", m.title || ""));
+  /* contact lives in the FIXED header — always visible while the body scrolls */
+  var ctc = el("div"); ctc.style.cssText = "margin-top:7px";
+  if(m.email){ var ea = el("a","tag gold", m.email); ea.href = "mailto:" + m.email; ctc.appendChild(ea); }
+  if(m.phone){ var pa2 = el("a","tag", m.phone); pa2.href = "tel:" + m.phone.replace(/[^0-9+]/g,""); pa2.style.marginLeft = "8px"; ctc.appendChild(pa2); }
+  if(m.email || m.phone){ hleft.appendChild(ctc); }
   hd.appendChild(hleft);
   var x = el("button","hmd-x","×"); x.title = "Close (Esc)"; x.addEventListener("click", closeHmDrawer); hd.appendChild(x);
   d.appendChild(hd);
   var body = el("div","hmd-body");
-  /* contact */
-  var ctc = el("div","hmd-sec");
-  if(m.email){ var ea = el("a","tag gold", m.email); ea.href = "mailto:" + m.email; ctc.appendChild(ea); }
-  if(m.phone){ var pa2 = el("a","tag", m.phone); pa2.href = "tel:" + m.phone.replace(/[^0-9+]/g,""); pa2.style.marginLeft = "8px"; ctc.appendChild(pa2); }
-  body.appendChild(ctc);
   /* stats */
   var srow = el("div","hmd-stats");
   [["Active Reqs", st.activeReqs], ["Candidates", st.candidates], ["Interviews", st.interviewing], ["Offers", st.offers]].forEach(function(s){
@@ -8142,16 +8144,16 @@ h3.sech .secount.urgent{ color:var(--red); border-color:var(--red); background:r
 .hm-card:hover .hm-card-view{ opacity:0; } /* quick actions replace it on hover */
 #hmDrawerOverlay{ position:fixed; inset:0; background:rgba(10,14,25,.35); opacity:0; pointer-events:none; transition:opacity .2s; z-index:60; }
 #hmDrawerOverlay.open{ opacity:1; pointer-events:auto; }
-#hmDrawer{ position:fixed; top:0; right:0; height:100%; width:min(480px,94vw); background:var(--panel);
+#hmDrawer{ position:fixed; top:0; right:0; height:100vh; height:100dvh; max-height:100dvh; width:min(480px,94vw); background:var(--panel);
   border-left:1px solid var(--line); box-shadow:-12px 0 34px rgba(0,0,0,.18); transform:translateX(102%);
-  transition:transform .22s ease; z-index:61; display:flex; flex-direction:column; }
+  transition:transform .22s ease; z-index:61; display:flex; flex-direction:column; overflow:hidden; }
 #hmDrawer.open{ transform:translateX(0); }
-.hmd-head{ display:flex; align-items:flex-start; justify-content:space-between; padding:18px 18px 12px; border-bottom:1px solid var(--line); }
+.hmd-head{ flex:0 0 auto; display:flex; align-items:flex-start; justify-content:space-between; padding:18px 18px 12px; border-bottom:1px solid var(--line); }
 .hmd-nm{ font-size:18px; font-weight:800; color:var(--ink); }
 .hmd-title{ font-size:12px; color:var(--muted); margin-top:3px; }
 .hmd-x{ background:none; border:none; font-size:24px; line-height:1; color:var(--muted); cursor:pointer; padding:2px 6px; border-radius:6px; }
 .hmd-x:hover{ color:var(--ink); background:var(--bg); }
-.hmd-body{ flex:1; overflow-y:auto; padding:14px 18px; }
+.hmd-body{ flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding:14px 18px; }
 .hmd-sec{ margin-bottom:18px; }
 .hmd-sec-t{ font-size:11px; font-weight:800; color:var(--gold); letter-spacing:.07em; text-transform:uppercase; margin-bottom:8px; }
 .hmd-sec .tag{ margin:0 6px 6px 0; display:inline-block; }
@@ -8162,7 +8164,12 @@ h3.sech .secount.urgent{ color:var(--red); border-color:var(--red); background:r
 .hmd-req-id{ font-size:12px; font-weight:800; color:var(--gold); }
 .hmd-req-title{ font-size:13px; font-weight:600; color:var(--ink); flex:1; }
 .hmd-req-l2{ font-size:11px; color:var(--muted); margin-top:3px; }
-.hmd-foot{ padding:12px 18px; border-top:1px solid var(--line); display:flex; gap:10px; justify-content:flex-end; }
+/* Page never scrolls behind an open drawer or modal (modern browsers) */
+body:has(#hmDrawer.open){ overflow:hidden; }
+body:has(#scrim.open){ overflow:hidden; }
+/* JS fallback for browsers without :has() */
+body.tb-overlay-open{ overflow:hidden; }
+.hmd-foot{ flex:0 0 auto; padding:12px 18px; border-top:1px solid var(--line); display:flex; gap:10px; justify-content:flex-end; background:var(--panel); }
 </style>
 
 <script id="tb-metrics">
