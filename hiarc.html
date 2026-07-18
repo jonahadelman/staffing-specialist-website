@@ -563,10 +563,15 @@ var CONFIG = {"company": "HiARC", "brand": "HiARC", "subtitle": "Talent Pipeline
 /*CONFIG_END*/
 
 var ORG = CONFIG.org;
+/* One canonical client display name for every client-facing surface
+   (sidebar identity, submission documents, printed headers). */
+function tbClientDisplayName(){
+  return CONFIG.clientDisplay || (ORG === "hiarc" ? "HiARC" : ORG === "elbit" ? "Elbit Systems of America" : (CONFIG.brand || CONFIG.company || "Client"));
+}
 /* Workspace identity: the sidebar leads with the CLIENT, not internal jargon */
 try{
   var __ws = document.getElementById("wsName");
-  if(__ws){ __ws.textContent = (ORG === "hiarc") ? "HiARC" : "Elbit Systems of America"; }
+  if(__ws){ __ws.textContent = tbClientDisplayName(); }
 }catch(eWs){}
 
 /* ============================================================================
@@ -1321,7 +1326,7 @@ function renderLeadershipBrief(host){
   section("Requisitions With No Candidates Tagged", starving.map(function(r){ return (r.jobId ? r.jobId + " · " : "") + r.title + " – " + r.loc + " (" + (r.hm || "no HM") + ")"; }), "Every open requisition has candidates in play.");
   var copy = el("button","btn gold","Copy Brief");
   copy.addEventListener("click", function(){
-    var lines = ["TSS Leadership Brief — " + (typeof ORG !== "undefined" && ORG === "hiarc" ? "HiARC" : "Elbit Systems of America") + " — " + todayISO(), ""];
+    var lines = ["TSS Leadership Brief — " + tbClientDisplayName() + " — " + todayISO(), ""];
     lines.push("Open requisitions: " + openReqs.length + " · Interviews this week: " + irsWeek.length + " · Interviewing: " + interviewing.length + " · Submitted awaiting HM: " + submitted.length + " · Offers pending: " + offers.length + " · Hired: " + hiredMTD.length, "");
     lines.push("OFFERS IN MOTION:"); offers.length ? offers.forEach(function(c){ lines.push("- " + fullName(c) + " — " + ((c.reqs||[])[0] || "")); }) : lines.push("- none");
     lines.push("", "AWAITING HM FEEDBACK:"); submitted.length ? submitted.forEach(function(c){ lines.push("- " + fullName(c) + " — " + ((c.reqs||[])[0] || "")); }) : lines.push("- none");
@@ -5759,7 +5764,7 @@ function buildSubmissionHTML(cands, reqTitle){
   var today = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
   var navy = "#0e1a2b", panel = "#14233a", gold = "#c8a96a", ink = "#1a2330", muted = "#5d6b80", line = "#d8dee8";
   var h = "";
-  h += "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Candidate Submission - " + submHesc(CONFIG.company) + "</title>";
+  h += "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Candidate Submission - " + submHesc(tbClientDisplayName()) + "</title>";
   h += "<style>";
   h += "*{box-sizing:border-box} body{margin:0;background:#eef1f5;color:" + ink + ";font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5}";
   h += ".page{max-width:820px;margin:24px auto;background:#fff;box-shadow:0 6px 30px #0002;border-radius:10px;overflow:hidden}";
@@ -5780,10 +5785,10 @@ function buildSubmissionHTML(cands, reqTitle){
   h += "</style></head><body>";
   h += "<div class='tools'><button class='btn g' onclick='window.print()'>Print / Save as PDF</button><button class='btn' id='copyBtn'>Copy as text</button><button class='btn' onclick='window.close()'>Close</button></div>";
   h += "<div class='page'>";
-  h += "<div class='top'><div><h1>" + submHesc(CONFIG.company) + "<span class='b'>.</span></h1><div style='color:#9db2d2;font-size:12px;margin-top:3px'>Candidate Submission" + (reqTitle ? (" &mdash; " + submHesc(reqTitle)) : "") + "</div></div>";
+  h += "<div class='top'><div><h1>" + submHesc(tbClientDisplayName()) + "<span class='b'>.</span></h1><div style='color:#9db2d2;font-size:12px;margin-top:3px'>Candidate Submission" + (reqTitle ? (" &mdash; " + submHesc(reqTitle)) : "") + "</div></div>";
   h += "<div class='meta'>Confidential Candidate Submission<br>" + today + "</div></div><div class='bar'></div>";
   h += "<div class='body'>";
-  var txt = "CANDIDATE SUBMISSION - " + CONFIG.company + (reqTitle ? (" - " + reqTitle) : "") + "\n" + today + "\n\n";
+  var txt = "CANDIDATE SUBMISSION - " + tbClientDisplayName() + (reqTitle ? (" - " + reqTitle) : "") + "\n" + today + "\n\n";
   cands.forEach(function(c){
     var name = fullName(c);
     h += "<div class='cand'>";
@@ -5814,9 +5819,9 @@ function buildSubmissionHTML(cands, reqTitle){
     txt += "\n----------------------------------------\n\n";
   });
   h += "</div>";
-  h += "<div class='foot'>" + submHesc(CONFIG.company) + " &nbsp;&middot;&nbsp; Confidential Candidate Submission &nbsp;&middot;&nbsp; " + today + "</div>";
+  h += "<div class='foot'>" + submHesc(tbClientDisplayName()) + " &nbsp;&middot;&nbsp; Confidential Candidate Submission &nbsp;&middot;&nbsp; " + today + "</div>";
   h += "</div>";
-  txt += CONFIG.company + " | Confidential Candidate Submission | " + today + "\n";
+  txt += tbClientDisplayName() + " | Confidential Candidate Submission | " + today + "\n";
   h += "<textarea id='plain' style='position:absolute;left:-9999px'>" + submHesc(txt) + "</textarea>";
   h += "<scr"+"ipt>document.getElementById('copyBtn').addEventListener('click',function(){var t=document.getElementById('plain');t.select();try{document.execCommand('copy');this.textContent='Copied';}catch(e){if(navigator.clipboard){navigator.clipboard.writeText(t.value);this.textContent='Copied';}}});<\/scr"+"ipt>";
   h += "</body></html>";
@@ -7015,7 +7020,7 @@ function makeSourcingBtn(r, tr){
            expandable department selector — no redundant "Departments" heading. */
         var sec = el("div"); sec.id = "tbProgramsNav";
         if(typeof window.TB_DEPT_OPEN === "undefined"){ window.TB_DEPT_OPEN = true; }
-        var clientName = (typeof ORG !== "undefined" && ORG === "hiarc") ? "HiARC" : "Elbit Systems of America";
+        var clientName = tbClientDisplayName();
         var co = el("div","tb-client-name", clientName);
         co.title = "Department overview — every department's requisitions and health at a glance";
         co.addEventListener("click", function(){
@@ -8785,7 +8790,7 @@ body.tb-overlay-open{ overflow:hidden; }
       var host = document.getElementById("tabs"); if(!host){ return; }
       var old = document.getElementById("tbProgramsNav"); if(old){ old.parentNode.removeChild(old); }
       var sec = el("div"); sec.id = "tbProgramsNav";
-      var name = (typeof ORG !== "undefined" && ORG === "hiarc") ? "HiARC" : (CONFIG.brand || CONFIG.company || "Client Workspace");
+      var name = tbClientDisplayName();
       var co = el("div","tb-client-name", name);
       co.title = name + " — client workspace";
       sec.appendChild(co);
