@@ -525,13 +525,15 @@ input::placeholder, textarea::placeholder{ color:#9aa1b5; }
  <h3 id="wsName">Workspace</h3>
  <div id="tabs"></div>
 
- <h3>Filters</h3>
+ <h3>Candidate Filters</h3>
  <div class="filterbox">
  <label>Status</label><select class="fil" id="fStatus"></select>
- <label>Discipline</label><select class="fil" id="fDiscipline"></select>
- <label>Target Req</label><select class="fil" id="fReq"></select>
+ <label>Department</label><select class="fil" id="fDept"></select>
+ <label>Hiring Manager</label><select class="fil" id="fHM"></select>
  <label>Recruiter</label><select class="fil" id="fOwner"></select>
  <label>Priority</label><select class="fil" id="fPriority"></select>
+ <label>Discipline</label><select class="fil" id="fDiscipline"></select>
+ <label>Target Requisition</label><select class="fil" id="fReq"></select>
  </div>
  </aside>
  <main class="main">
@@ -694,7 +696,7 @@ var NOTES_COMPOSE = "";
 var NOTES_EDITING = null;
 var PROGNOTES_OPEN = false;
 var TALENTBENCH_NOTES_OPEN = false;
-var ui = { view:"guide", q:"", fStatus:"", fDiscipline:"", fReq:"", fOwner:"", fPriority:"" };
+var ui = { view:"guide", q:"", fStatus:"", fDiscipline:"", fReq:"", fOwner:"", fPriority:"", fDept:"", fHM:"" };
 var openId = null;
 
 /* ---------- auth ---------- */
@@ -836,7 +838,7 @@ async function loadInterviewRequests(){
 }
 async function reloadNotesSoft(){
   await loadNotes();
-  if(ui.view === "priolist" && !NOTES_EDITING){ refresh(); }
+  if((ui.view === "priolist" || ui.view === "tb_teamnotes") && !NOTES_EDITING){ refresh(); }
 }
 async function reloadSoft(){ await loadData(); refresh(); }
 function wireRealtime(){
@@ -871,27 +873,40 @@ function withinDays(c,n){ return ageDays(c) <= n; }
 
 /* ---------- views ---------- */
 window.TALENTBASE_FU_WORKLIST = true;
+/* ═══ RECRUITER WORKSTATION HIERARCHY (founder decision 2026-07-18) ═══
+   Sidebar chapters mirror the order a recruiter mentally starts the day:
+   CLIENT → MY COMMAND CENTER → CANDIDATES → OPEN REQUISITIONS → ANALYTICS → CANDIDATE FILTERS.
+   Sourcing groupings (by Position / by Function / Resume Review / Dayforce)
+   left navigation and became filters + hidden routable views. */
 var VIEWS = [
-  { id:"guide", name:"Command Center", fn:function(){ return true; }, special:"guide" },
-  { id:"followup", collapsible:true, name:"Follow-Ups Due", fn:function(c){ return followUp(c).label !== ""; }, section:"My Work" },
-  { id:"interviewrequests", collapsible:true, name:"Interview Requests", fn:function(){ return true; }, special:"interviewrequests", section:"My Work" },
+  { id:"guide", collapsible:true, name:"Dashboard", fn:function(){ return true; }, special:"guide", section:"My Command Center" },
+  { id:"calendar", collapsible:true, name:"Interview Calendar", fn:function(){ return true; }, special:"calendar", section:"My Command Center" },
+  { id:"interviewrequests", collapsible:true, name:"Interview Requests", fn:function(){ return true; }, special:"interviewrequests", section:"My Command Center" },
+  { id:"followup", collapsible:true, name:"Follow-Ups Due", fn:function(c){ return followUp(c).label !== ""; }, section:"My Command Center" },
+  { id:"tb_checklist", collapsible:true, name:"My Daily Checklist", fn:function(){ return true; }, special:"tb_checklist", section:"My Command Center" },
+  { id:"tb_goals", collapsible:true, name:"Weekly Goals", fn:function(){ return true; }, special:"tb_goals", section:"My Command Center" },
+  { id:"tb_mynotes", collapsible:true, name:"My Notes", fn:function(){ return true; }, special:"tb_mynotes", section:"My Command Center" },
+  { id:"tb_teamnotes", collapsible:true, name:"Team Notes", fn:function(){ return true; }, special:"tb_teamnotes", section:"My Command Center" },
+  { id:"tb_brief", collapsible:true, name:"TSS Leadership Brief", fn:function(){ return true; }, special:"tb_brief", section:"My Command Center" },
+  { id:"tb_focus", collapsible:true, name:"Today's Focus", fn:function(){ return true; }, special:"tb_focus", section:"My Command Center" },
   { id:"all", collapsible:true, name:"Candidate Library", fn:function(){ return true; }, section:"Candidates" },
   { id:"board", collapsible:true, name:"TalentFit", fn:function(){ return true; }, special:"board", section:"Candidates" },
   { id:"autoslate", collapsible:true, name:"AutoSlate", fn:function(){ return true; }, special:"autoslate", section:"Candidates" },
   { id:"pipeline", collapsible:true, name:"Hiring Pipeline", fn:function(){ return true; }, special:"pipeline", section:"Candidates" },
-  { id:"submitted", collapsible:true, name:"Submitted to HM", fn:function(c){ return c.status === "Submitted"; }, section:"Candidates" },
+  { id:"submitted", collapsible:true, name:"Submitted to Hiring Managers", fn:function(c){ return c.status === "Submitted"; }, section:"Candidates" },
+  { id:"interviewing", collapsible:true, name:"Currently Interviewing", fn:function(c){ return c.status === "Interviewing Stage 1" || c.status === "Interviewing Stage 2" || c.status === "Interviewing Stage 3" || c.status === "Panel / Final Interview" || c.status === "Interviewing"; }, section:"Candidates" },
   { id:"offerpending", collapsible:true, name:"Offers", fn:function(c){ return c.status === "Offer Pending"; }, section:"Candidates" },
   { id:"offeraccepted", collapsible:true, name:"Hired", fn:function(c){ return c.status === "Offer Accepted - Hired"; }, section:"Candidates" },
-  { id:"reqs", name:"Open Positions", fn:function(){ return true; }, special:"reqs" },
-  { id:"talentbench", name:"TalentBench", fn:function(){ return true; }, special:"talentbench" },
-  { id:"byreq", collapsible:true, name:"Candidates by Position", fn:function(c){ return c.status !== "Archived"; }, special:"byreq", section:"Sourcing" },
-  { id:"bydisc", collapsible:true, name:"Candidates by Function", fn:function(c){ return c.status !== "Archived"; }, group:"discipline", section:"Sourcing" },
-  { id:"resumecheck", collapsible:true, name:"Resume Review", fn:function(){ return true; }, special:"resumecheck", section:"Sourcing" },
-  { id:"dayforcebadged", collapsible:true, name:"Dayforce Badged", fn:function(c){ return c.dayforceBadge === true && c.status !== "Archived"; }, section:"Sourcing" },
-  { id:"calendar", collapsible:true, name:"Interview Calendar", fn:function(){ return true; }, special:"calendar", section:"Interview Operations" },
-  { id:"interviewing", collapsible:true, name:"Currently Interviewing", fn:function(c){ return c.status === "Interviewing Stage 1" || c.status === "Interviewing Stage 2" || c.status === "Interviewing Stage 3" || c.status === "Panel / Final Interview" || c.status === "Interviewing"; }, section:"Interview Operations" },
+  { id:"reqs", collapsible:true, name:"Open Requisitions", fn:function(){ return true; }, special:"reqs", section:"Open Requisitions" },
+  { id:"talentbench", collapsible:true, name:"TalentBench", fn:function(){ return true; }, special:"talentbench", section:"Open Requisitions" },
   { id:"dashboard", collapsible:true, name:"Analytics Dashboard", fn:function(){ return true; }, special:"dashboard", section:"Analytics" },
-  { id:"managers", collapsible:true, name:"Hiring Manager Dashboard", fn:function(){ return true; }, special:"managers", section:"Organization" },
+  { id:"tb_people_rec", collapsible:true, name:"Recruiter Dashboard", fn:function(){ return true; }, section:"Analytics" },
+  { id:"tb_people_hm", collapsible:true, name:"Hiring Manager Dashboard", fn:function(){ return true; }, section:"Analytics" },
+  { id:"managers", hidden:true, name:"Hiring Manager Directory", fn:function(){ return true; }, special:"managers" },
+  { id:"byreq", hidden:true, name:"Candidates by Position", fn:function(c){ return c.status !== "Archived"; }, special:"byreq" },
+  { id:"bydisc", hidden:true, name:"Candidates by Function", fn:function(c){ return c.status !== "Archived"; }, group:"discipline" },
+  { id:"resumecheck", hidden:true, name:"Resume Review", fn:function(){ return true; }, special:"resumecheck" },
+  { id:"dayforcebadged", hidden:true, name:"Dayforce Badged", fn:function(c){ return c.dayforceBadge === true && c.status !== "Archived"; } },
   { id:"tarejected", hidden:true, name:"TA Rejected", fn:function(c){ return c.status === "TA Rejected"; }, section:"Closed & Archived", collapsible:true },
   { id:"hmrejected", hidden:true, name:"HM Rejected", fn:function(c){ return c.status === "HM Rejected"; }, section:"Closed & Archived", collapsible:true },
   { id:"archive", hidden:true, name:"Archive", fn:function(c){ return c.status === "Archived"; }, section:"Closed & Archived", collapsible:true },
@@ -954,20 +969,30 @@ function matchesSearch(c){
   try{ var fn = parseQuery(tokenizeQuery(ui.q)); return fn(candHaystack(c)); }
   catch(e){ return candHaystack(c).indexOf(ui.q.toLowerCase()) !== -1; }
 }
+function reqsForTags(tags){
+  var out = [];
+  (tags || []).forEach(function(t){ REQS.forEach(function(r){ if((r.title + " – " + r.loc) === t){ out.push(r); } }); });
+  return out;
+}
 function passFilters(c){
   if(ui.fStatus && c.status !== ui.fStatus){ return false; }
   if(ui.fDiscipline && c.discipline !== ui.fDiscipline){ return false; }
   if(ui.fReq && (c.reqs||[]).indexOf(ui.fReq) === -1){ return false; }
   if(ui.fOwner && c.owner !== ui.fOwner){ return false; }
   if(ui.fPriority && c.priority !== ui.fPriority){ return false; }
+  if(ui.fHM && !reqsForTags(c.reqs).some(function(r){ return r.hm === ui.fHM; })){ return false; }
+  if(ui.fDept){
+    var pf = (typeof window.TB_reqProgram === "function") ? window.TB_reqProgram : null;
+    if(!pf || !reqsForTags(c.reqs).some(function(r){ return pf(r) === ui.fDept; })){ return false; }
+  }
   return true;
 }
 function currentList(){ var v = activeView(); return state.candidates.filter(function(c){ return v.fn(c) && matchesSearch(c) && passFilters(c); }); }
 
 /* ---------- helpers ---------- */
 function clearSearchFilters(){
-  ui.q = ""; ui.fStatus = ""; ui.fDiscipline = ""; ui.fReq = ""; ui.fOwner = ""; ui.fPriority = "";
-  ["q","fStatus","fDiscipline","fReq","fOwner","fPriority"].forEach(function(id){ var elx = document.getElementById(id); if(elx){ elx.value = ""; } });
+  ui.q = ""; ui.fStatus = ""; ui.fDiscipline = ""; ui.fReq = ""; ui.fOwner = ""; ui.fPriority = ""; ui.fDept = ""; ui.fHM = "";
+  ["q","fStatus","fDiscipline","fReq","fOwner","fPriority","fDept","fHM"].forEach(function(id){ var elx = document.getElementById(id); if(elx){ elx.value = ""; } });
   renderList();
 }
 /* Defect fix (v2.0 audit): protocol-less web links (e.g. "linkedin.com/in/x")
@@ -987,7 +1012,7 @@ function prioTag(text, varname){ var w = el("span"); w.style.cssText = "display:
 function toast(msg){ var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); }, 1900); }
 
 /* ---------- sidebar ---------- */
-var sectionCollapsed = { "Sourcing": true, "Analytics": true, "Organization": true };
+var sectionCollapsed = { "Analytics": true }; /* daily-work chapters start open; reporting starts closed */
 function fuState(){
   var any = false, overdue = false;
   state.candidates.forEach(function(c){ var fr = followUp(c); if(fr.label !== ""){ any = true; if(fr.label === "Overdue"){ overdue = true; } } });
@@ -1009,7 +1034,7 @@ function renderTabs(){
       if(coll){ h.setAttribute("data-section-toggle", sec); }
       /* Urgent counts must survive collapse: aggregate Follow-Ups + Interview
          Requests on the My Work header while its items are hidden. */
-      if(isCollapsed && sec === "My Work" && window.TB_METRICS){
+      if(isCollapsed && sec === "My Command Center" && window.TB_METRICS){
         if(!window.__TB_ACTION_COUNTS){ window.__TB_ACTION_COUNTS = TB_METRICS.counts(window.TB_PROGRAM || "", window.TB_SUBPROGRAM || ""); }
         var agg = (window.__TB_ACTION_COUNTS.followUpDue || 0) + (window.__TB_ACTION_COUNTS.interviewRequests || 0);
         if(agg > 0){ var aggB = el("span","count secount" + (fuState() === "red" ? " urgent" : ""), String(agg)); h.appendChild(aggB); }
@@ -1062,11 +1087,17 @@ function renderList(){
   if(v.special === "guide"){ renderGuide(host); return; }
   if(v.special === "resumecheck"){ renderResumeCheck(host); return; }
   if(v.special === "talentbench"){ renderTalentBench(host); return; }
+  if(v.special === "tb_checklist"){ renderChecklist(host); return; }
+  if(v.special === "tb_goals"){ renderWeeklyGoals(host); return; }
+  if(v.special === "tb_mynotes"){ renderMyNotes(host); return; }
+  if(v.special === "tb_teamnotes"){ renderTeamNotesView(host); return; }
+  if(v.special === "tb_brief"){ renderLeadershipBrief(host); return; }
+  if(v.special === "tb_focus"){ renderTodaysFocus(host); return; }
   if(v.id === "followup" && window.TALENTBASE_FU_WORKLIST){ renderFollowUpWorklist(host); return; }
   var rows = pipelineSort(currentList());
   document.getElementById("viewMeta").textContent = (ui.view === "all") ? (rows.length + " enterprise candidate" + (rows.length === 1 ? "" : "s") + " in the library") : (rows.length + (rows.length === 1 ? " unique candidate" : " unique candidates"));
   if(rows.length === 0){
-    var filtersOn = !!(ui.q && ui.q.trim()) || !!ui.fStatus || !!ui.fDiscipline || !!ui.fReq || !!ui.fOwner || !!ui.fPriority;
+    var filtersOn = !!(ui.q && ui.q.trim()) || !!ui.fStatus || !!ui.fDiscipline || !!ui.fReq || !!ui.fOwner || !!ui.fPriority || !!ui.fDept || !!ui.fHM;
     var em = el("div","empty");
     if(filtersOn){
       em.appendChild(el("div","big","No matches"));
@@ -1107,6 +1138,187 @@ function rowFor(c){
   tr.appendChild(td6);
   tr.appendChild(el("td","sub2", c.owner || "")); return tr;
 }
+/* ═══════════════ MY COMMAND CENTER — recruiter desk views ═══════════════
+   Checklist / Goals / My Notes are personal productivity surfaces: stored in
+   this browser (localStorage, per user per workspace), zero database writes.
+   Team Notes is the existing server-backed notes component on a shared board.
+   Leadership Brief and Today's Focus are read-only, computed live from the
+   same canonical counting rules as every other screen. */
+function tbDeskKey(kind){ return "tb_" + kind + "_" + ORG + "_" + (CURRENT_USER ? CURRENT_USER.id : "anon"); }
+function tbDeskLoad(kind, fallback){ try{ var v = JSON.parse(localStorage.getItem(tbDeskKey(kind))); return v === null || v === undefined ? fallback : v; }catch(e){ return fallback; } }
+function tbDeskSave(kind, val){ try{ localStorage.setItem(tbDeskKey(kind), JSON.stringify(val)); }catch(e){} }
+function tbDeskHint(host, txt){ var h = el("div","hint", txt); h.style.cssText = "margin-bottom:14px"; host.appendChild(h); }
+function tbDeskCard(){ var c = el("div"); c.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;max-width:760px"; return c; }
+
+function renderChecklist(host){
+  var data = tbDeskLoad("checklist", { items: [] });
+  var open = data.items.filter(function(i){ return !i.done; }).length;
+  document.getElementById("viewMeta").textContent = open + " open · " + (data.items.length - open) + " done · private to you, this browser";
+  tbDeskHint(host, "Your working checklist for the day. Personal — stored on this machine, never shared.");
+  var card = tbDeskCard();
+  var row = el("div"); row.style.cssText = "display:flex;gap:8px;margin-bottom:12px";
+  var inp = el("input"); inp.type = "text"; inp.placeholder = "Add a task… (e.g. Call Angela Scott about Req 1439)"; inp.style.cssText = "flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:13px";
+  function add(){ var t = inp.value.trim(); if(!t){ return; } data.items.unshift({ id: Date.now() + "" + Math.floor(Math.random()*1e4), text: t, done: false }); tbDeskSave("checklist", data); renderList(); }
+  inp.addEventListener("keydown", function(e){ if(e.key === "Enter"){ add(); } });
+  var ab = el("button","btn gold sm","Add"); ab.addEventListener("click", add);
+  row.appendChild(inp); row.appendChild(ab); card.appendChild(row);
+  if(!data.items.length){ card.appendChild(el("div","hint","Nothing on the list. Add the first thing you need to do today.")); }
+  data.items.forEach(function(it){
+    var li = el("div"); li.style.cssText = "display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line)";
+    var cb = el("input"); cb.type = "checkbox"; cb.checked = !!it.done;
+    cb.addEventListener("change", function(){ it.done = cb.checked; tbDeskSave("checklist", data); renderList(); });
+    var tx = el("span", null, it.text); tx.style.cssText = "flex:1;font-size:13px;color:" + (it.done ? "var(--muted)" : "var(--ink)") + (it.done ? ";text-decoration:line-through" : "");
+    var dl = el("button","btn sm ghost","✕"); dl.title = "Remove"; dl.addEventListener("click", function(){ data.items = data.items.filter(function(x){ return x.id !== it.id; }); tbDeskSave("checklist", data); renderList(); });
+    li.appendChild(cb); li.appendChild(tx); li.appendChild(dl); card.appendChild(li);
+  });
+  if(data.items.some(function(i){ return i.done; })){
+    var cc = el("button","btn sm ghost","Clear completed"); cc.style.marginTop = "12px";
+    cc.addEventListener("click", function(){ data.items = data.items.filter(function(i){ return !i.done; }); tbDeskSave("checklist", data); renderList(); });
+    card.appendChild(cc);
+  }
+  host.appendChild(card);
+}
+
+function tbWeekStart(){ var d = new Date(); var dow = (d.getDay() + 6) % 7; d.setDate(d.getDate() - dow); return d.toISOString().slice(0,10); }
+function renderWeeklyGoals(host){
+  var wk = tbWeekStart();
+  var all = tbDeskLoad("goals", {});
+  var goals = all[wk] || [];
+  var done = goals.filter(function(g){ return g.done; }).length;
+  document.getElementById("viewMeta").textContent = "Week of " + wk + " · " + done + "/" + goals.length + " complete · private to you, this browser";
+  tbDeskHint(host, "What does a good week look like? Set it Monday, check it Friday.");
+  var card = tbDeskCard();
+  var row = el("div"); row.style.cssText = "display:flex;gap:8px;margin-bottom:12px";
+  var inp = el("input"); inp.type = "text"; inp.placeholder = "Add a goal… (e.g. 5 submittals to Alex, 2 slates refreshed)"; inp.style.cssText = "flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:13px";
+  function add(){ var t = inp.value.trim(); if(!t){ return; } goals.push({ id: Date.now() + "" + Math.floor(Math.random()*1e4), text: t, done: false }); all[wk] = goals; tbDeskSave("goals", all); renderList(); }
+  inp.addEventListener("keydown", function(e){ if(e.key === "Enter"){ add(); } });
+  var ab = el("button","btn gold sm","Add"); ab.addEventListener("click", add);
+  row.appendChild(inp); row.appendChild(ab); card.appendChild(row);
+  if(!goals.length){
+    card.appendChild(el("div","hint","No goals set for this week yet."));
+    var wks = Object.keys(all).filter(function(k){ return k < wk && (all[k]||[]).length; }).sort();
+    if(wks.length){
+      var cp = el("button","btn sm ghost","Copy last week's goals"); cp.style.marginTop = "10px";
+      cp.addEventListener("click", function(){ all[wk] = (all[wks[wks.length-1]]||[]).map(function(g){ return { id: Date.now() + "" + Math.floor(Math.random()*1e4), text: g.text, done: false }; }); tbDeskSave("goals", all); renderList(); });
+      card.appendChild(cp);
+    }
+  }
+  goals.forEach(function(g){
+    var li = el("div"); li.style.cssText = "display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line)";
+    var cb = el("input"); cb.type = "checkbox"; cb.checked = !!g.done;
+    cb.addEventListener("change", function(){ g.done = cb.checked; all[wk] = goals; tbDeskSave("goals", all); renderList(); });
+    var tx = el("span", null, g.text); tx.style.cssText = "flex:1;font-size:13px;color:" + (g.done ? "var(--muted)" : "var(--ink)") + (g.done ? ";text-decoration:line-through" : "");
+    var dl = el("button","btn sm ghost","✕"); dl.title = "Remove"; dl.addEventListener("click", function(){ all[wk] = goals.filter(function(x){ return x.id !== g.id; }); tbDeskSave("goals", all); renderList(); });
+    li.appendChild(cb); li.appendChild(tx); li.appendChild(dl); card.appendChild(li);
+  });
+  host.appendChild(card);
+}
+
+function renderMyNotes(host){
+  var data = tbDeskLoad("mynotes", { text: "", updated: "" });
+  document.getElementById("viewMeta").textContent = (data.updated ? "Last saved " + data.updated.slice(0,16).replace("T"," ") : "Not saved yet") + " · private to you, this browser";
+  tbDeskHint(host, "Your private scratchpad — phone screens, intake notes, reminders. Autosaves as you type. Never shared, never synced.");
+  var card = tbDeskCard(); card.style.maxWidth = "860px";
+  var ta = el("textarea"); ta.value = data.text || "";
+  ta.placeholder = "Type anything…";
+  ta.style.cssText = "width:100%;min-height:420px;resize:vertical;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:13.5px;line-height:1.6";
+  var saved = el("div","hint",""); saved.style.marginTop = "8px";
+  var t0 = null;
+  ta.addEventListener("input", function(){
+    if(t0){ clearTimeout(t0); }
+    t0 = setTimeout(function(){ data.text = ta.value; data.updated = new Date().toISOString(); tbDeskSave("mynotes", data); saved.textContent = "Saved " + data.updated.slice(11,16); }, 350);
+  });
+  card.appendChild(ta); card.appendChild(saved); host.appendChild(card);
+}
+
+function renderTeamNotesView(host){
+  document.getElementById("viewMeta").textContent = (state.notes.filter(function(n){ return (n.context||"") === "teamboard"; }).length) + " posted · shared with everyone in this workspace";
+  tbDeskHint(host, "The team board — visible to every recruiter in this workspace, synced to the database. Req-specific notes live on each requisition.");
+  var card = tbDeskCard(); card.style.maxWidth = "860px";
+  var tn = buildTeamNotes("teamboard");
+  tn.style.marginTop = "0"; tn.style.borderTop = "0"; tn.style.paddingTop = "0";
+  card.appendChild(tn); host.appendChild(card);
+}
+
+function renderLeadershipBrief(host){
+  var cands = state.candidates || [], irs = state.interviewRequests || [];
+  var canon = window.TB_METRICS ? TB_METRICS.canonicalReqEntries(REQS).map(function(e){ return e.req; }) : REQS;
+  var openReqs = canon.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : !r.bench; });
+  var offers = cands.filter(function(c){ return c.status === "Offer Pending"; });
+  var submitted = cands.filter(function(c){ return c.status === "Submitted"; });
+  var interviewing = cands.filter(function(c){ return ["Interviewing Stage 1","Interviewing Stage 2","Interviewing Stage 3","Panel / Final Interview","Interviewing"].indexOf(c.status) !== -1; });
+  var mo = todayISO().slice(0,7);
+  var hiredMTD = cands.filter(function(c){ return c.status === "Offer Accepted - Hired"; });
+  function reqTagged(r){ var tag = r.title + " – " + r.loc; return cands.filter(function(c){ return (c.reqs||[]).indexOf(tag) !== -1 && c.status !== "Archived"; }).length; }
+  var starving = openReqs.filter(function(r){ return reqTagged(r) === 0; });
+  var now = new Date(); var ws = new Date(now); ws.setDate(now.getDate() - now.getDay()); var we = new Date(ws); we.setDate(ws.getDate() + 7);
+  var irsWeek = irs.filter(function(ir){ if(!ir.interviewDate){ return false; } var d = new Date(ir.interviewDate); return d >= ws && d < we; });
+  document.getElementById("viewMeta").textContent = "Prepared live for the staffing meeting · every number matches its screen · read-only";
+  var wrap = el("div"); wrap.style.cssText = "max-width:860px";
+  var strip = el("div"); strip.style.cssText = "display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px";
+  [["Open Requisitions", openReqs.length],["Active Interviews This Week", irsWeek.length],["Currently Interviewing", interviewing.length],["Submitted, Awaiting HM", submitted.length],["Offers Pending", offers.length],["Hired", hiredMTD.length]].forEach(function(m){
+    var b = el("div"); b.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 18px;min-width:130px";
+    var n = el("div", null, String(m[1])); n.style.cssText = "font-size:24px;font-weight:800;color:var(--ink)";
+    b.appendChild(n); b.appendChild(el("div","hint", m[0])); strip.appendChild(b);
+  });
+  wrap.appendChild(strip);
+  function section(title, rows, empty){
+    var c = tbDeskCard(); c.style.cssText += ";margin-bottom:14px;max-width:860px";
+    var h = el("div", null, title); h.style.cssText = "font-weight:700;font-size:13px;color:var(--gold);margin-bottom:8px"; c.appendChild(h);
+    if(!rows.length){ c.appendChild(el("div","hint", empty)); }
+    rows.forEach(function(r){ var li = el("div", null, "· " + r); li.style.cssText = "font-size:13px;padding:3px 0;color:var(--ink)"; c.appendChild(li); });
+    wrap.appendChild(c);
+  }
+  section("Offers in Motion", offers.map(function(c){ return fullName(c) + " — " + ((c.reqs||[])[0] || c.title || "") + " (" + (c.owner || "unowned") + ")"; }), "No offers pending.");
+  section("Awaiting Hiring Manager Feedback", submitted.map(function(c){ return fullName(c) + " — " + ((c.reqs||[])[0] || "") + " (" + (c.owner || "unowned") + ")"; }), "Nothing submitted is waiting on feedback.");
+  section("Interviews This Week", irsWeek.map(function(ir){ return (ir.candidateName || "") + " — " + (ir.interviewDate || "") + " " + (ir.role || "") + (ir.hiringManager ? " (with " + ir.hiringManager + ")" : ""); }), "No interviews scheduled this week.");
+  section("Requisitions With No Candidates Tagged", starving.map(function(r){ return (r.jobId ? r.jobId + " · " : "") + r.title + " – " + r.loc + " (" + (r.hm || "no HM") + ")"; }), "Every open requisition has candidates in play.");
+  var copy = el("button","btn gold","Copy Brief");
+  copy.addEventListener("click", function(){
+    var lines = ["TSS Leadership Brief — " + (typeof ORG !== "undefined" && ORG === "hiarc" ? "HiARC" : "Elbit Systems of America") + " — " + todayISO(), ""];
+    lines.push("Open requisitions: " + openReqs.length + " · Interviews this week: " + irsWeek.length + " · Interviewing: " + interviewing.length + " · Submitted awaiting HM: " + submitted.length + " · Offers pending: " + offers.length + " · Hired: " + hiredMTD.length, "");
+    lines.push("OFFERS IN MOTION:"); offers.length ? offers.forEach(function(c){ lines.push("- " + fullName(c) + " — " + ((c.reqs||[])[0] || "")); }) : lines.push("- none");
+    lines.push("", "AWAITING HM FEEDBACK:"); submitted.length ? submitted.forEach(function(c){ lines.push("- " + fullName(c) + " — " + ((c.reqs||[])[0] || "")); }) : lines.push("- none");
+    lines.push("", "REQS WITH NO CANDIDATES:"); starving.length ? starving.forEach(function(r){ lines.push("- " + (r.jobId ? r.jobId + " · " : "") + r.title + " – " + r.loc); }) : lines.push("- none");
+    try{ navigator.clipboard.writeText(lines.join("\n")); toast("Brief copied — paste into your staffing-meeting email."); }catch(e){ toast("Could not copy on this browser."); }
+  });
+  wrap.appendChild(copy); host.appendChild(wrap);
+}
+
+function renderTodaysFocus(host){
+  var cands = state.candidates || [], irs = state.interviewRequests || [];
+  var today = todayISO();
+  var irsToday = irs.filter(function(ir){ return (ir.interviewDate || "").slice(0,10) === today; });
+  var fuDue = cands.filter(function(c){ var f = followUp(c); return f.label === "Overdue" || f.label === "Due Today"; });
+  var submitted = cands.filter(function(c){ return c.status === "Submitted"; });
+  var offers = cands.filter(function(c){ return c.status === "Offer Pending"; });
+  var hmWait = {};
+  submitted.forEach(function(c){ (c.reqs||[]).forEach(function(tag){ REQS.forEach(function(r){ if((r.title + " – " + r.loc) === tag && r.hm){ hmWait[r.hm] = (hmWait[r.hm] || 0) + 1; } }); }); });
+  var canon = window.TB_METRICS ? TB_METRICS.canonicalReqEntries(REQS).map(function(e){ return e.req; }) : REQS;
+  var openReqs = canon.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : !r.bench; });
+  var starving = openReqs.filter(function(r){ var tag = r.title + " – " + r.loc; return !cands.some(function(c){ return (c.reqs||[]).indexOf(tag) !== -1 && c.status !== "Archived"; }); });
+  document.getElementById("viewMeta").textContent = today + " · the six questions every recruiter starts the day with · read-only";
+  var wrap = el("div"); wrap.style.cssText = "max-width:860px";
+  function block(q, rows, empty, goView, goLabel){
+    var c = tbDeskCard(); c.style.cssText += ";margin-bottom:14px;max-width:860px";
+    var top = el("div"); top.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px";
+    var h = el("div", null, q); h.style.cssText = "font-weight:700;font-size:13.5px;color:var(--ink)"; top.appendChild(h);
+    if(goView){ var go = el("button","btn sm ghost", goLabel || "Open"); go.addEventListener("click", function(){ ui.view = goView; refresh(); }); top.appendChild(go); }
+    c.appendChild(top);
+    if(!rows.length){ c.appendChild(el("div","hint", empty)); }
+    rows.slice(0, 8).forEach(function(r){ var li = el("div", null, "· " + r); li.style.cssText = "font-size:13px;padding:3px 0"; c.appendChild(li); });
+    if(rows.length > 8){ c.appendChild(el("div","hint", "+ " + (rows.length - 8) + " more — open the full view.")); }
+    wrap.appendChild(c);
+  }
+  block("Who am I interviewing today?", irsToday.map(function(ir){ return (ir.candidateName || "") + " — " + (ir.role || "") + (ir.hiringManager ? " (with " + ir.hiringManager + ")" : ""); }), "No interviews on the calendar today.", "calendar", "Calendar");
+  block("Which candidates do I need to call?", fuDue.map(function(c){ return fullName(c) + " — " + (followUp(c).label) + (c.nextFollowUp ? " (" + c.nextFollowUp + ")" : ""); }), "No follow-ups due. Get ahead of tomorrow.", "followup", "Follow-Ups");
+  block("Which hiring managers owe me feedback?", Object.keys(hmWait).sort(function(a,b){ return hmWait[b] - hmWait[a]; }).map(function(h){ return h + " — " + hmWait[h] + " candidate" + (hmWait[h] === 1 ? "" : "s") + " submitted"; }), "Nothing outstanding with hiring managers.", "submitted", "Submitted"),
+  block("Which requisitions need candidates?", starving.map(function(r){ return (r.jobId ? r.jobId + " · " : "") + r.title + " – " + r.loc; }), "Every open requisition has candidates in play.", "autoslate", "AutoSlate");
+  block("Which offers are moving?", offers.map(function(c){ return fullName(c) + " — " + ((c.reqs||[])[0] || ""); }), "No offers in motion.", "offerpending", "Offers");
+  block("What do I need for today's staffing meeting?", [], "One click builds it from live data.", "tb_brief", "Open the Leadership Brief");
+  host.appendChild(wrap);
+}
+
 function renderFollowUpWorklist(host){
   // Read-only triage worklist over state.candidates. Reuses followUp(), rowFor(),
   // matchesSearch(), todayISO(). Ignores filter dropdowns by design; respects search.
@@ -1627,7 +1839,7 @@ async function addProgramNote(context){
   if(res.error){ toast(res.error.message || "Could not post note."); return; }
   NOTES_COMPOSE = "";
   await loadNotes();
-  if(ui.view === "priolist" || ui.view === "talentbench"){ refresh(); }
+  if(ui.view === "priolist" || ui.view === "talentbench" || ui.view === "tb_teamnotes"){ refresh(); }
   toast("Note posted.");
 }
 async function saveProgramNote(id, text){
@@ -1638,7 +1850,7 @@ async function saveProgramNote(id, text){
   if(res.error){ toast(res.error.message || "Could not save note."); return; }
   NOTES_EDITING = null;
   await loadNotes();
-  if(ui.view === "priolist" || ui.view === "talentbench"){ refresh(); }
+  if(ui.view === "priolist" || ui.view === "talentbench" || ui.view === "tb_teamnotes"){ refresh(); }
   toast("Note updated.");
 }
 async function deleteProgramNote(id){
@@ -1647,7 +1859,7 @@ async function deleteProgramNote(id){
   if(res.error){ toast(res.error.message || "Could not delete note."); return; }
   if(NOTES_EDITING === id){ NOTES_EDITING = null; }
   await loadNotes();
-  if(ui.view === "priolist" || ui.view === "talentbench"){ refresh(); }
+  if(ui.view === "priolist" || ui.view === "talentbench" || ui.view === "tb_teamnotes"){ refresh(); }
   toast("Note deleted.");
 }
 
@@ -5354,8 +5566,8 @@ function viewReq(r){
       ro.addEventListener("click", async function(){ if(confirm("Reopen this position? It will return to active views.")){ closeModal(); await run(sb.from("reqs").update({ req_status:"Open" }).eq("id", r.id), "Position reopened"); } });
       right.insertBefore(ro, right.firstChild);
     } else if(r.bench){
-      var pr = el("button","btn","Promote to Open Position"); pr.type = "button"; pr.title = "Move this TalentBench position into Open Positions";
-      pr.addEventListener("click", async function(){ if(confirm("Promote \"" + r.title + "\" from TalentBench to Open Positions?")){ closeModal(); await run(sb.from("reqs").update({ bench:false }).eq("id", r.id), "Promoted to Open Positions"); } });
+      var pr = el("button","btn","Promote to Open Requisition"); pr.type = "button"; pr.title = "Move this TalentBench requisition into Open Requisitions";
+      pr.addEventListener("click", async function(){ if(confirm("Promote \"" + r.title + "\" from TalentBench to Open Requisitions?")){ closeModal(); await run(sb.from("reqs").update({ bench:false }).eq("id", r.id), "Promoted to Open Requisitions"); } });
       right.insertBefore(pr, right.firstChild);
     } else {
       var cl = el("button","btn","Close Position"); cl.type = "button";
@@ -6011,6 +6223,8 @@ document.getElementById("q").addEventListener("keydown", function(e){
 });
 document.addEventListener("mousedown", function(e){ if(!e.target.closest(".search")){ closeQDrop(); } });
 document.getElementById("fStatus").addEventListener("change", function(e){ ui.fStatus = e.target.value; renderList(); });
+document.getElementById("fDept").addEventListener("change", function(e){ ui.fDept = e.target.value; renderList(); });
+document.getElementById("fHM").addEventListener("change", function(e){ ui.fHM = e.target.value; renderList(); });
 document.getElementById("fDiscipline").addEventListener("change", function(e){ ui.fDiscipline = e.target.value; renderList(); });
 document.getElementById("fReq").addEventListener("change", function(e){ ui.fReq = e.target.value; renderList(); });
 document.getElementById("fOwner").addEventListener("change", function(e){ ui.fOwner = e.target.value; renderList(); });
@@ -6072,6 +6286,8 @@ document.addEventListener("input", function(e){
 
 /* ---------- init ---------- */
 fillSelect(document.getElementById("fStatus"), STATUS, "All Statuses");
+fillSelect(document.getElementById("fHM"), MANAGERS.map(function(m){ return m.name; }), "All Hiring Managers");
+/* fDept fills in the Departments layer once TB_PROGRAMS exists */
 fillSelect(document.getElementById("fDiscipline"), DISCIPLINES, "All Disciplines");
 fillSelect(document.getElementById("fReq"), REQ_OPTIONS, "All Reqs");
 fillSelect(document.getElementById("fOwner"), OWNERS, "All Recruiters");
@@ -6173,7 +6389,22 @@ function makeSourcingBtn(r, tr){
 
 <style id="tb-programs-css">
 /* ── Recruiting Programs layer ── */
-#tbProgramsNav{ margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--line); }
+#tbProgramsNav{ margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--line); }
+/* ═══ Recruiter Workstation sidebar typography — the nav reads like chapters ═══ */
+.tb-client-name{
+  font-size:13.5px; font-weight:800; letter-spacing:1.1px; text-transform:uppercase;
+  color:var(--ink); padding:4px 16px 10px; line-height:1.35; cursor:pointer;
+}
+.tb-client-name:hover{ color:var(--gold); }
+.tb-dept-head{ font-weight:600; color:var(--ink); }
+.tb-dept-item{ padding-left:26px; font-size:12.5px; }
+.side h3, .side h3.sech{
+  font-size:10.5px; font-weight:800; letter-spacing:2px; text-transform:uppercase;
+  color:var(--gray); margin:26px 0 7px; padding:16px 16px 0;
+}
+#tabs h3.sech{ border-top:1px solid var(--line); }
+#tabs h3.sech:first-of-type{ border-top:0; padding-top:0; margin-top:10px; }
+.side .vtab{ padding:7.5px 16px; }
 .tb-prog-tab{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .tb-prog-tab.tb-prog-on{ background:var(--gold-dim); color:var(--gold); font-weight:600; }
 .tb-prog-strap{ display:flex; flex-direction:column; gap:2px; margin:2px 0 18px; }
@@ -6250,6 +6481,9 @@ function makeSourcingBtn(r, tr){
   ];
   window.TB_RECRUITER_DIRECTORY = TB_RECRUITER_DIRECTORY;
   window.TB_PROGRAMS = TB_PROGRAMS;
+  /* Candidate Filters → Department: expose the classifier + fill the select */
+  window.TB_reqProgram = function(r){ return reqProgram(r); };
+  try{ var fdSel = document.getElementById("fDept"); if(fdSel && typeof fillSelect === "function"){ fillSelect(fdSel, TB_PROGRAMS.map(function(p){ return p.name; }), "All Departments"); } }catch(eFD){}
 
   /* Merge roster into OWNERS (dedupe, keep existing values so no record orphans,
      keep "Unassigned" last). Purely additive to the dropdowns. */
@@ -6729,36 +6963,55 @@ function makeSourcingBtn(r, tr){
       try{
         var host = document.getElementById("tabs"); if(!host){ return; }
         var old = document.getElementById("tbProgramsNav"); if(old){ old.parentNode.removeChild(old); }
+        /* ═══ CLIENT chapter (Recruiter Workstation) ═══
+           The client leads the sidebar: bold company identity, then ONE
+           expandable department selector — no redundant "Departments" heading. */
         var sec = el("div"); sec.id = "tbProgramsNav";
-        var h = el("h3", null, "Recruiting Programs"); sec.appendChild(h);
-        var home = el("div","vtab" + ((typeof ui !== "undefined" && ui.view === "tb_programs") ? " active" : ""), "Programs Home");
-        home.setAttribute("data-view","tb_programs");
-        sec.appendChild(home);
-        var ent = el("div","vtab tb-prog-tab" + (!window.TB_PROGRAM ? " tb-prog-on" : ""), "Enterprise (All)");
-        ent.addEventListener("click", function(){
-          try{ if(typeof ui !== "undefined" && String(ui.view).indexOf("tb_people_") === 0){ ui.view = "tb_programs"; } }catch(eE){}
+        if(typeof window.TB_DEPT_OPEN === "undefined"){ window.TB_DEPT_OPEN = true; }
+        var clientName = (typeof ORG !== "undefined" && ORG === "hiarc") ? "HiARC" : "Elbit Systems of America";
+        var co = el("div","tb-client-name", clientName);
+        co.title = "Department overview — every department's requisitions and health at a glance";
+        co.addEventListener("click", function(){
+          try{ if(typeof ui !== "undefined"){ ui.view = "tb_programs"; } }catch(eCo){}
           (window.TB_setProgram || setProgram)("");
         });
-        sec.appendChild(ent);
-        TB_PROGRAMS.forEach(function(p){
-          var st = programStats(p.name);
-          var t = el("div","vtab tb-prog-tab" + (window.TB_PROGRAM === p.name ? " tb-prog-on" : ""));
-          /* Sidebar is navigation — no numeric badges. Counts live on the
-             Overview cards and in each view header, scoped and labeled. */
-          t.title = p.name + " — " + st.reqs + " open requisition" + (st.reqs === 1 ? "" : "s") + ". Full metrics on the Overview page.";
-          t.appendChild(el("span", null, p.name)); /* icons live on cards; nav stays typographic */
-          t.addEventListener("click", function(){
-            var target = (window.TB_PROGRAM === p.name ? "" : p.name);
-            try{
-              if(typeof ui !== "undefined" && (ui.view === "tb_programs" || String(ui.view).indexOf("tb_people_") === 0)){
-                ui.view = target ? "all" : "tb_programs";   /* entering a department lands on its candidates; leaving returns to Overview */
-              }
-            }catch(eNavV){}
-            (window.TB_setProgram || setProgram)(target);
+        sec.appendChild(co);
+        var selHead = el("div","vtab tb-dept-head" + ((typeof ui !== "undefined" && ui.view === "tb_programs") ? " active" : ""));
+        selHead.appendChild(el("span", null, (window.TB_DEPT_OPEN ? "▾ " : "▸ ") + (window.TB_PROGRAM || "All Departments")));
+        selHead.title = "Show or hide the department list";
+        selHead.addEventListener("click", function(){ window.TB_DEPT_OPEN = !window.TB_DEPT_OPEN; renderTabs(); });
+        sec.appendChild(selHead);
+        if(window.TB_DEPT_OPEN){
+          /* "All Departments" appears in the list only while a department is
+             selected — otherwise the selector header already says it */
+          if(window.TB_PROGRAM){
+            var ent = el("div","vtab tb-prog-tab tb-dept-item", "All Departments");
+            ent.addEventListener("click", function(){
+              try{ if(typeof ui !== "undefined" && String(ui.view).indexOf("tb_people_") === 0){ ui.view = "tb_programs"; } }catch(eE){}
+              (window.TB_setProgram || setProgram)("");
+            });
+            sec.appendChild(ent);
+          }
+          TB_PROGRAMS.forEach(function(p){
+            var st = programStats(p.name);
+            var t = el("div","vtab tb-prog-tab tb-dept-item" + (window.TB_PROGRAM === p.name ? " tb-prog-on" : ""));
+            /* Sidebar is navigation — no numeric badges. Counts live on the
+               Overview cards and in each view header, scoped and labeled. */
+            t.title = p.name + " — " + st.reqs + " open requisition" + (st.reqs === 1 ? "" : "s") + ". Full metrics on the Overview page.";
+            t.appendChild(el("span", null, p.name)); /* icons live on cards; nav stays typographic */
+            t.addEventListener("click", function(){
+              var target = (window.TB_PROGRAM === p.name ? "" : p.name);
+              try{
+                if(typeof ui !== "undefined" && (ui.view === "tb_programs" || String(ui.view).indexOf("tb_people_") === 0)){
+                  ui.view = target ? "all" : "tb_programs";   /* entering a department lands on its candidates; leaving returns to Overview */
+                }
+              }catch(eNavV){}
+              (window.TB_setProgram || setProgram)(target);
+            });
+            sec.appendChild(t);
           });
-          sec.appendChild(t);
-        });
-        host.insertBefore(sec, host.firstChild); /* workspace identity + departments lead the nav */
+        }
+        host.insertBefore(sec, host.firstChild); /* client identity + departments lead the nav */
       }catch(eT){}
     };
   }
@@ -7695,14 +7948,8 @@ function makeSourcingBtn(r, tr){
     _prevRenderTabs();
     try{
       var nav = document.getElementById("tbProgramsNav"); if(!nav){ return; }
-      /* terminology: this layer organizes DEPARTMENTS */
-      var h3 = nav.querySelector("h3"); if(h3){ h3.textContent = (typeof ORG !== "undefined" && ORG === "hiarc") ? "HiARC" : "Elbit Systems of America"; }
-      /* the injected workspace block provides the client heading — hide the static one */
+      /* the injected CLIENT block provides the company heading — hide the static one */
       try{ var wsn = document.getElementById("wsName"); if(wsn){ wsn.style.display = "none"; } }catch(eWsn){}
-      nav.querySelectorAll(".vtab").forEach(function(t){
-        if(t.textContent.indexOf("Programs Home") >= 0){ t.textContent = "Departments"; }
-        if(t.textContent.indexOf("Enterprise (All)") >= 0){ t.textContent = "All Departments"; }
-      });
       /* program child tabs under the active department */
       if(window.TB_PROGRAM){
         var s = deptStats(window.TB_PROGRAM);
@@ -7723,35 +7970,14 @@ function makeSourcingBtn(r, tr){
           }
         }
       }
-      /* PEOPLE section */
-      if(!document.getElementById("tbPeopleNav")){
-        var sec = el("div"); sec.id = "tbPeopleNav";
-        /* no separate heading — Recruiters & Hiring Managers live under Organization */
-        [["tb_people_rec","Recruiter Dashboard"],["tb_people_hm","Hiring Manager Dashboard"]].forEach(function(pv){
-          var t = el("div","vtab" + ((typeof ui !== "undefined" && ui.view === pv[0]) ? " active" : ""), pv[1]);
-          t.setAttribute("data-view", pv[0]);
-          sec.appendChild(t);
-        });
-        nav.parentNode.insertBefore(sec, nav.nextSibling);
-      }
-      /* remove the duplicate core Organization section — the injected Organization block is the single destination */
-      try{
-        var tabsHost = document.getElementById("tabs");
-        var kids = Array.prototype.slice.call(tabsHost.children);
-        for(var ki = 0; ki < kids.length; ki++){
-          var kEl = kids[ki];
-          if(kEl.tagName === "H3" && kEl.getAttribute("data-section-toggle") === "Organization"){
-            var toKill = [kEl]; var kj = ki + 1;
-            while(kj < kids.length && kids[kj].tagName !== "H3"){ toKill.push(kids[kj]); kj++; }
-            toKill.forEach(function(x){ if(x.parentNode){ x.parentNode.removeChild(x); } });
-            break;
-          }
-        }
-      }catch(ePR){}
-      /* de-jargon the core heading */
-      document.querySelectorAll(".side h3, #tabs h3").forEach(function(h){ if((h.textContent||"").trim().toLowerCase() === "views" || (h.textContent||"").trim().toLowerCase() === "workspace"){ h.textContent = "Talent Operations"; } });
+      /* Recruiter & HM dashboards live in the core Analytics chapter now —
+         the old injected PEOPLE block is gone. */
+      var stale = document.getElementById("tbPeopleNav"); if(stale){ stale.parentNode.removeChild(stale); }
     }catch(eNav){}
   };
+  /* if boot's first render ran before this layer parsed, repaint once so the
+     CLIENT block is present from the very first screen */
+  try{ if(typeof state !== "undefined" && state.candidates && state.candidates.length){ window.renderTabs(); } }catch(eRp){}
 
   /* delivery-model pill on req detail (model ≠ department ≠ program) */
   if(typeof viewReq === "function"){
@@ -7794,7 +8020,7 @@ function makeSourcingBtn(r, tr){
   background:linear-gradient(90deg,var(--panel2) 25%,#e9ecf5 50%,var(--panel2) 75%);
   background-size:200% 100%; animation:tb-shimmer 1.3s linear infinite; }
 /* Left navigation: executive rhythm */
-.side h3.sech{ margin-top:18px; padding-top:14px; border-top:1px solid var(--line); }
+.side h3.sech{ margin-top:26px; padding-top:16px; border-top:1px solid var(--line); font-size:10.5px; font-weight:800; letter-spacing:2px; }
 .side h3.sech:first-child{ margin-top:6px; border-top:0; padding-top:0; }
 .vtab .count{ font-variant-numeric:tabular-nums; min-width:26px; text-align:center; }
 .vtab{ line-height:1.45; }
@@ -8493,6 +8719,32 @@ body.tb-overlay-open{ overflow:hidden; }
     return ex;
   }
   window.TB_QA_EXCEPTIONS = qaExceptions;
+})();
+</script>
+
+<script id="tb-client-identity">
+/* CLIENT chapter for workspaces without the Elbit departments layer:
+   the Recruiter Workstation always leads with the client identity. */
+(function(){
+  "use strict";
+  if(typeof window === "undefined"){ return; }
+  if(typeof CONFIG === "undefined" || !CONFIG || CONFIG.org === "elbit"){ return; } /* Elbit's block comes from the departments layer */
+  var _rt = window.renderTabs;
+  window.renderTabs = function(){
+    _rt();
+    try{
+      var host = document.getElementById("tabs"); if(!host){ return; }
+      var old = document.getElementById("tbProgramsNav"); if(old){ old.parentNode.removeChild(old); }
+      var sec = el("div"); sec.id = "tbProgramsNav";
+      var name = (typeof ORG !== "undefined" && ORG === "hiarc") ? "HiARC" : (CONFIG.brand || CONFIG.company || "Client Workspace");
+      var co = el("div","tb-client-name", name);
+      co.title = name + " — client workspace";
+      sec.appendChild(co);
+      host.insertBefore(sec, host.firstChild);
+      var wsn = document.getElementById("wsName"); if(wsn){ wsn.style.display = "none"; }
+    }catch(e){}
+  };
+  try{ if(typeof state !== "undefined" && state.candidates && state.candidates.length){ window.renderTabs(); } }catch(eRp){}
 })();
 </script>
 
