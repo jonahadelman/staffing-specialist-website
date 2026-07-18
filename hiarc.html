@@ -1087,6 +1087,12 @@ function renderList(){
   if(v.special === "guide"){ renderGuide(host); return; }
   if(v.special === "resumecheck"){ renderResumeCheck(host); return; }
   if(v.special === "talentbench"){ renderTalentBench(host); return; }
+  /* Analytics people dashboards: in Elbit the departments layer intercepts
+     these ids before core renderList runs; in workspaces without that layer
+     (HiArc — the Recruiter Workstation) core provides the renderers, so the
+     views never fall through to the raw candidate list. */
+  if(v.id === "tb_people_hm"){ renderManagers(host); return; }
+  if(v.id === "tb_people_rec"){ renderRecruiterBoard(host); return; }
   if(v.special === "tb_checklist"){ renderChecklist(host); return; }
   if(v.special === "tb_goals"){ renderWeeklyGoals(host); return; }
   if(v.special === "tb_mynotes"){ renderMyNotes(host); return; }
@@ -1138,6 +1144,46 @@ function rowFor(c){
   tr.appendChild(td6);
   tr.appendChild(el("td","sub2", c.owner || "")); return tr;
 }
+/* ── Recruiter Dashboard (core, org-agnostic): per-recruiter workload board.
+   Every cell equals its drill-down: clicking a row opens the Candidate
+   Library filtered to that recruiter. ── */
+function renderRecruiterBoard(host){
+  var cands = state.candidates || [], irs = state.interviewRequests || [];
+  var INT = ["Interviewing Stage 1","Interviewing Stage 2","Interviewing Stage 3","Panel / Final Interview","Interviewing"];
+  var byId = {}; cands.forEach(function(c){ byId[c.id] = c; });
+  var rows = OWNERS.filter(function(o){ return o && o !== "Unassigned"; }).concat(["Unassigned"]).map(function(o){
+    var mine = cands.filter(function(c){ return (c.owner || "Unassigned") === o; });
+    if(!mine.length){ return null; }
+    var overdue = mine.filter(function(c){ return followUp(c).label === "Overdue"; }).length;
+    var sched = irs.filter(function(ir){ var c = byId[ir.candidateId]; return c && (c.owner || "Unassigned") === o && (ir.status === "Scheduled" || ir.status === "Requested"); }).length;
+    return { o: o,
+      active: mine.filter(function(c){ return c.status !== "Archived" && c.status !== "Offer Accepted - Hired"; }).length,
+      submitted: mine.filter(function(c){ return c.status === "Submitted"; }).length,
+      interviewing: mine.filter(function(c){ return INT.indexOf(c.status) !== -1; }).length,
+      offers: mine.filter(function(c){ return c.status === "Offer Pending"; }).length,
+      hired: mine.filter(function(c){ return c.status === "Offer Accepted - Hired"; }).length,
+      irs: sched, overdue: overdue };
+  }).filter(Boolean).sort(function(a,b){ return b.active - a.active; });
+  document.getElementById("viewMeta").textContent = rows.length + " recruiter" + (rows.length === 1 ? "" : "s") + " with candidates · every number equals its drill-down · click a row to open that recruiter's desk";
+  if(!rows.length){ host.appendChild(el("div","empty")).appendChild(el("div","big","No recruiter activity yet")); return; }
+  var table = el("table","cardtable"); var thead = el("thead"); var htr = el("tr");
+  ["Recruiter","Active Candidates","Submitted","Interviewing","Interviews Scheduled","Offers","Hired","Overdue Follow-Ups"].forEach(function(h){ htr.appendChild(el("th", null, h)); });
+  thead.appendChild(htr); table.appendChild(thead);
+  var tb = el("tbody");
+  rows.forEach(function(r){
+    var tr = el("tr","click");
+    var td1 = el("td"); td1.appendChild(el("div","nm", r.o)); tr.appendChild(td1);
+    [r.active, r.submitted, r.interviewing, r.irs, r.offers, r.hired].forEach(function(n){ tr.appendChild(el("td", null, String(n))); });
+    var od = el("td", null, String(r.overdue)); if(r.overdue > 0){ od.style.cssText = "color:var(--red);font-weight:700"; } tr.appendChild(od);
+    tr.addEventListener("click", function(){
+      ui.fOwner = (r.o === "Unassigned" ? "" : r.o); var s = document.getElementById("fOwner"); if(s){ s.value = ui.fOwner; }
+      ui.view = "all"; refresh();
+    });
+    tb.appendChild(tr);
+  });
+  table.appendChild(tb); host.appendChild(table);
+}
+
 /* ═══════════════ MY COMMAND CENTER — recruiter desk views ═══════════════
    Checklist / Goals / My Notes are personal productivity surfaces: stored in
    this browser (localStorage, per user per workspace), zero database writes.
@@ -6392,8 +6438,9 @@ function makeSourcingBtn(r, tr){
 #tbProgramsNav{ margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--line); }
 /* ═══ Recruiter Workstation sidebar typography — the nav reads like chapters ═══ */
 .tb-client-name{
-  font-size:13.5px; font-weight:800; letter-spacing:1.1px; text-transform:uppercase;
+  font-size:12.5px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
   color:var(--ink); padding:4px 16px 10px; line-height:1.35; cursor:pointer;
+  white-space:nowrap; overflow:hidden;   /* client identity always sits on ONE line */
 }
 .tb-client-name:hover{ color:var(--gold); }
 .tb-dept-head{ font-weight:600; color:var(--ink); }
@@ -6976,6 +7023,8 @@ function makeSourcingBtn(r, tr){
           (window.TB_setProgram || setProgram)("");
         });
         sec.appendChild(co);
+        /* fit-to-width: the client name must never wrap or clip — shrink until it fits on one line */
+        requestAnimationFrame(function(){ try{ var fs = 12.5; co.style.fontSize = fs + "px"; var guard = 0; while(co.scrollWidth > co.clientWidth && fs > 9 && guard++ < 12){ fs -= 0.5; co.style.fontSize = fs + "px"; } }catch(eFit){} });
         var selHead = el("div","vtab tb-dept-head" + ((typeof ui !== "undefined" && ui.view === "tb_programs") ? " active" : ""));
         selHead.appendChild(el("span", null, (window.TB_DEPT_OPEN ? "▾ " : "▸ ") + (window.TB_PROGRAM || "All Departments")));
         selHead.title = "Show or hide the department list";
@@ -8740,6 +8789,8 @@ body.tb-overlay-open{ overflow:hidden; }
       var co = el("div","tb-client-name", name);
       co.title = name + " — client workspace";
       sec.appendChild(co);
+      /* fit-to-width: the client name must never wrap or clip — shrink until it fits on one line */
+      requestAnimationFrame(function(){ try{ var fs = 12.5; co.style.fontSize = fs + "px"; var guard = 0; while(co.scrollWidth > co.clientWidth && fs > 9 && guard++ < 12){ fs -= 0.5; co.style.fontSize = fs + "px"; } }catch(eFit){} });
       host.insertBefore(sec, host.firstChild);
       var wsn = document.getElementById("wsName"); if(wsn){ wsn.style.display = "none"; }
     }catch(e){}
