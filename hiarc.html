@@ -1240,7 +1240,7 @@ window.TB_HERO_ART = { defense: "<svg xmlns='http://www.w3.org/2000/svg' width='
 function tbGreeting(){
   var hr = new Date().getHours();
   var g = hr < 12 ? "Good Morning" : hr < 17 ? "Good Afternoon" : "Good Evening";
-  var who = (typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email.split("@")[0].split(/[._+\-]/)[0] : "";
+  var who = (typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email.trim().split("@")[0].split(/[._+\-]/)[0] : "";
   who = who ? who.charAt(0).toUpperCase() + who.slice(1) : "";
   return g + (who ? ", " + who : "");
 }
@@ -1282,13 +1282,19 @@ function renderStartMyDay(host){
   var hmSet = {};
   cands.filter(function(c){ return c.status === "Submitted"; }).forEach(function(c){ (c.reqs||[]).forEach(function(tag){ REQS.forEach(function(r){ if((r.title + " – " + r.loc) === tag && r.hm){ hmSet[r.hm] = 1; } }); }); });
   var hmN = Object.keys(hmSet).length;
-  var readyN = 0;
-  try{ /* candidates the engine rates a strong fit and nobody is working yet — the magic, surfaced */
-    cands.filter(function(c){ return c.status !== "Archived" && c.status !== "Offer Accepted - Hired"; }).forEach(function(c){
-      var sc = BOARD.scoreCandidate(c);
-      if(sc && sc.length && sc[0].verdict === "strong" && (c.status === "New" || c.status === "Contacted" || !c.owner || c.owner === "Unassigned")){ readyN++; }
-    });
-  }catch(eR){ readyN = -1; }
+  function tbCountReady(){
+    var n = 0;
+    try{
+      cands.filter(function(c){ return c.status !== "Archived" && c.status !== "Offer Accepted - Hired"; }).forEach(function(c){
+        var sc = BOARD.scoreCandidate(c);
+        if(sc && sc.length && sc[0].verdict === "strong" && (c.status === "New" || c.status === "Contacted" || !c.owner || c.owner === "Unassigned")){ n++; }
+      });
+    }catch(eR){ return -1; }
+    return n;
+  }
+  /* never score on the landing render: use the warm cache instantly, otherwise
+     show a quiet placeholder and fill it in when background scoring finishes */
+  var readyN = window.__TB_SCORES_WARM ? tbCountReady() : -2;
 
   var hero = el("div"); hero.style.cssText = "position:relative;border-radius:18px;overflow:hidden;margin:2px 0 20px;border:1px solid var(--line);box-shadow:0 10px 34px rgba(10,18,30,.16)";
   var bg = el("div"); bg.style.cssText = "position:absolute;inset:-14px;background:url(\"data:image/svg+xml;utf8," + encodeURIComponent(window.TB_HERO_ART[(typeof ORG !== "undefined" && ORG === "hiarc") ? "medical" : "defense"]) + "\") center/cover no-repeat;filter:blur(3px) saturate(1.05)";
@@ -1322,6 +1328,11 @@ function renderStartMyDay(host){
   heroChip(irsTodayN, "Interviews Today", "calendar", "Interview requests dated today");
   heroChip(hmN, "Hiring Managers Waiting", "submitted", "Hiring managers with submittals awaiting their decision");
   if(readyN >= 0){ heroChip(readyN, "Candidates Ready", "autoslate", "Open talent TalentFit rates a strong fit that nobody is working yet — start there"); }
+  else if(readyN === -2 && typeof tbWarmScores === "function"){
+    heroChip("\u2026", "Candidates Ready", "autoslate", "TalentFit is scoring in the background — this fills in automatically");
+    var _chipRef = chips.children[chips.children.length - 1].querySelector("b");
+    tbWarmScores(function(){ try{ if(_chipRef && _chipRef.isConnected){ _chipRef.textContent = String(tbCountReady()); } }catch(eC){} });
+  }
   var cta = el("button", null, "Start My Day"); cta.type = "button";
   cta.style.cssText = "margin-left:auto;background:var(--gold);border:0;border-radius:10px;color:#fff;font:inherit;font-size:14px;font-weight:700;padding:11px 26px;cursor:pointer;box-shadow:0 4px 16px rgba(59,91,255,.35);transition:transform .14s,opacity .14s";
   cta.addEventListener("mouseenter", function(){ cta.style.transform = "translateY(-1px)"; cta.style.opacity = ".92"; });
@@ -9387,7 +9398,7 @@ body.tb-overlay-open{ overflow:hidden; }
     var row = candToRow(c);
     row.org = ORG;
     row.status = "New";
-    var _meFirst = ((CURRENT_USER && CURRENT_USER.email) || "").split("@")[0].split(/[._+\-]/)[0].toLowerCase();
+    var _meFirst = ((CURRENT_USER && CURRENT_USER.email) || "").trim().split("@")[0].split(/[._+\-]/)[0].toLowerCase();
     var _meOwner = (typeof OWNERS !== "undefined" ? OWNERS : []).filter(function(o){ return o.toLowerCase() === _meFirst; })[0];
     row.owner = _meOwner || ((typeof OWNERS !== "undefined" && OWNERS.indexOf(row.owner) >= 0) ? row.owner : "Unassigned"); /* the recruiter starting the process owns the candidate */
     row.notes = ((row.notes || "") + "\n[Added to " + orgLabel(ORG) + " pipeline from " + orgLabel(c._xorg) + " " + new Date().toISOString().slice(0,10) + " — the " + orgLabel(c._xorg) + " record is unchanged; status there was “" + (c.status || "?") + "”. One resume, referenced, not copied.]").trim();
@@ -9403,7 +9414,7 @@ body.tb-overlay-open{ overflow:hidden; }
 
   /* ---------- the Enterprise Candidate Library view ---------- */
   function libFilters(){
-    var meFirst = (typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email.split("@")[0].split(/[._]/)[0].toLowerCase() : "";
+    var meFirst = (typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email.trim().split("@")[0].split(/[._]/)[0].toLowerCase() : "";
     var now = Date.now(); var recentMs = 14 * 86400000;
     return [
       ["enterprise", "Enterprise", function(){ return true; }],
@@ -9531,7 +9542,7 @@ body.tb-overlay-open{ overflow:hidden; }
 
   function tbResolveWorkstation(){
     if(window.TB_WORKSTATION_OVERRIDE){ return window.TB_WORKSTATION_OVERRIDE; } /* admin View-as */
-    var email = ((typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) || "").toLowerCase();
+    var email = ((typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) || "").trim().toLowerCase();
     var cfg = window.TB_WORKSTATION_ASSIGNMENTS[email];
     if(cfg && cfg.workstation){ return cfg.workstation; }
     var first = email.split("@")[0].split(/[._+\-]/)[0];
@@ -9555,7 +9566,7 @@ body.tb-overlay-open{ overflow:hidden; }
 
   function isAdmin(){ return (window.TB_WS === "admin") || (!window.TB_WORKSTATION_OVERRIDE && tbResolveWorkstation() === "admin"); }
   function hmName(){
-    var email = ((CURRENT_USER && CURRENT_USER.email) || "").toLowerCase();
+    var email = ((CURRENT_USER && CURRENT_USER.email) || "").trim().toLowerCase();
     var m = (typeof MANAGERS !== "undefined" ? MANAGERS : []).filter(function(x){ return (x.email || "").toLowerCase() === email; })[0];
     if(m){ return m.name; }
     return window.TB_HM_PREVIEW || ""; /* admin View-as previews the first HM */
@@ -9564,7 +9575,7 @@ body.tb-overlay-open{ overflow:hidden; }
   /* ---------- 2. CANDIDATE OWNERSHIP (claim → own → transfer, history kept) ---------- */
   var LOCKED_STATUSES = { "Submitted":1, "Interviewing Stage 1":1, "Interviewing Stage 2":1, "Interviewing Stage 3":1, "Panel / Final Interview":1, "Interviewing":1, "Offer Pending":1 };
   function meOwnerName(){
-    var first = ((CURRENT_USER && CURRENT_USER.email) || "").split("@")[0].split(/[._+\-]/)[0].toLowerCase();
+    var first = ((CURRENT_USER && CURRENT_USER.email) || "").trim().split("@")[0].split(/[._+\-]/)[0].toLowerCase();
     var hit = (typeof OWNERS !== "undefined" ? OWNERS : []).filter(function(o){ return o.toLowerCase() === first; })[0];
     return hit || (first ? first.charAt(0).toUpperCase() + first.slice(1) : "");
   }
@@ -9804,6 +9815,72 @@ body.tb-overlay-open{ overflow:hidden; }
       card.appendChild(top); host.appendChild(card);
     });
   };
+
+  /* ---------- 3c. TALENTFIT WARM ENGINE (launch perf fix) ----------
+     Cold scoring of the full desk is seconds of synchronous work, and the
+     cache clears on every data reload. Nothing user-facing may ever pay that
+     cost on the main thread: scoring warms in idle chunks, heavy views show
+     a brief skeleton on a cold cache, and the cache re-warms in the
+     background after every reload. */
+  window.__TB_SCORES_WARM = false;
+  var _warmRunning = false, _warmGen = 0;
+  try{
+    var _csc = BOARD.clearScoreCache;
+    BOARD.clearScoreCache = function(){ window.__TB_SCORES_WARM = false; _warmGen++; _csc(); };
+  }catch(eW){}
+  window.tbWarmScores = function(cb){
+    if(window.__TB_SCORES_WARM){ if(cb){ cb(); } return; }
+    var gen = _warmGen;
+    var pool = (state.candidates || []).filter(function(c){ return c.status !== "Archived"; });
+    if(window.TB_ENTERPRISE_LIBRARY_V1 && window.XORG && window.XORG.loaded && window.XORG.recruitable){ pool = pool.concat(window.XORG.recruitable()); }
+    var i = 0;
+    if(_warmRunning){ /* piggyback: poll for completion */
+      var wait = setInterval(function(){ if(window.__TB_SCORES_WARM || gen !== _warmGen){ clearInterval(wait); if(cb && window.__TB_SCORES_WARM){ cb(); } } }, 120);
+      return;
+    }
+    _warmRunning = true;
+    (function chunk(){
+      if(gen !== _warmGen){ _warmRunning = false; return; } /* cache cleared mid-warm: abort, a re-warm will follow */
+      var end = Math.min(i + 15, pool.length);
+      try{ for(; i < end; i++){ BOARD.scoreCandidate(pool[i]); } }catch(eS){}
+      if(i < pool.length){ setTimeout(chunk, 0); }
+      else { _warmRunning = false; window.__TB_SCORES_WARM = true; if(cb){ cb(); } }
+    })();
+  };
+  function tbSkeleton(host, label){
+    host.innerHTML = "";
+    var sk = el("div"); sk.style.cssText = "max-width:1020px";
+    sk.appendChild(el("div","hint", label));
+    for(var i = 0; i < 4; i++){
+      var row = el("div"); row.style.cssText = "height:64px;border-radius:12px;background:linear-gradient(90deg,var(--panel) 25%,var(--panel2) 50%,var(--panel) 75%);background-size:200% 100%;animation:tbSkel 1.1s infinite linear;margin-bottom:12px;border:1px solid var(--line)";
+      sk.appendChild(row);
+    }
+    if(!document.getElementById("tbSkelCss")){
+      var st = document.createElement("style"); st.id = "tbSkelCss";
+      st.textContent = "@keyframes tbSkel{0%{background-position:200% 0}100%{background-position:-200% 0}}";
+      document.head.appendChild(st);
+    }
+    host.appendChild(sk);
+  }
+  /* heavy views never block: skeleton on cold cache, instant when warm */
+  ["renderBoard", "renderAutoSlate"].forEach(function(fn){
+    var _orig = window[fn];
+    if(typeof _orig !== "function"){ return; }
+    window[fn] = function(host){
+      if(window.__TB_SCORES_WARM){ _orig(host); return; }
+      var v = ui.view;
+      tbSkeleton(host, "TalentFit is scoring every candidate against every open requisition\u2026");
+      tbWarmScores(function(){ if(ui.view === v){ renderList(); } });
+    };
+  });
+  /* keep the cache warm: after boot and after every coalesced reload */
+  var _warmKick = setInterval(function(){
+    if(typeof state !== "undefined" && state.candidates && state.candidates.length){ clearInterval(_warmKick); tbWarmScores(); }
+  }, 1500);
+  if(typeof _rtReloadNow === "function"){ /* re-warm quietly after realtime reloads */
+    var _rtOrig = _rtReloadNow; /* not reassignable safely; hook via stats polling instead */
+  }
+  setInterval(function(){ if(typeof state !== "undefined" && state.candidates && state.candidates.length && !window.__TB_SCORES_WARM && !_warmRunning){ tbWarmScores(); } }, 5000);
 
   /* ---------- 4. WORKSTATION RENDERERS ---------- */
   function wsCard(css){ var c = el("div"); c.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;" + (css || ""); return c; }
