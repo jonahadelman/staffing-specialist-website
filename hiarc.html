@@ -1240,7 +1240,9 @@ window.TB_HERO_ART = { defense: "<svg xmlns='http://www.w3.org/2000/svg' width='
 function tbGreeting(){
   var hr = new Date().getHours();
   var g = hr < 12 ? "Good Morning" : hr < 17 ? "Good Afternoon" : "Good Evening";
-  var who = (typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email.trim().split("@")[0].split(/[._+\-]/)[0] : "";
+  var who = "";
+  if(window.TB_IMPERSONATE){ who = window.TB_IMPERSONATE.name.split(" ")[0]; }
+  else if(typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email){ who = CURRENT_USER.email.trim().split("@")[0].split(/[._+\-]/)[0]; }
   who = who ? who.charAt(0).toUpperCase() + who.slice(1) : "";
   return g + (who ? ", " + who : "");
 }
@@ -1655,7 +1657,10 @@ function renderNotesView(host){
    Team Notes is the existing server-backed notes component on a shared board.
    Leadership Brief and Today's Focus are read-only, computed live from the
    same canonical counting rules as every other screen. */
-function tbDeskKey(kind){ return "tb_" + kind + "_" + ORG + "_" + (CURRENT_USER ? CURRENT_USER.id : "anon"); }
+function tbDeskKey(kind){
+  if(window.TB_IMPERSONATE){ return "tb_" + kind + "_" + ORG + "_imp_" + window.TB_IMPERSONATE.name.toLowerCase().replace(/\s+/g, "_"); } /* never mix admin's personal desk with theirs */
+  return "tb_" + kind + "_" + ORG + "_" + (CURRENT_USER ? CURRENT_USER.id : "anon");
+}
 function tbDeskLoad(kind, fallback){ try{ var v = JSON.parse(localStorage.getItem(tbDeskKey(kind))); return v === null || v === undefined ? fallback : v; }catch(e){ return fallback; } }
 function tbDeskSave(kind, val){ try{ localStorage.setItem(tbDeskKey(kind), JSON.stringify(val)); }catch(e){} }
 function tbDeskHint(host, txt){ var h = el("div","hint", txt); h.style.cssText = "margin-bottom:14px"; host.appendChild(h); }
@@ -9683,7 +9688,34 @@ body.tb-overlay-open{ overflow:hidden; }
   var WS_HOME = { recruiter:"guide", manager:"tb_ws_manager", hm:"tb_hm_review", executive:"tb_brief", admin:"tb_ws_admin" };
   var WS_LABEL = { recruiter:"Recruiter Workstation", manager:"Recruiting Manager Workstation", hm:"Hiring Manager Workstation", executive:"Executive Workstation", admin:"Administrator Workstation" };
 
+  /* ── ADMIN IMPERSONATION: become any user for support, training, QA.
+     View-only by default; Edit requires confirmation; every session is
+     audit-logged to the database. ── */
+  window.TB_IMPERSONATE = null;
+  async function tbAuditLog(text){
+    try{ if(sb && CURRENT_USER){ await sb.from("program_notes").insert({ org: ORG, author_id: CURRENT_USER.id, author_email: (CURRENT_USER.email || "").trim(), body: text, context: "admin_audit" }); if(typeof loadNotes === "function"){ await loadNotes(); } } }catch(eA){}
+  }
+  window.tbImpersonate = function(target){
+    window.TB_IMPERSONATE = { name: target.name, ws: target.ws, started: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), edit: false };
+    tbAuditLog("[Admin Access] " + ((CURRENT_USER && CURRENT_USER.email) || "admin").trim() + " opened the " + (WS_LABEL[target.ws] || target.ws) + " as " + target.name + " (view-only)");
+    window.TB_WORKSTATION_OVERRIDE = null;
+    tbApplyWorkstation(true);
+  };
+  window.tbImpersonateEdit = function(){
+    if(!window.TB_IMPERSONATE){ return; }
+    if(!window.confirm("Enter Edit Mode as " + window.TB_IMPERSONATE.name + "?\n\nYou will be able to change records exactly as they can.\nEvery action is logged to the audit trail.")){ return; }
+    window.TB_IMPERSONATE.edit = true;
+    tbAuditLog("[Admin Access] edit mode ENABLED while acting as " + window.TB_IMPERSONATE.name);
+    tbApplyWorkstation(true);
+  };
+  window.tbImpersonateEnd = function(){
+    var imp = window.TB_IMPERSONATE; window.TB_IMPERSONATE = null;
+    if(imp){ tbAuditLog("[Admin Access] ended session as " + imp.name + (imp.edit ? " (edit mode was used)" : " (view-only)")); }
+    window.TB_WORKSTATION_OVERRIDE = null;
+    tbApplyWorkstation(true);
+  };
   function tbResolveWorkstation(){
+    if(window.TB_IMPERSONATE){ return window.TB_IMPERSONATE.ws; }   /* impersonation wins over everything */
     if(window.TB_WORKSTATION_OVERRIDE){ return window.TB_WORKSTATION_OVERRIDE; } /* admin View-as */
     var email = ((typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) || "").trim().toLowerCase();
     var cfg = window.TB_WORKSTATION_ASSIGNMENTS[email];
@@ -9707,8 +9739,12 @@ body.tb-overlay-open{ overflow:hidden; }
     return !v.ws; /* recruiter: the flagship experience, nothing bolted on */
   };
 
-  function isAdmin(){ return (window.TB_WS === "admin") || (!window.TB_WORKSTATION_OVERRIDE && tbResolveWorkstation() === "admin"); }
+  function isAdmin(){
+    if(window.TB_IMPERSONATE){ return window.TB_IMPERSONATE.ws === "admin"; } /* while impersonating you carry THEIR rights */
+    return (window.TB_WS === "admin") || (!window.TB_WORKSTATION_OVERRIDE && tbResolveWorkstation() === "admin");
+  }
   function hmName(){
+    if(window.TB_IMPERSONATE && window.TB_IMPERSONATE.ws === "hm"){ return window.TB_IMPERSONATE.name; }
     var email = ((CURRENT_USER && CURRENT_USER.email) || "").trim().toLowerCase();
     var m = (typeof MANAGERS !== "undefined" ? MANAGERS : []).filter(function(x){ return (x.email || "").toLowerCase() === email; })[0];
     if(m){ return m.name; }
@@ -9718,6 +9754,11 @@ body.tb-overlay-open{ overflow:hidden; }
   /* ---------- 2. CANDIDATE OWNERSHIP (claim → own → transfer, history kept) ---------- */
   var LOCKED_STATUSES = { "Submitted":1, "Interviewing Stage 1":1, "Interviewing Stage 2":1, "Interviewing Stage 3":1, "Panel / Final Interview":1, "Interviewing":1, "Offer Pending":1 };
   function meOwnerName(){
+    if(window.TB_IMPERSONATE){
+      var inm = window.TB_IMPERSONATE.name.split(" ")[0];
+      var ihit = (typeof OWNERS !== "undefined" ? OWNERS : []).filter(function(o){ return o.toLowerCase() === inm.toLowerCase(); })[0];
+      return ihit || inm;
+    }
     var first = ((CURRENT_USER && CURRENT_USER.email) || "").trim().split("@")[0].split(/[._+\-]/)[0].toLowerCase();
     var hit = (typeof OWNERS !== "undefined" ? OWNERS : []).filter(function(o){ return o.toLowerCase() === first; })[0];
     return hit || (first ? first.charAt(0).toUpperCase() + first.slice(1) : "");
@@ -10163,20 +10204,50 @@ body.tb-overlay-open{ overflow:hidden; }
       ff.appendChild(li);
     });
     wrap.appendChild(ff);
-    /* view-as (approved v3.0 amendment: admin sees what each role sees) */
-    var va = wsCard("margin-bottom:14px"); va.appendChild(wsHead("View As — preview any workstation"));
-    var row = el("div"); row.style.cssText = "display:flex;gap:8px;flex-wrap:wrap";
-    [["recruiter","Recruiter"],["manager","Recruiting Manager"],["hm","Hiring Manager"],["executive","Executive"],["admin","Administrator"]].forEach(function(w){
-      var b = el("button","btn sm" + ((window.TB_WS === w[0]) ? " gold" : " ghost"), w[1]);
-      b.addEventListener("click", function(){
-        window.TB_WORKSTATION_OVERRIDE = w[0];
-        if(w[0] === "hm" && !hmName()){ window.TB_HM_PREVIEW = (MANAGERS[0] || {}).name || ""; }
-        tbApplyWorkstation(true);
-      });
-      row.appendChild(b);
+    /* ── ACCESS ANY WORKSTATION — become any user for support, training, QA.
+       View-only by default; Edit Mode requires confirmation; every session is
+       written to the audit trail. ── */
+    var va = wsCard("margin-bottom:14px"); va.appendChild(wsHead("Access Any Workstation"));
+    va.appendChild(el("div","hint","Open TalentBase exactly as that person sees it. View-only until you enable Edit Mode. Every session is audit-logged."));
+    var rl = el("div", null, "Recruiters"); rl.style.cssText = "font-size:11px;font-weight:700;color:var(--muted);margin:12px 0 6px";
+    va.appendChild(rl);
+    var rrow = el("div"); rrow.style.cssText = "display:flex;gap:8px;flex-wrap:wrap";
+    (typeof OWNERS !== "undefined" ? OWNERS : []).filter(function(o){ return o && o !== "Unassigned"; }).forEach(function(o){
+      var b = el("button","btn sm ghost", o); b.title = "Open " + o + "\u2019s Recruiter Workstation (view-only)";
+      b.addEventListener("click", function(){ tbImpersonate({ name: o, ws: "recruiter" }); });
+      rrow.appendChild(b);
     });
-    va.appendChild(row);
-    va.appendChild(el("div","hint","Preview only — your admin rights return when you switch back."));
+    va.appendChild(rrow);
+    var hl = el("div", null, "Hiring Managers"); hl.style.cssText = "font-size:11px;font-weight:700;color:var(--muted);margin:12px 0 6px";
+    va.appendChild(hl);
+    var hrow = el("div"); hrow.style.cssText = "display:flex;gap:8px;align-items:center;flex-wrap:wrap";
+    var hsel = el("select","fil"); hsel.style.maxWidth = "260px";
+    (state.managers && state.managers.length ? state.managers : (typeof MANAGERS !== "undefined" ? MANAGERS : [])).forEach(function(m2){
+      var op = el("option", null, m2.name); op.value = m2.name; hsel.appendChild(op);
+    });
+    var hgo = el("button","btn sm ghost","Open Workstation");
+    hgo.addEventListener("click", function(){ if(hsel.value){ window.TB_HM_PREVIEW = hsel.value; tbImpersonate({ name: hsel.value, ws: "hm" }); } });
+    hrow.appendChild(hsel); hrow.appendChild(hgo); va.appendChild(hrow);
+    var ol = el("div", null, "Other Roles"); ol.style.cssText = "font-size:11px;font-weight:700;color:var(--muted);margin:12px 0 6px";
+    va.appendChild(ol);
+    var orow = el("div"); orow.style.cssText = "display:flex;gap:8px;flex-wrap:wrap";
+    [["Recruiting Manager","manager"],["Executive","executive"]].forEach(function(w){
+      var b2 = el("button","btn sm ghost", w[0]); b2.title = "Open the " + w[0] + " Workstation";
+      b2.addEventListener("click", function(){ tbImpersonate({ name: w[0], ws: w[1] }); });
+      orow.appendChild(b2);
+    });
+    va.appendChild(orow);
+    /* audit trail — nothing hidden */
+    var audits = (state.notes || []).filter(function(n){ return (n.context || "") === "admin_audit"; }).slice(0, 6);
+    if(audits.length){
+      var al = el("div", null, "Recent Access Log"); al.style.cssText = "font-size:11px;font-weight:700;color:var(--muted);margin:14px 0 6px";
+      va.appendChild(al);
+      audits.forEach(function(a){
+        var li = el("div", null, "\u00b7 " + (a.createdAt ? a.createdAt.slice(0, 16).replace("T", " ") : "") + " \u2014 " + String(a.body || "").replace("[Admin Access] ", ""));
+        li.style.cssText = "font-size:12px;color:var(--muted);padding:2px 0";
+        va.appendChild(li);
+      });
+    }
     wrap.appendChild(va);
     /* candidate intelligence */
     var intel = tbIntelligence();
@@ -10249,7 +10320,35 @@ body.tb-overlay-open{ overflow:hidden; }
     /* executive + hm are read-only experiences regardless of DB role */
     if(typeof window.TB_ORIG_VO === "undefined"){ window.TB_ORIG_VO = VIEW_ONLY; }
     VIEW_ONLY = (ws === "executive" || ws === "hm") ? true : window.TB_ORIG_VO;
+    if(window.TB_IMPERSONATE && !window.TB_IMPERSONATE.edit){ VIEW_ONLY = true; } /* impersonation is view-only until Edit Mode is confirmed */
     if(ws === "executive"){ try{ sectionCollapsed["Analytics"] = false; }catch(eSC){} }
+    /* impersonation banner — across the top, impossible to miss, one-click return */
+    try{
+      var iban = document.getElementById("tbImpBanner");
+      if(window.TB_IMPERSONATE){
+        var imp = window.TB_IMPERSONATE;
+        if(!iban){
+          iban = el("div"); iban.id = "tbImpBanner";
+          iban.style.cssText = "background:#b45309;color:#fff;padding:9px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:13px;font-weight:600";
+          document.body.insertBefore(iban, document.body.firstChild);
+        }
+        iban.innerHTML = "";
+        var lab = el("span", null, "\ud83d\udfe7 ADMIN MODE \u2014 viewing TalentBase as " + imp.name + " \u00b7 " + (WS_LABEL[imp.ws] || imp.ws) + " \u00b7 started " + imp.started + (imp.edit ? " \u00b7 EDIT MODE ON (all actions logged)" : " \u00b7 view-only"));
+        iban.appendChild(lab);
+        var sp = el("span"); sp.style.flex = "1"; iban.appendChild(sp);
+        if(!imp.edit){
+          var eb = el("button", null, "Enable Edit Mode"); eb.type = "button";
+          eb.style.cssText = "background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:7px;padding:5px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer";
+          eb.addEventListener("click", function(){ tbImpersonateEdit(); });
+          iban.appendChild(eb);
+        }
+        var rb = el("button", null, "Return to Administrator"); rb.type = "button";
+        rb.style.cssText = "background:#fff;border:0;color:#b45309;border-radius:7px;padding:5px 14px;font:inherit;font-size:12px;font-weight:800;cursor:pointer";
+        rb.addEventListener("click", function(){ tbImpersonateEnd(); });
+        iban.appendChild(rb);
+        iban.title = "Personal notes, checklists, and goals live on each recruiter\u2019s own device \u2014 they are not visible from here.";
+      } else if(iban){ iban.remove(); }
+    }catch(eIB){}
     /* topbar: recruiters recruit; admins administer */
     try{
       var adminBtns = ["importBtn","exportBtn","dayforceBtn","bulkBtn"], recruitBtns = ["fromResumeBtn","addBtn"];
