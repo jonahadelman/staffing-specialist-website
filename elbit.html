@@ -1150,7 +1150,15 @@ function renderList(){
   if(v.special === "tb_focus"){ renderTodaysFocus(host); return; }
   if(v.id === "followup" && window.TALENTBASE_FU_WORKLIST){ renderFollowUpWorklist(host); return; }
   var rows = pipelineSort(currentList());
-  document.getElementById("viewMeta").textContent = (ui.view === "all") ? (rows.length + " enterprise candidate" + (rows.length === 1 ? "" : "s") + " in the library") : (rows.length + (rows.length === 1 ? " unique candidate" : " unique candidates"));
+  var fParts = [];
+  if(ui.fOwner){ fParts.push("Recruiter: " + ui.fOwner); }
+  if(ui.fStatus){ fParts.push("Status: " + ui.fStatus); }
+  if(ui.fDept){ fParts.push("Department: " + ui.fDept); }
+  if(ui.fHM){ fParts.push("Hiring Manager: " + ui.fHM); }
+  if(ui.fDiscipline){ fParts.push(ui.fDiscipline); }
+  if(ui.fReq){ fParts.push(ui.fReq); }
+  var fCtx = fParts.length ? " \u00b7 filtered \u2014 " + fParts.join(" \u00b7 ") : "";
+  document.getElementById("viewMeta").textContent = ((ui.view === "all") ? (rows.length + " enterprise candidate" + (rows.length === 1 ? "" : "s") + " in the library") : (rows.length + (rows.length === 1 ? " unique candidate" : " unique candidates"))) + fCtx;
   if(rows.length === 0){
     var filtersOn = !!(ui.q && ui.q.trim()) || !!ui.fStatus || !!ui.fDiscipline || !!ui.fReq || !!ui.fOwner || !!ui.fPriority || !!ui.fDept || !!ui.fHM;
     var em = el("div","empty");
@@ -1219,15 +1227,33 @@ function renderRecruiterBoard(host){
   ["Recruiter","Active Candidates","Submitted","Interviewing","Interviews Scheduled","Offers","Hired","Overdue Follow-Ups"].forEach(function(h){ htr.appendChild(el("th", null, h)); });
   thead.appendChild(htr); table.appendChild(thead);
   var tb = el("tbody");
+  function drillTo(owner, view){
+    ui.fOwner = (owner === "Unassigned" ? "" : owner);
+    var sel = document.getElementById("fOwner"); if(sel){ sel.value = ui.fOwner; }
+    ui.view = view; refresh();
+  }
   rows.forEach(function(r){
     var tr = el("tr","click");
-    var td1 = el("td"); td1.appendChild(el("div","nm", r.o)); tr.appendChild(td1);
-    [r.active, r.submitted, r.interviewing, r.irs, r.offers, r.hired].forEach(function(n){ tr.appendChild(el("td", null, String(n))); });
-    var od = el("td", null, String(r.overdue)); if(r.overdue > 0){ od.style.cssText = "color:var(--red);font-weight:700"; } tr.appendChild(od);
-    tr.addEventListener("click", function(){
-      ui.fOwner = (r.o === "Unassigned" ? "" : r.o); var s = document.getElementById("fOwner"); if(s){ s.value = ui.fOwner; }
-      ui.view = "all"; refresh();
+    var td1 = el("td"); td1.appendChild(el("div","nm", r.o));
+    td1.title = "Open " + r.o + "\u2019s active candidates — filter applied for you";
+    td1.addEventListener("click", function(ev){ ev.stopPropagation(); drillTo(r.o, "activecandidates"); });
+    tr.appendChild(td1);
+    /* every number opens exactly those records with the recruiter filter preserved */
+    [[r.active, "activecandidates", "active candidates"], [r.submitted, "submitted", "submitted candidates"], [r.interviewing, "interviewing", "interviewing candidates"], [r.irs, null, "interview requests (schedule-wide list)"], [r.offers, "offerpending", "offers"], [r.hired, "offeraccepted", "hires"]].forEach(function(cell){
+      var td = el("td", null, String(cell[0]));
+      if(cell[1]){
+        td.style.cssText = "cursor:pointer;font-weight:600";
+        td.title = r.o + "\u2019s " + cell[2] + " — opens filtered to " + r.o;
+        td.addEventListener("click", function(ev){ ev.stopPropagation(); drillTo(r.o, cell[1]); });
+      } else { td.title = cell[2]; }
+      tr.appendChild(td);
     });
+    var od = el("td", null, String(r.overdue));
+    od.style.cssText = "cursor:pointer;font-weight:600" + (r.overdue > 0 ? ";color:var(--red);font-weight:700" : "");
+    od.title = r.o + "\u2019s overdue follow-ups — opens the worklist filtered to " + r.o;
+    od.addEventListener("click", function(ev){ ev.stopPropagation(); drillTo(r.o, "followup"); });
+    tr.appendChild(od);
+    tr.addEventListener("click", function(){ drillTo(r.o, "activecandidates"); });
     tb.appendChild(tr);
   });
   table.appendChild(tb); host.appendChild(table);
@@ -1840,21 +1866,30 @@ function renderLeadershipBrief(host){
     var body = el("div"); body.style.marginTop = "10px"; c.appendChild(body);
     wrap.appendChild(c); return body;
   }
-  function exRow(host2, txt, accentVar){
-    var li = el("div"); li.style.cssText = "display:flex;gap:10px;align-items:baseline;padding:5px 0;font-size:13.5px;color:var(--ink)";
+  function exRow(host2, txt, accentVar, onOpen, tip){
+    var li = el("div"); li.style.cssText = "display:flex;gap:10px;align-items:baseline;padding:5px 0;font-size:13.5px;color:var(--ink)" + (onOpen ? ";cursor:pointer;border-radius:7px" : "");
     if(accentVar){ var d = el("span"); d.style.cssText = "width:7px;height:7px;border-radius:50%;flex-shrink:0;position:relative;top:-1px;background:" + cssVar(accentVar); li.appendChild(d); }
-    li.appendChild(el("span", null, txt)); host2.appendChild(li); return li;
+    li.appendChild(el("span", null, txt));
+    if(onOpen){
+      var go = el("span", null, "\u2192"); go.style.cssText = "margin-left:auto;color:var(--muted);font-weight:700"; li.appendChild(go);
+      li.title = tip || "Open the records behind this number";
+      li.addEventListener("mouseenter", function(){ li.style.background = "var(--panel2)"; });
+      li.addEventListener("mouseleave", function(){ li.style.background = ""; });
+      li.addEventListener("click", onOpen);
+    }
+    host2.appendChild(li); return li;
   }
   /* top hiring bottlenecks */
   var bn = exSection("Top Hiring Bottlenecks", "Where hiring momentum is being lost right now");
+  function goView(v){ return function(){ ui.view = v; refresh(); }; }
   var bottlenecks = [];
-  if(starving.length){ bottlenecks.push([starving.length + " open requisition" + (starving.length === 1 ? "" : "s") + " with zero candidates in play", "--red"]); }
-  if(hmWaitKeys.length){ bottlenecks.push([hmWaitKeys.length + " hiring manager" + (hmWaitKeys.length === 1 ? "" : "s") + " sitting on " + submitted.length + " submittal" + (submitted.length === 1 ? "" : "s") + " — " + hmWaitKeys.slice(0,3).map(function(h){ return h + " (" + hmWait[h] + ")"; }).join(", "), "--orange"]); }
-  if(fuOver.length){ bottlenecks.push([fuOver.length + " overdue follow-up" + (fuOver.length === 1 ? "" : "s") + " — candidates at risk of going cold", "--yellow"]); }
+  if(starving.length){ bottlenecks.push([starving.length + " open requisition" + (starving.length === 1 ? "" : "s") + " with zero candidates in play", "--red", goView("autoslate"), "Opens AutoSlate — the fastest way to put candidates on these requisitions"]); }
+  if(hmWaitKeys.length){ bottlenecks.push([hmWaitKeys.length + " hiring manager" + (hmWaitKeys.length === 1 ? "" : "s") + " sitting on " + submitted.length + " submittal" + (submitted.length === 1 ? "" : "s") + " — " + hmWaitKeys.slice(0,3).map(function(h){ return h + " (" + hmWait[h] + ")"; }).join(", "), "--orange", goView("submitted"), "Opens the submitted candidates each hiring manager is sitting on"]); }
+  if(fuOver.length){ bottlenecks.push([fuOver.length + " candidate" + (fuOver.length === 1 ? "" : "s") + " at risk of going cold — recruiter follow-up overdue", "--yellow", goView("followup"), "Opens the follow-up worklist with days-overdue per candidate"]); }
   var stalledIRs = irs.filter(function(ir){ if(ir.status !== "Requested"){ return false; } var d = Date.parse(ir.createdAt || ""); return d && (Date.now() - d) > 5 * 86400000; });
-  if(stalledIRs.length){ bottlenecks.push([stalledIRs.length + " interview request" + (stalledIRs.length === 1 ? "" : "s") + " unscheduled for more than 5 days", "--purple"]); }
+  if(stalledIRs.length){ bottlenecks.push([stalledIRs.length + " interview request" + (stalledIRs.length === 1 ? "" : "s") + " unscheduled for more than 5 days", "--purple", goView("interviewrequests"), "Opens the interview request list"]); }
   if(!bottlenecks.length){ bn.appendChild(el("div","hint","No structural bottlenecks. Momentum is with us.")); }
-  bottlenecks.slice(0, 5).forEach(function(b){ exRow(bn, b[0], b[1]); });
+  bottlenecks.slice(0, 5).forEach(function(b){ exRow(bn, b[0], b[1], b[2], b[3]); });
   /* momentum */
   var mo = exSection("Recruiting Momentum", "Last 7 days");
   exRow(mo, acts7 + " recruiter touchpoints logged (calls, emails, interviews, notes)");
@@ -1863,11 +1898,11 @@ function renderLeadershipBrief(host){
   /* offers in motion */
   var om = exSection("Offers in Motion", null);
   if(!offers.length){ om.appendChild(el("div","hint","No offers pending.")); }
-  offers.forEach(function(c){ exRow(om, fullName(c) + " — " + ((c.reqs||[])[0] || c.title || "") + " (" + (c.owner || "unowned") + ")", "--gold"); });
+  offers.forEach(function(c){ exRow(om, fullName(c) + " — " + ((c.reqs||[])[0] || c.title || "") + " (" + (c.owner || "unowned") + ")", "--gold", function(){ openDetail(c); }, "Open " + fullName(c) + "\u2019s record"); });
   /* critical requisitions */
   var cr = exSection("Critical Requisitions", "Zero-coverage or flagged priority");
   if(!critical.length){ cr.appendChild(el("div","hint","Nothing critical. Every open requisition has candidates in play.")); }
-  critical.slice(0, 8).forEach(function(r){ exRow(cr, (r.jobId ? r.jobId + " · " : "") + r.title + " – " + r.loc + " (" + (r.hm || "no HM") + ") — " + reqCandN(r) + " in play", reqCandN(r) === 0 ? "--red" : "--orange"); });
+  critical.slice(0, 8).forEach(function(r){ exRow(cr, (r.jobId ? r.jobId + " · " : "") + r.title + " – " + r.loc + " (" + (r.hm || "no HM") + ") — " + reqCandN(r) + " in play", reqCandN(r) === 0 ? "--red" : "--orange", function(){ if(typeof viewReq === "function"){ viewReq(r); } }, "Open this requisition"); });
   if(critical.length > 8){ cr.appendChild(el("div","hint","+ " + (critical.length - 8) + " more in Open Requisitions.")); }
   /* executive summary — deterministic, from the same numbers as everything above */
   var es = exSection("Executive Summary", null);
@@ -1931,7 +1966,7 @@ function renderFollowUpWorklist(host){
   // Read-only triage worklist over state.candidates. Reuses followUp(), rowFor(),
   // matchesSearch(), todayISO(). Ignores filter dropdowns by design; respects search.
   // Four buckets: Overdue, Due Today, Upcoming, No Follow-Up Scheduled. Archived excluded.
-  var pool = (state.candidates || []).filter(function(c){ return c.status !== "Archived" && matchesSearch(c); });
+  var pool = (state.candidates || []).filter(function(c){ return c.status !== "Archived" && matchesSearch(c) && (!ui.fOwner || (c.owner || "Unassigned") === ui.fOwner); });
   var overdue = [], dueToday = [], upcoming = [], noFu = [];
   pool.forEach(function(c){
     if(!c.nextFollowUp){ noFu.push(c); return; }
@@ -1946,7 +1981,7 @@ function renderFollowUpWorklist(host){
   noFu.sort(function(a,b){ return fullName(a).localeCompare(fullName(b)); });
 
   var dueN = overdue.length + dueToday.length + upcoming.length;
-  document.getElementById("viewMeta").textContent = dueN + " follow-up" + (dueN === 1 ? "" : "s") + " due (" + overdue.length + " overdue · " + dueToday.length + " today · " + upcoming.length + " upcoming) · " + noFu.length + " active without a scheduled follow-up";
+  document.getElementById("viewMeta").textContent = dueN + " follow-up" + (dueN === 1 ? "" : "s") + " due (" + overdue.length + " overdue · " + dueToday.length + " today · " + upcoming.length + " upcoming) · " + noFu.length + " active without a scheduled follow-up" + (ui.fOwner ? " \u00b7 filtered \u2014 Recruiter: " + ui.fOwner : "");
 
   var strip = el("div"); strip.style.cssText = "display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-size:13px;font-weight:700";
   function chip(label, n, colorVar){ var w = el("span"); w.style.cssText = "display:inline-flex;align-items:center;gap:6px;color:" + cssVar(colorVar); var dot = el("span"); dot.style.cssText = "width:9px;height:9px;border-radius:2px;display:inline-block;background:" + cssVar(colorVar); w.appendChild(dot); w.appendChild(document.createTextNode(label + ": " + n)); return w; }
@@ -10241,11 +10276,51 @@ body.tb-overlay-open{ overflow:hidden; }
     function mineCands(){ return (state.candidates || []).filter(function(c){ return (c.reqs || []).some(function(t){ return myTags[t]; }); }); }
     var irs = (state.interviewRequests || []).filter(function(ir){ return (ir.hiringManager || "") === me; });
     var wrap = el("div"); wrap.style.cssText = "max-width:1020px";
+    function hmDecisionCard(c){
+      var card = el("div"); card.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:12px;max-width:920px";
+      var top = el("div"); top.style.cssText = "display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap";
+      var l = el("div");
+      var nm = el("div", null, fullName(c)); nm.style.cssText = "font-size:16px;font-weight:800;cursor:pointer"; nm.title = "Open the full profile (resume, history, notes)";
+      nm.addEventListener("click", function(){ openDetail(c); });
+      l.appendChild(nm);
+      l.appendChild(el("div","hint", [c.title, c.company].filter(Boolean).join(" \u2014 ") + (c.location ? "  \u00b7  " + c.location : "")));
+      l.appendChild(el("div","hint", "Recruiter: " + (c.owner && c.owner !== "Unassigned" ? c.owner : "recruiting team")));
+      top.appendChild(l);
+      var rgt = el("div"); rgt.style.cssText = "display:flex;align-items:center;gap:9px;flex-wrap:wrap";
+      try{ /* the engine's read, right on the card */
+        var sc = BOARD.scoreCandidate(c);
+        if(sc && sc.best && sc.best.score > 0){
+          var fit = el("span", null, sc.best.score + "% TalentFit");
+          fit.style.cssText = "font-size:12px;font-weight:800;border-radius:999px;padding:4px 11px;color:#fff;background:" + (sc.best.score >= 72 ? "var(--green)" : sc.best.score >= 52 ? "var(--gold)" : "var(--gray)");
+          fit.title = "TalentFit " + sc.best.score + "/100 \u2014 " + (sc.best.reasons || []).slice(0, 3).join(", ");
+          rgt.appendChild(fit);
+        }
+      }catch(eF){}
+      rgt.appendChild(pill(c.status, STATUS_COLOR[c.status] || "--gray"));
+      top.appendChild(rgt);
+      card.appendChild(top);
+      var act = el("div"); act.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-top:13px";
+      var ri = el("button","btn gold sm","Request Interview"); ri.title = "Sends an interview request straight to your recruiter";
+      ri.addEventListener("click", function(){ tbHMDecision(c, "Interview"); });
+      var ps = el("button","btn sm danger","Pass"); ps.title = "Sends a pass decision (with your reason) straight to your recruiter";
+      ps.addEventListener("click", function(){ tbHMDecision(c, "Reject"); });
+      var nt = el("button","btn ghost sm","Add Note"); nt.title = "A note on the record \u2014 your recruiter sees it";
+      nt.addEventListener("click", async function(){
+        var w = window.prompt("Note on " + fullName(c) + " (your recruiter sees it):", "");
+        if(!w){ return; }
+        var res = await sb.from("activities").insert({ org: ORG, candidate_id: c.id, type: "Note", date: todayISO(), notes: "[HM Note] " + hmName() + ": " + w, owner: hmName() });
+        if(res.error){ toast("Could not save note."); return; }
+        await loadData(); toast("Note added \u2014 on the record."); 
+      });
+      var op = el("button","btn ghost sm","Open Profile"); op.title = "Full record: resume, activity history, notes";
+      op.addEventListener("click", function(){ openDetail(c); });
+      act.appendChild(ri); act.appendChild(ps); act.appendChild(nt); act.appendChild(op);
+      card.appendChild(act);
+      return card;
+    }
     function candTable(rows, empty){
       if(!rows.length){ var e2 = el("div","hint", empty); wrap.appendChild(e2); return; }
-      var table = el("table","cardtable"); var tb = el("tbody");
-      pipelineSort(rows).forEach(function(c){ tb.appendChild(rowFor(c)); });
-      table.appendChild(tb); wrap.appendChild(table);
+      pipelineSort(rows).forEach(function(c){ wrap.appendChild(hmDecisionCard(c)); });
     }
     if(v === "tb_hm_review"){
       var gr = el("div", null, tbGreeting()); gr.style.cssText = "font-size:13px;font-weight:600;color:var(--muted);margin-bottom:2px";
@@ -10280,9 +10355,7 @@ body.tb-overlay-open{ overflow:hidden; }
           chev.style.transform = opening ? "rotate(180deg)" : "";
           if(opening && !holder.childElementCount){
             if(!inPlay.length){ holder.appendChild(el("div","hint","No candidates in play yet — your recruiter is sourcing. New submittals land in Candidates Awaiting Review.")); return; }
-            var table = el("table","cardtable"); var tb2 = el("tbody");
-            pipelineSort(inPlay).forEach(function(c){ tb2.appendChild(rowFor(c)); });
-            table.appendChild(tb2); holder.appendChild(table);
+            pipelineSort(inPlay).forEach(function(c){ holder.appendChild(hmDecisionCard(c)); });
           }
         });
         wrap.appendChild(c2);
