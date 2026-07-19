@@ -11192,6 +11192,140 @@ body.tb-overlay-open{ overflow:hidden; }
       dc.appendChild(el("div","hint","Open each record, keep the complete one, and delete the empty one. Nobody should ever ask which record is real."));
     }
     wrap.appendChild(dc);
+
+    /* ── B6: Ownership Console — safe, fast, auditable ownership correction.
+       Advisory suggestions, explicit human action, bulk assignment, inheritance,
+       audit via the existing admin_audit framework. Never auto-assigns. ── */
+    (function(){
+      var oc = wsCard("margin-bottom:14px"); oc.appendChild(wsHead("Ownership Console — TalentBench"));
+      var benchAll = getBenchReqs();
+      var unownedN = benchAll.filter(function(r){ return !r.taOwner || !r.tssRecruiter; }).length;
+      oc.appendChild(el("div","hint", benchAll.length + " TalentBench requisitions · " + unownedN + " missing ownership. Select rows, assign in bulk, then Recalculate Inheritance to flow ownership onto unassigned candidates. Suggestions are advisory — nothing is ever assigned without your explicit action. Every change is logged."));
+
+      function sourcedFor(r){
+        var lbl = (r.title||"") + " – " + (r.loc||""), lblAlt = (r.title||"") + " - " + (r.loc||"");
+        return (state.candidates || []).filter(function(c){ return (c.reqs||[]).indexOf(lbl) !== -1 || (c.reqs||[]).indexOf(lblAlt) !== -1; });
+      }
+      function suggestFor(r){
+        var counts = {};
+        sourcedFor(r).forEach(function(c){ if(c.owner && c.owner !== "Unassigned" && c.status !== "Archived"){ counts[c.owner] = (counts[c.owner]||0) + 1; } });
+        var best = null; Object.keys(counts).sort().forEach(function(o){ if(!best || counts[o] > counts[best]){ best = o; } });
+        return best ? { name: best, n: counts[best] } : null;
+      }
+      async function logAudit(text){
+        try{ await sb.from("program_notes").insert({ org: ORG, author_id: CURRENT_USER.id, author_email: (CURRENT_USER.email||"").trim(), body: text, context: "admin_audit" }); }catch(eLA){}
+      }
+      var selected = {};
+      /* bulk bar */
+      var bar = el("div"); bar.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0";
+      var taIn = el("input"); taIn.type = "text"; taIn.placeholder = "TA Owner (e.g. Taylor Mercer)";
+      taIn.style.cssText = "background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:var(--ink);font:inherit;font-size:13px;width:210px";
+      var taDl = document.createElement("datalist"); taDl.id = "ocTaDl";
+      (function(){ var seen = {}; benchAll.forEach(function(r){ if(r.taOwner && !seen[r.taOwner]){ seen[r.taOwner] = 1; var o = document.createElement("option"); o.value = r.taOwner; taDl.appendChild(o); } }); })();
+      taIn.setAttribute("list","ocTaDl"); bar.appendChild(taIn); bar.appendChild(taDl);
+      var recSel = document.createElement("select");
+      recSel.style.cssText = "background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:var(--ink);font:inherit;font-size:13px";
+      var rp = document.createElement("option"); rp.value = ""; rp.textContent = "TSS Recruiter…"; recSel.appendChild(rp);
+      var recNames = (typeof TB_RECRUITER_DIRECTORY !== "undefined" && TB_RECRUITER_DIRECTORY.length) ? TB_RECRUITER_DIRECTORY.map(function(x){ return x.name; }) : (typeof OWNERS !== "undefined" ? OWNERS.filter(function(o){ return o && o !== "Unassigned"; }) : []);
+      recNames.forEach(function(n2){ var o = document.createElement("option"); o.value = n2; o.textContent = n2; recSel.appendChild(o); });
+      bar.appendChild(recSel);
+      var applyBtn = el("button","btn gold sm","Assign to selected (0)"); applyBtn.type = "button"; applyBtn.disabled = true;
+      bar.appendChild(applyBtn);
+      var sugBtn = el("button","btn sm ghost","Apply suggested recruiters to selected"); sugBtn.type = "button"; sugBtn.disabled = true;
+      sugBtn.title = "Sets each selected requisition’s TSS Recruiter to its suggestion (rows without a suggestion are skipped). TA Owner is not touched.";
+      bar.appendChild(sugBtn);
+      var recalcBtn = el("button","btn sm ghost","Recalculate Inheritance"); recalcBtn.type = "button";
+      recalcBtn.title = "For every owned requisition: unassigned candidates tagged to it inherit the TSS Recruiter as owner. Claimed candidates are never touched.";
+      bar.appendChild(recalcBtn);
+      oc.appendChild(bar);
+      function refreshBulkState(){
+        var n = Object.keys(selected).filter(function(k){ return selected[k]; }).length;
+        applyBtn.textContent = "Assign to selected (" + n + ")";
+        applyBtn.disabled = n === 0 || (!taIn.value.trim() && !recSel.value);
+        sugBtn.disabled = n === 0;
+      }
+      taIn.addEventListener("input", refreshBulkState); recSel.addEventListener("change", refreshBulkState);
+      /* table */
+      var tblWrap = el("div"); tblWrap.style.cssText = "max-height:340px;overflow-y:auto;border:1px solid var(--line);border-radius:10px";
+      var GRID = "display:grid;grid-template-columns:30px 2fr 1fr 1fr 64px 1.2fr;gap:0 10px;align-items:center;padding:7px 12px";
+      var hd = el("div"); hd.style.cssText = GRID + ";position:sticky;top:0;background:var(--panel2);font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--line);z-index:2";
+      ["","Requisition","TA Owner","TSS Recruiter","Cands","Suggested Owner"].forEach(function(h){ hd.appendChild(el("span",null,h)); });
+      tblWrap.appendChild(hd);
+      var allCk = el("input"); allCk.type = "checkbox"; allCk.title = "Select all"; hd.children[0].appendChild(allCk);
+      var rowCks = [];
+      benchAll.slice().sort(function(a,b){ var au = (!a.taOwner||!a.tssRecruiter)?0:1, bu = (!b.taOwner||!b.tssRecruiter)?0:1; return au - bu || (a.title||"").localeCompare(b.title||""); }).forEach(function(r){
+        var row = el("div"); row.style.cssText = GRID + ";border-bottom:1px solid var(--line);font-size:12.5px";
+        var ckW = el("span"); var ck = el("input"); ck.type = "checkbox";
+        ck.addEventListener("change", function(){ selected[r.id] = ck.checked; refreshBulkState(); });
+        rowCks.push(ck); ckW.appendChild(ck); row.appendChild(ckW);
+        row.appendChild(el("span", null, (r.jobId ? "#" + r.jobId + " · " : "") + (r.title || "")));
+        function ownSpan(v){ var s = el("span", null, v || "Unowned"); if(!v){ s.style.cssText = "color:#92400e;font-weight:700;font-style:italic"; } return s; }
+        row.appendChild(ownSpan(r.taOwner)); row.appendChild(ownSpan(r.tssRecruiter));
+        var scN = sourcedFor(r).length; var cn = el("span", null, String(scN)); cn.style.cssText = "font-weight:700;color:" + (scN ? "var(--gold)" : "var(--muted)"); row.appendChild(cn);
+        var sug = suggestFor(r);
+        var sg = el("span","sub2", sug ? ("Suggest: " + sug.name + " (" + sug.n + " active)") : "—");
+        if(sug){ sg.title = sug.name + " is working " + sug.n + " active candidate" + (sug.n === 1 ? "" : "s") + " on this req — advisory only, nothing is assigned until you act."; sg.style.color = "var(--teal)"; }
+        row.appendChild(sg);
+        row.__req = r; row.__sug = sug;
+        tblWrap.appendChild(row);
+      });
+      allCk.addEventListener("change", function(){
+        rowCks.forEach(function(ck){ ck.checked = allCk.checked; ck.dispatchEvent(new Event("change")); });
+      });
+      oc.appendChild(tblWrap);
+      function selectedReqs(){
+        return benchAll.filter(function(r){ return selected[r.id]; });
+      }
+      async function applyOwnership(pairs){ /* pairs: [{r, ta, rec}] — explicit human action only */
+        var changed = 0;
+        for(var i=0;i<pairs.length;i++){
+          var p = pairs[i]; var upd = {};
+          if(p.ta && p.ta !== p.r.taOwner){ upd.ta_owner = p.ta; }
+          if(p.rec && p.rec !== p.r.tssRecruiter){ upd.tss_recruiter = p.rec; }
+          if(!Object.keys(upd).length){ continue; }
+          var res = await sb.from("reqs").update(upd).eq("id", p.r.id);
+          if(res && res.error){ toast("Update failed on #" + (p.r.jobId||p.r.title) + ": " + (res.error.message||"")); continue; }
+          changed++;
+          await logAudit("[Ownership] Req #" + (p.r.jobId||"") + " " + (p.r.title||"") +
+            (upd.ta_owner ? " — TA: '" + (p.r.taOwner||"—") + "' → '" + upd.ta_owner + "'" : "") +
+            (upd.tss_recruiter ? " — Recruiter: '" + (p.r.tssRecruiter||"—") + "' → '" + upd.tss_recruiter + "'" : ""));
+        }
+        if(changed){
+          await loadData(); try{ if(typeof loadNotes === "function"){ await loadNotes(); } }catch(eLN){}
+          toast(changed + " requisition" + (changed === 1 ? "" : "s") + " updated — board and console reflect the new owners.");
+          refresh(); /* re-render console + everything with fresh ownership */
+        } else { toast("Nothing to change."); }
+      }
+      applyBtn.addEventListener("click", function(){
+        var ta = taIn.value.trim(), rec = recSel.value;
+        applyOwnership(selectedReqs().map(function(r){ return { r: r, ta: ta, rec: rec }; }));
+      });
+      sugBtn.addEventListener("click", function(){
+        var pairs = selectedReqs().map(function(r){ var s = suggestFor(r); return s ? { r: r, ta: "", rec: s.name } : null; }).filter(Boolean);
+        if(!pairs.length){ toast("No suggestions available for the selected rows."); return; }
+        applyOwnership(pairs);
+      });
+      recalcBtn.addEventListener("click", async function(){
+        if(!window.confirm("Recalculate inheritance? Unassigned candidates on owned requisitions inherit the requisition's TSS Recruiter as owner. Candidates already owned by a recruiter are never touched.")){ return; }
+        var inherited = 0, details = [];
+        for(var i=0;i<benchAll.length;i++){
+          var r = benchAll[i]; if(!r.tssRecruiter){ continue; }
+          var cands = sourcedFor(r).filter(function(c){ return (!c.owner || c.owner === "Unassigned") && c.status !== "Archived"; });
+          for(var j=0;j<cands.length;j++){
+            var res2 = await sb.from("candidates").update({ owner: r.tssRecruiter }).eq("id", cands[j].id);
+            if(!res2 || !res2.error){ inherited++; details.push(fullName(cands[j]) + " → " + r.tssRecruiter); }
+          }
+        }
+        if(inherited){
+          await logAudit("[Ownership] Inheritance recalculated — " + inherited + " unassigned candidate" + (inherited === 1 ? "" : "s") + " inherited ownership: " + details.slice(0,10).join(", ") + (details.length > 10 ? " …" : ""));
+          await loadData(); try{ if(typeof loadNotes === "function"){ await loadNotes(); } }catch(eLN2){}
+          toast(inherited + " candidate" + (inherited === 1 ? "" : "s") + " inherited ownership from their requisitions.");
+          refresh();
+        } else { toast("Nothing to inherit — every candidate on owned reqs already has an owner."); }
+      });
+      wrap.appendChild(oc);
+    })();
+
     /* recent platform activity */
     var lg = wsCard(); lg.appendChild(wsHead("Recent Activity (latest 10)"));
     (state.activities || []).slice(0, 10).forEach(function(a){
