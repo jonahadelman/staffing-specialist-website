@@ -415,6 +415,7 @@ tbody tr.click:hover td{ background:#f6f8ff; }
 .tfit-ring::after{ content:""; position:absolute; inset:6px; border-radius:50%; background:#fff; }
 .tfit-ring-score{ position:relative; z-index:1; font-size:20px; font-weight:800; color:var(--ink); }
 .tfit-ring-score::after{ content:"%"; font-size:11px; font-weight:700; color:var(--muted); }
+.tfit-ring-tier{ position:relative; z-index:1; font-size:26px; line-height:1; }
 .tfit-hero-tx{ display:flex; flex-direction:column; gap:6px; }
 .tfit-hero-l{ font-size:13px; font-weight:600; color:var(--muted); }
 .tfit-chip{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700;
@@ -1506,7 +1507,7 @@ function renderStartMyDay(host){
         row.title = t.s.req ? ("Strongest match: " + (t.s.req.title || "") + " \u2014 open the record") : "Open the record";
         row.addEventListener("mouseenter", function(){ row.style.background = "var(--panel2)"; });
         row.addEventListener("mouseleave", function(){ row.style.background = ""; });
-        var pct = el("b", null, t.s.score + "%"); pct.style.cssText = "font-size:14.5px;color:" + (t.s.score >= 72 ? "var(--green)" : "var(--gold)") + ";min-width:44px";
+        var pct = el("b", null, BOARD.tier(t.s.verdict).icon); pct.title = BOARD.tier(t.s.verdict).label; pct.style.cssText = "font-size:14.5px;color:" + (t.s.score >= 72 ? "var(--green)" : "var(--gold)") + ";min-width:44px";
         var nm = el("span", null, fullName(t.c)); nm.style.cssText = "font-size:14px;font-weight:600;color:var(--ink)";
         row.appendChild(pct); row.appendChild(nm);
         row.addEventListener("click", function(){ openDetail(t.c); });
@@ -2576,7 +2577,17 @@ var BOARD = (function(){
     {re:/principal|staff engineer|technical lead|\btech lead\b|team lead/i, label:"Tech Lead", w:4},
     {re:/managed (a team|\d+|engineers|people)|people manager|engineering manager|direct reports/i, label:"People Mgmt", w:5}
   ];
-  var LEVELORD = {mid:1, sr:2, principal:3, staff:3, manager:3, director:4, vp:5};
+  /* ── LAUNCH FIX (TalentFit credibility, 2026-07-19) ──
+     Full experience ladder + tier presentation. Profile first, hard-filter
+     second, score last: obviously incompatible requisitions never rank. */
+  var LEVELORD = {intern:0, junior:1, mid:2, sr:3, principal:4, staff:4, manager:4, director:5, chief:5, vp:6, executive:6};
+  var TIERS = {
+    strong:  {icon:"\u{1F947}", label:"Excellent Match"},
+    moderate:{icon:"\u{1F948}", label:"Strong Match"},
+    stretch: {icon:"\u{1F949}", label:"Possible Match"},
+    not:     {icon:"⚪",    label:"Unlikely Match"}
+  };
+  function tier(v){ return TIERS[v] || TIERS.not; }
 
   function detectFn(txt){
     var head = txt.slice(0,240);
@@ -2601,7 +2612,8 @@ var BOARD = (function(){
     var cmf = score(/configuration (analyst|manager|management)/i, /configuration management|change control|\bccb\b|baseline/i);
     var ito = score(/systems administrator|network engineer|help ?desk|iam analyst|identity (operations|governance)|security administration analyst/i, /active directory|\bldap\b|\bsso\b|\brbac\b|\bvpn\b|windows server/i);
     var rel = score(/reliability engineer/i, /\bdfr\b|\bhalt\b|\bhass\b|\bmtbf\b|reliasoft|weibull|\bfracas\b/i);
-    var arr = [["SW",sw],["EE",ee],["SE",se],["MFG",mfg],["SC",sc],["MECH",mech],["PM",pm],["CONTRACTS",ktr],["CYBER",cy],["QA",qa],["TEST",te],["CM",cmf],["ITOPS",ito],["REL",rel]];
+    var sch = score(/master (program |production )?scheduler|master planner|program schedul|production (planner|scheduler)|planning analyst|\bscheduler\b/i, /integrated master schedule|\bims\b|ms project|microsoft project|primavera|\bp6\b|critical path|schedule (risk|baseline|health|variance)/i);
+    var arr = [["SW",sw],["EE",ee],["SE",se],["MFG",mfg],["SC",sc],["MECH",mech],["PM",pm],["CONTRACTS",ktr],["CYBER",cy],["QA",qa],["TEST",te],["CM",cmf],["ITOPS",ito],["REL",rel],["SCHED",sch]];
     arr.sort(function(a,b){ return b[1]-a[1]; });
     if(arr[0][1]===0) return {primary:"UNK", set:[]};
     var top = arr[0][1];
@@ -2609,10 +2621,36 @@ var BOARD = (function(){
     return {primary:arr[0][0], set:set};
   }
   function detectLevel(txt){
-    if(/vice president|\bvp\b|\bdirector\b/i.test(txt)) return "director";
+    if(/chief (executive|operating|financial|technology|information) officer|\bceo\b|\bcoo\b|\bcfo\b|\bcto\b|\bpresident\b/i.test(txt)) return "executive";
+    if(/vice president|\bvp\b|\bdirector\b|\bchief engineer\b/i.test(txt)) return "director";
     if(/principal|staff engineer|sr\.? staff|senior staff/i.test(txt)) return "principal";
     if(/(engineering|electrical|hardware|software|manufacturing|systems|technical|development)\s+manager|people manager|\bmanager,/i.test(txt)) return "manager";
-    if(/(senior|sr\.?)\s+(engineer|software|electrical|systems|hardware|mechanical|manufacturing)|lead engineer|\blead\b/i.test(txt)) return "sr";
+    if(/(senior|sr\.?)\s+(engineer|software|electrical|systems|hardware|mechanical|manufacturing)|lead engineer|\blead\b/i.test(txt)){
+      var ymS = txt.match(/(\d{1,2})\+?\s*years/i);
+      if(ymS && parseInt(ymS[1],10) >= 13 && /technical lead|tech lead|team lead|lead engineer|architect|subject matter expert|\bsme\b/i.test(txt)) return "principal";
+      return "sr";
+    }
+    if(/\bintern(ship)?\b(?!ational)|\bco-?op\b|currently (a |an )?(undergraduate|student)|pursuing (a |my )?(b\.?s\.?|bachelor|undergraduate)/i.test(txt)
+       && !/(senior|sr\.?\s|principal|\bstaff\b|manager|director)/i.test(txt.slice(0,240))) return "intern";
+    var ym = txt.match(/(\d{1,2})\+?\s*years/i);
+    /* Graduation-date evidence: a future graduation year = still enrolled = intern.
+       A graduation within the last year, with no professional years claimed = recent grad. */
+    var gm = txt.match(/graduat\w*[^0-9]{0,24}(20\d{2})|class of (20\d{2})/i);
+    if(gm && (!ym || parseInt(ym[1],10) <= 1)){
+      var gy = parseInt(gm[1] || gm[2], 10), nowY = new Date().getFullYear();
+      if(gy >= nowY) return "intern";
+      if(gy >= nowY - 1) return "junior";
+    }
+    /* Career-level bands: 0-2 entry · 3-7 mid · 8-12 senior · 13+ w/ technical
+       leadership = principal (years alone never make a principal). */
+    if(ym){
+      var y = parseInt(ym[1],10);
+      if(y >= 13 && /principal|\bstaff\b|technical lead|tech lead|team lead|lead engineer|architect|subject matter expert|\bsme\b/i.test(txt)) return "principal";
+      if(y >= 8) return "sr";
+      if(y >= 3) return "mid";
+      return "junior";
+    }
+    if(/\bjunior\b|\bassociate engineer\b|entry.?level|new grad|recent graduate/i.test(txt)) return "junior";
     return "mid";
   }
   function detectLoc(txt){
@@ -2646,30 +2684,48 @@ var BOARD = (function(){
     if(/\bjunior\b|\bassociate engineer\b|entry.level|new grad|recent graduate/i.test(txt)) return true;
     return false;
   }
-  function reqFn(title){
-    var t=title||"";
+  function reqFnOne(t){
     if(/contracts?|counsel|legal/i.test(t)) return "CONTRACTS";
-    if(/cyber|security engineer/i.test(t)) return "CYBER";
+    if(/cyber|security engineer|information security/i.test(t)) return "CYBER";
     if(/reliability/i.test(t)) return "REL";
     if(/quality/i.test(t)) return "QA";
     if(/test engineer|test & evaluation|test and evaluation/i.test(t)) return "TEST";
     if(/configuration/i.test(t)) return "CM";
-    if(/program manager|project manager/i.test(t)) return "PM";
+    if(/schedul|\bplanner\b/i.test(t)) return "SCHED";
+    if(/program manager|project manager|\bpmo\b/i.test(t)) return "PM";
     if(/software|firmware/i.test(t)) return "SW";
-    if(/systems? engineer/i.test(t)) return "SE";
+    if(/chief engineer/i.test(t)) return "SE";
+    if(/systems? engineer|system architect/i.test(t)) return "SE";
     if(/supply chain|procurement|sourcing|commodity|\bbuyer\b/i.test(t)) return "SC";
     if(/manufacturing|\bnpi\b|process engineer|production/i.test(t)) return "MFG";
     if(/electrical|electronic|hardware|\bee\b|dfx|dfm/i.test(t)) return "EE";
     if(/mechanical/i.test(t)) return "MECH";
     return "ANY";
   }
-  function reqLevel(title){
-    var t=title||"";
-    if(/vice president|sr\.? director|senior director|\bdirector\b/i.test(t)) return "director";
+  /* Classify from the title first; if the title is generic, fall back to the
+     role/position text — this is what stops "Chief Engineer", "Intern -
+     Engineering" and "Master Program Scheduler" all collapsing into one
+     unclassified bucket that matches everybody. */
+  function reqFn(req){
+    var byTitle = reqFnOne(String((req && req.title != null) ? req.title : (req || "")));
+    if(byTitle !== "ANY") return byTitle;
+    return req && req.role ? reqFnOne(String(req.role)) : "ANY";
+  }
+  function reqLevelOne(t){
+    if(/\bintern(ship)?\b(?!ational)|\bco-?op\b|entry.?level/i.test(t)) return "intern";
+    if(/vice president|\bvp\b/i.test(t)) return "vp";
+    if(/sr\.? director|senior director|\bdirector\b|\bchief\b/i.test(t)) return "director";
     if(/principal|\bstaff\b/i.test(t)) return "principal";
     if(/\bmanager\b|\bmgr\b/i.test(t)) return "manager";
     if(/\bsr\.?\b|senior|\blead\b/i.test(t)) return "sr";
-    return "mid";
+    return "";
+  }
+  function reqLevel(req){
+    var t = String((req && req.title != null) ? req.title : (req || ""));
+    var byTitle = reqLevelOne(t);
+    if(byTitle) return byTitle;
+    var byRole = (req && req.role) ? reqLevelOne(String(req.role)) : "";
+    return byRole || "mid";
   }
   var SITE_GEO = [
     {key:"Fort Worth TX", site:/\bfwo\b|\bftw\b|fort worth/i, cand:/fort worth|dallas|\bdfw\b|arlington|irving|plano|frisco|grand prairie|north richland|keller|euless|hurst|mansfield|burleson|weatherford|denton|mckinney|garland|mesquite|richardson|carrollton|lewisville|southlake|grapevine|haltom|benbrook|crowley|cleburne|azle/i},
@@ -2707,7 +2763,26 @@ var BOARD = (function(){
   }
   function scoreReq(c, req){
     var reasons=[], s=0;
-    var rfn=reqFn(req.title||""), rlevel=reqLevel(req.title||"");
+    var rfn=reqFn(req), rlevel=reqLevel(req);
+    /* ── HARD COMPATIBILITY FILTERS — checked before any scoring ── */
+    var want = (LEVELORD[rlevel] != null) ? LEVELORD[rlevel] : 2;
+    var have = (LEVELORD[c.level] != null) ? LEVELORD[c.level] : 2;
+    var d = have - want;
+    if(d >= 3){ return {req:req, score:4, verdict:"not", reasons:["hard filter: " + c.level + "-level candidate vs " + rlevel + "-level requisition (severely over-qualified)"]}; }
+    if(d <= -3){ return {req:req, score:4, verdict:"not", reasons:["hard filter: " + c.level + "-level candidate vs " + rlevel + "-level requisition (leadership role vs early-career profile)"]}; }
+    if(rlevel === "intern" && have >= 2){ return {req:req, score:4, verdict:"not", reasons:["hard filter: experienced professional vs intern requisition"]}; }
+    if(want >= 5 && (c.junior || have <= 1)){ return {req:req, score:4, verdict:"not", reasons:["hard filter: director-level requisition vs entry-level profile"]}; }
+    var HARD_X = {
+      SCHED:{SW:1,EE:1,CYBER:1,MECH:1,REL:1,ITOPS:1},
+      SW:{SCHED:1,CONTRACTS:1,SC:1},
+      EE:{SCHED:1,CONTRACTS:1,SC:1},
+      MFG:{CYBER:1,CONTRACTS:1,ITOPS:1},
+      CYBER:{MFG:1,MECH:1,SC:1,SCHED:1},
+      MECH:{SCHED:1,CYBER:1,CONTRACTS:1}
+    };
+    if(rfn !== "ANY" && HARD_X[rfn] && HARD_X[rfn][c.fn] && c.fnset.indexOf(rfn) < 0){
+      return {req:req, score:4, verdict:"not", reasons:["hard filter: " + c.fn + " profile vs " + rfn + " requisition — incompatible disciplines"]};
+    }
     var NONTECH = {CONTRACTS:1, ITOPS:1};
     if(NONTECH[c.fn] && rfn !== c.fn && !(c.fn === "ITOPS" && rfn === "CYBER")){
       return {req:req, score:5, verdict:"not", reasons:[(c.fn === "CONTRACTS" ? "contracts/legal" : "IT-operations") + " profile vs " + (rfn === "ANY" ? "technical" : rfn) + " req"]};
@@ -2721,9 +2796,9 @@ var BOARD = (function(){
     var fnOK = (rfn==="ANY") || (c.fnset.indexOf(rfn)>=0) || adjacentOnly;
     
     if(!fnOK) return {req:req, score:8, verdict:"not", reasons:["discipline mismatch ("+c.fn+" vs "+rfn+")"]};
-    s+=28; reasons.push("discipline match");
+    if(rfn === "ANY"){ s+=14; reasons.push("general requisition — no specialty extracted"); }
+    else { s+=28; reasons.push("discipline match"); }
     var ls=locScore(req.loc, c); s+=ls.s; reasons.push(ls.why);
-    var want=LEVELORD[rlevel]||2, have=LEVELORD[c.level]||2, d=have-want;
     if(d===0){s+=18;reasons.push("seniority on-level");}
     else if(d===1||d===-1){s+=12;reasons.push(d>0?"slightly senior":"slightly junior");}
     else if(d>=2){s+=8;reasons.push("over-leveled");}
@@ -2732,8 +2807,9 @@ var BOARD = (function(){
     SIGNALS.forEach(function(sig){ if(sig.re.test(c.txt)){ s+=sig.w; sigHits.push(sig.label); } });
     if(sigHits.length) reasons.push("signals: "+sigHits.slice(0,5).join(", "));
     if(c.domain==="off"){ s=Math.min(s,33); reasons.push("off-domain cap"); }
-    else if(c.domain==="thin"){ var tc=(LEVELORD[c.level]>=3)?68:55; s=Math.min(s,tc); reasons.push("thin-domain cap"); }
-    if(c.junior){ s=Math.min(s, want>=2?40:50); reasons.push("junior cap"); }
+    else if(c.domain==="thin"){ var tc=(LEVELORD[c.level]>=4)?68:55; s=Math.min(s,tc); reasons.push("thin-domain cap"); }
+    if(c.junior){ s=Math.min(s, want>=3?40:50); reasons.push("junior cap"); }
+    if(rfn === "ANY"){ s=Math.min(s, 58); reasons.push("unclassified-req cap"); }
     if(s<0)s=0; if(s>100)s=100;
     if(adjacentOnly){ if(s > 58) s = 58; reasons.push("adjacent discipline (" + c.fn + " vs " + rfn + ")"); }
     if(rfn === "CONTRACTS" && c.fnset.indexOf("CONTRACTS") >= 0 && s < 45){ s = 45; reasons.push("specialist in-lane floor"); }
@@ -2763,7 +2839,7 @@ var BOARD = (function(){
     return cssVar("--muted");
   }
   function render(host){
-    document.getElementById("viewMeta").textContent = "TalentFit: resumes auto-scored against all open reqs. A candidate appears only with a Moderate or better fit.";
+    document.getElementById("viewMeta").textContent = "TalentFit: candidates are profiled (experience level + discipline), hard-filtered for compatibility, then ranked. A candidate appears only at \u{1F949} Possible Match or better.";
     if(!REQS || !REQS.length){
       var none=el("div","empty"); none.appendChild(el("div","big","No open reqs"));
       none.appendChild(el("div",null,"Add requisitions under Open Reqs and candidates will be scored against them here."));
@@ -2779,7 +2855,7 @@ var BOARD = (function(){
       buckets[b].sort(function(a,b2){ return b2.best.score-a.best.score; });
     });
     var grid=el("div"); grid.style.cssText="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start";
-    var cols=[["strong","Strong"],["moderate","Moderate"],["stretch","Stretch"]];
+    var cols=[["strong","\u{1F947} Excellent Match"],["moderate","\u{1F948} Strong Match"],["stretch","\u{1F949} Possible Match"]];
     cols.forEach(function(pair){
       var key=pair[0], list=buckets[key];
       var col=el("div"); col.style.cssText="background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;min-height:120px";
@@ -2793,7 +2869,7 @@ var BOARD = (function(){
         card.style.cssText="background:var(--bg);border:1px solid var(--line);border-left:3px solid "+vcolor(key)+";border-radius:8px;padding:10px 11px;margin-bottom:9px;cursor:pointer";
         var top=el("div"); top.style.cssText="display:flex;justify-content:space-between;align-items:baseline";
         var nm=el("div",null,fullName(c.ref)); nm.style.cssText="font-weight:700;color:var(--ink);font-size:13px";
-        var sc=el("div",null,String(c.best.score)); sc.style.cssText="font-size:11px;font-weight:700;color:"+vcolor(key);
+        var sc=el("div",null,tier(c.best.verdict).icon); sc.style.cssText="font-size:14px;font-weight:700;color:"+vcolor(key); sc.title=tier(c.best.verdict).label;
         top.appendChild(nm); top.appendChild(sc); card.appendChild(top);
         var role=el("div",null,c.best.req.title+(c.best.req.loc?(" \u00b7 "+c.best.req.loc):"")); role.style.cssText="color:var(--gold);font-size:12px;margin-top:3px";
         card.appendChild(role);
@@ -2814,7 +2890,7 @@ var BOARD = (function(){
       grid.appendChild(col);
     });
     host.appendChild(grid);
-    var foot=el("div",null,off+" candidate"+(off===1?"":"s")+" scored below Stretch and are not shown here. They remain in the database under All Candidates.");
+    var foot=el("div",null,off+" candidate"+(off===1?"":"s")+" rated ⚪ Unlikely Match and not shown here (incompatible or unranked). They remain in the database under All Candidates.");
     foot.style.cssText="margin-top:16px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:12px";
     host.appendChild(foot);
   }
@@ -2833,7 +2909,7 @@ var BOARD = (function(){
     cc.results=results; cc.best=results[0]||{verdict:"not", score:0, req:{title:"(no reqs in scope)", loc:""}};
     return cc;
   }
-  return {render:render, scoreCandidate:scoreCandidate, scoreCandidateAgainst:scoreCandidateAgainst, clearScoreCache:clearScoreCache};
+  return {render:render, scoreCandidate:scoreCandidate, scoreCandidateAgainst:scoreCandidateAgainst, clearScoreCache:clearScoreCache, tier:tier};
 })();
 
 /* ═══ AutoSlate™ v1 (Intelligence Layer) — ranked hiring-manager slates with
@@ -2982,7 +3058,7 @@ function renderAutoSlate(host){
       var needsRelo = function(m){ return (m.reasons || []).some(function(rr){ return /relocation/i.test(rr); }); };
       var sm = x.list.length + " candidate" + (x.list.length === 1 ? "" : "s") + " meet" + (x.list.length === 1 ? "s" : "") + " the requirements. ";
       sm += fullName(top.c) + " is the strongest overall fit (" + top.score + "%) — " + (top.reasons || []).slice(0, 3).join(", ") + ".";
-      if(x.list[1]){ var m2 = x.list[1]; sm += " " + fullName(m2.c) + (needsRelo(m2) ? " is technically qualified but would require relocation" : " is a close second at " + m2.score + "%") + "."; }
+      if(x.list[1]){ var m2 = x.list[1]; sm += " " + fullName(m2.c) + (needsRelo(m2) ? " is technically qualified but would require relocation" : " is a close second (" + BOARD.tier(m2.verdict).label + ")") + "."; }
       if(x.list[2]){ sm += " " + fullName(x.list[2].c) + " is a " + (x.list[2].verdict === "strong" ? "strong alternative" : "lower-confidence match") + "."; }
       var smWrap = document.createElement("details"); smWrap.style.cssText = "margin:5px 0 7px";
       var smSum = document.createElement("summary");
@@ -3018,11 +3094,11 @@ function renderAutoSlate(host){
         nm.appendChild(document.createTextNode(fullName(mch.c)));
         if(mch.c._xorg){ var ob = el("span", null, mch.c._xorg === "hiarc" ? "HiArc" : mch.c._xorg); ob.style.cssText = "margin-left:6px;font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--purple);background:rgba(124,58,237,.09);border-radius:4px;padding:1px 5px;vertical-align:1px"; nm.appendChild(ob); }
         var pctWrap = el("span"); pctWrap.style.cssText = "flex:0 0 70px;display:flex;flex-direction:column;gap:2px";
-        var pct = el("span", null, mch.score + "%"); pct.style.cssText = "font-weight:800;font-size:15.5px;line-height:1;font-variant-numeric:tabular-nums;color:" + (mch.verdict === "strong" ? "var(--green)" : "var(--cyan)");
+        var pct = el("span", null, BOARD.tier(mch.verdict).icon); pct.title = BOARD.tier(mch.verdict).label; pct.style.cssText = "font-weight:800;font-size:15.5px;line-height:1;color:" + (mch.verdict === "strong" ? "var(--green)" : "var(--cyan)");
         var bar = el("span"); bar.style.cssText = "display:block;width:60px;height:4px;border-radius:3px;background:var(--line);overflow:hidden";
         var fill = el("span"); fill.style.cssText = "display:block;height:100%;width:" + mch.score + "%;border-radius:3px;background:" + (mch.verdict === "strong" ? "var(--green)" : "var(--cyan)");
         bar.appendChild(fill); pctWrap.appendChild(pct); pctWrap.appendChild(bar);
-        var vd = el("span", null, mch.verdict === "strong" ? "Strong fit" : "Moderate fit");
+        var vd = el("span", null, BOARD.tier(mch.verdict).icon + " " + BOARD.tier(mch.verdict).label);
         vd.style.cssText = "font-size:10.5px;font-weight:700;border-radius:999px;padding:2px 9px;" + (mch.verdict === "strong" ? "color:var(--green);background:rgba(21,128,61,.1)" : "color:var(--cyan);background:rgba(8,145,178,.1)");
         var why = el("span"); why.style.cssText = "flex:1;display:flex;gap:6px;flex-wrap:wrap;overflow:hidden";
         (mch.reasons || []).slice(0, 4).forEach(function(rr){
@@ -3081,16 +3157,16 @@ function buildSubmissionPackage(hm, sec){
   var lines = ["Hi " + first + ",", "", "Sending you " + sel.length + " ranked candidate" + (sel.length === 1 ? "" : "s") + " for your open position" + (sel.length === 1 ? "" : "s") + " — scored and slated by TalentFit. Highlights below; resumes available on request.", ""];
   sel.forEach(function(m, i){
     lines.push((i + 1) + ". " + fullName(m.c) + " — " + m.req.title + (m.req.jobId ? " (Req " + m.req.jobId + ")" : ""));
-    lines.push("   Fit: " + m.score + "% (" + (m.verdict === "strong" ? "Strong" : "Moderate") + ") · " + (m.reasons || []).slice(0, 3).join(" · "));
+    lines.push("   Fit: " + BOARD.tier(m.verdict).label + " · " + (m.reasons || []).slice(0, 3).join(" · "));
     if(m.c.title || m.c.company){ lines.push("   Currently: " + [m.c.title, m.c.company].filter(Boolean).join(" at ") + (m.c._xorg ? "  [Enterprise Library: " + (m.c._xorg === "hiarc" ? "HiArc" : m.c._xorg) + "]" : "")); }
     if(m.c.summary){ lines.push("   " + String(m.c.summary).split(/(?<=\.)\s/)[0]); }
     lines.push("");
   });
   lines.push("Happy to set up time this week — just tell me who you want to meet.", "", "Best,", (typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email.split("@")[0].replace(/^\w/, function(ch){ return ch.toUpperCase(); }) : "");
   var emailTxt = lines.join("\n");
-  var csv = "Rank,Candidate,Fit %,Verdict,Position,Req,Current Title,Company,Location,Email,Phone,Resume Link\n" + sel.map(function(m, i){
+  var csv = "Rank,Candidate,Fit Tier,Verdict,Position,Req,Current Title,Company,Location,Email,Phone,Resume Link\n" + sel.map(function(m, i){
     function q(v){ v = String(v == null ? "" : v); return '"' + v.replace(/"/g, '""') + '"'; }
-    return [i + 1, q(fullName(m.c)), m.score, m.verdict, q(m.req.title), q(m.req.jobId || ""), q(m.c.title), q(m.c.company), q(m.c.location), q(m.c.email), q(m.c.phone), q(m.c.resumeLink || "")].join(",");
+    return [i + 1, q(fullName(m.c)), q(BOARD.tier(m.verdict).label), m.verdict, q(m.req.title), q(m.req.jobId || ""), q(m.c.title), q(m.c.company), q(m.c.location), q(m.c.email), q(m.c.phone), q(m.c.resumeLink || "")].join(",");
   }).join("\n");
   var mo = document.getElementById("modal"); mo.className = "modal"; mo.innerHTML = "";
   var head = el("div","mhead"); head.appendChild(el("h2", null, "Submission Package — " + hm));
@@ -3117,7 +3193,7 @@ function buildSubmissionPackage(hm, sec){
   tbl.appendChild(thr);
   sel.slice(0, 6).forEach(function(m, i){
     var tr = el("tr");
-    [i + 1, fullName(m.c), m.score + "%", m.req.title, m.req.jobId || "-"].forEach(function(v){ var td = el("td", null, String(v)); td.style.cssText = "padding:4px 8px;border-bottom:1px solid var(--line)"; tr.appendChild(td); });
+    [i + 1, fullName(m.c), BOARD.tier(m.verdict).icon + " " + BOARD.tier(m.verdict).label, m.req.title, m.req.jobId || "-"].forEach(function(v){ var td = el("td", null, String(v)); td.style.cssText = "padding:4px 8px;border-bottom:1px solid var(--line)"; tr.appendChild(td); });
     tbl.appendChild(tr);
   });
   if(sel.length > 6){ var mr = el("div", null, "+ " + (sel.length - 6) + " more in the download"); mr.style.cssText = "font-size:11px;color:var(--muted);padding:5px 8px"; body.appendChild(tbl); body.appendChild(mr); } else { body.appendChild(tbl); }
@@ -5539,8 +5615,8 @@ function buildExecHeader(c){
     if(typeof BOARD !== "undefined" && BOARD.scoreCandidate){
       var bf = BOARD.scoreCandidate(c).best;
       if(bf && bf.verdict && bf.verdict !== "not"){
-        var tfDot = bf.verdict === "strong" ? "\ud83d\udfe2" : (bf.verdict === "moderate" ? "\ud83d\udfe1" : "\u26aa");
-        var tf = el("div", null, tfDot + " TalentFit " + bf.score + "%");
+        var tfT = BOARD.tier(bf.verdict);
+        var tf = el("div", null, tfT.icon + " TalentFit: " + tfT.label);
         tf.style.cssText = "font-size:12px;font-weight:800;color:#111318;margin-top:6px;";
         right.appendChild(tf);
       }
@@ -5603,12 +5679,22 @@ function openDetail(c){
     var upRow = el("div"); upRow.style.display = "flex"; upRow.style.gap = "10px"; upRow.style.alignItems = "center";
     var upBtn = el("button","btn sm","Choose Resume File"); upBtn.setAttribute("data-resumepick","1"); upBtn.type = "button";
     upRow.appendChild(upBtn);
-    var upStat = el("span","sub2"); upStat.id = "resumeUpStat"; upStat.textContent = c.resumeFileName ? ("On file: " + c.resumeFileName) : "No file yet";
+    var upStat = el("span","sub2"); upStat.id = "resumeUpStat"; upStat.textContent = c.resumeFileName ? ("✓ On file: " + c.resumeFileName) : "No file yet";
     upRow.appendChild(upStat);
+    /* PRODUCTION FIX (launch, 2026-07-19): the uploaded resume is an interactive
+       asset, never a mystery — View / Replace / Remove + pipeline status ticks. */
+    var btnRow = el("span"); btnRow.id = "resumeAssetBtns"; btnRow.style.cssText = "display:inline-flex;gap:8px;margin-left:8px;flex-wrap:wrap";
+    upRow.appendChild(btnRow);
     upWrap.appendChild(upRow);
+    var tickRow = el("div","sub2"); tickRow.id = "resumeTicks"; tickRow.style.cssText = "margin-top:6px;font-weight:600";
+    upWrap.appendChild(tickRow);
     var hiddenIn = el("input"); hiddenIn.type = "file"; hiddenIn.id = "resumeFileIn"; hiddenIn.accept = ".pdf,.doc,.docx"; hiddenIn.style.display = "none";
     upWrap.appendChild(hiddenIn);
-    if(c.resumePath){ var dl = el("button","btn sm ghost","Open current resume"); dl.setAttribute("data-resumeopen", c.resumePath); dl.type="button"; dl.style.marginLeft="8px"; upRow.appendChild(dl); }
+    if(c.resumePath){
+      var dl = el("button","btn sm","View Resume"); dl.setAttribute("data-resumeopen", c.resumePath); dl.type = "button"; btnRow.appendChild(dl);
+      var rp0 = el("button","btn sm ghost","Replace Resume"); rp0.setAttribute("data-resumepick","1"); rp0.type = "button"; btnRow.appendChild(rp0);
+      tickRow.textContent = "✓ Resume on file · " + (c.summary ? "✓ Executive Brief on record" : "○ Executive Brief — not yet written") + " · TalentFit: live on this profile";
+    }
     body.appendChild(upWrap);
 
     /* TalentFit - live job-match view from the existing Auto-Fit engine */
@@ -5628,17 +5714,17 @@ function openDetail(c){
           afWrap.appendChild(afEmpty);
         } else {
           var best0 = afTop[0];
-          var vLabel = best0.verdict === "strong" ? "Strong Match" : (best0.verdict === "moderate" ? "Moderate Match" : "Stretch");
+          var vT = BOARD.tier(best0.verdict);
           var afHero = el("div", "tfit-hero");
           var afRing = el("div", "tfit-ring tfit-v-" + best0.verdict);
           afRing.style.background = "conic-gradient(currentColor " + (Math.max(0, Math.min(100, best0.score)) * 3.6) + "deg, var(--tfit-track) 0)";
-          afRing.appendChild(el("span", "tfit-ring-score", String(best0.score)));
+          afRing.appendChild(el("span", "tfit-ring-tier", vT.icon));
           afHero.appendChild(afRing);
           var afHtx = el("div", "tfit-hero-tx");
           afHtx.appendChild(el("div", "tfit-hero-l", "Overall Fit"));
           var afChip = el("span", "tfit-chip tfit-v-" + best0.verdict);
           afChip.appendChild(el("i", "tfit-dot"));
-          afChip.appendChild(document.createTextNode(vLabel));
+          afChip.appendChild(document.createTextNode(vT.label));
           afHtx.appendChild(afChip);
           afHero.appendChild(afHtx);
           afWrap.appendChild(afHero);
@@ -5649,7 +5735,8 @@ function openDetail(c){
             var afLine = el("div", "tfit-line");
             afLine.appendChild(el("span", "tfit-rank", String(i2 + 1)));
             afLine.appendChild(el("span", "tfit-title", q.title || ""));
-            afLine.appendChild(el("span", "tfit-score tfit-v-" + r2.verdict, r2.score + "%"));
+            var rT = BOARD.tier(r2.verdict);
+            afLine.appendChild(el("span", "tfit-score tfit-v-" + r2.verdict, rT.icon + " " + rT.label));
             afRow.appendChild(afLine);
             var afBar = el("div", "tfit-bar");
             var afFill = el("i", "tfit-fill tfit-v-" + r2.verdict);
@@ -5695,7 +5782,8 @@ function openDetail(c){
               var rk = el("span", null, String(i2 + 1)); rk.style.cssText = "font-size:11px;font-weight:800;color:var(--muted);min-width:14px"; row2.appendChild(rk);
               var tt = el("b", null, (q2.jobId ? q2.jobId + " · " : "") + (q2.title || "")); row2.appendChild(tt);
               var lc2 = el("span", null, (q2.loc || "") + (q2._xorg ? " · " + (q2.orgName || "Enterprise") : "")); lc2.style.cssText = "color:var(--muted);font-size:12px"; row2.appendChild(lc2);
-              var sc2 = el("span", null, r2.score + " · " + (r2.verdict === "strong" ? "Strong" : r2.verdict === "moderate" ? "Moderate" : "Stretch"));
+              var pT2 = BOARD.tier(r2.verdict);
+              var sc2 = el("span", null, pT2.icon + " " + pT2.label);
               sc2.style.cssText = "margin-left:auto;font-weight:800;font-size:12px;color:" + (r2.verdict === "strong" ? "var(--gold)" : r2.verdict === "moderate" ? "var(--cyan)" : "#e0a85a");
               row2.appendChild(sc2);
               if(!q2._xorg){
@@ -6382,6 +6470,34 @@ async function handleResumeFile(file){
   m.setAttribute("data-resumepath", path);
   m.setAttribute("data-resumefilename", file.name);
   setUpStat(warn ? ("Stored: " + file.name + " - WARNING: " + warn) : ("Ready: " + file.name + (text ? " (text extracted)" : " (stored; no text found)")));
+  renderResumeAsset(m, path, file.name, !!text, warn);
+}
+/* PRODUCTION FIX (launch, 2026-07-19): after upload, the resume becomes an
+   interactive asset with explicit pipeline status — no silent success, ever. */
+function renderResumeAsset(m, path, fileName, parsed, warn){
+  try{
+    var row = m.querySelector("#resumeAssetBtns"); var ticks = m.querySelector("#resumeTicks");
+    var stat = m.querySelector("#resumeUpStat");
+    if(stat){ stat.textContent = "✓ Uploaded: " + fileName + (warn ? (" — " + warn) : ""); }
+    if(row){
+      row.innerHTML = "";
+      var v = el("button","btn sm","View Resume"); v.type = "button"; v.setAttribute("data-resumeopen", path); row.appendChild(v);
+      var rp = el("button","btn sm ghost","Replace Resume"); rp.type = "button"; rp.setAttribute("data-resumepick","1"); row.appendChild(rp);
+      var rm = el("button","btn sm ghost","Remove"); rm.type = "button";
+      rm.addEventListener("click", function(){
+        m.removeAttribute("data-resumepath"); m.removeAttribute("data-resumefilename");
+        if(stat){ stat.textContent = "No file yet"; }
+        row.innerHTML = ""; if(ticks){ ticks.textContent = ""; }
+        toast("Resume removed from this form — nothing was saved");
+      });
+      row.appendChild(rm);
+    }
+    if(ticks){
+      var briefEl = m.querySelector("[data-field='summary']");
+      var brief = !!(briefEl && briefEl.value);
+      ticks.textContent = "✓ Resume uploaded · " + (parsed ? "✓ Parsed" : "✗ No text — fill fields manually") + " · " + (brief ? "✓ Executive Brief drafted" : (parsed ? "○ Executive Brief" : "○ Executive Brief (needs text)")) + " · TalentFit: computes live once created";
+    }
+  }catch(e){}
 }
 async function openResume(path){
   var res = await sb.storage.from("resumes").createSignedUrl(path, 3600);
