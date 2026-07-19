@@ -502,7 +502,7 @@ input::placeholder, textarea::placeholder{ color:#9aa1b5; }
       <div class="brand-logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><rect width="32" height="32" rx="7" fill="#3B5BFF"/><rect x="7" y="8" width="18" height="4" rx="2" fill="#F8FAFC"/><rect x="14" y="8" width="4" height="16" rx="2" fill="#F8FAFC"/><circle cx="23" cy="10" r="2.5" fill="#8EA2FF"/></svg></div>
       <div class="brand-text">
         <span class="brand-name">TalentBase TES</span>
-        <span class="brand-sub">Recruiting Command Center · Powered by TSS™</span><!-- TalentBase Enterprise v2.0 – Intelligence Layer (branch) -->
+        <span class="brand-sub">Professional Equipment for Professional Recruiters · TSS™</span><!-- TalentBase Enterprise v2.0 – Intelligence Layer (branch) -->
       </div>
       <span class="vobadge" id="voBadge" style="display:none">View Only</span>
      </div>
@@ -1287,7 +1287,7 @@ function renderStartMyDay(host){
     try{
       cands.filter(function(c){ return c.status !== "Archived" && c.status !== "Offer Accepted - Hired"; }).forEach(function(c){
         var sc = BOARD.scoreCandidate(c);
-        if(sc && sc.length && sc[0].verdict === "strong" && (c.status === "New" || c.status === "Contacted" || !c.owner || c.owner === "Unassigned")){ n++; }
+        if(sc && sc.best && sc.best.verdict === "strong" && (c.status === "New" || c.status === "Contacted" || !c.owner || c.owner === "Unassigned")){ n++; }
       });
     }catch(eR){ return -1; }
     return n;
@@ -1301,18 +1301,29 @@ function renderStartMyDay(host){
   hero.appendChild(bg);
   var ov = el("div"); ov.style.cssText = "position:absolute;inset:0;background:linear-gradient(115deg, rgba(7,12,20,.94) 0%, rgba(9,16,27,.86) 42%, rgba(9,16,27,.55) 100%)";
   hero.appendChild(ov);
-  var hc = el("div"); hc.style.cssText = "position:relative;padding:36px 40px 32px;color:#fff";
-  var wsLine = el("div", null, (window.TB_WS && window.TB_WS !== "recruiter") ? ({manager:"Recruiting Manager Workstation",hm:"Hiring Manager Workstation",executive:"Executive Workstation",admin:"Administrator Workstation"})[window.TB_WS] || "Recruiter Workstation" : "Recruiter Workstation");
-  wsLine.style.cssText = "font-size:10.5px;font-weight:800;letter-spacing:2.4px;text-transform:uppercase;color:#9cc4f2;margin-bottom:10px";
+  var hc = el("div"); hc.style.cssText = "position:relative;padding:46px 44px 40px;color:#fff";
+  var brandLine = el("div", null, "The Staffing Specialist Workstation\u2122");
+  brandLine.style.cssText = "font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:6px";
+  hc.appendChild(brandLine);
+  var WS_MOTTO = { recruiter:"Build the future.", manager:"Build recruiting excellence.", hm:"Build your team.", executive:"Build organizational capability.", admin:"Build the recruiting infrastructure." };
+  var wsKey = window.TB_WS || "recruiter";
+  var wsLine = el("div", null, (({manager:"Recruiting Manager Workstation",hm:"Hiring Manager Workstation",executive:"Executive Workstation",admin:"Administrator Workstation"})[wsKey] || "Recruiter Workstation") + "  \u2014  " + (WS_MOTTO[wsKey] || WS_MOTTO.recruiter));
+  wsLine.style.cssText = "font-size:10.5px;font-weight:800;letter-spacing:2.4px;text-transform:uppercase;color:#9cc4f2;margin-bottom:14px";
   hc.appendChild(wsLine);
-  var h1 = el("div", null, tbGreeting()); h1.style.cssText = "font-size:31px;font-weight:800;letter-spacing:-.5px;line-height:1.15";
+  var h1 = el("div", null, tbGreeting()); h1.style.cssText = "font-size:34px;font-weight:800;letter-spacing:-.6px;line-height:1.12";
   hc.appendChild(h1);
-  var sub = el("div", null, new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric" }) + "  ·  " + tbClientDisplayName() + (window.TB_PROGRAM ? "  ·  " + window.TB_PROGRAM : ""));
-  sub.style.cssText = "font-size:13.5px;color:rgba(255,255,255,.72);margin-top:7px;font-weight:500";
+  var sub = el("div", null, new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric" }) + "  \u00b7  " + tbClientDisplayName() + (window.TB_PROGRAM ? "  \u00b7  " + window.TB_PROGRAM : ""));
+  sub.style.cssText = "font-size:13.5px;color:rgba(255,255,255,.72);margin-top:8px;font-weight:500";
   hc.appendChild(sub);
+  /* the mission is the emotional center — it owns this section */
+  var mWrap = el("div"); mWrap.style.cssText = "margin:24px 0 26px;padding:16px 0;border-top:1px solid rgba(255,255,255,.16);border-bottom:1px solid rgba(255,255,255,.16);max-width:640px";
+  var mLabel = el("div", null, "\ud83d\udee1 Today\u2019s Mission");
+  mLabel.style.cssText = "font-size:10px;font-weight:800;letter-spacing:2.6px;text-transform:uppercase;color:#c8a96a;margin-bottom:9px";
+  mWrap.appendChild(mLabel);
   var mission = el("div", null, tbMissionOfTheDay());
-  mission.style.cssText = "font-size:14.5px;line-height:1.6;color:rgba(255,255,255,.88);max-width:600px;margin:18px 0 22px;font-weight:500";
-  hc.appendChild(mission);
+  mission.style.cssText = "font-size:17.5px;line-height:1.55;color:rgba(255,255,255,.95);font-weight:600;letter-spacing:-.1px";
+  mWrap.appendChild(mission);
+  hc.appendChild(mWrap);
   var chips = el("div"); chips.style.cssText = "display:flex;gap:10px;flex-wrap:wrap;align-items:center";
   function heroChip(n, label, view, tip){
     var b = el("button", null); b.type = "button"; b.title = tip;
@@ -1389,10 +1400,58 @@ function renderStartMyDay(host){
   if(!irsToday.length && !fuDue.length && !hmOweN && !offers.length && !starving.length){
     pc.appendChild(el("div","hint","Clear board. Get ahead: refresh TalentFit and work the slates."));
   }
-  wrap.appendChild(pc);
+  /* ── Row A: Today's Priorities | TalentFit Ready (the AI worked before you clicked) ── */
+  function smdGrid(){ var g = el("div"); g.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px"; if(window.innerWidth < 900){ g.style.gridTemplateColumns = "1fr"; } return g; }
+  function smdCard(title, tip){
+    var c = el("div"); c.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px";
+    var h = el("div", null, title); h.style.cssText = "font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--gray);margin-bottom:10px";
+    if(tip){ h.title = tip; }
+    c.appendChild(h); return c;
+  }
+  pc.style.marginBottom = "0";
+  var rowA = smdGrid();
+  rowA.appendChild(pc);
+  var tf = smdCard("TalentFit Ready", "The three strongest open candidates the engine has already matched — the work is done, make the call");
+  function fillTalentFitReady(){
+    try{
+      var scored = [];
+      cands.filter(function(c){ return c.status !== "Archived" && c.status !== "Offer Accepted - Hired" && (c.status === "New" || c.status === "Contacted" || !c.owner || c.owner === "Unassigned"); }).forEach(function(c){
+        var sc = BOARD.scoreCandidate(c);
+        if(sc && sc.best && sc.best.score >= 52){ scored.push({ c: c, s: sc.best }); }
+      });
+      scored.sort(function(a, b){ return b.s.score - a.s.score; });
+      var top = scored.slice(0, 3);
+      var body = tf.querySelector(".tfr-body"); if(body){ body.remove(); }
+      body = el("div"); body.className = "tfr-body"; tf.appendChild(body);
+      if(!top.length){ body.appendChild(el("div","hint","No unworked strong matches right now — the slates are covered.")); return; }
+      top.forEach(function(t){
+        var row = el("div"); row.style.cssText = "display:flex;align-items:center;gap:11px;padding:7px 2px;cursor:pointer;border-radius:8px";
+        row.title = t.s.req ? ("Strongest match: " + (t.s.req.title || "") + " \u2014 open the record") : "Open the record";
+        row.addEventListener("mouseenter", function(){ row.style.background = "var(--panel2)"; });
+        row.addEventListener("mouseleave", function(){ row.style.background = ""; });
+        var pct = el("b", null, t.s.score + "%"); pct.style.cssText = "font-size:14.5px;color:" + (t.s.score >= 72 ? "var(--green)" : "var(--gold)") + ";min-width:44px";
+        var nm = el("span", null, fullName(t.c)); nm.style.cssText = "font-size:14px;font-weight:600;color:var(--ink)";
+        row.appendChild(pct); row.appendChild(nm);
+        row.addEventListener("click", function(){ openDetail(t.c); });
+        body.appendChild(row);
+      });
+      var go = el("button","btn sm ghost","Open TalentFit \u2192"); go.style.marginTop = "8px";
+      go.addEventListener("click", function(){ ui.view = "board"; refresh(); });
+      body.appendChild(go);
+    }catch(eTF){}
+  }
+  if(window.__TB_SCORES_WARM){ fillTalentFitReady(); }
+  else {
+    var ph = el("div"); ph.className = "tfr-body";
+    ph.appendChild(el("div","hint","TalentFit is scoring your desk in the background\u2026"));
+    tf.appendChild(ph);
+    if(typeof tbWarmScores === "function"){ tbWarmScores(function(){ if(ui.view === "guide" && tf.isConnected){ fillTalentFitReady(); } }); }
+  }
+  rowA.appendChild(tf);
+  wrap.appendChild(rowA);
 
-  /* ── Checklist + Weekly Goals, side by side ── */
-  var grid = el("div"); grid.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:16px";
+  /* ── Row B: Checklist + Weekly Goals, side by side ── */
+  var grid = el("div"); grid.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px";
   if(window.innerWidth < 900){ grid.style.gridTemplateColumns = "1fr"; }
 
   /* My Checklist (same storage as before — nothing a recruiter saved is lost) */
@@ -1466,6 +1525,60 @@ function renderStartMyDay(host){
   });
   grid.appendChild(gl);
   wrap.appendChild(grid);
+
+  /* ── Row C: Recruiting Momentum | Recommended to Me (or Quick Actions) ── */
+  var rowC = smdGrid();
+  var mo = smdCard("Recruiting Momentum", "Real activity from the desk — yesterday and this week. Progress you can see.");
+  (function(){
+    var acts = state.activities || [];
+    var yday = new Date(); yday.setDate(yday.getDate() - 1); var ydayISO = yday.toISOString().slice(0,10);
+    var wkStart = new Date(); wkStart.setDate(wkStart.getDate() - wkStart.getDay()); var wkISO = wkStart.toISOString().slice(0,10);
+    function n(f){ return acts.filter(f).length; }
+    var ySub = n(function(a){ return a.date === ydayISO && /Resume Submitted/.test(a.type); });
+    var yInt = (irs || []).filter(function(ir){ return (ir.interviewDate||"").slice(0,10) === ydayISO; }).length;
+    var yTouch = n(function(a){ return a.date === ydayISO; });
+    var wCalls = n(function(a){ return a.date >= wkISO && /Call|Voicemail/.test(a.type); });
+    var wNew = cands.filter(function(c){ return (c.dateReceived||"") >= wkISO; }).length;
+    var wInt = (irs || []).filter(function(ir){ return (ir.interviewDate||"").slice(0,10) >= wkISO; }).length;
+    function line(host2, txt){ var li = el("div", null, txt); li.style.cssText = "font-size:13.5px;padding:3px 0;color:var(--ink)"; host2.appendChild(li); }
+    var cols = el("div"); cols.style.cssText = "display:flex;gap:28px;flex-wrap:wrap";
+    var c1 = el("div"); c1.appendChild(el("div","hint","Yesterday"));
+    line(c1, "\u2713 " + yTouch + " touchpoints logged"); line(c1, "\u2713 " + ySub + " submissions"); line(c1, "\u2713 " + yInt + " interviews");
+    var c2 = el("div"); c2.appendChild(el("div","hint","This Week"));
+    line(c2, wCalls + " calls made"); line(c2, wNew + " new candidates in"); line(c2, wInt + " interviews scheduled");
+    cols.appendChild(c1); cols.appendChild(c2); mo.appendChild(cols);
+  })();
+  rowC.appendChild(mo);
+  var recsHome = (typeof tbRecsForMe === "function") ? tbRecsForMe() : [];
+  if(recsHome.length){
+    var rc2 = smdCard("Recommended to Me", "Teammates put these candidates in your queue — accept to claim, decline to pass");
+    recsHome.slice(0, 3).forEach(function(it){
+      var row = el("div"); row.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 2px;border-bottom:1px solid var(--line)";
+      var l = el("div");
+      var nm2 = el("div", null, fullName(it.c)); nm2.style.cssText = "font-size:13.5px;font-weight:700;cursor:pointer"; nm2.addEventListener("click", function(){ openDetail(it.c); });
+      l.appendChild(nm2); l.appendChild(el("div","hint", it.rec.req));
+      var btns = el("div"); btns.style.cssText = "display:flex;gap:6px";
+      var a2 = el("button","btn gold sm","Accept"); a2.addEventListener("click", function(){ tbRecRespond(it, true); });
+      var d2 = el("button","btn ghost sm","Decline"); d2.addEventListener("click", function(){ tbRecRespond(it, false); });
+      btns.appendChild(a2); btns.appendChild(d2);
+      row.appendChild(l); row.appendChild(btns); rc2.appendChild(row);
+    });
+    if(recsHome.length > 3){ var more = el("button","btn sm ghost","All " + recsHome.length + " recommendations \u2192"); more.style.marginTop = "8px"; more.addEventListener("click", function(){ ui.view = "tb_recs"; refresh(); }); rc2.appendChild(more); }
+    rowC.appendChild(rc2);
+  } else {
+    var qa2 = smdCard("Quick Actions", "The four most common moves, one click away");
+    var qwrap = el("div"); qwrap.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:9px";
+    [["+ New Candidate", function(){ openDetail(null); }],
+     ["Add From Resume", function(){ var b = document.getElementById("fromResumeBtn"); if(b){ b.click(); } }],
+     ["Schedule Interview", function(){ ui.view = "interviewrequests"; refresh(); }],
+     ["Search Candidates", function(){ var q = document.getElementById("q"); if(q){ q.focus(); } }]].forEach(function(qb){
+      var b2 = el("button","btn", qb[0]); b2.style.cssText = "padding:13px 10px;font-size:13px";
+      b2.addEventListener("click", qb[1]); qwrap.appendChild(b2);
+    });
+    qa2.appendChild(qwrap);
+    rowC.appendChild(qa2);
+  }
+  wrap.appendChild(rowC);
   host.appendChild(wrap);
 }
 
