@@ -3995,63 +3995,71 @@ async function renderTBAnalytics(host){
   kpiRow.appendChild(kpi("Acceptance Rate",      acceptRate + "%","--gold"));
   wrap.appendChild(kpiRow);
 
-  /* ── By Recruiter scorecard ── */
+  /* ── By Recruiter scorecard — B7: attribution comes from the EXPLICIT ownership
+     model (candidate owner, inherited from the requisition's TSS Recruiter via B6).
+     reviewer_email is audit history only and is never used for attribution. ── */
   var recHdr = el("div",null,"By Recruiter");
   recHdr.style.cssText = "font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray);margin-bottom:8px";
   wrap.appendChild(recHdr);
 
-  /* Group by reviewer_email — use reviewer as proxy for recruiter for now */
-  /* Also group submitted candidates by the recruiter who submitted them   */
-  /* We approximate: tb_reviews first action per candidate = submission    */
-  var firstByCand = {};
-  rows.forEach(function(r){
-    if(!firstByCand[r.candidate_id]){
-      firstByCand[r.candidate_id] = r; /* earliest = submission */
-    }
-  });
+  var candById = {};
+  (state.candidates || []).forEach(function(c){ candById[c.id] = c; });
+  function tbrExplicitOwner(candId){
+    var c = candById[candId];
+    if(c && c.owner && c.owner !== "Unassigned"){ return c.owner; }
+    return null; /* no explicit ownership — never fall back to who clicked */
+  }
 
-  /* Build per-reviewer stats */
-  var reviewerMap = {};
+  var ownerMap = {}; var unattributed = 0;
   Object.keys(latestByCand).forEach(function(candId){
     var latest = latestByCand[candId];
-    var first  = firstByCand[candId];
-    var who = first ? first.reviewer_email : latest.reviewer_email;
-    if(!reviewerMap[who]){ reviewerMap[who] = { submitted:0, accepted:0, rejected:0, nmi:0, ir:0 }; }
-    reviewerMap[who].submitted++;
-    if(latest.new_status === "Accepted")                  reviewerMap[who].accepted++;
-    else if(latest.new_status === "Rejected")             reviewerMap[who].rejected++;
-    else if(latest.new_status === "Needs More Information") reviewerMap[who].nmi++;
-    else if(latest.new_status === "Interview Requested")  reviewerMap[who].ir++;
+    var who = tbrExplicitOwner(candId);
+    if(!who){ unattributed++; return; }
+    if(!ownerMap[who]){ ownerMap[who] = { submitted:0, accepted:0, rejected:0, nmi:0, ir:0 }; }
+    ownerMap[who].submitted++;
+    if(latest.new_status === "Accepted")                  ownerMap[who].accepted++;
+    else if(latest.new_status === "Rejected")             ownerMap[who].rejected++;
+    else if(latest.new_status === "Needs More Information") ownerMap[who].nmi++;
+    else if(latest.new_status === "Interview Requested")  ownerMap[who].ir++;
   });
 
-  var recTable = el("div");
-  recTable.style.cssText = "display:flex;flex-direction:column;gap:5px;margin-bottom:16px";
-
-  /* Header row */
-  var recHead = el("div");
-  recHead.style.cssText = "display:grid;grid-template-columns:1fr 60px 60px 60px 60px 70px;gap:0 8px;padding:5px 10px;font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.06em";
-  ["Reviewer","Submitted","Accepted","Rejected","NMI","Accept %"].forEach(function(h){
-    recHead.appendChild(el("div",null,h));
-  });
-  recTable.appendChild(recHead);
-
-  Object.keys(reviewerMap).sort().forEach(function(email){
-    var s = reviewerMap[email];
-    var rate = s.submitted ? Math.round((s.accepted/s.submitted)*100) : 0;
-    var shortEmail = email.split("@")[0];
-    var row = el("div");
-    row.style.cssText = "display:grid;grid-template-columns:1fr 60px 60px 60px 60px 70px;gap:0 8px;padding:7px 10px;background:var(--bg);border:1px solid var(--line);border-radius:7px;font-size:12px;align-items:center";
-    var nameEl = el("div",null,shortEmail); nameEl.style.cssText = "font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"; nameEl.title = email;
-    var subEl  = el("div",null,String(s.submitted));  subEl.style.cssText  = "color:var(--blue);font-weight:700;text-align:center";
-    var accEl  = el("div",null,String(s.accepted));   accEl.style.cssText  = "color:var(--green);font-weight:700;text-align:center";
-    var rejEl  = el("div",null,String(s.rejected));   rejEl.style.cssText  = "color:var(--red);font-weight:700;text-align:center";
-    var nmiEl  = el("div",null,String(s.nmi));        nmiEl.style.cssText  = "color:var(--orange);font-weight:700;text-align:center";
-    var rateEl = el("div",null,rate + "%");
-    rateEl.style.cssText = "font-weight:700;text-align:center;color:" + (rate >= 70 ? "var(--green)" : rate >= 40 ? "var(--gold)" : "var(--red)");
-    [nameEl,subEl,accEl,rejEl,nmiEl,rateEl].forEach(function(e){ row.appendChild(e); });
-    recTable.appendChild(row);
-  });
-  wrap.appendChild(recTable);
+  if(!Object.keys(ownerMap).length){
+    /* Safe fallback: no reviewed candidate has explicit ownership yet.
+       Incorrect reporting is worse than unavailable reporting. */
+    var na = el("div",null,"Available after ownership assignment.");
+    na.style.cssText = "font-size:12.5px;color:var(--muted);font-style:italic;padding:8px 10px;background:var(--bg);border:1px dashed var(--line);border-radius:8px;margin-bottom:16px";
+    na.title = "Per-recruiter numbers appear once reviewed candidates carry explicit ownership — assign owners in Platform Status → Ownership Console, then Recalculate Inheritance.";
+    wrap.appendChild(na);
+  } else {
+    var recTable = el("div");
+    recTable.style.cssText = "display:flex;flex-direction:column;gap:5px;margin-bottom:16px";
+    var recHead = el("div");
+    recHead.style.cssText = "display:grid;grid-template-columns:1fr 60px 60px 60px 60px 70px;gap:0 8px;padding:5px 10px;font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.06em";
+    ["Recruiter (owner)","Submitted","Accepted","Rejected","NMI","Accept %"].forEach(function(h){
+      recHead.appendChild(el("div",null,h));
+    });
+    recTable.appendChild(recHead);
+    Object.keys(ownerMap).sort().forEach(function(ownerName){
+      var s = ownerMap[ownerName];
+      var rate = s.submitted ? Math.round((s.accepted/s.submitted)*100) : 0;
+      var row = el("div");
+      row.style.cssText = "display:grid;grid-template-columns:1fr 60px 60px 60px 60px 70px;gap:0 8px;padding:7px 10px;background:var(--bg);border:1px solid var(--line);border-radius:7px;font-size:12px;align-items:center";
+      var nameEl = el("div",null,ownerName); nameEl.style.cssText = "font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"; nameEl.title = ownerName + " — the candidate's explicit recruiter owner (inherited from the requisition)";
+      var subEl  = el("div",null,String(s.submitted));  subEl.style.cssText  = "color:var(--blue);font-weight:700;text-align:center";
+      var accEl  = el("div",null,String(s.accepted));   accEl.style.cssText  = "color:var(--green);font-weight:700;text-align:center";
+      var rejEl  = el("div",null,String(s.rejected));   rejEl.style.cssText  = "color:var(--red);font-weight:700;text-align:center";
+      var nmiEl  = el("div",null,String(s.nmi));        nmiEl.style.cssText  = "color:var(--orange);font-weight:700;text-align:center";
+      var rateEl = el("div",null,rate + "%");
+      rateEl.style.cssText = "font-weight:700;text-align:center;color:" + (rate >= 70 ? "var(--green)" : rate >= 40 ? "var(--gold)" : "var(--red)");
+      [nameEl,subEl,accEl,rejEl,nmiEl,rateEl].forEach(function(e){ row.appendChild(e); });
+      recTable.appendChild(row);
+    });
+    if(unattributed){
+      var un = el("div","hint", unattributed + " reviewed candidate" + (unattributed === 1 ? "" : "s") + " without explicit ownership " + (unattributed === 1 ? "is" : "are") + " not attributed — assign owners in the Ownership Console.");
+      un.style.marginTop = "2px"; recTable.appendChild(un);
+    }
+    wrap.appendChild(recTable);
+  }
 
   /* ── By Requisition breakdown ── */
   var reqHdrEl = el("div",null,"By Requisition");
