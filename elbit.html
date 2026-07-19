@@ -917,6 +917,7 @@ var VIEWS = [
   { id:"tb_notes", collapsible:true, name:"Notes", fn:function(){ return true; }, special:"tb_notes", section:"My Work" },
   { id:"tb_brief", collapsible:true, name:"Staffing Brief", fn:function(){ return true; }, special:"tb_brief", section:"My Work" },
   /* v3.0 WORKSTATION VIEWS — shown only to their assigned workstation (TB_WS_FILTER) */
+  { id:"tb_hmfb", hidden:true, name:"Hiring Manager Decisions", fn:function(){ return true; }, special:"tb_hmfb" },
   { id:"tb_recs", hidden:true, name:"Recommended to Me", fn:function(){ return true; }, special:"tb_recs" },
   { id:"tb_checklist", hidden:true, name:"My Daily Checklist", fn:function(){ return true; }, special:"tb_checklist" },
   { id:"tb_goals", hidden:true, name:"Weekly Goals", fn:function(){ return true; }, special:"tb_goals" },
@@ -1139,6 +1140,7 @@ function renderList(){
      views never fall through to the raw candidate list. */
   if(v.id === "tb_people_hm"){ renderManagers(host); return; }
   if(v.id === "tb_people_rec"){ renderRecruiterBoard(host); return; }
+  if(v.special === "tb_hmfb"){ renderHMFbQueue(host); return; }
   if(v.special === "tb_recs"){ renderRecQueue(host); return; }
   if(v.special === "tb_checklist"){ renderChecklist(host); return; }
   if(v.special === "tb_goals"){ renderWeeklyGoals(host); return; }
@@ -1426,6 +1428,9 @@ function renderStartMyDay(host){
     "Candidates at Offer Pending. Opens the Offers list.");
   prio("--blue", starving.length, "requisition" + (starving.length === 1 ? "" : "s") + " need" + (starving.length === 1 ? "s" : "") + " candidates", "autoslate", false,
     "Open requisitions with zero active candidates tagged. Opens AutoSlate to work the slates.");
+  var hmfbN = 0; try{ hmfbN = (typeof tbHMFbForMe === "function") ? tbHMFbForMe().length : 0; }catch(eFb){}
+  prio("--red", hmfbN, "hiring-manager decision" + (hmfbN === 1 ? "" : "s") + " to action", "tb_hmfb", false,
+    "Hiring managers requested interviews or passed on candidates \u2014 act on each one so nothing stalls.");
   var recsN = 0; try{ recsN = (typeof tbRecsForMe === "function") ? tbRecsForMe().length : 0; }catch(eRc){}
   prio("--purple", recsN, "candidate" + (recsN === 1 ? "" : "s") + " recommended to you", "tb_recs", false,
     "Teammates recommended these candidates for your requisitions. Accept to add them to your desk, or decline — they see your call either way.");
@@ -9708,6 +9713,11 @@ body.tb-overlay-open{ overflow:hidden; }
     tbAuditLog("[Admin Access] edit mode ENABLED while acting as " + window.TB_IMPERSONATE.name);
     tbApplyWorkstation(true);
   };
+  window.tbImpersonateSwitch = function(target){
+    var prev = window.TB_IMPERSONATE;
+    if(prev){ tbAuditLog("[Admin Access] ended session as " + prev.name + (prev.edit ? " (edit mode was used)" : " (view-only)")); }
+    tbImpersonate(target);
+  };
   window.tbImpersonateEnd = function(){
     var imp = window.TB_IMPERSONATE; window.TB_IMPERSONATE = null;
     if(imp){ tbAuditLog("[Admin Access] ended session as " + imp.name + (imp.edit ? " (edit mode was used)" : " (view-only)")); }
@@ -9804,6 +9814,19 @@ body.tb-overlay-open{ overflow:hidden; }
       if(!c || c._xorg){ return; }
       var mh = document.querySelector("#modal .mhead h2"); if(!mh){ return; }
       var ws = window.TB_WS || "recruiter";
+      if(ws === "hm" && c.id){
+        var footH = document.querySelector("#modal .mfoot .right");
+        if(footH && !footH.querySelector("[data-hmfb]")){
+          var ri = el("button","btn gold","Request Interview"); ri.type = "button"; ri.setAttribute("data-hmfb","1");
+          ri.title = "Sends an interview request for this candidate straight to your recruiter";
+          ri.addEventListener("click", function(){ tbHMDecision(c, "Interview"); });
+          var ps = el("button","btn ghost","Pass"); ps.type = "button"; ps.setAttribute("data-hmfb","1");
+          ps.title = "Sends a pass decision (with your reason) straight to your recruiter";
+          ps.addEventListener("click", function(){ tbHMDecision(c, "Reject"); });
+          footH.insertBefore(ps, footH.firstChild); footH.insertBefore(ri, footH.firstChild);
+        }
+        return;
+      }
       if(lockedToOther){
         var ob = el("span", null, "Owned by " + c.owner + (LOCKED_STATUSES[c.status] ? " · in process" : ""));
         ob.style.cssText = "margin-left:10px;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--orange);background:rgba(234,88,12,.09);border-radius:5px;padding:2px 8px;vertical-align:3px";
@@ -10066,6 +10089,90 @@ body.tb-overlay-open{ overflow:hidden; }
   }
   setInterval(function(){ if(typeof state !== "undefined" && state.candidates && state.candidates.length && !window.__TB_SCORES_WARM && !_warmRunning){ tbWarmScores(); } }, 5000);
 
+  /* ---------- 3d. HIRING MANAGER FEEDBACK LOOP ----------
+     The HM's two sanctioned actions — Request Interview / Pass — write a
+     decision to the candidate record and land in the owning recruiter's
+     queue. Open → Handled trail, nothing travels by email, nothing is lost. */
+  function tbHMFbParse(a){
+    var m = /^\[HM Feedback\] from:(.+?) req:(.+?) decision:(\w+) status:(\w+)(?: by:(.+?))?(?: — ([\s\S]*))?$/.exec((a.notes || "").trim());
+    return m ? { from: m[1], req: m[2], decision: m[3], status: m[4], by: m[5] || "", reason: m[6] || "", date: a.date || "", candidateId: a.candidateId } : null;
+  }
+  function tbHMFbOpenFor(candidateId){
+    var fbs = (state.activities || []).filter(function(a){ return a.candidateId === candidateId; }).map(tbHMFbParse).filter(Boolean);
+    var open = fbs.filter(function(f){ return f.status === "Open" && !fbs.some(function(g){ return g.status === "Handled" && g.from === f.from && g.req === f.req && g.decision === f.decision; }); });
+    return open.length ? open[0] : null;
+  }
+  window.tbHMDecision = async function(c, kind){
+    var me = hmName(); if(!me){ toast("Your login isn\u2019t linked to a hiring-manager record."); return; }
+    var myTags = {}; REQS.filter(function(r){ return (r.hm || "") === me; }).forEach(function(r){ myTags[r.title + " – " + r.loc] = 1; });
+    var tag = (c.reqs || []).filter(function(t){ return myTags[t]; })[0] || (c.reqs || [])[0] || "General";
+    var why = window.prompt(kind === "Interview" ? ("Request an interview with " + fullName(c) + " \u2014 anything for the recruiter? (optional)") : ("Pass on " + fullName(c) + " \u2014 reason for the recruiter? (optional)"), "");
+    if(why === null){ return; }
+    var res = await sb.from("activities").insert({ org: ORG, candidate_id: c.id, type: "Note", date: todayISO(),
+      notes: "[HM Feedback] from:" + me + " req:" + tag + " decision:" + (kind === "Interview" ? "InterviewRequested" : "Rejected") + " status:Open" + (why ? " — " + why : ""), owner: me });
+    if(res.error){ toast("Could not send: " + res.error.message.slice(0, 60)); return; }
+    await loadData(); closeModal();
+    toast(kind === "Interview" ? ("Interview request sent \u2014 " + (c.owner && c.owner !== "Unassigned" ? c.owner : "the recruiting team") + " will schedule it.") : ("Feedback sent \u2014 " + (c.owner && c.owner !== "Unassigned" ? c.owner : "the recruiting team") + " has your decision."));
+    refresh();
+  };
+  window.tbHMFbForMe = function(){
+    var me = meOwnerName().toLowerCase();
+    var out = [];
+    (state.candidates || []).forEach(function(c){
+      var f = tbHMFbOpenFor(c.id);
+      if(f && (((c.owner || "").toLowerCase() === me) || !c.owner || c.owner === "Unassigned")){ out.push({ c: c, fb: f }); }
+    });
+    return out;
+  };
+  window.tbHMFbHandle = async function(item, apply){
+    var f = item.fb, c = item.c;
+    var res = await sb.from("activities").insert({ org: ORG, candidate_id: c.id, type: "Note", date: todayISO(),
+      notes: "[HM Feedback] from:" + f.from + " req:" + f.req + " decision:" + f.decision + " status:Handled by:" + meOwnerName(), owner: meOwnerName() });
+    if(res.error){ toast("Could not update: " + res.error.message.slice(0, 60)); return; }
+    if(apply && f.decision === "Rejected"){ await sb.from("candidates").update({ status: "HM Rejected" }).eq("id", c.id); }
+    await loadData();
+    if(apply && f.decision === "InterviewRequested"){ toast("Handled \u2014 now schedule it in Interview Requests."); ui.view = "interviewrequests"; refresh(); return; }
+    toast(apply ? (fullName(c) + " marked HM Rejected \u2014 " + f.from + "\u2019s call is on the record.") : "Marked handled.");
+    refresh();
+  };
+  window.renderHMFbQueue = function(host){
+    var items = tbHMFbForMe();
+    document.getElementById("viewTitle").textContent = "Hiring Manager Decisions";
+    document.getElementById("viewMeta").textContent = items.length + " decision" + (items.length === 1 ? "" : "s") + " waiting on you \u00b7 every one is on the candidate\u2019s record";
+    if(!items.length){
+      var em = el("div","empty"); em.appendChild(el("div","big","No decisions waiting"));
+      em.appendChild(el("div", null, "When a hiring manager requests an interview or passes on a candidate, it lands here instantly."));
+      host.appendChild(em); return;
+    }
+    items.forEach(function(it){
+      var isInt = it.fb.decision === "InterviewRequested";
+      var card = el("div"); card.style.cssText = "background:var(--panel);border:1px solid var(--line);border-left:3px solid " + (isInt ? "var(--green)" : "var(--red)") + ";border-radius:14px;padding:16px 18px;margin-bottom:12px;max-width:860px";
+      var top = el("div"); top.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap";
+      var left = el("div");
+      var nm = el("div", null, (isInt ? "\ud83d\udfe2 " : "\ud83d\udd34 ") + it.fb.from + (isInt ? " wants to interview " : " passed on ") + fullName(it.c));
+      nm.style.cssText = "font-weight:700;font-size:14.5px;cursor:pointer"; nm.title = "Open the candidate record";
+      nm.addEventListener("click", function(){ openDetail(it.c); });
+      left.appendChild(nm);
+      left.appendChild(el("div","hint", it.fb.req + (it.fb.date ? " \u00b7 " + it.fb.date : "")));
+      if(it.fb.reason){ var why = el("div", null, "\u201c" + it.fb.reason + "\u201d"); why.style.cssText = "font-size:13px;margin-top:6px;font-style:italic"; left.appendChild(why); }
+      top.appendChild(left);
+      var act = el("div"); act.style.cssText = "display:flex;gap:8px";
+      if(isInt){
+        var sch = el("button","btn gold sm","Schedule Interview"); sch.title = "Opens Interview Requests and marks this handled";
+        sch.addEventListener("click", function(){ tbHMFbHandle(it, true); });
+        act.appendChild(sch);
+      } else {
+        var ap = el("button","btn sm danger","Apply HM Reject"); ap.title = "Sets the candidate\u2019s status to HM Rejected";
+        ap.addEventListener("click", function(){ tbHMFbHandle(it, true); });
+        act.appendChild(ap);
+      }
+      var dm = el("button","btn ghost sm","Mark Handled"); dm.title = "Acknowledge without changing the candidate";
+      dm.addEventListener("click", function(){ tbHMFbHandle(it, false); });
+      act.appendChild(dm);
+      top.appendChild(act); card.appendChild(top); host.appendChild(card);
+    });
+  };
+
   /* ---------- 4. WORKSTATION RENDERERS ---------- */
   function wsCard(css){ var c = el("div"); c.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;" + (css || ""); return c; }
   function wsHead(txt){ var h = el("div", null, txt); h.style.cssText = "font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--gray);margin-bottom:10px"; return h; }
@@ -10151,12 +10258,33 @@ body.tb-overlay-open{ overflow:hidden; }
       document.getElementById("viewTitle").textContent = "My Open Positions";
       if(!open.length){ wrap.appendChild(el("div","hint","No open positions right now.")); }
       open.forEach(function(r){
-        var c2 = wsCard("margin-bottom:10px");
-        var t2 = el("div", null, (r.jobId ? r.jobId + " · " : "") + r.title + " – " + r.loc); t2.style.cssText = "font-weight:700;font-size:14.5px";
-        c2.appendChild(t2);
+        var c2 = wsCard("margin-bottom:10px"); c2.style.cursor = "pointer";
         var tag = r.title + " – " + r.loc;
-        var n = (state.candidates || []).filter(function(c){ return (c.reqs||[]).indexOf(tag) !== -1 && c.status !== "Archived"; }).length;
-        c2.appendChild(el("div","hint", n + " candidate" + (n === 1 ? "" : "s") + " in play"));
+        var inPlay = (state.candidates || []).filter(function(c){ return (c.reqs||[]).indexOf(tag) !== -1 && c.status !== "Archived"; });
+        var head = el("div"); head.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:12px";
+        var hl2 = el("div");
+        var t2 = el("div", null, (r.jobId ? r.jobId + " · " : "") + r.title + " – " + r.loc); t2.style.cssText = "font-weight:700;font-size:14.5px";
+        hl2.appendChild(t2);
+        hl2.appendChild(el("div","hint", inPlay.length + " candidate" + (inPlay.length === 1 ? "" : "s") + " in play" + (inPlay.length ? " · click to view them" : "")));
+        head.appendChild(hl2);
+        var chev = el("span", null, "\u25be"); chev.style.cssText = "color:var(--muted);font-size:15px;transition:transform .15s";
+        head.appendChild(chev);
+        c2.appendChild(head);
+        c2.title = inPlay.length ? "See exactly who is in play for this position" : "Your recruiter is sourcing for this position";
+        var holder = el("div"); holder.style.cssText = "display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:10px";
+        c2.appendChild(holder);
+        c2.addEventListener("click", function(ev){
+          if(ev.target.closest("tr") || ev.target.closest("#tbImpBanner")){ return; } /* row clicks open the profile */
+          var opening = holder.style.display === "none";
+          holder.style.display = opening ? "" : "none";
+          chev.style.transform = opening ? "rotate(180deg)" : "";
+          if(opening && !holder.childElementCount){
+            if(!inPlay.length){ holder.appendChild(el("div","hint","No candidates in play yet — your recruiter is sourcing. New submittals land in Candidates Awaiting Review.")); return; }
+            var table = el("table","cardtable"); var tb2 = el("tbody");
+            pipelineSort(inPlay).forEach(function(c){ tb2.appendChild(rowFor(c)); });
+            table.appendChild(tb2); holder.appendChild(table);
+          }
+        });
         wrap.appendChild(c2);
       });
     } else if(v === "tb_hm_interviews"){
@@ -10166,7 +10294,7 @@ body.tb-overlay-open{ overflow:hidden; }
       up.forEach(function(ir){ var li = el("div", null, "· " + (ir.interviewDate || "") + " — " + (ir.candidateName || "") + " (" + (ir.role || "") + ")"); li.style.cssText = "font-size:13.5px;padding:5px 0"; wrap.appendChild(li); });
     } else if(v === "tb_hm_feedback"){
       document.getElementById("viewTitle").textContent = "Pending Feedback";
-      wrap.appendChild(el("div","hint","Submitted candidates waiting on your decision — your recruiter is holding these for you."));
+      wrap.appendChild(el("div","hint","Submitted candidates waiting on your decision. Open any candidate to Request Interview or Pass — your recruiter gets it instantly."));
       candTable(mineCands().filter(function(c){ return c.status === "Submitted"; }), "Nothing outstanding — you're caught up.");
     } else if(v === "tb_hm_offers"){
       document.getElementById("viewTitle").textContent = "Offers";
@@ -10336,6 +10464,25 @@ body.tb-overlay-open{ overflow:hidden; }
         var lab = el("span", null, "\ud83d\udfe7 ADMIN MODE \u2014 viewing TalentBase as " + imp.name + " \u00b7 " + (WS_LABEL[imp.ws] || imp.ws) + " \u00b7 started " + imp.started + (imp.edit ? " \u00b7 EDIT MODE ON (all actions logged)" : " \u00b7 view-only"));
         iban.appendChild(lab);
         var sp = el("span"); sp.style.flex = "1"; iban.appendChild(sp);
+        /* one-click switch to any other user — no round-trip through the admin panel */
+        var swSel = document.createElement("select");
+        swSel.style.cssText = "background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:7px;padding:4px 8px;font:inherit;font-size:12px;font-weight:700;cursor:pointer";
+        var ph = document.createElement("option"); ph.value = ""; ph.textContent = "Switch user\u2026"; ph.style.color = "#333"; swSel.appendChild(ph);
+        function swGroup(label, items){
+          var og = document.createElement("optgroup"); og.label = label; og.style.color = "#333";
+          items.forEach(function(it){ var op = document.createElement("option"); op.value = it.ws + "|" + it.name; op.textContent = it.name; op.style.color = "#333"; og.appendChild(op); });
+          swSel.appendChild(og);
+        }
+        swGroup("Recruiters", (typeof OWNERS !== "undefined" ? OWNERS : []).filter(function(o){ return o && o !== "Unassigned" && o !== imp.name; }).map(function(o){ return { name: o, ws: "recruiter" }; }));
+        swGroup("Hiring Managers", ((state.managers && state.managers.length ? state.managers : (typeof MANAGERS !== "undefined" ? MANAGERS : [])) || []).filter(function(m2){ return m2.name !== imp.name; }).map(function(m2){ return { name: m2.name, ws: "hm" }; }));
+        swGroup("Roles", [{ name: "Recruiting Manager", ws: "manager" }, { name: "Executive", ws: "executive" }].filter(function(r2){ return r2.name !== imp.name; }));
+        swSel.addEventListener("change", function(){
+          if(!swSel.value){ return; }
+          var parts = swSel.value.split("|");
+          if(parts[0] === "hm"){ window.TB_HM_PREVIEW = parts[1]; }
+          tbImpersonateSwitch({ name: parts[1], ws: parts[0] });
+        });
+        iban.appendChild(swSel);
         if(!imp.edit){
           var eb = el("button", null, "Enable Edit Mode"); eb.type = "button";
           eb.style.cssText = "background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:7px;padding:5px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer";
