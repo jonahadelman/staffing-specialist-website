@@ -4441,6 +4441,41 @@ async function tbrWriteReview(candidateId, candidateName, action, prevStatus, ne
   var cIdx = state.candidates.findIndex(function(x){ return x.id === candidateId; });
   if(cIdx !== -1){ state.candidates[cIdx].tbStatus = newStatus; }
 
+  /* ── B2: "Request Interview" creates a REAL Interview Request via the existing
+     certified IR pipeline — the button now does exactly what its label promises.
+     Same row shape as saveInterviewRequest; status "Requested" enters the normal
+     scheduling workflow (Interview Requests view, calendar once dated, dashboards). ── */
+  if(action === 'Interview Requested'){
+    var cRef = (cIdx !== -1) ? state.candidates[cIdx] : null;
+    var reqRef = reqId ? (state.reqs || REQS || []).filter(function(x){ return x.id === reqId; })[0] : null;
+    var already = (state.interviewRequests || []).some(function(q){
+      return q.candidateId === candidateId && q.status === 'Requested';
+    });
+    if(already){
+      toast('Interview Request already open for ' + candidateName + ' — see Interview Requests.');
+    } else {
+      var irRow = {
+        org: ORG,
+        candidate_name: candidateName,
+        candidate_id: candidateId,
+        hiring_manager: (reqRef && reqRef.hm) || '',
+        role: reqRef ? ((reqRef.title || '') + ' – ' + (reqRef.loc || '')) : (((cRef && cRef.reqs) || [])[0] || ''),
+        req_id: reqId || null,
+        format: '', panel_members: '', length_minutes: null,
+        presentation_required: false, presentation_notes: '',
+        notes: '[TalentBench] Interview requested via review' + (comments ? ' — ' + comments : ''),
+        interview_date: null, time_zone: 'Eastern (ET)', status: 'Requested'
+      };
+      var irRes = await sb.from('interview_requests').insert(irRow);
+      if(irRes.error){
+        toast('Review saved, but the Interview Request could not be created: ' + (irRes.error.message || 'unknown error') + ' — create it from Interview Requests.');
+      } else {
+        toast('Interview Request created for ' + candidateName + ' — track and schedule it in Interview Requests.');
+        try{ await loadData(); }catch(eIR2){}
+      }
+    }
+  }
+
   return true;
 }
 
@@ -4629,7 +4664,7 @@ function tbrOpenActionDialog(c, action, newStatus, parentSection){
     );
 
     if(ok){
-      toast(action + ' saved');
+      if(action !== 'Interview Requested'){ toast(action + ' saved'); } /* IR path shows its own, more specific toast */
       dialog.remove();
       /* Update the candidate object in memory and re-render the section */
       c.tbStatus = newStatus;
