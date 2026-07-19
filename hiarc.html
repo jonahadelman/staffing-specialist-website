@@ -668,7 +668,7 @@ function pipelineSort(rows){
     return fullName(a).localeCompare(fullName(b));
   });
 }
-var SOURCE = ["LinkedIn","Referral","Direct Applicant","Resume Database","Recruiter Outreach","Internal Referral","Agency","Other"];
+var SOURCE = ["LinkedIn","Referral","Direct Applicant","Resume Database","Recruiter Outreach","Internal Referral","Agency","Dayforce Auto-Import","Other"];
 var DISCIPLINES = ["Program Management","Systems Engineering","Engineering Leadership","Electrical / Hardware","Mechanical / Hardware","Software","Test & Evaluation","Configuration Management","Manufacturing","Quality","Supply Chain","Cyber / DevSecOps","Other"];
 var ACT_TYPES = ["Call","Email","LinkedIn Message","Text","Voicemail","Meeting","Interview Scheduled","Interview Completed","HM Interview Feedback","Candidate Interview Feedback","TA Interview Feedback","Panel Interview Scorecard","Declined by HM (Resume)","Declined by HM (Post-Interview)","Resume Submitted","Status Change","Note","Other"];
 var OWNERS = CONFIG.owners;
@@ -798,7 +798,7 @@ function candToRow(c){
     ta_reject_reason:c.taRejectReason||"", ta_reject_date:nz(c.taRejectDate), hm_reject_reason:c.hmRejectReason||"", hm_reject_date:nz(c.hmRejectDate),
     updated_at:new Date().toISOString() };
 }
-function rowToReq(r){ return { id:r.id, title:r.title||"", role:r.role||"", loc:r.loc||"", disc:r.discipline||"Other", urgency:r.urgency||"Open", priority:r.priority||"", reqStatus:r.req_status||"", rank:((r.rank!=null && r.rank!=="" && !isNaN(r.rank)) ? Number(r.rank) : null), desiredStart:r.desired_start||"", contingent:r.contingent||"", compMin:r.comp_min||"", compMax:r.comp_max||"", compTarget:r.comp_target||"", eicp:r.eicp||"", openings:r.openings||1, hm:r.hiring_manager||"", hmTitle:r.hm_title||"", hmEmail:r.hm_email||"", hmPhone:r.hm_phone||"", jobId:r.job_id||"", jd:r.jd||"", jdLink:r.jd_link||"", bench:r.bench===true, partner:r.partner||"", sourcingStatus:normSourcing(r.sourcing_status), benchStatus:r.bench_status||"waiting" }; }
+function rowToReq(r){ return { id:r.id, title:r.title||"", role:r.role||"", loc:r.loc||"", disc:r.discipline||"Other", urgency:r.urgency||"Open", priority:r.priority||"", reqStatus:r.req_status||"", rank:((r.rank!=null && r.rank!=="" && !isNaN(r.rank)) ? Number(r.rank) : null), desiredStart:r.desired_start||"", contingent:r.contingent||"", compMin:r.comp_min||"", compMax:r.comp_max||"", compTarget:r.comp_target||"", eicp:r.eicp||"", openings:r.openings||1, hm:r.hiring_manager||"", hmTitle:r.hm_title||"", hmEmail:r.hm_email||"", hmPhone:r.hm_phone||"", jobId:r.job_id||"", jd:r.jd||"", jdLink:r.jd_link||"", bench:r.bench===true, partner:r.partner||"", sourcingStatus:normSourcing(r.sourcing_status), benchStatus:r.bench_status||"waiting", createdAt:r.created_at||"" }; }
 function setReqs(arr){
   REQS = arr;
   REQ_OPTIONS = arr.filter(function(r){ return !r.bench; }).map(function(r){ return r.title + " \u2013 " + r.loc; });
@@ -1904,6 +1904,14 @@ function renderLeadershipBrief(host){
   if(!critical.length){ cr.appendChild(el("div","hint","Nothing critical. Every open requisition has candidates in play.")); }
   critical.slice(0, 8).forEach(function(r){ exRow(cr, (r.jobId ? r.jobId + " · " : "") + r.title + " – " + r.loc + " (" + (r.hm || "no HM") + ") — " + reqCandN(r) + " in play", reqCandN(r) === 0 ? "--red" : "--orange", function(){ if(typeof viewReq === "function"){ viewReq(r); } }, "Open this requisition"); });
   if(critical.length > 8){ cr.appendChild(el("div","hint","+ " + (critical.length - 8) + " more in Open Requisitions.")); }
+  /* enterprise recruiting intelligence — the engine surfacing hidden value */
+  var ir = (typeof tbIntelligenceReport === "function") ? tbIntelligenceReport() : { rediscovered: [], silver: [], multi: [], newReqs: 0 };
+  if(ir.multi.length || ir.silver.length || ir.rediscovered.length){
+    var ei = exSection("Enterprise Recruiting Intelligence", "TalentFit works the database continuously — this is what it found");
+    if(ir.multi.length){ exRow(ei, ir.multi.length + " candidate" + (ir.multi.length === 1 ? "" : "s") + " currently match multiple open requisitions at strong fit", "--green", function(){ ui.view = "board"; refresh(); }, "Opens TalentFit — the full match board"); }
+    if(ir.rediscovered.length){ exRow(ei, ir.rediscovered.length + " existing candidate" + (ir.rediscovered.length === 1 ? "" : "s") + " match roles opened in the last 14 days — rediscovered talent, zero sourcing cost", "--gold", function(){ ui.view = "board"; refresh(); }, "Opens TalentFit"); }
+    if(ir.silver.length){ exRow(ei, ir.silver.length + " silver medalist" + (ir.silver.length === 1 ? "" : "s") + " (went deep on one role, didn\u2019t land) now match other open requisitions", "--purple", function(){ ui.view = "board"; refresh(); }, "Opens TalentFit"); }
+  }
   /* executive summary — deterministic, from the same numbers as everything above */
   var es = exSection("Executive Summary", null);
   var sum = [];
@@ -2774,7 +2782,22 @@ var BOARD = (function(){
     foot.style.cssText="margin-top:16px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:12px";
     host.appendChild(foot);
   }
-  return {render:render, scoreCandidate:scoreCandidate, clearScoreCache:clearScoreCache};
+  function scoreCandidateAgainst(c, reqList){
+    /* TalentFit on an arbitrary requisition set — powers the scoped Run buttons
+       on the candidate profile (My Reqs / All Programs / Enterprise). Never cached:
+       the scope changes per click, so results are always computed fresh. */
+    var txt = candHaystack(c);
+    var cc = {ref:c, txt:txt};
+    var f = detectFn(txt);
+    cc.fn=f.primary; cc.fnset=f.set;
+    cc.level=detectLevel(txt); cc.locs=detectLoc(txt);
+    cc.domain=domainScore(txt); cc.junior=juniorRead(txt);
+    var results = (reqList || []).map(function(r){ return scoreReq(cc, r); });
+    results.sort(function(a,b){ return b.score-a.score; });
+    cc.results=results; cc.best=results[0]||{verdict:"not", score:0, req:{title:"(no reqs in scope)", loc:""}};
+    return cc;
+  }
+  return {render:render, scoreCandidate:scoreCandidate, scoreCandidateAgainst:scoreCandidateAgainst, clearScoreCache:clearScoreCache};
 })();
 
 /* ═══ AutoSlate™ v1 (Intelligence Layer) — ranked hiring-manager slates with
@@ -5152,6 +5175,84 @@ function openDetail(c){
             afWrap.appendChild(afRow);
           });
         }
+        /* ── Run TalentFit on demand — three scopes, widest gated to the admin ── */
+        (function(){
+          var runBar = el("div"); runBar.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)";
+          var runLab = el("span", null, "Run TalentFit:"); runLab.style.cssText = "font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray)";
+          runBar.appendChild(runLab);
+          var runHost = el("div"); runHost.style.cssText = "margin-top:8px";
+          function openCanon(){
+            var canon = window.TB_METRICS ? TB_METRICS.canonicalReqEntries(REQS).map(function(e2){ return e2.req; }) : REQS;
+            return canon.filter(function(r2){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r2) : !r2.bench; });
+          }
+          function myReqs(){
+            var me2 = (typeof meOwnerName === "function" ? meOwnerName() : "").toLowerCase();
+            var mine = {};
+            (state.candidates || []).forEach(function(x){
+              if((x.owner || "").toLowerCase() !== me2 || x.status === "Archived"){ return; }
+              (x.reqs || []).forEach(function(tag){ mine[tag] = 1; });
+            });
+            (c.reqs || []).forEach(function(tag){ mine[tag] = 1; }); /* this candidate's own targets always count */
+            return openCanon().filter(function(r2){ return mine[(r2.title + " – " + r2.loc)] || mine[(r2.title + " - " + r2.loc)]; });
+          }
+          function paintRun(title, scored, note){
+            runHost.innerHTML = "";
+            var hd = el("div", null, title + " — " + scored.results.length + " requisition" + (scored.results.length === 1 ? "" : "s") + " scored" + (note ? " · " + note : ""));
+            hd.style.cssText = "font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px";
+            runHost.appendChild(hd);
+            var top = scored.results.filter(function(r2){ return r2.verdict !== "not"; }).slice(0, 10);
+            if(!top.length){ runHost.appendChild(el("div","hint","No stretch-or-better matches in this scope.")); return; }
+            top.forEach(function(r2, i2){
+              var q2 = r2.req || {};
+              var row2 = el("div"); row2.style.cssText = "display:flex;gap:8px;align-items:baseline;padding:5px 6px;border-radius:7px;font-size:13px;" + (q2._xorg ? "" : "cursor:pointer");
+              row2.title = q2._xorg ? ("A " + (q2.orgName || "partner-workspace") + " requisition — visible enterprise-wide, opened from its own workspace") : "Open this requisition";
+              var rk = el("span", null, String(i2 + 1)); rk.style.cssText = "font-size:11px;font-weight:800;color:var(--muted);min-width:14px"; row2.appendChild(rk);
+              var tt = el("b", null, (q2.jobId ? q2.jobId + " · " : "") + (q2.title || "")); row2.appendChild(tt);
+              var lc2 = el("span", null, (q2.loc || "") + (q2._xorg ? " · " + (q2.orgName || "Enterprise") : "")); lc2.style.cssText = "color:var(--muted);font-size:12px"; row2.appendChild(lc2);
+              var sc2 = el("span", null, r2.score + " · " + (r2.verdict === "strong" ? "Strong" : r2.verdict === "moderate" ? "Moderate" : "Stretch"));
+              sc2.style.cssText = "margin-left:auto;font-weight:800;font-size:12px;color:" + (r2.verdict === "strong" ? "var(--gold)" : r2.verdict === "moderate" ? "var(--cyan)" : "#e0a85a");
+              row2.appendChild(sc2);
+              if(!q2._xorg){
+                row2.addEventListener("mouseenter", function(){ row2.style.background = "var(--panel2)"; });
+                row2.addEventListener("mouseleave", function(){ row2.style.background = ""; });
+                row2.addEventListener("click", function(){ if(typeof viewReq === "function"){ viewReq(q2); } });
+              }
+              runHost.appendChild(row2);
+              if(r2.reasons && r2.reasons.length){ var wy = el("div", null, r2.reasons.slice(0, 3).join(" · ")); wy.style.cssText = "font-size:11px;color:var(--muted);padding:0 6px 4px 28px"; runHost.appendChild(wy); }
+            });
+          }
+          function runBtn(label, tip, fn2){
+            var b2 = el("button","btn sm ghost", label); b2.type = "button"; b2.title = tip;
+            b2.addEventListener("click", function(){ fn2(); }); runBar.appendChild(b2); return b2;
+          }
+          runBtn("My Open Reqs", "Score " + fullName(c) + " against the open requisitions you are working (plus this candidate's tagged reqs)", function(){
+            var rs = myReqs();
+            paintRun("My Open Requisitions", BOARD.scoreCandidateAgainst(c, rs), rs.length ? null : "you have no active requisitions yet — use All Programs");
+          });
+          runBtn("All Programs", "Score against every open requisition across all programs in this workspace", function(){
+            paintRun("All Programs — " + tbClientDisplayName(), BOARD.scoreCandidateAgainst(c, openCanon()));
+          });
+          if(window.TB_WS === "admin"){
+            runBtn("Enterprise", "Administrator only — score against open requisitions across every workspace", function(){
+              var local = openCanon();
+              runHost.innerHTML = ""; runHost.appendChild(el("div","hint","Scanning enterprise requisitions…"));
+              (async function(){
+                var pool = local.slice();
+                try{
+                  if(window.XORG && XORG.orgs && XORG.orgs.length && typeof sb !== "undefined" && sb){
+                    var xr = await sb.from("reqs").select("*").in("org", XORG.orgs);
+                    ((xr && xr.data) || []).forEach(function(r3){
+                      if(r3.bench_status === "bench" || /closed|filled|hold/i.test(r3.req_status || "")){ return; }
+                      pool.push({ id:r3.id, title:r3.title || "", loc:r3.loc || r3.location || "", jobId:r3.job_id || "", hm:r3.hiring_manager || "", bench:false, _xorg:true, orgName:(typeof orgLabel === "function" ? orgLabel(r3.org) : r3.org) });
+                    });
+                  }
+                }catch(eXR){}
+                paintRun("Enterprise — all workspaces", BOARD.scoreCandidateAgainst(c, pool), pool.length === local.length ? "no partner-workspace reqs visible" : (pool.length - local.length) + " partner-workspace reqs included");
+              })();
+            });
+          }
+          afWrap.appendChild(runBar); afWrap.appendChild(runHost);
+        })();
         body.appendChild(afWrap);
       }
     }catch(eAF){}
@@ -6229,7 +6330,59 @@ async function saveReq(){
   var row = { org:ORG, title:title, role:v("reqRole").trim(), loc:v("reqLoc").trim(), job_id:v("reqJobId").trim(), hiring_manager:v("reqHM").trim(), hm_title:v("reqHMTitle").trim(), hm_email:v("reqHMEmail").trim(), hm_phone:v("reqHMPhone").trim(), discipline:v("reqDisc"), urgency:v("reqStatus"), priority:v("reqPriority"), req_status:v("reqStatus"), rank:(parseInt(v("reqRank"),10) || null), desired_start:v("reqDesiredStart").trim(), contingent:v("reqContingent"), comp_min:v("reqCompMin").trim(), comp_max:v("reqCompMax").trim(), comp_target:v("reqCompTarget").trim(), eicp:v("reqEicp").trim(), openings:parseInt(v("reqOpen"),10) || 1, jd:v("reqJd"), jd_link:v("reqJdLink").trim() };
   var id = editReqId; closeModal();
   if(id){ await run(sb.from("reqs").update(row).eq("id", id), "Req updated"); }
-  else{ await run(sb.from("reqs").insert(row), "Req added"); }
+  else{
+    await run(sb.from("reqs").insert(row), "Req added");
+    try{ tbNewReqScan(row); }catch(eNRS){}
+  }
+}
+/* ── New-requisition automation: the instant a req opens, TalentFit scans the
+   whole database and surfaces the top matches — nobody has to remember to look. ── */
+function tbNewReqScan(row){
+  if(typeof BOARD === "undefined" || !BOARD.scoreCandidateAgainst){ return; }
+  var reqShape = { id:"new", title:row.title || "", loc:row.loc || "", jobId:row.job_id || "", hm:row.hiring_manager || "", bench:false };
+  var tag = reqShape.title + " – " + reqShape.loc;
+  setTimeout(function(){
+    var pool = (state.candidates || []).filter(function(c){ return c.status !== "Archived" && c.status !== "Offer Accepted - Hired"; });
+    if(window.TB_ENTERPRISE_LIBRARY_V1 && window.XORG && XORG.loaded && XORG.recruitable){ pool = pool.concat(XORG.recruitable()); }
+    var hits = pool.map(function(c){
+      var sc = BOARD.scoreCandidateAgainst(c, [reqShape]);
+      return { c:c, r:(sc.results && sc.results[0]) || { score:0, verdict:"not", reasons:[] } };
+    }).filter(function(h){ return h.r.verdict === "strong" || h.r.verdict === "moderate"; });
+    hits.sort(function(a,b){ return b.r.score - a.r.score; });
+    hits = hits.slice(0, 25);
+    if(!hits.length){ toast("TalentFit scanned " + pool.length + " candidates for " + reqShape.title + " — no moderate-or-better matches yet."); return; }
+    var m = document.getElementById("modal"); m.className = "modal wide"; m.innerHTML = "";
+    var head = el("div","mhead"); head.appendChild(el("h2", null, "🧠 TalentFit — " + reqShape.title));
+    var x = el("button","x","×"); x.setAttribute("data-close","1"); head.appendChild(x); m.appendChild(head);
+    var body = el("div","mbody");
+    body.appendChild(el("div","hint","The requisition just opened, and the database has already been worked: " + pool.length + " candidates scanned, top " + hits.length + " below. Tag the ones worth pursuing — they land on this req and flow into AutoSlate automatically."));
+    hits.forEach(function(h, i){
+      var rrow = el("div"); rrow.style.cssText = "display:flex;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:9px;margin-top:8px";
+      var rk = el("span", null, String(i + 1)); rk.style.cssText = "font-size:11px;font-weight:800;color:var(--muted);min-width:16px"; rrow.appendChild(rk);
+      var tx = el("div"); tx.style.cssText = "min-width:0";
+      var nm = el("b", null, fullName(h.c)); nm.style.cssText = "cursor:pointer"; nm.title = "Open " + fullName(h.c) + "’s full record";
+      nm.addEventListener("click", function(){ openDetail(h.c); }); /* the openDetail wrapper renders cross-workspace candidates read-only automatically */
+      tx.appendChild(nm);
+      var mt = el("div", null, (h.c.title || "") + (h.c.location ? " · " + h.c.location : "") + (h.c._xorg ? " · " + (typeof orgLabel === "function" ? orgLabel(h.c._xorg) : "partner workspace") : "") + (h.r.reasons.length ? " — " + h.r.reasons.slice(0,3).join(", ") : ""));
+      mt.style.cssText = "font-size:11.5px;color:var(--muted)"; tx.appendChild(mt); rrow.appendChild(tx);
+      var sc2 = el("span", null, h.r.score + " · " + (h.r.verdict === "strong" ? "Strong" : "Moderate"));
+      sc2.style.cssText = "margin-left:auto;font-weight:800;font-size:12px;white-space:nowrap;color:" + (h.r.verdict === "strong" ? "var(--gold)" : "var(--cyan)");
+      rrow.appendChild(sc2);
+      if(!h.c._xorg && !VIEW_ONLY){
+        var tg = el("button","btn sm ghost","Tag to req"); tg.type = "button"; tg.title = "Add this requisition to " + fullName(h.c) + "’s target reqs";
+        tg.addEventListener("click", async function(){
+          tg.disabled = true; tg.textContent = "Tagged ✓";
+          try{ var nr = (h.c.reqs || []).slice(); if(nr.indexOf(tag) < 0){ nr.push(tag); } await sb.from("candidates").update({ reqs: nr }).eq("id", h.c.id); await loadData(); }catch(eTg){}
+        });
+        rrow.appendChild(tg);
+      }
+      body.appendChild(rrow);
+    });
+    m.appendChild(body);
+    var foot = el("div","mfoot"); foot.appendChild(el("div"));
+    var right = el("div","right"); var ok = el("button","btn gold","Done"); ok.setAttribute("data-close","1"); right.appendChild(ok); foot.appendChild(right); m.appendChild(foot);
+    document.getElementById("scrim").classList.add("open");
+  }, 600); /* let the post-save reload settle first */
 }
 async function deleteReq(id){ await run(sb.from("reqs").delete().eq("id", id), "Req deleted"); }
 
@@ -6307,14 +6460,32 @@ async function importCSV(text){
   function idx(n){ return head.indexOf(n.toLowerCase()); }
   var map = { firstName:idx("first name"), lastName:idx("last name"), full:idx("full name"), email:idx("email"), phone:idx("phone"), location:idx("location"), title:idx("current title"), company:idx("current company"), skills:idx("skills"), source:idx("source"), status:idx("status"), priority:idx("priority"), owner:idx("recruiter owner"), disc:idx("discipline"), recv:idx("date received"), last:idx("last contacted"), next:idx("next follow up"), link:idx("resume link"), linkedin:idx("linkedin"), summary:idx("candidate summary"), notes:idx("notes") };
   if(map.summary < 0){ map.summary = idx("summary"); }
+  /* Dayforce applicant-export column aliases — the standard template imports as-is */
+  if(map.phone < 0){ map.phone = idx("mobile phone"); }
+  if(map.title < 0){ map.title = idx("current job title"); }
+  if(map.company < 0){ map.company = idx("current employer"); }
+  if(map.status < 0){ map.status = idx("candidate status"); }
+  if(map.recv < 0){ map.recv = idx("date applied"); }
+  map.reqTitles = idx("requisition title");
+  map.city = idx("city"); map.stt = idx("state");
+  var isDayforce = map.city >= 0 || map.reqTitles >= 0 || idx("mobile phone") >= 0;
   var out = []; var skipped = 0; var seenEmail = {}; var seenName = {};
   for(var r=1;r<rows.length;r++){ var row = rows[r];
     function g(i){ return (i>=0 && row[i] !== undefined) ? row[i].trim() : ""; }
     var fn = g(map.firstName); var ln = g(map.lastName);
     if(!fn && !ln && map.full >= 0){ var sp = g(map.full).split(/\s+/); fn = sp[0] || ""; ln = sp.slice(1).join(" "); }
     var c = newBlank(); c.firstName = fn; c.lastName = ln; c.email = g(map.email); c.phone = g(map.phone); c.location = g(map.location); c.title = g(map.title); c.company = g(map.company); c.discipline = g(map.disc);
+    if(!c.location && (map.city >= 0 || map.stt >= 0)){ c.location = [g(map.city), g(map.stt)].filter(Boolean).join(", "); }
+    if(map.reqTitles >= 0 && g(map.reqTitles)){
+      var wantTags = g(map.reqTitles).split("|").map(function(s){ return s.trim(); }).filter(Boolean);
+      c.reqs = []; wantTags.forEach(function(w){
+        var hit = REQS.filter(function(r2){ var tag2 = r2.title + " – " + r2.loc; return tag2 === w || (r2.title === w) || tag2.replace(" – ", " - ") === w; })[0];
+        if(hit){ var tg2 = hit.title + " – " + hit.loc; if(c.reqs.indexOf(tg2) < 0){ c.reqs.push(tg2); } }
+      });
+    }
+    if(isDayforce){ c.dayforceBadge = true; }
     c.skills = g(map.skills) ? g(map.skills).split(",").map(function(s){ return s.trim(); }).filter(Boolean) : [];
-    c.source = g(map.source) || "Other"; c.status = g(map.status) || "New"; c.priority = g(map.priority) || "Medium"; c.owner = g(map.owner) || (OWNERS[0]||"Unassigned");
+    c.source = g(map.source) || (isDayforce ? "Dayforce Auto-Import" : "Other"); c.status = (STATUS.indexOf(g(map.status)) >= 0 ? g(map.status) : "New"); c.priority = g(map.priority) || "Medium"; c.owner = g(map.owner) || (OWNERS[0]||"Unassigned");
     c.dateReceived = g(map.recv) || todayISO(); c.lastContacted = g(map.last); c.nextFollowUp = g(map.next); c.resumeLink = g(map.link); c.linkedin = g(map.linkedin); c.summary = g(map.summary); c.notes = g(map.notes);
     var em = normEmail(c.email); var nm = normName(c.firstName, c.lastName);
     // skip if duplicates an existing record, or an earlier row in this same file
@@ -6895,7 +7066,29 @@ document.getElementById("addBtn").addEventListener("click", function(){ openDeta
 document.getElementById("bulkBtn").addEventListener("click", openBulk);
 document.getElementById("exportBtn").addEventListener("click", exportData);
 document.getElementById("dayforceBtn").addEventListener("click", exportDayforce);
-document.getElementById("importBtn").addEventListener("click", function(){ document.getElementById("fileInput").click(); });
+document.getElementById("importBtn").addEventListener("click", function(){
+  /* Import front door — TalentBase CSV or the standard Dayforce applicant export */
+  var m = document.getElementById("modal"); m.className = "modal"; m.innerHTML = "";
+  var head = el("div","mhead"); head.appendChild(el("h2", null, "Import Candidates"));
+  var x = el("button","x","×"); x.setAttribute("data-close","1"); head.appendChild(x); m.appendChild(head);
+  var body = el("div","mbody");
+  body.appendChild(el("div","hint","Two formats import directly: a TalentBase export, or the standard Dayforce applicant export (First Name, Last Name, Email, Mobile Phone, City, State, Requisition Title, Current Job Title, Current Employer, Date Applied…). Dayforce rows arrive marked “Applied to Dayforce” with source Dayforce Auto-Import, requisition titles auto-link to open reqs, and duplicates are skipped automatically — the same file can be re-imported safely."));
+  var row1 = el("div"); row1.style.cssText = "display:flex;gap:10px;flex-wrap:wrap;margin-top:14px";
+  var pick = el("button","btn gold","Choose CSV File"); pick.type = "button";
+  pick.addEventListener("click", function(){ closeModal(); document.getElementById("fileInput").click(); });
+  var tpl = el("button","btn ghost","Download Dayforce Template"); tpl.type = "button";
+  tpl.title = "A header-only CSV in the standard Dayforce applicant layout — fill it (or paste a Dayforce export over it) and import";
+  tpl.addEventListener("click", function(){
+    var headers = ["First Name","Last Name","Email","Mobile Phone","Address Line 1","City","State","Country","LinkedIn","Source","Candidate Status","Requisition Title","Current Job Title","Current Employer","Skills","Notes","Date Applied"];
+    download(CONFIG.company + "_Dayforce_Import_Template.csv", headers.join(",") + "\n", "text/csv");
+    toast("Template downloaded — fill it and import it right back");
+  });
+  row1.appendChild(pick); row1.appendChild(tpl); body.appendChild(row1);
+  m.appendChild(body);
+  var foot = el("div","mfoot"); foot.appendChild(el("div"));
+  var right = el("div","right"); var cancel = el("button","btn ghost","Cancel"); cancel.setAttribute("data-close","1"); right.appendChild(cancel); foot.appendChild(right); m.appendChild(foot);
+  document.getElementById("scrim").classList.add("open");
+});
 document.getElementById("fileInput").addEventListener("change", function(e){ var f = e.target.files[0]; if(!f){ return; } var r = new FileReader(); r.onload = function(){ importCSV(String(r.result)); }; r.readAsText(f); e.target.value = ""; });
 
 document.getElementById("scrim").addEventListener("click", function(e){
@@ -10208,6 +10401,40 @@ body.tb-overlay-open{ overflow:hidden; }
     });
   };
 
+  /* ---------- 3e. RECRUITING INTELLIGENCE (the database never sleeps) ----------
+     Powered by the local TalentFit engine — free, instant, always current.
+     Rediscovery: candidates who existed BEFORE a role opened and now match it.
+     Silver medalists: candidates who went deep on one req and match another. */
+  var SILVER = { "HM Rejected":1, "Offer Declined":1, "TA Rejected":1, "Withdrawn":1 };
+  window.tbIntelligenceReport = function(){
+    var out = { rediscovered: [], byRecruiter: {}, silver: [], multi: [], newReqs: 0 };
+    try{
+      if(!window.__TB_SCORES_WARM){ return out; } /* never compute cold on a render path */
+      var cutoff = Date.now() - 14 * 86400000;
+      var canon = window.TB_METRICS ? TB_METRICS.canonicalReqEntries(REQS).map(function(e){ return e.req; }) : REQS;
+      var openReqs = canon.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : !r.bench; });
+      var newReqs = openReqs.filter(function(r){ var d = Date.parse(r.createdAt || ""); return d && d >= cutoff; });
+      out.newReqs = newReqs.length;
+      var newIds = {}; newReqs.forEach(function(r){ newIds[r.id] = r; });
+      (state.candidates || []).forEach(function(c){
+        if(c.status === "Archived" || c.status === "Offer Accepted - Hired"){ return; }
+        var sc = BOARD.scoreCandidate(c); if(!sc || !sc.results){ return; }
+        var strongOpen = sc.results.filter(function(x){ return x.score >= 72 && x.req && openReqs.some(function(r){ return r.id === x.req.id; }); });
+        if(strongOpen.length >= 2){ out.multi.push({ c: c, n: strongOpen.length }); }
+        if(SILVER[c.status] && strongOpen.length){ out.silver.push({ c: c, top: strongOpen[0] }); }
+        /* rediscovery: candidate pre-dates a newly opened role and strongly matches it */
+        var cd = Date.parse(c.dateReceived || "");
+        var redisc = strongOpen.filter(function(x){ var rd = Date.parse((newIds[x.req.id] || {}).createdAt || ""); return rd && cd && cd < rd; });
+        if(redisc.length){
+          out.rediscovered.push({ c: c, top: redisc[0] });
+          var o = c.owner && c.owner !== "Unassigned" ? c.owner : "Unassigned";
+          out.byRecruiter[o] = (out.byRecruiter[o] || 0) + 1;
+        }
+      });
+    }catch(eIR){}
+    return out;
+  };
+
   /* ---------- 4. WORKSTATION RENDERERS ---------- */
   function wsCard(css){ var c = el("div"); c.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;" + (css || ""); return c; }
   function wsHead(txt){ var h = el("div", null, txt); h.style.cssText = "font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--gray);margin-bottom:10px"; return h; }
@@ -10244,6 +10471,26 @@ body.tb-overlay-open{ overflow:hidden; }
     if(!flags.length){ fc.appendChild(el("div","hint","No coaching flags. The desk is healthy.")); }
     flags.slice(0, 8).forEach(function(f){ var li = el("div", null, "· " + f); li.style.cssText = "font-size:13.5px;padding:4px 0;color:var(--ink)"; fc.appendChild(li); });
     wrap.appendChild(fc);
+    /* weekly candidate rediscovery — the database working for the team */
+    var ir2 = (typeof tbIntelligenceReport === "function") ? tbIntelligenceReport() : { rediscovered: [], byRecruiter: {} };
+    var rd = wsCard("margin-bottom:16px"); rd.appendChild(wsHead("Candidate Rediscovery — existing talent matching newly opened roles"));
+    if(!ir2.rediscovered.length){
+      rd.appendChild(el("div","hint", window.__TB_SCORES_WARM ? "No rediscovered matches right now — TalentFit re-checks continuously as roles open." : "TalentFit is scoring in the background — check back in a moment."));
+    } else {
+      var lead = el("div", null, ir2.rediscovered.length + " existing candidate" + (ir2.rediscovered.length === 1 ? "" : "s") + " match roles opened in the last 14 days"); lead.style.cssText = "font-size:14px;font-weight:700;margin-bottom:8px";
+      rd.appendChild(lead);
+      Object.keys(ir2.byRecruiter).sort(function(a, b){ return ir2.byRecruiter[b] - ir2.byRecruiter[a]; }).forEach(function(o){
+        var li = el("div"); li.style.cssText = "display:flex;gap:10px;align-items:baseline;padding:4px 0;font-size:13.5px;cursor:pointer;border-radius:7px";
+        li.title = "Open " + o + "\u2019s active candidates — their rediscovered matches are highlighted in TalentFit";
+        li.appendChild(el("b", null, o)); li.appendChild(el("span", null, ir2.byRecruiter[o] + " match" + (ir2.byRecruiter[o] === 1 ? "" : "es")));
+        var go2 = el("span", null, "\u2192"); go2.style.cssText = "margin-left:auto;color:var(--muted)"; li.appendChild(go2);
+        li.addEventListener("mouseenter", function(){ li.style.background = "var(--panel2)"; });
+        li.addEventListener("mouseleave", function(){ li.style.background = ""; });
+        li.addEventListener("click", function(){ ui.fOwner = (o === "Unassigned" ? "" : o); var s2 = document.getElementById("fOwner"); if(s2){ s2.value = ui.fOwner; } ui.view = "activecandidates"; refresh(); });
+        rd.appendChild(li);
+      });
+    }
+    wrap.appendChild(rd);
     /* workload board (canonical) */
     var wb = wsCard("margin-bottom:16px"); wb.appendChild(wsHead("Recruiter Workload — click a row to open that desk"));
     var inner = el("div"); wb.appendChild(inner);
