@@ -4066,7 +4066,10 @@ async function renderTBAnalytics(host){
   reqHdrEl.style.cssText = "font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray);margin-bottom:8px";
   wrap.appendChild(reqHdrEl);
 
-  /* Group latest status by req_id */
+  /* Group latest status by req_id — structural grouping by requisition, not
+     ownership attribution (earliest review carries the req the candidate entered on) */
+  var firstByCand = {};
+  rows.forEach(function(r){ if(!firstByCand[r.candidate_id]){ firstByCand[r.candidate_id] = r; } });
   var reqMap = {};
   Object.keys(latestByCand).forEach(function(candId){
     var latest = latestByCand[candId];
