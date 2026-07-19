@@ -4790,7 +4790,9 @@ function renderTalentBench(host){
 
   var table = el("table");
   var thead = el("thead"); var htr = el("tr");
-  (["Rank","Role","Status"].concat(showSrc?["Sourcing"]:[]).concat(["Req #","Location","Elbit TA","Sourced"])).forEach(function(h){
+  /* B4: explicit ownership columns — the mislabeled "Elbit TA" (which showed the
+     sourcing partner) is gone. Ownership reads ONLY from ta_owner / tss_recruiter. */
+  (["Rank","Role","Status"].concat(showSrc?["Sourcing"]:[]).concat(["Req #","Location","TA Owner","TSS Recruiter","Sourced"])).forEach(function(h){
     var th = el("th",null,h);
     if(h === "Rank"){ th.style.width = "58px"; }
     if(h === "Status"){ th.style.width = "100px"; }
@@ -4804,7 +4806,7 @@ function renderTalentBench(host){
     var pReqs = byPartner[partner].slice().sort(function(a,b){ var ra=(a.rank==null?9999:a.rank), rb=(b.rank==null?9999:b.rank); return (ra-rb) || (a.title||"").localeCompare(b.title||""); });
 
     var grpHdr = el("tr","grp");
-    var grpTd = el("td"); grpTd.colSpan = showSrc ? 8 : 7;
+    var grpTd = el("td"); grpTd.colSpan = showSrc ? 9 : 8;
     grpTd.textContent = partner + " (" + pReqs.length + " req" + (pReqs.length !== 1 ? "s" : "") + ")";
     grpHdr.appendChild(grpTd);
     tb.appendChild(grpHdr);
@@ -4848,7 +4850,32 @@ function renderTalentBench(host){
 
       tr.appendChild(el("td","sub2", r.jobId || "-"));
       tr.appendChild(el("td","sub2", r.loc || "-"));
-      tr.appendChild(el("td","sub2", r.partner || "-"));
+
+      /* B4: ownership cells — real name, or an explicit Unowned state. Never a placeholder. */
+      function ownerCell(val, focusKey, roleLabel){
+        var td = el("td");
+        if(val){
+          var nm2 = el("span","sub2", val); nm2.style.cssText = "color:var(--ink);font-weight:600";
+          nm2.title = val + " owns this requisition (" + roleLabel + ")";
+          td.appendChild(nm2);
+        } else {
+          var chip = el("span", null, "Unowned — Assign");
+          chip.style.cssText = "display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.3px;color:#92400e;background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.45);border-radius:999px;padding:2px 9px;cursor:pointer;white-space:nowrap";
+          chip.title = "No " + roleLabel + " assigned — click to assign ownership now";
+          chip.addEventListener("click", function(e){
+            e.stopPropagation();
+            openBenchReqModal(r);
+            setTimeout(function(){
+              var f = document.querySelector("#modal [data-bfield='" + focusKey + "']");
+              if(f){ f.focus(); try{ f.scrollIntoView({ block:"center" }); }catch(eSc){} }
+            }, 60);
+          });
+          td.appendChild(chip);
+        }
+        return td;
+      }
+      tr.appendChild(ownerCell(r.taOwner, "taOwner", "TA Owner"));
+      tr.appendChild(ownerCell(r.tssRecruiter, "tssRecruiter", "TSS Recruiter"));
 
       var cntTd = el("td"); cntTd.style.textAlign = "right";
       var cnt = el("span");
