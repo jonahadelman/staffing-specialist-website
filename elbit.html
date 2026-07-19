@@ -798,7 +798,7 @@ function candToRow(c){
     ta_reject_reason:c.taRejectReason||"", ta_reject_date:nz(c.taRejectDate), hm_reject_reason:c.hmRejectReason||"", hm_reject_date:nz(c.hmRejectDate),
     updated_at:new Date().toISOString() };
 }
-function rowToReq(r){ return { id:r.id, title:r.title||"", role:r.role||"", loc:r.loc||"", disc:r.discipline||"Other", urgency:r.urgency||"Open", priority:r.priority||"", reqStatus:r.req_status||"", rank:((r.rank!=null && r.rank!=="" && !isNaN(r.rank)) ? Number(r.rank) : null), desiredStart:r.desired_start||"", contingent:r.contingent||"", compMin:r.comp_min||"", compMax:r.comp_max||"", compTarget:r.comp_target||"", eicp:r.eicp||"", openings:r.openings||1, hm:r.hiring_manager||"", hmTitle:r.hm_title||"", hmEmail:r.hm_email||"", hmPhone:r.hm_phone||"", jobId:r.job_id||"", jd:r.jd||"", jdLink:r.jd_link||"", bench:r.bench===true, partner:r.partner||"", sourcingStatus:normSourcing(r.sourcing_status), benchStatus:r.bench_status||"waiting", createdAt:r.created_at||"", taOwner:r.ta_owner||"", tssRecruiter:r.tss_recruiter||"" }; }
+function rowToReq(r){ return { id:r.id, title:r.title||"", role:r.role||"", loc:r.loc||"", disc:r.discipline||"Other", urgency:r.urgency||"Open", priority:r.priority||"", reqStatus:r.req_status||"", rank:((r.rank!=null && r.rank!=="" && !isNaN(r.rank)) ? Number(r.rank) : null), desiredStart:r.desired_start||"", contingent:r.contingent||"", compMin:r.comp_min||"", compMax:r.comp_max||"", compTarget:r.comp_target||"", eicp:r.eicp||"", openings:r.openings||1, hm:r.hiring_manager||"", hmTitle:r.hm_title||"", hmEmail:r.hm_email||"", hmPhone:r.hm_phone||"", jobId:r.job_id||"", jd:r.jd||"", jdLink:r.jd_link||"", bench:r.bench===true, partner:r.partner||"", sourcingStatus:normSourcing(r.sourcing_status), benchStatus:r.bench_status||"waiting", createdAt:r.created_at||"", taOwner:r.ta_owner||"", tssRecruiter:r.tss_recruiter||"", department:r.department||"", program:r.program||"", benchNotes:r.bench_notes||"" }; }
 function setReqs(arr){
   REQS = arr;
   REQ_OPTIONS = arr.filter(function(r){ return !r.bench; }).map(function(r){ return r.title + " \u2013 " + r.loc; });
@@ -4939,28 +4939,97 @@ function renderBenchCandidates(reqId){
   document.getElementById("scrim").classList.add("open");
 }
 
+/* \u2500\u2500 B3: TalentBench requisition creation \u2014 complete ownership and business context,
+   or no requisition. Every field maps to its own database column; no legacy mapping. \u2500\u2500 */
+var TB_BENCH_REQUIRED = [
+  ["jobId","Job ID"], ["title","Requisition Title"], ["hm","Hiring Manager"],
+  ["taOwner","TA Owner"], ["tssRecruiter","TSS Recruiter"], ["department","Department"],
+  ["program","Program"], ["priority","Priority"], ["benchStatus","Status"], ["notes","Notes"]
+];
 function openBenchReqModal(existing){
-  var r = existing || { title:"", jobId:"", loc:"", hm:"", partner:"" };
+  var r = existing || { title:"", jobId:"", loc:"", hm:"", partner:"", taOwner:"", tssRecruiter:"", department:"", program:"", priority:"", benchStatus:"waiting", benchNotes:"" };
   var editId = existing ? existing.id : null;
   var m = document.getElementById("modal"); m.className = "modal"; m.innerHTML = "";
   var head = el("div","mhead");
   head.appendChild(el("h2", null, existing ? "Edit Sourcing Req" : "Add Sourcing Req"));
+  var hint = el("div","sub2","Every TalentBench requisition starts with an owner. \u25cf marks required fields.");
+  hint.style.marginTop = "2px"; head.appendChild(hint);
   var xb = el("button","x","\u00d7"); xb.setAttribute("data-close","1"); head.appendChild(xb);
   m.appendChild(head);
   var body = el("div","mbody");
   var g = el("div","grid2");
 
-  function bField(label, key, val){
-    var wrap = el("div","fld full"); wrap.appendChild(el("label",null,label));
-    var inp = el("input"); inp.type = "text"; inp.value = val || ""; inp.setAttribute("data-bfield", key);
-    wrap.appendChild(inp); return wrap;
+  function markLabel(label, required){
+    var l = el("label", null, label + (required ? " " : ""));
+    if(required){ var dot = el("span", null, "\u25cf"); dot.style.cssText = "color:var(--red);font-size:8px;vertical-align:2px;margin-left:2px"; dot.title = "Required"; l.appendChild(dot); }
+    return l;
   }
+  function wireValidation(inp){
+    inp.addEventListener("input", updateBenchValidation);
+    inp.addEventListener("change", updateBenchValidation);
+    return inp;
+  }
+  function bField(label, key, val, required){
+    var wrap = el("div","fld"); wrap.appendChild(markLabel(label, required));
+    var inp = el("input"); inp.type = "text"; inp.value = val || ""; inp.setAttribute("data-bfield", key);
+    if(required){ inp.setAttribute("data-brequired","1"); }
+    wrap.appendChild(wireValidation(inp)); return wrap;
+  }
+  function bSelect(label, key, val, options, required, placeholder){
+    var wrap = el("div","fld"); wrap.appendChild(markLabel(label, required));
+    var sel = el("select"); sel.setAttribute("data-bfield", key);
+    if(required){ sel.setAttribute("data-brequired","1"); }
+    var ph = el("option", null, placeholder || ("\u2014 Select " + label + " \u2014")); ph.value = ""; sel.appendChild(ph);
+    options.forEach(function(o){
+      var opt = el("option", null, Array.isArray(o) ? o[1] : o); opt.value = Array.isArray(o) ? o[0] : o; sel.appendChild(opt);
+    });
+    if(val && !Array.from(sel.options).some(function(o){ return o.value === val; })){
+      var extra = el("option", null, val); extra.value = val; sel.appendChild(extra); /* preserve legacy value on edit */
+    }
+    sel.value = val || "";
+    wrap.appendChild(wireValidation(sel)); return wrap;
+  }
+  function bDatalist(label, key, val, suggestions, required){
+    var wrap = el("div","fld"); wrap.appendChild(markLabel(label, required));
+    var inp = el("input"); inp.type = "text"; inp.value = val || ""; inp.setAttribute("data-bfield", key);
+    if(required){ inp.setAttribute("data-brequired","1"); }
+    if(suggestions && suggestions.length){
+      var dlId = "bdl_" + key; inp.setAttribute("list", dlId);
+      var dl = document.createElement("datalist"); dl.id = dlId;
+      suggestions.forEach(function(s){ var o = document.createElement("option"); o.value = s; dl.appendChild(o); });
+      wrap.appendChild(dl);
+    }
+    wrap.appendChild(wireValidation(inp)); return wrap;
+  }
+  function distinct(arr){ var seen = {}; return arr.filter(function(x){ x = (x||"").trim(); if(!x || seen[x]){ return false; } seen[x] = 1; return true; }); }
 
-  g.appendChild(bField("Job Title", "title", r.title));
-  g.appendChild(bField("Req # / Job ID", "jobId", r.jobId));
-  g.appendChild(bField("Location", "loc", r.loc));
-  g.appendChild(bField("Talent Advisor / Recruiter", "hm", r.hm));
-  g.appendChild(bField("Sourcing Partner", "partner", r.partner));
+  var hmNames = distinct((state.managers || []).map(function(mg){ return mg.name || ""; })).sort();
+  var recruiterNames = (typeof TB_RECRUITER_DIRECTORY !== "undefined" && TB_RECRUITER_DIRECTORY.length)
+    ? TB_RECRUITER_DIRECTORY.map(function(x){ return x.name; })
+    : (typeof OWNERS !== "undefined" ? OWNERS.filter(function(o){ return o && o !== "Unassigned"; }) : []);
+  var deptNames = (typeof TB_PROGRAMS !== "undefined" && TB_PROGRAMS.length) ? TB_PROGRAMS.map(function(p){ return p.name; }) : [];
+  var allReqs = (state.reqs || []);
+  var taSuggestions = distinct(allReqs.map(function(x){ return x.taOwner; })).sort();
+  var programSuggestions = distinct(allReqs.map(function(x){ return x.program; })).sort();
+  var statusOptions = Object.keys(BENCH_STATUS).map(function(k){ return [k, BENCH_STATUS[k].icon + " " + BENCH_STATUS[k].label]; });
+
+  g.appendChild(bField("Req # / Job ID", "jobId", r.jobId, true));
+  g.appendChild(bField("Requisition Title", "title", r.title, true));
+  g.appendChild(bDatalist("Hiring Manager", "hm", r.hm, hmNames, true));
+  g.appendChild(bDatalist("TA Owner", "taOwner", r.taOwner, taSuggestions, true));
+  g.appendChild(bSelect("TSS Recruiter", "tssRecruiter", r.tssRecruiter, recruiterNames, true));
+  if(deptNames.length){ g.appendChild(bSelect("Department", "department", r.department, deptNames, true)); }
+  else { g.appendChild(bField("Department", "department", r.department, true)); }
+  g.appendChild(bDatalist("Program", "program", r.program, programSuggestions, true));
+  g.appendChild(bSelect("Priority", "priority", r.priority, PRIORITY, true));
+  g.appendChild(bSelect("Status", "benchStatus", r.benchStatus || "waiting", statusOptions, true));
+  g.appendChild(bField("Location", "loc", r.loc, false));
+  g.appendChild(bField("Sourcing Partner", "partner", r.partner, false));
+  var notesWrap = el("div","fld full"); notesWrap.appendChild(markLabel("Notes", true));
+  var notesTa = el("textarea"); notesTa.value = r.benchNotes || ""; notesTa.setAttribute("data-bfield","notes"); notesTa.setAttribute("data-brequired","1");
+  notesTa.placeholder = "Why this req exists, sourcing context, anything the owner needs to know\u2026";
+  notesTa.style.cssText = "min-height:64px";
+  notesWrap.appendChild(wireValidation(notesTa)); g.appendChild(notesWrap);
 
   if(existing && !VIEW_ONLY){
     var delWrap = el("div","fld full");
@@ -4974,33 +5043,97 @@ function openBenchReqModal(existing){
 
   body.appendChild(g);
   var foot = el("div","mfoot");
+  var vmsg = el("div","sub2"); vmsg.id = "benchValMsg"; vmsg.style.cssText = "color:var(--muted);font-weight:600";
+  foot.appendChild(vmsg);
+  var right = el("div","right");
   var sav = el("button","btn gold", existing ? "Save Changes" : "Add Position");
+  sav.id = "benchSaveBtn";
   sav.setAttribute("data-benchsave", editId || "new");
-  foot.appendChild(sav);
+  right.appendChild(sav); foot.appendChild(right);
   body.appendChild(foot);
   m.appendChild(body);
   document.getElementById("scrim").classList.add("open");
+  updateBenchValidation();
+}
+
+function updateBenchValidation(){
+  var m = document.getElementById("modal"); if(!m){ return; }
+  var missing = [];
+  TB_BENCH_REQUIRED.forEach(function(pair){
+    var e = m.querySelector("[data-bfield='" + pair[0] + "'][data-brequired]");
+    if(!e){ return; }
+    var ok = (e.value || "").trim() !== "";
+    e.style.borderColor = ok ? "" : "var(--red)";
+    if(!ok){ missing.push(pair[1]); }
+  });
+  var vmsg = document.getElementById("benchValMsg");
+  var sav = document.getElementById("benchSaveBtn");
+  if(vmsg){
+    vmsg.textContent = missing.length ? (missing.length + " required field" + (missing.length === 1 ? "" : "s") + " remaining: " + missing.slice(0,4).join(", ") + (missing.length > 4 ? "\u2026" : "")) : "Ready \u2014 all required fields complete.";
+    vmsg.style.color = missing.length ? "var(--red)" : "var(--green)";
+  }
+  if(sav){ sav.disabled = missing.length > 0; sav.style.opacity = missing.length ? ".5" : "1"; sav.style.cursor = missing.length ? "not-allowed" : "pointer"; }
+  return missing;
 }
 
 async function saveBenchReq(editId){
   var m = document.getElementById("modal");
   function bv(k){ var e = m.querySelector("[data-bfield='" + k + "']"); return e ? e.value.trim() : ""; }
-  var title = bv("title");
-  var jobId = bv("jobId");
-  var loc   = bv("loc");
-  var hm    = bv("hm");
-  var partner = bv("partner");
-  if(!title){ toast("Title required"); return; }
-  var row = { org:ORG, title:title, job_id:jobId, loc:loc, hiring_manager:hm, partner:partner, bench:true, urgency:"Open" };
+  var missing = updateBenchValidation();
+  if(missing && missing.length){
+    toast(missing.length + " required field" + (missing.length === 1 ? "" : "s") + " missing \u2014 complete the highlighted fields.");
+    return; /* no partial saves, no orphaned requisitions */
+  }
+  /* Every field maps ONLY to its correct column \u2014 TA never touches hiring_manager. */
+  var row = {
+    org: ORG, bench: true, urgency: "Open",
+    title: bv("title"), job_id: bv("jobId"), loc: bv("loc"),
+    hiring_manager: bv("hm"),
+    ta_owner: bv("taOwner"),
+    tss_recruiter: bv("tssRecruiter"),
+    department: bv("department"),
+    program: bv("program"),
+    priority: bv("priority"),
+    bench_status: bv("benchStatus"),
+    bench_notes: bv("notes"),
+    partner: bv("partner")
+  };
   closeModal();
   if(editId && editId !== "new"){
-    await run(sb.from("reqs").update(row).eq("id", editId), "Sourcing req updated");
+    await run(sb.from("reqs").update(row).eq("id", editId), "Sourcing req updated \u2014 TA " + row.ta_owner + " \u00b7 Recruiter " + row.tss_recruiter);
   } else {
     var res = await sb.from("reqs").insert(row);
     if(res && res.error){ toast(res.error.message || "Insert failed"); return; }
     await reloadSoft();
-    toast("Sourcing req added");
+    tbBenchCreatedConfirm(row);
   }
+}
+
+/* B3 success confirmation \u2014 the requisition exists, who owns it, what happens next */
+function tbBenchCreatedConfirm(row){
+  var m = document.getElementById("modal"); m.className = "modal"; m.innerHTML = "";
+  var head = el("div","mhead"); head.appendChild(el("h2", null, "\u2705 Requisition Created"));
+  var xb = el("button","x","\u00d7"); xb.setAttribute("data-close","1"); head.appendChild(xb); m.appendChild(head);
+  var body = el("div","mbody");
+  var card = el("div"); card.style.cssText = "background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px 16px";
+  function line(label, val){
+    var d = el("div"); d.style.cssText = "display:flex;gap:8px;padding:3px 0;font-size:13.5px";
+    var l = el("span", null, label); l.style.cssText = "color:var(--muted);font-weight:600;min-width:110px"; d.appendChild(l);
+    d.appendChild(el("b", null, val || "\u2014")); card.appendChild(d);
+  }
+  line("Requisition", row.title + (row.loc ? " \u2013 " + row.loc : ""));
+  line("Job ID", "#" + row.job_id);
+  line("TA Owner", row.ta_owner);
+  line("TSS Recruiter", row.tss_recruiter);
+  body.appendChild(card);
+  body.appendChild(el("div","hint","It\u2019s live on the TalentBench board under " + row.department + " \u00b7 " + row.program + ". Next: tag candidates to it from their profiles, or open a candidate\u2019s TalentFit panel and run it against your reqs."));
+  m.appendChild(body);
+  var foot = el("div","mfoot"); foot.appendChild(el("div"));
+  var right = el("div","right"); var ok = el("button","btn gold","Go to TalentBench Board");
+  ok.addEventListener("click", function(){ closeModal(); ui.view = "talentbench"; refresh(); });
+  var cls = el("button","btn ghost","Done"); cls.setAttribute("data-close","1");
+  right.appendChild(cls); right.appendChild(ok); foot.appendChild(right); m.appendChild(foot);
+  document.getElementById("scrim").classList.add("open");
 }
 
 async function deleteBenchReq(id){
