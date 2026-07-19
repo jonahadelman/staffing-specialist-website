@@ -5628,7 +5628,7 @@ function buildExecHeader(c){
 function openDetail(c){
   openId = c ? c.id : null; var isNew = !c; if(!c){ c = newBlank(); }
   var m = document.getElementById("modal"); m.className = "modal"; m.innerHTML = "";
-  m.removeAttribute("data-resumepath"); m.removeAttribute("data-resumefilename"); editActId = null;
+  m.removeAttribute("data-resumepath"); m.removeAttribute("data-resumefilename"); m.removeAttribute("data-storedresume"); m.removeAttribute("data-storedresumename"); m.removeAttribute("data-prevbrief"); editActId = null;
   var head = el("div","mhead"); head.appendChild(el("h2", null, isNew ? "New Candidate" : fullName(c)));
   var x = el("button","x","\u00d7"); x.setAttribute("data-close","1"); head.appendChild(x); m.appendChild(head);
   var body = el("div","mbody"); var g = el("div","grid2");
@@ -5652,7 +5652,7 @@ function openDetail(c){
     rqv.appendChild(rb); g.appendChild(rqv);
     if(c.resumeLink){ var rl = roField("Resume Link", c.resumeLink); rl.className="fld full"; g.appendChild(rl); }
     if(c.linkedin){ var li = el("div","fld full"); li.appendChild(el("label", null, "LinkedIn")); var la = el("a","tag gold","Open LinkedIn profile"); la.href = c.linkedin; la.target = "_blank"; li.appendChild(la); g.appendChild(li); }
-    if(c.resumePath){ var rfo = el("div","fld full"); rfo.appendChild(el("label", null, "Resume File")); var ob = el("button","btn sm","Open Resume"); ob.setAttribute("data-resumeopen", c.resumePath); ob.type="button"; rfo.appendChild(ob); g.appendChild(rfo); }
+    if(c.resumePath){ var rfo = el("div","fld full"); rfo.appendChild(el("label", null, "Resume File")); var obr = el("div"); obr.style.cssText = "display:flex;gap:8px;align-items:center;flex-wrap:wrap"; var ob = el("button","btn sm","View Resume"); ob.setAttribute("data-resumeopen", c.resumePath); ob.type="button"; obr.appendChild(ob); var ob2 = el("button","btn sm ghost","Download Resume"); ob2.setAttribute("data-resumedownload", c.resumePath); ob2.setAttribute("data-resumedlname", c.resumeFileName || ""); ob2.type="button"; obr.appendChild(ob2); var obD = resumeUploadDate(c.resumePath); obr.appendChild(el("span","sub2", (c.resumeFileName || "") + (obD ? " · uploaded " + obD : ""))); rfo.appendChild(obr); g.appendChild(rfo); }
     var nt = el("div","fld full"); nt.appendChild(el("label", null, "Notes")); var __ntv = el("div","roval"); renderRich(__ntv, c.notes); nt.appendChild(__ntv); g.appendChild(nt); body.appendChild(g);
   }else{
     var smF = field("Executive Brief","summary",c.summary,"textarea"); smF.className = "fld full"; body.appendChild(smF);
@@ -5691,9 +5691,26 @@ function openDetail(c){
     var hiddenIn = el("input"); hiddenIn.type = "file"; hiddenIn.id = "resumeFileIn"; hiddenIn.accept = ".pdf,.doc,.docx"; hiddenIn.style.display = "none";
     upWrap.appendChild(hiddenIn);
     if(c.resumePath){
+      /* stash the saved version so an unsaved replacement can be discarded back to it */
+      m.setAttribute("data-storedresume", c.resumePath);
+      m.setAttribute("data-storedresumename", c.resumeFileName || "");
       var dl = el("button","btn sm","View Resume"); dl.setAttribute("data-resumeopen", c.resumePath); dl.type = "button"; btnRow.appendChild(dl);
-      var rp0 = el("button","btn sm ghost","Replace Resume"); rp0.setAttribute("data-resumepick","1"); rp0.type = "button"; btnRow.appendChild(rp0);
-      tickRow.textContent = "✓ Resume on file · " + (c.summary ? "✓ Executive Brief on record" : "○ Executive Brief — not yet written") + " · TalentFit: live on this profile";
+      var dlb = el("button","btn sm ghost","Download Resume"); dlb.setAttribute("data-resumedownload", c.resumePath); dlb.setAttribute("data-resumedlname", c.resumeFileName || ""); dlb.type = "button"; btnRow.appendChild(dlb);
+      /* replacing a SAVED resume requires explicit confirmation — two clicks */
+      var rp0 = el("button","btn sm ghost","Replace Resume"); rp0.type = "button"; var rpArmed = null;
+      rp0.addEventListener("click", function(){
+        if(rp0.getAttribute("data-armed")){
+          rp0.removeAttribute("data-armed"); rp0.textContent = "Replace Resume"; rp0.style.color = "";
+          if(rpArmed){ clearTimeout(rpArmed); rpArmed = null; }
+          var fi0 = document.getElementById("resumeFileIn"); if(fi0){ fi0.click(); }
+          return;
+        }
+        rp0.setAttribute("data-armed","1"); rp0.textContent = "Click again to replace (previous version kept)"; rp0.style.color = "var(--red, #c0392b)";
+        rpArmed = setTimeout(function(){ rp0.removeAttribute("data-armed"); rp0.textContent = "Replace Resume"; rp0.style.color = ""; }, 6000);
+      });
+      btnRow.appendChild(rp0);
+      var upD = resumeUploadDate(c.resumePath);
+      tickRow.textContent = "✓ Resume on file: " + (c.resumeFileName || "resume") + (upD ? " · uploaded " + upD : "") + " · " + (c.summary ? "✓ Executive Brief on record" : "○ Executive Brief — not yet written") + " · TalentFit: live on this profile";
     }
     body.appendChild(upWrap);
 
@@ -5836,7 +5853,7 @@ function openDetail(c){
     body.appendChild(rtToggle); body.appendChild(rtF);
     var notesF = field("Notes","notes",c.notes,"textarea"); notesF.className = "fld full"; body.appendChild(notesF);
   }
-  if(c.resumeFileName){ body.appendChild(el("div","hint","Resume on file: " + c.resumeFileName)); }
+  if(c.resumeFileName){ var rhD = resumeUploadDate(c.resumePath); body.appendChild(el("div","hint","Resume on file: " + c.resumeFileName + (rhD ? " · uploaded " + rhD : ""))); }
   if(!isNew){
     var ah = el("h3", null, "Activity"); ah.style.fontSize = "15px"; ah.style.margin = "18px 0 10px"; body.appendChild(ah);
     var alist = el("div");
@@ -5895,8 +5912,26 @@ async function saveCandidate(){
     var c = JSON.parse(JSON.stringify(existing)); readModalInto(c);
     var dupE = findDuplicate(c, c.id);
     if(dupE){ toast("Duplicate: " + (normEmail(c.email) && normEmail(dupE.email) === normEmail(c.email) ? "email already on " : "name already on ") + fullName(dupE)); return; }
-    if(newPath){ c.resumePath = newPath; c.resumeFileName = newFile || c.resumeFileName; }
-    closeModal(); await run(sb.from("candidates").update(candToRow(c)).eq("id", c.id), "Saved");
+    var replacedOld = null;
+    if(newPath){
+      if(existing.resumePath && existing.resumePath !== newPath){ replacedOld = { path: existing.resumePath, name: existing.resumeFileName || "previous resume" }; }
+      c.resumePath = newPath; c.resumeFileName = newFile || c.resumeFileName;
+    }
+    var prevBrief = m.getAttribute("data-prevbrief") || "";
+    closeModal(); await run(sb.from("candidates").update(candToRow(c)).eq("id", c.id), replacedOld ? "Saved — resume replaced (previous version retained)" : "Saved");
+    /* VERSION HISTORY (launch, 2026-07-19): a replaced resume is never
+       overwritten — the old file stays in storage at its own path, and the
+       swap is recorded as an activity with both versions referenced. */
+    if(replacedOld){
+      try{
+        var oldD = resumeUploadDate(replacedOld.path);
+        var vnote = "Resume replaced: " + replacedOld.name + (oldD ? " (uploaded " + oldD + ")" : "") +
+          " → " + (newFile || "new resume") + ". Previous version retained in storage [" + replacedOld.path + "]." +
+          (prevBrief ? "\n\nPrevious Executive Brief:\n" + prevBrief : "");
+        await sb.from("activities").insert({ org:ORG, candidate_id:c.id, type:"Note", date:todayISO(), notes:vnote, owner:"" });
+        await reloadSoft();
+      }catch(eVH){}
+    }
   }
   else{
     var n = newBlank(); readModalInto(n);
@@ -6361,17 +6396,39 @@ function ingestOwnerDefault(){
   }catch(e){}
   return "Unassigned";
 }
-async function ingestResumes(files){
-  var list = Array.prototype.slice.call(files).filter(function(f){ return /\.(pdf|docx?)$/i.test(f.name); });
-  if(!list.length){ toast("Drop PDF or Word resumes"); return; }
-  toast("Processing " + list.length + " resumes…");
-  var owner = ingestOwnerDefault();
+async function ingestResumes(files, opts){
+  opts = opts || {};
+  var pat = opts.allowTxt ? /\.(pdf|docx?|txt)$/i : /\.(pdf|docx?)$/i;
+  var list = Array.prototype.slice.call(files).filter(function(f){ return pat.test(f.name); });
+  if(!list.length){ toast(opts.allowTxt ? "Drop PDF, Word, or text resumes" : "Drop PDF or Word resumes"); return; }
+  var owner = opts.owner || ingestOwnerDefault();
+  var source = opts.source || "Resume Database";
+  /* LIVE processing table — visible from file one. Never silent. */
+  var m = document.getElementById("modal"); m.className = "modal"; m.innerHTML = "";
+  var head = el("div","mhead"); var h2 = el("h2", null, opts.title || "Resume Ingestion");
+  head.appendChild(h2);
+  var x = el("button","x","×"); x.setAttribute("data-close","1"); head.appendChild(x); m.appendChild(head);
+  var body = el("div","mbody");
+  var hint = el("div","hint","Processing 0 of " + list.length + "…"); body.appendChild(hint);
+  var t = el("table"); var th = el("thead"); var htr = el("tr");
+  ["File","Result","Detail"].forEach(function(h){ htr.appendChild(el("th", null, h)); });
+  th.appendChild(htr); t.appendChild(th);
+  var tb = el("tbody"); t.appendChild(tb); body.appendChild(t); m.appendChild(body);
+  document.getElementById("scrim").classList.add("open");
+  function liveRow(r){
+    var tr = el("tr");
+    tr.appendChild(el("td","nm", r.file));
+    tr.appendChild(el("td", null, r.status === "created" ? "✓ Complete" : (r.status === "skipped" ? "○ Duplicate" : "✗ Failed")));
+    tr.appendChild(el("td","sub2", r.detail || ""));
+    tb.appendChild(tr);
+  }
   var results = []; var rows = []; var seenBatch = {};
   for(var i = 0; i < list.length; i++){
     var file = list[i]; var rec = { file: file.name, status: "", detail: "" };
     try{
       var text = "";
-      try{ text = await extractText(file); }catch(eT){ text = ""; }
+      if(/\.txt$/i.test(file.name)){ try{ text = String(await file.text()); }catch(eTx){ text = ""; } }
+      else { try{ text = await extractText(file); }catch(eT){ text = ""; } }
       if(text === "__LEGACY_DOC__"){ text = ""; rec.detail = "old .doc — no text; "; }
       if(text && text.indexOf("__SCANNED_PDF__") === 0){ text = text.replace("__SCANNED_PDF__", ""); if(!text.trim()){ rec.detail = "scanned — no text; "; } }
       var c = newBlank();
@@ -6386,13 +6443,22 @@ async function ingestResumes(files){
         c.summary = buildExecBrief(text);
         try{ c.notes = autoMatchReqs(text, { first: c.firstName, last: c.lastName, loc: c.location, disc: c.discipline, title: c.title, company: c.company, skills: (c.skills || []).join(", ") }) || ""; }catch(eN){}
         c.resumeText = text.slice(0, 60000);
+      } else {
+        /* no text — honor the advertised LastName_FirstName_Location filename contract */
+        try{
+          var pf = parseFilename(file.name);
+          if(!c.firstName && pf.firstName){ c.firstName = pf.firstName; }
+          if(!c.lastName && pf.lastName){ c.lastName = pf.lastName; }
+          if(!c.location && pf.location){ c.location = pf.location; }
+        }catch(ePf){}
       }
-      c.owner = owner; c.source = "Resume Database"; c.dateReceived = todayISO();
+      if(opts.disc && (!c.discipline || c.discipline === "Other")){ c.discipline = opts.disc; }
+      c.owner = owner; c.source = source; c.dateReceived = todayISO();
       /* duplicate detection — against production data AND within this batch */
       var key = normEmail(c.email) || normName(c.firstName, c.lastName);
       var dup = findDuplicate(c, null);
-      if(dup){ rec.status = "skipped"; rec.detail = "duplicate of " + fullName(dup); results.push(rec); continue; }
-      if(key && key !== "|" && seenBatch[key]){ rec.status = "skipped"; rec.detail = "duplicate within batch"; results.push(rec); continue; }
+      if(dup){ rec.status = "skipped"; rec.detail = "duplicate of " + fullName(dup); results.push(rec); liveRow(rec); hint.textContent = "Processing " + results.length + " of " + list.length + "…"; continue; }
+      if(key && key !== "|" && seenBatch[key]){ rec.status = "skipped"; rec.detail = "duplicate within batch"; results.push(rec); liveRow(rec); hint.textContent = "Processing " + results.length + " of " + list.length + "…"; continue; }
       if(key){ seenBatch[key] = 1; }
       /* store the file — same bucket and path scheme as the single-file flow */
       try{
@@ -6402,35 +6468,21 @@ async function ingestResumes(files){
       }catch(eU){}
       rows.push(candToRow(c));
       rec.status = "created";
-      rec.detail = (rec.detail || "") + (c.summary ? "Executive Brief ✓" : "no text — fill manually") + (c.notes ? " · req matches ✓" : "");
-      results.push(rec);
-    }catch(eF){ rec.status = "failed"; rec.detail = String((eF && eF.message) || eF).slice(0, 80); results.push(rec); }
+      rec.detail = (rec.detail || "") + (c.summary ? "Executive Brief ✓" : "no text — fill manually") + (c.notes ? " · req matches ✓" : "") + (c.resumePath ? " · stored ✓" : " · file store failed");
+      results.push(rec); liveRow(rec);
+    }catch(eF){ rec.status = "failed"; rec.detail = String((eF && eF.message) || eF).slice(0, 80); results.push(rec); liveRow(rec); }
+    hint.textContent = "Processing " + results.length + " of " + list.length + "…";
   }
   var okIns = true;
   if(rows.length){ okIns = await run(sb.from("candidates").insert(rows), null); }
-  /* processing summary — every file accounted for, honestly */
+  /* completion summary — every file accounted for, honestly */
   var created = results.filter(function(r){ return r.status === "created"; }).length;
   var skipped = results.filter(function(r){ return r.status === "skipped"; }).length;
   var failed  = results.filter(function(r){ return r.status === "failed"; }).length;
   var briefs  = results.filter(function(r){ return r.status === "created" && r.detail.indexOf("Executive Brief ✓") !== -1; }).length;
-  var m = document.getElementById("modal"); m.className = "modal"; m.innerHTML = "";
-  var head = el("div","mhead"); head.appendChild(el("h2", null, "Resume Ingestion Summary"));
-  var x = el("button","x","×"); x.setAttribute("data-close","1"); head.appendChild(x); m.appendChild(head);
-  var body = el("div","mbody");
-  body.appendChild(el("div","hint", created + " created (" + briefs + " with Executive Brief) · " + skipped + " duplicate" + (skipped === 1 ? "" : "s") + " skipped" + (failed ? " · " + failed + " failed" : "") + " · Owner: " + owner + " · TalentFit matches compute live on every profile."));
-  var t = el("table"); var th = el("thead"); var htr = el("tr");
-  ["File","Result","Detail"].forEach(function(h){ htr.appendChild(el("th", null, h)); });
-  th.appendChild(htr); t.appendChild(th);
-  var tb = el("tbody");
-  results.forEach(function(r){
-    var tr = el("tr");
-    tr.appendChild(el("td","nm", r.file));
-    tr.appendChild(el("td", null, r.status === "created" ? "✓ Created" : (r.status === "skipped" ? "○ Skipped" : "✗ Failed")));
-    tr.appendChild(el("td","sub2", r.detail || ""));
-    tb.appendChild(tr);
-  });
-  t.appendChild(tb); body.appendChild(t); m.appendChild(body);
-  document.getElementById("scrim").classList.add("open");
+  var stored  = results.filter(function(r){ return r.status === "created" && r.detail.indexOf("stored ✓") !== -1; }).length;
+  h2.textContent = "Resume Ingestion Summary";
+  hint.textContent = list.length + " processed · " + created + " candidate" + (created === 1 ? "" : "s") + " created · " + stored + " resume" + (stored === 1 ? "" : "s") + " stored · " + briefs + " Executive Brief" + (briefs === 1 ? "" : "s") + " · " + skipped + " duplicate" + (skipped === 1 ? "" : "s") + (failed ? " · " + failed + " failed" : "") + " · Owner: " + owner + " · TalentFit matches compute live on every profile.";
   if(!okIns){ toast("Some rows failed to save — see summary"); }
 }
 async function handleResumeFile(file){
@@ -6460,6 +6512,16 @@ async function handleResumeFile(file){
        text, fill only when the field is blank — never overwrite a written brief. */
     var sm0 = m.querySelector("[data-field='summary']");
     if(sm0 && !sm0.value){ var eb0 = buildExecBrief(text); if(eb0){ sm0.value = eb0; } }
+    else if(sm0 && sm0.value && m.getAttribute("data-storedresume")){
+      /* REPLACE flow: re-run the Executive Brief from the new resume. The
+         previous brief is preserved in the version-history activity on save. */
+      var ebR = buildExecBrief(text);
+      if(ebR && ebR !== sm0.value){
+        m.setAttribute("data-prevbrief", sm0.value);
+        sm0.value = ebR;
+        toast("Executive Brief refreshed from the new resume — the previous brief is kept in Activity when you save");
+      }
+    }
   }
   // upload to storage
   setUpStat("Uploading " + file.name + " ...");
@@ -6482,13 +6544,28 @@ function renderResumeAsset(m, path, fileName, parsed, warn){
     if(row){
       row.innerHTML = "";
       var v = el("button","btn sm","View Resume"); v.type = "button"; v.setAttribute("data-resumeopen", path); row.appendChild(v);
+      var dlB = el("button","btn sm ghost","Download Resume"); dlB.type = "button"; dlB.setAttribute("data-resumedownload", path); dlB.setAttribute("data-resumedlname", fileName || ""); row.appendChild(dlB);
       var rp = el("button","btn sm ghost","Replace Resume"); rp.type = "button"; rp.setAttribute("data-resumepick","1"); row.appendChild(rp);
+      /* Remove only discards THIS unsaved upload. A saved resume is never
+         deletable — removing an unsaved replacement restores the saved version. */
       var rm = el("button","btn sm ghost","Remove"); rm.type = "button";
       rm.addEventListener("click", function(){
-        m.removeAttribute("data-resumepath"); m.removeAttribute("data-resumefilename");
-        if(stat){ stat.textContent = "No file yet"; }
-        row.innerHTML = ""; if(ticks){ ticks.textContent = ""; }
-        toast("Resume removed from this form — nothing was saved");
+        m.removeAttribute("data-resumepath"); m.removeAttribute("data-resumefilename"); m.removeAttribute("data-prevbrief");
+        var savedP = m.getAttribute("data-storedresume"); var savedN = m.getAttribute("data-storedresumename") || "";
+        if(savedP){
+          if(stat){ stat.textContent = "✓ On file: " + (savedN || "resume"); }
+          row.innerHTML = "";
+          var v2 = el("button","btn sm","View Resume"); v2.type = "button"; v2.setAttribute("data-resumeopen", savedP); row.appendChild(v2);
+          var d2 = el("button","btn sm ghost","Download Resume"); d2.type = "button"; d2.setAttribute("data-resumedownload", savedP); d2.setAttribute("data-resumedlname", savedN); row.appendChild(d2);
+          var r2 = el("button","btn sm ghost","Replace Resume"); r2.type = "button"; r2.setAttribute("data-resumepick","1"); row.appendChild(r2);
+          var sd = resumeUploadDate(savedP);
+          if(ticks){ ticks.textContent = "✓ Resume on file: " + (savedN || "resume") + (sd ? " · uploaded " + sd : "") + " · new upload discarded — the saved resume is unchanged"; }
+          toast("New upload discarded — keeping the saved resume");
+        } else {
+          if(stat){ stat.textContent = "No file yet"; }
+          row.innerHTML = ""; if(ticks){ ticks.textContent = ""; }
+          toast("Resume removed from this form — nothing was saved");
+        }
       });
       row.appendChild(rm);
     }
@@ -6503,6 +6580,25 @@ async function openResume(path){
   var res = await sb.storage.from("resumes").createSignedUrl(path, 3600);
   if(res.error || !res.data){ toast("Could not open file"); return; }
   window.open(res.data.signedUrl, "_blank");
+}
+/* PRODUCTION FIX (launch, 2026-07-19): resume access certification.
+   The storage path embeds the upload timestamp (ORG/<ms>_name) — the upload
+   date is derivable for every resume ever stored, no schema change needed. */
+function resumeUploadDate(path){
+  try{
+    var m2 = String(path || "").match(/\/(\d{13})_/);
+    if(!m2){ return ""; }
+    var dte = new Date(parseInt(m2[1], 10));
+    if(isNaN(dte.getTime())){ return ""; }
+    return dte.toLocaleDateString(undefined, { year:"numeric", month:"short", day:"numeric" });
+  }catch(e){ return ""; }
+}
+async function downloadResume(path, fileName){
+  var res = await sb.storage.from("resumes").createSignedUrl(path, 3600, { download: fileName || true });
+  if(res.error || !res.data){ toast("Could not download file"); return; }
+  var a = document.createElement("a");
+  a.href = res.data.signedUrl; a.download = fileName || "";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
 /* ---------- manage reqs ---------- */
@@ -7158,31 +7254,14 @@ function wireDrop(){
   ["dragenter","dragover"].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add("hot"); }); });
   ["dragleave","drop"].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove("hot"); }); });
   drop.addEventListener("drop", function(e){
-    var files = e.dataTransfer.files; var d = bulkDefaults(); var rows = []; var pending = files.length; if(pending === 0){ return; }
-    for(var i=0;i<files.length;i++){
-      (function(file){
-        var info = parseFilename(file.name); var c = newBlank();
-        c.firstName = info.firstName; c.lastName = info.lastName; c.location = info.location; c.source = d.source; c.owner = d.owner; c.discipline = d.disc; c.resumeFileName = file.name;
-        if(/\.txt$/i.test(file.name)){ var r = new FileReader(); r.onload = function(){ c.resumeText = String(r.result).slice(0,20000); rows.push(candToRow(c)); done(); }; r.onerror = function(){ rows.push(candToRow(c)); done(); }; r.readAsText(file); }
-        else{ rows.push(candToRow(c)); done(); }
-        async function done(){ pending--; if(pending === 0){
-          /* PRODUCTION FIX (launch, 2026-07-19): duplicate prevention on the
-             Bulk Add file-drop — the one intake door that skipped the guard.
-             Same rule as every other path: check production + within-batch. */
-          var seenD = {}; var dedupD = []; var droppedD = 0;
-          rows.forEach(function(row){
-            var cc = { email: row.email, firstName: row.first_name, lastName: row.last_name };
-            var emD = normEmail(cc.email); var nmD = normName(cc.firstName, cc.lastName); var keyD = emD || nmD;
-            if(findDuplicate(cc, null) || (keyD && keyD !== "|" && seenD[keyD])){ droppedD++; return; }
-            if(keyD && keyD !== "|"){ seenD[keyD] = 1; }
-            dedupD.push(row);
-          });
-          closeModal();
-          if(dedupD.length === 0){ toast("All files were duplicates of existing candidates - nothing added"); return; }
-          await run(sb.from("candidates").insert(dedupD), dedupD.length + " candidate(s) added" + (droppedD ? (" - " + droppedD + " duplicate(s) skipped") : ""));
-        } }
-      })(files[i]);
-    }
+    /* PRODUCTION FIX (launch, 2026-07-19): Bulk Add completion. Every file
+       dropped here now runs the EXACT same certified pipeline as an individual
+       upload — store, parse, duplicate check, create, Executive Brief, owner
+       assignment — with a live per-file processing table. The old path created
+       filename-only shells with no stored resume and no brief. */
+    var files = e.dataTransfer.files; if(!files || !files.length){ return; }
+    var d = bulkDefaults();
+    ingestResumes(files, { owner: d.owner, source: d.source, disc: d.disc, allowTxt: true, title: "Bulk Add — Processing Resumes" });
   });
 }
 async function bulkFromText(){
@@ -7872,6 +7951,7 @@ document.getElementById("scrim").addEventListener("click", function(e){
   var ed = e.target.closest("[data-reqedit]"); if(ed){ var er = REQS.filter(function(x){ return x.id === ed.getAttribute("data-reqedit"); })[0]; if(er){ openReqModal(er); } return; }
   var pick = e.target.closest("[data-resumepick]"); if(pick){ var fi = document.getElementById("resumeFileIn"); if(fi){ fi.click(); } return; }
   var openr = e.target.closest("[data-resumeopen]"); if(openr){ openResume(openr.getAttribute("data-resumeopen")); return; }
+  var dlr = e.target.closest("[data-resumedownload]"); if(dlr){ downloadResume(dlr.getAttribute("data-resumedownload"), dlr.getAttribute("data-resumedlname") || ""); return; }
 });
 document.addEventListener("keydown", function(e){ if(e.key === "Escape"){ closeModal(); } });
 document.addEventListener("change", function(e){ if(e.target && e.target.id === "resumeFileIn"){ var f = e.target.files[0]; if(f){ handleResumeFile(f); } } });
