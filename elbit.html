@@ -798,7 +798,10 @@ function candToRow(c){
     ta_reject_reason:c.taRejectReason||"", ta_reject_date:nz(c.taRejectDate), hm_reject_reason:c.hmRejectReason||"", hm_reject_date:nz(c.hmRejectDate),
     updated_at:new Date().toISOString() };
 }
-function rowToReq(r){ return { id:r.id, title:r.title||"", role:r.role||"", loc:r.loc||"", disc:r.discipline||"Other", urgency:r.urgency||"Open", priority:r.priority||"", reqStatus:r.req_status||"", rank:((r.rank!=null && r.rank!=="" && !isNaN(r.rank)) ? Number(r.rank) : null), desiredStart:r.desired_start||"", contingent:r.contingent||"", compMin:r.comp_min||"", compMax:r.comp_max||"", compTarget:r.comp_target||"", eicp:r.eicp||"", openings:r.openings||1, hm:r.hiring_manager||"", hmTitle:r.hm_title||"", hmEmail:r.hm_email||"", hmPhone:r.hm_phone||"", jobId:r.job_id||"", jd:r.jd||"", jdLink:r.jd_link||"", bench:r.bench===true, partner:r.partner||"", sourcingStatus:normSourcing(r.sourcing_status), benchStatus:r.bench_status||"waiting", createdAt:r.created_at||"", taOwner:r.ta_owner||"", tssRecruiter:r.tss_recruiter||"", department:r.department||"", program:r.program||"", benchNotes:r.bench_notes||"" }; }
+function rowToReq(r){ return { id:r.id, title:r.title||"", role:r.role||"", loc:r.loc||"", disc:r.discipline||"Other", urgency:r.urgency||"Open", priority:r.priority||"", reqStatus:r.req_status||"", rank:((r.rank!=null && r.rank!=="" && !isNaN(r.rank)) ? Number(r.rank) : null), desiredStart:r.desired_start||"", contingent:r.contingent||"", compMin:r.comp_min||"", compMax:r.comp_max||"", compTarget:r.comp_target||"", eicp:r.eicp||"", openings:r.openings||1, hm:r.hiring_manager||"", hmTitle:r.hm_title||"", hmEmail:r.hm_email||"", hmPhone:r.hm_phone||"", jobId:r.job_id||"", jd:r.jd||"", jdLink:r.jd_link||"", bench:r.bench===true, partner:r.partner||"", sourcingStatus:normSourcing(r.sourcing_status), benchStatus:r.bench_status||"waiting", createdAt:r.created_at||"", owner:r.tss_recruiter||"", department:r.department||"", program:r.program||"", benchNotes:r.bench_notes||"" }; }
+/* OWNERSHIP MODEL v2 (Phase 2.3): ONE owner per requisition. Field of record: tss_recruiter
+   column, surfaced everywhere as "Owner". ta_owner and partner are retired concepts —
+   unreferenced by the application. */
 function setReqs(arr){
   REQS = arr;
   REQ_OPTIONS = arr.filter(function(r){ return !r.bench; }).map(function(r){ return r.title + " \u2013 " + r.loc; });
@@ -3996,7 +3999,7 @@ async function renderTBAnalytics(host){
   wrap.appendChild(kpiRow);
 
   /* ── By Recruiter scorecard — B7: attribution comes from the EXPLICIT ownership
-     model (candidate owner, inherited from the requisition's TSS Recruiter via B6).
+     model (candidate owner, inherited from the requisition Owner).
      reviewer_email is audit history only and is never used for attribution. ── */
   var recHdr = el("div",null,"By Recruiter");
   recHdr.style.cssText = "font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray);margin-bottom:8px";
@@ -4035,7 +4038,7 @@ async function renderTBAnalytics(host){
     recTable.style.cssText = "display:flex;flex-direction:column;gap:5px;margin-bottom:16px";
     var recHead = el("div");
     recHead.style.cssText = "display:grid;grid-template-columns:1fr 60px 60px 60px 60px 70px;gap:0 8px;padding:5px 10px;font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.06em";
-    ["Recruiter (owner)","Submitted","Accepted","Rejected","NMI","Accept %"].forEach(function(h){
+    ["Owner","Submitted","Accepted","Rejected","NMI","Accept %"].forEach(function(h){
       recHead.appendChild(el("div",null,h));
     });
     recTable.appendChild(recHead);
@@ -4320,7 +4323,7 @@ function renderDashboard(host){
 
 
 /* ============================================================
-   TALENTBENCH -- Sourcing Partner Board
+   TALENTBENCH -- Sourcing Board (one Owner per requisition)
    Bench reqs live in Supabase reqs table with bench=true.
    Partner field identifies the sourcing partner.
    Supports add / edit / delete. Generic -- not partner-specific.
@@ -4438,7 +4441,7 @@ function tbrOpenQueueModal(stateKey){
   } else {
     var GRID = "display:grid;grid-template-columns:1.2fr 1fr 150px 130px 66px;gap:0 12px;align-items:center";
     var lhdr = el("div"); lhdr.style.cssText = GRID + ";padding:6px 0 10px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);margin-bottom:4px";
-    ["Name","Requisition","Recruiter Owner","Review Status",""].forEach(function(h){ lhdr.appendChild(el("span",null,h)); });
+    ["Name","Requisition","Owner","Review Status",""].forEach(function(h){ lhdr.appendChild(el("span",null,h)); });
     body.appendChild(lhdr);
     list.forEach(function(c){
       var crow = el("div"); crow.style.cssText = GRID + ";padding:11px 0;border-bottom:1px solid var(--border);cursor:pointer";
@@ -4664,8 +4667,7 @@ async function tbrBuildSection(c, body){
       s.appendChild(v); return s;
     }
     ownLine.appendChild(ownBit('Requisition', (ownReq.jobId ? '#' + ownReq.jobId + ' — ' : '') + ownReq.title));
-    ownLine.appendChild(ownBit('TA Owner', ownReq.taOwner, 'No Talent Advisor assigned to this requisition yet — the administrator assigns owners in Platform Status'));
-    ownLine.appendChild(ownBit('TSS Recruiter', ownReq.tssRecruiter || ((c.owner && c.owner !== 'Unassigned') ? c.owner : ''), 'No recruiter assigned yet — claim the candidate or ask the administrator to assign the requisition'));
+    ownLine.appendChild(ownBit('Owner', ownReq.owner || ((c.owner && c.owner !== 'Unassigned') ? c.owner : ''), 'No owner assigned yet — assign it on the requisition, or in Platform Status → Ownership Console'));
     section.appendChild(ownLine);
   }
 
@@ -4675,7 +4677,7 @@ async function tbrBuildSection(c, body){
   nextStepLine.style.cssText = 'font-size:12.5px;font-weight:600;color:var(--gold);margin-bottom:12px;display:none;';
   section.appendChild(nextStepLine);
   function tbrNextStepText(status){
-    if(status === 'Accepted'){ return 'Next: submit to ' + ((ownReq && ownReq.taOwner) ? ownReq.taOwner : 'the TA owner') + '.'; }
+    if(status === 'Accepted'){ return 'Next: submit to ' + ((ownReq && ownReq.hm) ? ownReq.hm : 'the hiring manager') + '.'; }
     if(status === 'Needs More Information'){ return 'Next: gather the requested information and re-review.'; }
     if(status === 'Rejected'){ return 'Recorded. No further action required.'; }
     if(status === 'Interview Requested'){ return 'Interview Request created — track scheduling in Interview Requests.'; }
@@ -4890,7 +4892,7 @@ function tbrOpenActionDialog(c, action, newStatus, parentSection){
 function renderTalentBench(host){
   var benchReqs = getBenchReqs();
   var showSrc = TB_FLAGS.sourcingStatus;
-  var partners = Array.from(new Set(benchReqs.map(function(r){ return r.partner || "Unassigned"; }))).sort();
+  var partners = Array.from(new Set(benchReqs.map(function(r){ return r.owner || "Unowned"; }))).sort();
   var total = benchReqs.length;
   document.getElementById("viewMeta").textContent = total + " TalentBench position" + (total !== 1 ? "s" : "") + (partners.length ? " | " + partners.join(", ") : "");
 
@@ -4943,18 +4945,17 @@ function renderTalentBench(host){
     host.appendChild(em); return;
   }
 
+  /* Phase 2.3: ONE owner. The board groups by Owner — each recruiter sees their book together. */
   var byPartner = {};
   benchReqs.forEach(function(r){
-    var p = r.partner || "Unassigned";
+    var p = r.owner || "Unowned";
     if(!byPartner[p]){ byPartner[p] = []; }
     byPartner[p].push(r);
   });
 
   var table = el("table");
   var thead = el("thead"); var htr = el("tr");
-  /* B4: explicit ownership columns — the mislabeled "Elbit TA" (which showed the
-     sourcing partner) is gone. Ownership reads ONLY from ta_owner / tss_recruiter. */
-  (["Rank","Role","Status"].concat(showSrc?["Sourcing"]:[]).concat(["Req #","Location","TA Owner","TSS Recruiter","Sourced"])).forEach(function(h){
+  (["Rank","Role","Status"].concat(showSrc?["Sourcing"]:[]).concat(["Req #","Location","Owner","Sourced"])).forEach(function(h){
     var th = el("th",null,h);
     if(h === "Rank"){ th.style.width = "58px"; }
     if(h === "Status"){ th.style.width = "100px"; }
@@ -4968,7 +4969,7 @@ function renderTalentBench(host){
     var pReqs = byPartner[partner].slice().sort(function(a,b){ var ra=(a.rank==null?9999:a.rank), rb=(b.rank==null?9999:b.rank); return (ra-rb) || (a.title||"").localeCompare(b.title||""); });
 
     var grpHdr = el("tr","grp");
-    var grpTd = el("td"); grpTd.colSpan = showSrc ? 9 : 8;
+    var grpTd = el("td"); grpTd.colSpan = showSrc ? 8 : 7;
     grpTd.textContent = partner + " (" + pReqs.length + " req" + (pReqs.length !== 1 ? "s" : "") + ")";
     grpHdr.appendChild(grpTd);
     tb.appendChild(grpHdr);
@@ -5036,8 +5037,7 @@ function renderTalentBench(host){
         }
         return td;
       }
-      tr.appendChild(ownerCell(r.taOwner, "taOwner", "TA Owner"));
-      tr.appendChild(ownerCell(r.tssRecruiter, "tssRecruiter", "TSS Recruiter"));
+      tr.appendChild(ownerCell(r.owner, "owner", "Owner"));
 
       var cntTd = el("td"); cntTd.style.textAlign = "right";
       var cnt = el("span");
@@ -5066,7 +5066,7 @@ function renderBenchCandidates(reqId){
   var m = document.getElementById("modal"); m.className = "modal"; m.innerHTML = "";
   var head = el("div","mhead");
   head.appendChild(el("h2", null, r.title + (r.loc ? " | " + r.loc : "")));
-  var sub = el("div","sub2", (r.jobId ? "Req #" + r.jobId + "  |  " : "") + (r.partner ? r.partner + "  |  " : "") + sourced.length + " sourced candidate" + (sourced.length !== 1 ? "s" : ""));
+  var sub = el("div","sub2", (r.jobId ? "Req #" + r.jobId + "  |  " : "") + (r.owner ? "Owner: " + r.owner + "  |  " : "") + sourced.length + " sourced candidate" + (sourced.length !== 1 ? "s" : ""));
   sub.style.marginTop = "2px"; head.appendChild(sub);
   var xb = el("button","x","\u00d7"); xb.setAttribute("data-close","1"); head.appendChild(xb);
   m.appendChild(head);
@@ -5086,7 +5086,7 @@ function renderBenchCandidates(reqId){
     var GRID = "display:grid;grid-template-columns:1.2fr 1fr 1fr 150px 130px 66px;gap:0 12px;align-items:center";
     var lhdr = el("div");
     lhdr.style.cssText = GRID + ";padding:6px 0 10px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);margin-bottom:4px";
-    ["Name","Title","Company","Recruiter Owner","Review Status",""].forEach(function(h){ lhdr.appendChild(el("span",null,h)); });
+    ["Name","Title","Company","Owner","Review Status",""].forEach(function(h){ lhdr.appendChild(el("span",null,h)); });
     body.appendChild(lhdr);
     STATE_ORDER.forEach(function(stateKey){
       var list = groups[stateKey]; if(!list || !list.length){ return; }
@@ -5127,11 +5127,11 @@ function renderBenchCandidates(reqId){
    or no requisition. Every field maps to its own database column; no legacy mapping. \u2500\u2500 */
 var TB_BENCH_REQUIRED = [
   ["jobId","Job ID"], ["title","Requisition Title"], ["hm","Hiring Manager"],
-  ["taOwner","TA Owner"], ["tssRecruiter","TSS Recruiter"], ["department","Department"],
+  ["owner","Owner"], ["department","Department"],
   ["program","Program"], ["priority","Priority"], ["benchStatus","Status"], ["notes","Notes"]
 ];
 function openBenchReqModal(existing){
-  var r = existing || { title:"", jobId:"", loc:"", hm:"", partner:"", taOwner:"", tssRecruiter:"", department:"", program:"", priority:"", benchStatus:"waiting", benchNotes:"" };
+  var r = existing || { title:"", jobId:"", loc:"", hm:"", owner:"", department:"", program:"", priority:"", benchStatus:"waiting", benchNotes:"" };
   var editId = existing ? existing.id : null;
   var m = document.getElementById("modal"); m.className = "modal"; m.innerHTML = "";
   var head = el("div","mhead");
@@ -5193,22 +5193,19 @@ function openBenchReqModal(existing){
     : (typeof OWNERS !== "undefined" ? OWNERS.filter(function(o){ return o && o !== "Unassigned"; }) : []);
   var deptNames = (typeof TB_PROGRAMS !== "undefined" && TB_PROGRAMS.length) ? TB_PROGRAMS.map(function(p){ return p.name; }) : [];
   var allReqs = (state.reqs || []);
-  var taSuggestions = distinct(allReqs.map(function(x){ return x.taOwner; })).sort();
   var programSuggestions = distinct(allReqs.map(function(x){ return x.program; })).sort();
   var statusOptions = Object.keys(BENCH_STATUS).map(function(k){ return [k, BENCH_STATUS[k].icon + " " + BENCH_STATUS[k].label]; });
 
   g.appendChild(bField("Req # / Job ID", "jobId", r.jobId, true));
   g.appendChild(bField("Requisition Title", "title", r.title, true));
   g.appendChild(bDatalist("Hiring Manager", "hm", r.hm, hmNames, true));
-  g.appendChild(bDatalist("TA Owner", "taOwner", r.taOwner, taSuggestions, true));
-  g.appendChild(bSelect("TSS Recruiter", "tssRecruiter", r.tssRecruiter, recruiterNames, true));
+  g.appendChild(bSelect("Owner", "owner", r.owner, recruiterNames, true, "— Select Owner (the recruiter filling this req) —"));
   if(deptNames.length){ g.appendChild(bSelect("Department", "department", r.department, deptNames, true)); }
   else { g.appendChild(bField("Department", "department", r.department, true)); }
   g.appendChild(bDatalist("Program", "program", r.program, programSuggestions, true));
   g.appendChild(bSelect("Priority", "priority", r.priority, PRIORITY, true));
   g.appendChild(bSelect("Status", "benchStatus", r.benchStatus || "waiting", statusOptions, true));
   g.appendChild(bField("Location", "loc", r.loc, false));
-  g.appendChild(bField("Sourcing Partner", "partner", r.partner, false));
   var notesWrap = el("div","fld full"); notesWrap.appendChild(markLabel("Notes", true));
   var notesTa = el("textarea"); notesTa.value = r.benchNotes || ""; notesTa.setAttribute("data-bfield","notes"); notesTa.setAttribute("data-brequired","1");
   notesTa.placeholder = "Why this req exists, sourcing context, anything the owner needs to know\u2026";
@@ -5273,18 +5270,16 @@ async function saveBenchReq(editId){
     org: ORG, bench: true, urgency: "Open",
     title: bv("title"), job_id: bv("jobId"), loc: bv("loc"),
     hiring_manager: bv("hm"),
-    ta_owner: bv("taOwner"),
-    tss_recruiter: bv("tssRecruiter"),
+    tss_recruiter: bv("owner"), /* single Owner — field of record */
     department: bv("department"),
     program: bv("program"),
     priority: bv("priority"),
     bench_status: bv("benchStatus"),
-    bench_notes: bv("notes"),
-    partner: bv("partner")
+    bench_notes: bv("notes")
   };
   closeModal();
   if(editId && editId !== "new"){
-    await run(sb.from("reqs").update(row).eq("id", editId), "Sourcing req updated \u2014 TA " + row.ta_owner + " \u00b7 Recruiter " + row.tss_recruiter);
+    await run(sb.from("reqs").update(row).eq("id", editId), "Sourcing req updated \u2014 Owner " + row.tss_recruiter);
   } else {
     var res = await sb.from("reqs").insert(row);
     if(res && res.error){ toast(res.error.message || "Insert failed"); return; }
@@ -5307,8 +5302,7 @@ function tbBenchCreatedConfirm(row){
   }
   line("Requisition", row.title + (row.loc ? " \u2013 " + row.loc : ""));
   line("Job ID", "#" + row.job_id);
-  line("TA Owner", row.ta_owner);
-  line("TSS Recruiter", row.tss_recruiter);
+  line("Owner", row.tss_recruiter);
   body.appendChild(card);
   body.appendChild(el("div","hint","It\u2019s live on the TalentBench board under " + row.department + " \u00b7 " + row.program + ". Next: tag candidates to it from their profiles, or open a candidate\u2019s TalentFit panel and run it against your reqs."));
   m.appendChild(body);
@@ -6120,7 +6114,7 @@ function autoMatchReqs(text, cand){
     if(skillsTop){ out += "- Key skills: " + skillsTop + "\n"; }
     if(cand.loc){ out += "- Location: " + cand.loc + (cstate && cstate === (SITE_STATE[(b.loc || "").split(/[\/,\s]/)[0].trim().toUpperCase()] || "") ? " (local to site)" : "") + "\n"; }
     out += "\nResume attached. They are available to speak this week - happy to coordinate a time.\n\nBest,\n" + (typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.name ? CURRENT_USER.name : "The Staffing Specialist");
-    if(b.bench && b.partner){ out += "\n\nALERT: TalentBench req - notify " + b.partner + "."; }
+    if(b.bench && b.owner){ out += "\n\nALERT: TalentBench req - notify " + b.owner + "."; }
     return out;
   }catch(e){ return ""; }
 }
@@ -11210,11 +11204,11 @@ body.tb-overlay-open{ overflow:hidden; }
     (function(){
       var oc = wsCard("margin-bottom:14px"); oc.appendChild(wsHead("Ownership Console — TalentBench"));
       var benchAll = getBenchReqs();
-      var unownedN = benchAll.filter(function(r){ return !r.taOwner || !r.tssRecruiter; }).length;
-      oc.appendChild(el("div","hint", benchAll.length + " TalentBench requisitions · " + unownedN + " missing ownership. Select rows, assign in bulk, then Recalculate Inheritance to flow ownership onto unassigned candidates. Suggestions are advisory — nothing is ever assigned without your explicit action. Every change is logged."));
+      var unownedN = benchAll.filter(function(r){ return !r.owner; }).length;
+      oc.appendChild(el("div","hint", benchAll.length + " TalentBench requisitions \u00b7 " + unownedN + " unowned. One Owner per requisition \u2014 the recruiter filling it. Select rows, assign in bulk, then Recalculate Inheritance to flow ownership onto unassigned candidates. Suggestions are advisory \u2014 nothing is ever assigned without your explicit action. Every change is logged."));
 
       function sourcedFor(r){
-        var lbl = (r.title||"") + " – " + (r.loc||""), lblAlt = (r.title||"") + " - " + (r.loc||"");
+        var lbl = (r.title||"") + " \u2013 " + (r.loc||""), lblAlt = (r.title||"") + " - " + (r.loc||"");
         return (state.candidates || []).filter(function(c){ return (c.reqs||[]).indexOf(lbl) !== -1 || (c.reqs||[]).indexOf(lblAlt) !== -1; });
       }
       function suggestFor(r){
@@ -11227,57 +11221,51 @@ body.tb-overlay-open{ overflow:hidden; }
         try{ await sb.from("program_notes").insert({ org: ORG, author_id: CURRENT_USER.id, author_email: (CURRENT_USER.email||"").trim(), body: text, context: "admin_audit" }); }catch(eLA){}
       }
       var selected = {};
-      /* bulk bar */
+      /* bulk bar \u2014 ONE owner, selected from the user directory, never free text */
       var bar = el("div"); bar.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0";
-      var taIn = el("input"); taIn.type = "text"; taIn.placeholder = "TA Owner (e.g. Taylor Mercer)";
-      taIn.style.cssText = "background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:var(--ink);font:inherit;font-size:13px;width:210px";
-      var taDl = document.createElement("datalist"); taDl.id = "ocTaDl";
-      (function(){ var seen = {}; benchAll.forEach(function(r){ if(r.taOwner && !seen[r.taOwner]){ seen[r.taOwner] = 1; var o = document.createElement("option"); o.value = r.taOwner; taDl.appendChild(o); } }); })();
-      taIn.setAttribute("list","ocTaDl"); bar.appendChild(taIn); bar.appendChild(taDl);
       var recSel = document.createElement("select");
       recSel.style.cssText = "background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:var(--ink);font:inherit;font-size:13px";
-      var rp = document.createElement("option"); rp.value = ""; rp.textContent = "TSS Recruiter…"; recSel.appendChild(rp);
+      var rp = document.createElement("option"); rp.value = ""; rp.textContent = "Owner\u2026"; recSel.appendChild(rp);
       var recNames = (typeof TB_RECRUITER_DIRECTORY !== "undefined" && TB_RECRUITER_DIRECTORY.length) ? TB_RECRUITER_DIRECTORY.map(function(x){ return x.name; }) : (typeof OWNERS !== "undefined" ? OWNERS.filter(function(o){ return o && o !== "Unassigned"; }) : []);
       recNames.forEach(function(n2){ var o = document.createElement("option"); o.value = n2; o.textContent = n2; recSel.appendChild(o); });
       bar.appendChild(recSel);
-      var applyBtn = el("button","btn gold sm","Assign to selected (0)"); applyBtn.type = "button"; applyBtn.disabled = true;
+      var applyBtn = el("button","btn gold sm","Assign Owner to selected (0)"); applyBtn.type = "button"; applyBtn.disabled = true;
       bar.appendChild(applyBtn);
-      var sugBtn = el("button","btn sm ghost","Apply suggested recruiters to selected"); sugBtn.type = "button"; sugBtn.disabled = true;
-      sugBtn.title = "Sets each selected requisition’s TSS Recruiter to its suggestion (rows without a suggestion are skipped). TA Owner is not touched.";
+      var sugBtn = el("button","btn sm ghost","Apply suggested owners to selected"); sugBtn.type = "button"; sugBtn.disabled = true;
+      sugBtn.title = "Sets each selected requisition\u2019s Owner to its suggestion (rows without a suggestion are skipped).";
       bar.appendChild(sugBtn);
       var recalcBtn = el("button","btn sm ghost","Recalculate Inheritance"); recalcBtn.type = "button";
-      recalcBtn.title = "For every owned requisition: unassigned candidates tagged to it inherit the TSS Recruiter as owner. Claimed candidates are never touched.";
+      recalcBtn.title = "For every owned requisition: unassigned candidates tagged to it inherit the req Owner. Claimed candidates are never touched.";
       bar.appendChild(recalcBtn);
       oc.appendChild(bar);
       function refreshBulkState(){
         var n = Object.keys(selected).filter(function(k){ return selected[k]; }).length;
-        applyBtn.textContent = "Assign to selected (" + n + ")";
-        applyBtn.disabled = n === 0 || (!taIn.value.trim() && !recSel.value);
+        applyBtn.textContent = "Assign Owner to selected (" + n + ")";
+        applyBtn.disabled = n === 0 || !recSel.value;
         sugBtn.disabled = n === 0;
       }
-      taIn.addEventListener("input", refreshBulkState); recSel.addEventListener("change", refreshBulkState);
+      recSel.addEventListener("change", refreshBulkState);
       /* table */
       var tblWrap = el("div"); tblWrap.style.cssText = "max-height:340px;overflow-y:auto;border:1px solid var(--line);border-radius:10px";
-      var GRID = "display:grid;grid-template-columns:30px 2fr 1fr 1fr 64px 1.2fr;gap:0 10px;align-items:center;padding:7px 12px";
+      var GRID = "display:grid;grid-template-columns:30px 2.2fr 1.1fr 64px 1.2fr;gap:0 10px;align-items:center;padding:7px 12px";
       var hd = el("div"); hd.style.cssText = GRID + ";position:sticky;top:0;background:var(--panel2);font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--line);z-index:2";
-      ["","Requisition","TA Owner","TSS Recruiter","Cands","Suggested Owner"].forEach(function(h){ hd.appendChild(el("span",null,h)); });
+      ["","Requisition","Owner","Cands","Suggested Owner"].forEach(function(h){ hd.appendChild(el("span",null,h)); });
       tblWrap.appendChild(hd);
       var allCk = el("input"); allCk.type = "checkbox"; allCk.title = "Select all"; hd.children[0].appendChild(allCk);
       var rowCks = [];
-      benchAll.slice().sort(function(a,b){ var au = (!a.taOwner||!a.tssRecruiter)?0:1, bu = (!b.taOwner||!b.tssRecruiter)?0:1; return au - bu || (a.title||"").localeCompare(b.title||""); }).forEach(function(r){
+      benchAll.slice().sort(function(a,b){ var au = (!a.owner)?0:1, bu = (!b.owner)?0:1; return au - bu || (a.title||"").localeCompare(b.title||""); }).forEach(function(r){
         var row = el("div"); row.style.cssText = GRID + ";border-bottom:1px solid var(--line);font-size:12.5px";
         var ckW = el("span"); var ck = el("input"); ck.type = "checkbox";
         ck.addEventListener("change", function(){ selected[r.id] = ck.checked; refreshBulkState(); });
         rowCks.push(ck); ckW.appendChild(ck); row.appendChild(ckW);
-        row.appendChild(el("span", null, (r.jobId ? "#" + r.jobId + " · " : "") + (r.title || "")));
-        function ownSpan(v){ var s = el("span", null, v || "Unowned"); if(!v){ s.style.cssText = "color:#92400e;font-weight:700;font-style:italic"; } return s; }
-        row.appendChild(ownSpan(r.taOwner)); row.appendChild(ownSpan(r.tssRecruiter));
+        row.appendChild(el("span", null, (r.jobId ? "#" + r.jobId + " \u00b7 " : "") + (r.title || "")));
+        var s = el("span", null, r.owner || "Unowned"); if(!r.owner){ s.style.cssText = "color:#92400e;font-weight:700;font-style:italic"; }
+        row.appendChild(s);
         var scN = sourcedFor(r).length; var cn = el("span", null, String(scN)); cn.style.cssText = "font-weight:700;color:" + (scN ? "var(--gold)" : "var(--muted)"); row.appendChild(cn);
         var sug = suggestFor(r);
-        var sg = el("span","sub2", sug ? ("Suggest: " + sug.name + " (" + sug.n + " active)") : "—");
-        if(sug){ sg.title = sug.name + " is working " + sug.n + " active candidate" + (sug.n === 1 ? "" : "s") + " on this req — advisory only, nothing is assigned until you act."; sg.style.color = "var(--teal)"; }
+        var sg = el("span","sub2", sug ? ("Suggest: " + sug.name + " (" + sug.n + " active)") : "\u2014");
+        if(sug){ sg.title = sug.name + " is working " + sug.n + " active candidate" + (sug.n === 1 ? "" : "s") + " on this req \u2014 advisory only, nothing is assigned until you act."; sg.style.color = "var(--teal)"; }
         row.appendChild(sg);
-        row.__req = r; row.__sug = sug;
         tblWrap.appendChild(row);
       });
       allCk.addEventListener("change", function(){
@@ -11287,52 +11275,48 @@ body.tb-overlay-open{ overflow:hidden; }
       function selectedReqs(){
         return benchAll.filter(function(r){ return selected[r.id]; });
       }
-      async function applyOwnership(pairs){ /* pairs: [{r, ta, rec}] — explicit human action only */
+      async function applyOwnership(pairs){ /* pairs: [{r, own}] \u2014 explicit human action only */
         var changed = 0;
         for(var i=0;i<pairs.length;i++){
-          var p = pairs[i]; var upd = {};
-          if(p.ta && p.ta !== p.r.taOwner){ upd.ta_owner = p.ta; }
-          if(p.rec && p.rec !== p.r.tssRecruiter){ upd.tss_recruiter = p.rec; }
-          if(!Object.keys(upd).length){ continue; }
-          var res = await sb.from("reqs").update(upd).eq("id", p.r.id);
+          var p = pairs[i];
+          if(!p.own || p.own === p.r.owner){ continue; }
+          var res = await sb.from("reqs").update({ tss_recruiter: p.own }).eq("id", p.r.id);
           if(res && res.error){ toast("Update failed on #" + (p.r.jobId||p.r.title) + ": " + (res.error.message||"")); continue; }
           changed++;
-          await logAudit("[Ownership] Req #" + (p.r.jobId||"") + " " + (p.r.title||"") +
-            (upd.ta_owner ? " — TA: '" + (p.r.taOwner||"—") + "' → '" + upd.ta_owner + "'" : "") +
-            (upd.tss_recruiter ? " — Recruiter: '" + (p.r.tssRecruiter||"—") + "' → '" + upd.tss_recruiter + "'" : ""));
+          await logAudit("[Ownership] Req #" + (p.r.jobId||"") + " " + (p.r.title||"") + " \u2014 Owner: '" + (p.r.owner||"\u2014") + "' \u2192 '" + p.own + "'");
         }
         if(changed){
           await loadData(); try{ if(typeof loadNotes === "function"){ await loadNotes(); } }catch(eLN){}
-          toast(changed + " requisition" + (changed === 1 ? "" : "s") + " updated — board and console reflect the new owners.");
-          refresh(); /* re-render console + everything with fresh ownership */
+          toast(changed + " requisition" + (changed === 1 ? "" : "s") + " updated \u2014 board, routing, and reports reflect the new owner immediately.");
+          refresh();
         } else { toast("Nothing to change."); }
       }
       applyBtn.addEventListener("click", function(){
-        var ta = taIn.value.trim(), rec = recSel.value;
-        applyOwnership(selectedReqs().map(function(r){ return { r: r, ta: ta, rec: rec }; }));
+        var own = recSel.value;
+        applyOwnership(selectedReqs().map(function(r){ return { r: r, own: own }; }));
       });
       sugBtn.addEventListener("click", function(){
-        var pairs = selectedReqs().map(function(r){ var s = suggestFor(r); return s ? { r: r, ta: "", rec: s.name } : null; }).filter(Boolean);
+        var pairs = selectedReqs().map(function(r){ var s2 = suggestFor(r); return s2 ? { r: r, own: s2.name } : null; }).filter(Boolean);
         if(!pairs.length){ toast("No suggestions available for the selected rows."); return; }
         applyOwnership(pairs);
       });
       recalcBtn.addEventListener("click", async function(){
-        if(!window.confirm("Recalculate inheritance? Unassigned candidates on owned requisitions inherit the requisition's TSS Recruiter as owner. Candidates already owned by a recruiter are never touched.")){ return; }
+        if(!window.confirm("Recalculate inheritance? Unassigned candidates on owned requisitions inherit the requisition Owner. Candidates already owned by a recruiter are never touched.")){ return; }
         var inherited = 0, details = [];
         for(var i=0;i<benchAll.length;i++){
-          var r = benchAll[i]; if(!r.tssRecruiter){ continue; }
+          var r = benchAll[i]; if(!r.owner){ continue; }
           var cands = sourcedFor(r).filter(function(c){ return (!c.owner || c.owner === "Unassigned") && c.status !== "Archived"; });
           for(var j=0;j<cands.length;j++){
-            var res2 = await sb.from("candidates").update({ owner: r.tssRecruiter }).eq("id", cands[j].id);
-            if(!res2 || !res2.error){ inherited++; details.push(fullName(cands[j]) + " → " + r.tssRecruiter); }
+            var res2 = await sb.from("candidates").update({ owner: r.owner }).eq("id", cands[j].id);
+            if(!res2 || !res2.error){ inherited++; details.push(fullName(cands[j]) + " \u2192 " + r.owner); }
           }
         }
         if(inherited){
-          await logAudit("[Ownership] Inheritance recalculated — " + inherited + " unassigned candidate" + (inherited === 1 ? "" : "s") + " inherited ownership: " + details.slice(0,10).join(", ") + (details.length > 10 ? " …" : ""));
+          await logAudit("[Ownership] Inheritance recalculated \u2014 " + inherited + " unassigned candidate" + (inherited === 1 ? "" : "s") + " inherited ownership: " + details.slice(0,10).join(", ") + (details.length > 10 ? " \u2026" : ""));
           await loadData(); try{ if(typeof loadNotes === "function"){ await loadNotes(); } }catch(eLN2){}
           toast(inherited + " candidate" + (inherited === 1 ? "" : "s") + " inherited ownership from their requisitions.");
           refresh();
-        } else { toast("Nothing to inherit — every candidate on owned reqs already has an owner."); }
+        } else { toast("Nothing to inherit \u2014 every candidate on owned reqs already has an owner."); }
       });
       wrap.appendChild(oc);
     })();
