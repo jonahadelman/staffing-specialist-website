@@ -1342,7 +1342,7 @@ function renderStartMyDay(host){
   else if(readyN === -2 && typeof tbWarmScores === "function"){
     heroChip("\u2026", "Candidates Ready", "autoslate", "TalentFit is scoring in the background — this fills in automatically");
     var _chipRef = chips.children[chips.children.length - 1].querySelector("b");
-    tbWarmScores(function(){ try{ if(_chipRef && _chipRef.isConnected){ _chipRef.textContent = String(tbCountReady()); } }catch(eC){} });
+    tbWarmScores(function(){ try{ if(_chipRef && _chipRef.isConnected){ var _n = tbCountReady(); _chipRef.textContent = String(_n); if(pulse && pulse.isConnected){ pulse.textContent = tbPulseText(_n); } } }catch(eC){} });
   }
   var cta = el("button", null, "Start My Day"); cta.type = "button";
   cta.style.cssText = "margin-left:auto;background:var(--gold);border:0;border-radius:10px;color:#fff;font:inherit;font-size:14px;font-weight:700;padding:11px 26px;cursor:pointer;box-shadow:0 4px 16px rgba(59,91,255,.35);transition:transform .14s,opacity .14s";
@@ -1353,6 +1353,36 @@ function renderStartMyDay(host){
   hc.appendChild(chips);
   hero.appendChild(hc);
   wrap.appendChild(hero);
+
+  /* ── The pulse: one muted line proving the workstation worked while you were away.
+     ONE line only — the hero stays clean; luxury is whitespace. ── */
+  var activeN = cands.filter(function(c){ return c.status !== "Archived" && c.status !== "Offer Accepted - Hired"; }).length;
+  var openReqN = 0; try{ openReqN = (window.TB_METRICS ? TB_METRICS.canonicalReqEntries(REQS).map(function(e){ return e.req; }) : REQS).filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : !r.bench; }).length; }catch(ePl){}
+  var pulse = el("div"); pulse.style.cssText = "font-size:12.5px;color:var(--muted);margin:-8px 0 16px;padding:0 4px";
+  function tbPulseText(ready){
+    var recN = 0; try{ recN = (typeof tbRecsForMe === "function") ? tbRecsForMe().length : 0; }catch(eR2){}
+    var base = "\ud83e\udde0 TalentFit analyzed " + activeN + " candidates against " + openReqN + " open requisitions" + (ready >= 0 ? " \u2014 " + ready + " ready for review" : "");
+    /* since-yesterday deltas from the daily snapshot */
+    try{
+      var p = tbDeskLoad("pulse", null);
+      if(ready >= 0){
+        if(!p || p.date !== today){ p = { date: today, prev: p ? { readyN: p.readyN, recN: p.recN } : null, readyN: ready, recN: recN }; }
+        else { p.readyN = ready; p.recN = recN; }
+        tbDeskSave("pulse", p);
+        if(p.prev){
+          var bits = [];
+          var dR = p.readyN - p.prev.readyN; if(dR > 0){ bits.push("+" + dR + " became TalentFit Ready"); }
+          var dRec = p.recN - p.prev.recN; if(dRec > 0){ bits.push("+" + dRec + " new recommendation" + (dRec === 1 ? "" : "s")); }
+          if(hmN > 0){ bits.push(hmN + " hiring manager" + (hmN === 1 ? "" : "s") + " waiting"); }
+          if(bits.length){ base += "  \u00b7  Since yesterday: " + bits.join(" \u00b7 "); }
+        }
+      }
+    }catch(eP){}
+    return base;
+  }
+  pulse.textContent = tbPulseText(readyN);
+  pulse.title = "Computed live from your desk \u2014 every number equals its drill-down";
+  wrap.appendChild(pulse);
 
   /* ── Today's Priorities ── */
   var irsToday = irs.filter(function(ir){ return (ir.interviewDate || "").slice(0,10) === today && ir.status !== "Cancelled"; });
@@ -1411,7 +1441,7 @@ function renderStartMyDay(host){
   pc.style.marginBottom = "0";
   var rowA = smdGrid();
   rowA.appendChild(pc);
-  var tf = smdCard("TalentFit Ready", "The three strongest open candidates the engine has already matched — the work is done, make the call");
+  var tf = smdCard("\ud83e\udde0 TalentFit Ready", "The three strongest open candidates the engine has already matched — the work is done, make the call");
   function fillTalentFitReady(){
     try{
       var scored = [];
