@@ -919,6 +919,7 @@ var VIEWS = [
   /* v3.0 WORKSTATION VIEWS — shown only to their assigned workstation (TB_WS_FILTER) */
   { id:"tb_hmfb", hidden:true, name:"Hiring Manager Decisions", fn:function(){ return true; }, special:"tb_hmfb" },
   { id:"tb_recs", hidden:true, name:"Recommended to Me", fn:function(){ return true; }, special:"tb_recs" },
+  { id:"tb_tbrev", hidden:true, name:"TalentBench Review Updates", fn:function(){ return true; }, special:"tb_tbrev" },
   { id:"tb_checklist", hidden:true, name:"My Daily Checklist", fn:function(){ return true; }, special:"tb_checklist" },
   { id:"tb_goals", hidden:true, name:"Weekly Goals", fn:function(){ return true; }, special:"tb_goals" },
   { id:"tb_mynotes", hidden:true, name:"My Notes", fn:function(){ return true; }, special:"tb_mynotes" },
@@ -1142,6 +1143,7 @@ function renderList(){
   if(v.id === "tb_people_rec"){ renderRecruiterBoard(host); return; }
   if(v.special === "tb_hmfb"){ renderHMFbQueue(host); return; }
   if(v.special === "tb_recs"){ renderRecQueue(host); return; }
+  if(v.special === "tb_tbrev"){ renderTBRevQueue(host); return; }
   if(v.special === "tb_checklist"){ renderChecklist(host); return; }
   if(v.special === "tb_goals"){ renderWeeklyGoals(host); return; }
   if(v.special === "tb_mynotes"){ renderMyNotes(host); return; }
@@ -1460,6 +1462,9 @@ function renderStartMyDay(host){
   var recsN = 0; try{ recsN = (typeof tbRecsForMe === "function") ? tbRecsForMe().length : 0; }catch(eRc){}
   prio("--purple", recsN, "candidate" + (recsN === 1 ? "" : "s") + " recommended to you", "tb_recs", false,
     "Teammates recommended these candidates for your requisitions. Accept to add them to your desk, or decline — they see your call either way.");
+  var tbrN = 0; try{ tbrN = (typeof tbTBRevForMe === "function") ? tbTBRevForMe().length : 0; }catch(eTr){}
+  prio("--teal", tbrN, "TalentBench review update" + (tbrN === 1 ? "" : "s") + " on your candidates", "tb_tbrev", false,
+    "Review decisions (accepted, rejected, interview requested…) landed on candidates you own in the last 7 days. Opens each with its next step.");
   if(!irsToday.length && !fuDue.length && !hmOweN && !offers.length && !starving.length){
     pc.appendChild(el("div","hint","Clear board. Get ahead: refresh TalentFit and work the slates."));
   }
@@ -4384,6 +4389,113 @@ function tbrCanReview(){
   return CURRENT_USER.role === 'editor' || CURRENT_USER.role === 'tb_reviewer';
 }
 
+/* ── B5: ONE state model, shared by the queue, the board modal, and Start My Day.
+   Maps the EXISTING tb_status values written by the review workflow — no new states. ── */
+function tbrStateOf(c){
+  var s = c && c.tbStatus;
+  if(!s || s === "Submitted" || s === "Under Review"){ return "Waiting Review"; }
+  if(s === "Closed"){ return "Completed"; }
+  return s; /* Accepted / Rejected / Needs More Information / Interview Requested */
+}
+var TBR_STATE_ORDER = ["Waiting Review","Needs More Information","Interview Requested","Accepted","Rejected","Completed"];
+function tbrBenchCands(){
+  var benchLabels = {}, benchLabelsAlt = {};
+  getBenchReqs().forEach(function(r){ benchLabels[(r.title||"") + " – " + (r.loc||"")] = 1; benchLabelsAlt[(r.title||"") + " - " + (r.loc||"")] = 1; });
+  return (state.candidates || []).filter(function(c){
+    return (c.reqs || []).some(function(l){ return benchLabels[l] || benchLabelsAlt[l]; });
+  });
+}
+function tbrQueue(){
+  var q = {}; TBR_STATE_ORDER.forEach(function(k){ q[k] = []; });
+  tbrBenchCands().forEach(function(c){ q[tbrStateOf(c)].push(c); }); /* every candidate lands in exactly one state */
+  return q;
+}
+/* Queue drill-down — same row pattern as the sourced-candidates modal */
+function tbrOpenQueueModal(stateKey){
+  var list = tbrQueue()[stateKey] || [];
+  var m = document.getElementById("modal"); m.className = "modal"; m.innerHTML = "";
+  var head = el("div","mhead");
+  head.appendChild(el("h2", null, "Review Queue — " + stateKey));
+  var sub = el("div","sub2", list.length + " candidate" + (list.length !== 1 ? "s" : "") + " · TalentBench");
+  sub.style.marginTop = "2px"; head.appendChild(sub);
+  var xb = el("button","x","×"); xb.setAttribute("data-close","1"); head.appendChild(xb); m.appendChild(head);
+  var body = el("div","mbody");
+  if(!list.length){
+    var em = el("div","empty"); em.appendChild(el("div","big","Nothing in " + stateKey));
+    em.appendChild(el("div", null, "Candidates land here as review decisions are made on TalentBench candidates."));
+    body.appendChild(em);
+  } else {
+    var GRID = "display:grid;grid-template-columns:1.2fr 1fr 150px 130px 66px;gap:0 12px;align-items:center";
+    var lhdr = el("div"); lhdr.style.cssText = GRID + ";padding:6px 0 10px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);margin-bottom:4px";
+    ["Name","Requisition","Recruiter Owner","Review Status",""].forEach(function(h){ lhdr.appendChild(el("span",null,h)); });
+    body.appendChild(lhdr);
+    list.forEach(function(c){
+      var crow = el("div"); crow.style.cssText = GRID + ";padding:11px 0;border-bottom:1px solid var(--border);cursor:pointer";
+      crow.title = "Open " + fullName(c) + "’s full record — review actions live there";
+      crow.addEventListener("mouseover", function(){ crow.style.background = "var(--hover)"; });
+      crow.addEventListener("mouseout", function(){ crow.style.background = ""; });
+      crow.addEventListener("click", function(){ openDetail(c); });
+      var nm = el("span","nm", fullName(c)); nm.style.cssText = "font-weight:600;color:var(--gold)"; crow.appendChild(nm);
+      crow.appendChild(el("span","sub2", ((c.reqs||[])[0] || "-")));
+      var ow = el("span","sub2", (c.owner && c.owner !== "Unassigned") ? c.owner : "Unassigned");
+      if(!c.owner || c.owner === "Unassigned"){ ow.style.cssText = "color:var(--muted);font-style:italic"; }
+      crow.appendChild(ow);
+      var pw = el("span"); var pl = tbrStatusPill(c.tbStatus);
+      if(!c.tbStatus){ pl.textContent = "Waiting Review"; }
+      pw.appendChild(pl); crow.appendChild(pw);
+      var go = el("span", null, "Open →"); go.style.cssText = "font-size:12px;font-weight:700;color:var(--gold);text-align:right;white-space:nowrap"; crow.appendChild(go);
+      body.appendChild(crow);
+    });
+  }
+  m.appendChild(body);
+  document.getElementById("scrim").classList.add("open");
+}
+/* Routed work: review decisions on candidates I own, last 7 days — one entry per candidate (latest) */
+function tbTBRevForMe(){
+  var me = (typeof window.tbMeOwnerName === "function" ? window.tbMeOwnerName() : "").toLowerCase();
+  if(!me){ return []; }
+  var cutoff = Date.now() - 7 * 86400000;
+  var byCand = {};
+  (state.activities || []).forEach(function(a){
+    if((a.notes || "").indexOf("[TB Review]") !== 0){ return; }
+    var d = Date.parse(a.date || ""); if(!d || d < cutoff){ return; }
+    var c = (state.candidates || []).filter(function(x){ return x.id === a.candidateId; })[0];
+    if(!c || (c.owner || "").toLowerCase() !== me){ return; }
+    var prev = byCand[c.id];
+    if(!prev || (a.date || "") >= (prev.a.date || "")){ byCand[c.id] = { c: c, a: a }; } /* latest decision only — no duplicate routing */
+  });
+  return Object.keys(byCand).map(function(k){ return byCand[k]; });
+}
+function renderTBRevQueue(host){
+  document.getElementById("viewTitle").textContent = "TalentBench Review Updates";
+  var items = tbTBRevForMe();
+  document.getElementById("viewMeta").textContent = items.length + " review decision" + (items.length !== 1 ? "s" : "") + " on your candidates in the last 7 days";
+  if(!items.length){
+    var em = el("div","empty"); em.appendChild(el("div","big","No review updates"));
+    em.appendChild(el("div", null, "When a TalentBench review decision lands on a candidate you own, it appears here and on Start My Day."));
+    host.appendChild(em); return;
+  }
+  var wrap = el("div"); wrap.style.cssText = "max-width:900px";
+  items.sort(function(x, y){ return (y.a.date || "").localeCompare(x.a.date || ""); });
+  items.forEach(function(it){
+    var card = el("div"); card.style.cssText = "background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:14px 18px;margin-bottom:10px;cursor:pointer";
+    card.title = "Open " + fullName(it.c) + "’s record";
+    card.addEventListener("click", function(){ openDetail(it.c); });
+    var top = el("div"); top.style.cssText = "display:flex;align-items:center;gap:10px;flex-wrap:wrap";
+    var nm = el("b", null, fullName(it.c)); top.appendChild(nm);
+    top.appendChild(tbrStatusPill(it.c.tbStatus));
+    var when = el("span","sub2", it.a.date || ""); when.style.marginLeft = "auto"; top.appendChild(when);
+    card.appendChild(top);
+    var mt = el("div","sub2", (it.a.notes || "").replace("[TB Review] ", "") + " · " + ((it.c.reqs||[])[0] || ""));
+    mt.style.marginTop = "4px"; card.appendChild(mt);
+    var ns = el("div", null, "→ " + (tbrStateOf(it.c) === "Waiting Review" ? "Continue the review from the record." : tbrStateOf(it.c) === "Accepted" ? "Next: submit to the TA owner." : tbrStateOf(it.c) === "Needs More Information" ? "Next: gather the requested information and re-review." : tbrStateOf(it.c) === "Interview Requested" ? "Interview Request created — track scheduling in Interview Requests." : "Recorded — no further action required."));
+    ns.style.cssText = "font-size:12.5px;font-weight:600;color:var(--gold);margin-top:6px";
+    card.appendChild(ns);
+    wrap.appendChild(card);
+  });
+  host.appendChild(wrap);
+}
+
 /* Is candidate in any TalentBench req? */
 function tbrIsBenchCand(c){
   if(!c || !c.reqs || !c.reqs.length) return false;
@@ -4447,6 +4559,18 @@ async function tbrWriteReview(candidateId, candidateName, action, prevStatus, ne
   var cIdx = state.candidates.findIndex(function(x){ return x.id === candidateId; });
   if(cIdx !== -1){ state.candidates[cIdx].tbStatus = newStatus; }
 
+  /* ── B5: route the decision to the owning recruiter via the existing routed-work
+     framework (activities feed → Start My Day), same as Recommendations. One write
+     per decision — the queue reads latest-per-candidate, so no duplicate routing. ── */
+  try{
+    var cOwn = (cIdx !== -1) ? state.candidates[cIdx] : null;
+    await sb.from("activities").insert({
+      org: ORG, candidate_id: candidateId, type: "Note", date: todayISO(),
+      owner: (cOwn && cOwn.owner && cOwn.owner !== "Unassigned") ? cOwn.owner : (typeof meOwnerName === "function" ? meOwnerName() : ""),
+      notes: "[TB Review] status:" + newStatus + " by:" + CURRENT_USER.email + (reason ? " reason:" + reason : "")
+    });
+  }catch(eRt){}
+
   /* ── B2: "Request Interview" creates a REAL Interview Request via the existing
      certified IR pipeline — the button now does exactly what its label promises.
      Same row shape as saveInterviewRequest; status "Requested" enters the normal
@@ -4477,10 +4601,12 @@ async function tbrWriteReview(candidateId, candidateName, action, prevStatus, ne
         toast('Review saved, but the Interview Request could not be created: ' + (irRes.error.message || 'unknown error') + ' — create it from Interview Requests.');
       } else {
         toast('Interview Request created for ' + candidateName + ' — track and schedule it in Interview Requests.');
-        try{ await loadData(); }catch(eIR2){}
       }
     }
   }
+
+  /* One reload after all writes — queue, routed work, and IR views reflect immediately */
+  try{ await loadData(); }catch(eLd){}
 
   return true;
 }
@@ -4768,6 +4894,31 @@ function renderTalentBench(host){
   tninner.appendChild(buildTeamNotes("talentbench"));
   tn.appendChild(tninner); host.appendChild(tn);
 
+  /* ── B5: Review Queue — the existing review states, finally visible. One chip per
+     state; count always equals drill-down because both read tbrQueue(). ── */
+  {
+    var q = tbrQueue();
+    var qc = el("div"); qc.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:0 0 14px";
+    var qh = el("div", null, "Review Queue"); qh.style.cssText = "font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--gray);margin-bottom:10px";
+    qc.appendChild(qh);
+    var qrow = el("div"); qrow.style.cssText = "display:flex;gap:8px;flex-wrap:wrap";
+    var Q_COLORS = { "Waiting Review":"--gold", "Needs More Information":"--orange", "Interview Requested":"--teal", "Accepted":"--green", "Rejected":"--red", "Completed":"--gray" };
+    TBR_STATE_ORDER.forEach(function(sk){
+      var n = q[sk].length;
+      var chip = el("button","btn sm " + (sk === "Waiting Review" ? "gold" : "ghost"));
+      chip.type = "button";
+      chip.textContent = sk + " · " + n;
+      chip.title = n + " TalentBench candidate" + (n === 1 ? "" : "s") + " in " + sk + " — click to open exactly these candidates";
+      if(sk !== "Waiting Review"){ chip.style.cssText = "border-left:3px solid " + cssVar(Q_COLORS[sk]); }
+      chip.addEventListener("click", function(){ tbrOpenQueueModal(sk); });
+      qrow.appendChild(chip);
+    });
+    qc.appendChild(qrow);
+    var qhint = el("div","hint","Every TalentBench candidate is in exactly one state. Decisions land in the owning recruiter’s Start My Day automatically.");
+    qhint.style.marginTop = "8px"; qc.appendChild(qhint);
+    host.appendChild(qc);
+  }
+
   if(!VIEW_ONLY){
     var bar = el("div"); bar.style.cssText = "display:flex;gap:8px;margin-bottom:12px;align-items:center";
     var addb = el("button","btn gold sm","+ Add Sourcing Req"); addb.setAttribute("data-benchadd","1"); bar.appendChild(addb);
@@ -4916,14 +5067,9 @@ function renderBenchCandidates(reqId){
     body.appendChild(em2);
   } else {
     /* ── B1: every candidate belongs to exactly one visible review state; every row
-       shows status, ownership, and one obvious action. Reuses tbrStatusPill + openDetail. ── */
-    function tbrStateOf(c){
-      var s = c.tbStatus;
-      if(!s || s === "Submitted" || s === "Under Review"){ return "Waiting Review"; }
-      if(s === "Closed"){ return "Completed"; }
-      return s; /* Accepted / Rejected / Needs More Information / Interview Requested */
-    }
-    var STATE_ORDER = ["Waiting Review","Needs More Information","Interview Requested","Accepted","Rejected","Completed"];
+       shows status, ownership, and one obvious action. B5: state model now shared —
+       the global tbrStateOf/TBR_STATE_ORDER drive this modal AND the Review Queue. ── */
+    var STATE_ORDER = TBR_STATE_ORDER;
     var groups = {};
     sourced.forEach(function(c){ var k = tbrStateOf(c); (groups[k] = groups[k] || []).push(c); });
     var GRID = "display:grid;grid-template-columns:1.2fr 1fr 1fr 150px 130px 66px;gap:0 12px;align-items:center";
@@ -10296,6 +10442,7 @@ body.tb-overlay-open{ overflow:hidden; }
     var hit = (typeof OWNERS !== "undefined" ? OWNERS : []).filter(function(o){ return o.toLowerCase() === first; })[0];
     return hit || (first ? first.charAt(0).toUpperCase() + first.slice(1) : "");
   }
+  window.tbMeOwnerName = meOwnerName; /* B5: routed-work queue needs this outside the module */
   function ownerIsMe(c){ return (c.owner || "") !== "" && c.owner !== "Unassigned" && c.owner.toLowerCase() === meOwnerName().toLowerCase(); }
   function unclaimed(c){ return !c.owner || c.owner === "Unassigned"; }
   async function logOwnership(c, text){
