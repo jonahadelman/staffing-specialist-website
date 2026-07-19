@@ -9714,11 +9714,16 @@ h3.sech .secount.urgent{ color:var(--red); border-color:var(--red); background:r
 .hm-qa-btn:hover{ border-color:var(--gold); color:var(--gold); }
 .hm-card-view{ position:absolute; right:14px; bottom:10px; font-size:11px; font-weight:700; color:var(--gold); opacity:.85; transition:opacity .15s; }
 .hm-card:hover .hm-card-view{ opacity:0; } /* quick actions replace it on hover */
-#hmDrawerOverlay{ position:fixed; inset:0; background:rgba(10,14,25,.35); opacity:0; pointer-events:none; transition:opacity .2s; z-index:60; }
+/* PRODUCTION FIX (launch, 2026-07-19): the sticky app header is z-index:100, so at
+   z-index:60/61 the drawer's fixed head (manager name · contact · × close) rendered
+   UNDERNEATH the top bar — fully hidden at 1366×768 where the bar wraps to two rows.
+   The slide-over must sit above the page chrome (header=100) and below modals
+   (scrim=500). Values only — no layout, spacing, or typography change. */
+#hmDrawerOverlay{ position:fixed; inset:0; background:rgba(10,14,25,.35); opacity:0; pointer-events:none; transition:opacity .2s; z-index:110; }
 #hmDrawerOverlay.open{ opacity:1; pointer-events:auto; }
 #hmDrawer{ position:fixed; top:0; right:0; height:100vh; height:100dvh; max-height:100dvh; width:min(480px,94vw); background:var(--panel);
   border-left:1px solid var(--line); box-shadow:-12px 0 34px rgba(0,0,0,.18); transform:translateX(102%);
-  transition:transform .22s ease; z-index:61; display:flex; flex-direction:column; overflow:hidden; }
+  transition:transform .22s ease; z-index:111; display:flex; flex-direction:column; overflow:hidden; }
 #hmDrawer.open{ transform:translateX(0); }
 .hmd-head{ flex:0 0 auto; display:flex; align-items:flex-start; justify-content:space-between; padding:18px 18px 12px; border-bottom:1px solid var(--line); }
 .hmd-nm{ font-size:18px; font-weight:800; color:var(--ink); }
