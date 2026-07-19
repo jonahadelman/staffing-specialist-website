@@ -5813,7 +5813,25 @@ async function saveCandidate(){
   else{
     var n = newBlank(); readModalInto(n);
     var dup = findDuplicate(n, null);
-    if(dup){ toast("Not added - " + (normEmail(n.email) ? "email" : "name") + " already exists: " + fullName(dup)); return; }
+    if(dup){
+      /* One Candidate. One Record. — turn the block into a workflow:
+         associate the new resume/brief with the existing record (fill-blank
+         only, history preserved), then open the existing profile. */
+      var patch = {}; var attached = [];
+      if(newPath && !dup.resumePath){ patch.resume_path = newPath; patch.resume_file_name = newFile || ""; attached.push("resume"); }
+      if(n.summary && !dup.summary){ patch.summary = n.summary; attached.push("Executive Brief"); }
+      if(n.resumeText && !dup.resumeText){ patch.resume_text = n.resumeText; }
+      closeModal();
+      if(attached.length){
+        await run(sb.from("candidates").update(patch).eq("id", dup.id), null);
+        toast("Candidate already exists - " + attached.join(" + ") + " attached to " + fullName(dup) + ". Opening existing profile…");
+      } else {
+        toast("Candidate already exists in TalentBase: " + fullName(dup) + ". Opening existing profile…");
+      }
+      var fresh = state.candidates.filter(function(x){ return x.id === dup.id; })[0] || dup;
+      openDetail(fresh);
+      return;
+    }
     if(newPath){ n.resumePath = newPath; n.resumeFileName = newFile || n.resumeFileName; }
     closeModal(); await run(sb.from("candidates").insert(candToRow(n)), "Created");
   }
@@ -7031,7 +7049,22 @@ function wireDrop(){
         c.firstName = info.firstName; c.lastName = info.lastName; c.location = info.location; c.source = d.source; c.owner = d.owner; c.discipline = d.disc; c.resumeFileName = file.name;
         if(/\.txt$/i.test(file.name)){ var r = new FileReader(); r.onload = function(){ c.resumeText = String(r.result).slice(0,20000); rows.push(candToRow(c)); done(); }; r.onerror = function(){ rows.push(candToRow(c)); done(); }; r.readAsText(file); }
         else{ rows.push(candToRow(c)); done(); }
-        async function done(){ pending--; if(pending === 0){ closeModal(); await run(sb.from("candidates").insert(rows), rows.length + " candidate(s) added"); } }
+        async function done(){ pending--; if(pending === 0){
+          /* PRODUCTION FIX (launch, 2026-07-19): duplicate prevention on the
+             Bulk Add file-drop — the one intake door that skipped the guard.
+             Same rule as every other path: check production + within-batch. */
+          var seenD = {}; var dedupD = []; var droppedD = 0;
+          rows.forEach(function(row){
+            var cc = { email: row.email, firstName: row.first_name, lastName: row.last_name };
+            var emD = normEmail(cc.email); var nmD = normName(cc.firstName, cc.lastName); var keyD = emD || nmD;
+            if(findDuplicate(cc, null) || (keyD && keyD !== "|" && seenD[keyD])){ droppedD++; return; }
+            if(keyD && keyD !== "|"){ seenD[keyD] = 1; }
+            dedupD.push(row);
+          });
+          closeModal();
+          if(dedupD.length === 0){ toast("All files were duplicates of existing candidates - nothing added"); return; }
+          await run(sb.from("candidates").insert(dedupD), dedupD.length + " candidate(s) added" + (droppedD ? (" - " + droppedD + " duplicate(s) skipped") : ""));
+        } }
       })(files[i]);
     }
   });
