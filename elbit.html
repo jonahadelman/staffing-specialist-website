@@ -6237,6 +6237,96 @@ async function fromResume(file){
   }
 }
 
+/* PRODUCTION FIX (launch, 2026-07-19): multi-resume ingestion.
+   Extends the existing From Resume door — same parser, same Executive Brief
+   composer, same duplicate guard, same storage path — to accept multiple files.
+   One file keeps the review-modal flow unchanged; multiple files run the
+   identical pipeline per file and end with a processing summary. No second
+   workflow was created. */
+function ingestOwnerDefault(){
+  try{
+    var em = (typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email : "";
+    var fn = em.split("@")[0].split(/[._\-]/)[0].toLowerCase();
+    if(fn){
+      for(var i = 0; i < OWNERS.length; i++){
+        if(String(OWNERS[i]).toLowerCase().indexOf(fn) === 0){ return OWNERS[i]; }
+      }
+    }
+  }catch(e){}
+  return "Unassigned";
+}
+async function ingestResumes(files){
+  var list = Array.prototype.slice.call(files).filter(function(f){ return /\.(pdf|docx?)$/i.test(f.name); });
+  if(!list.length){ toast("Drop PDF or Word resumes"); return; }
+  toast("Processing " + list.length + " resumes…");
+  var owner = ingestOwnerDefault();
+  var results = []; var rows = []; var seenBatch = {};
+  for(var i = 0; i < list.length; i++){
+    var file = list[i]; var rec = { file: file.name, status: "", detail: "" };
+    try{
+      var text = "";
+      try{ text = await extractText(file); }catch(eT){ text = ""; }
+      if(text === "__LEGACY_DOC__"){ text = ""; rec.detail = "old .doc — no text; "; }
+      if(text && text.indexOf("__SCANNED_PDF__") === 0){ text = text.replace("__SCANNED_PDF__", ""); if(!text.trim()){ rec.detail = "scanned — no text; "; } }
+      var c = newBlank();
+      var nm = grabName(text, file.name);
+      c.firstName = nm.first || ""; c.lastName = nm.last || "";
+      if(text){
+        c.email = grabEmail(text) || ""; c.phone = grabPhone(text) || "";
+        c.location = grabLocation(text) || ""; c.title = grabTitle(text) || "";
+        c.company = grabCompany(text) || ""; c.skills = grabSkills(text) || [];
+        c.discipline = guessDiscipline(text) || c.discipline;
+        c.linkedin = grabLinkedin(text) || "";
+        c.summary = buildExecBrief(text);
+        try{ c.notes = autoMatchReqs(text, { first: c.firstName, last: c.lastName, loc: c.location, disc: c.discipline, title: c.title, company: c.company, skills: (c.skills || []).join(", ") }) || ""; }catch(eN){}
+        c.resumeText = text.slice(0, 60000);
+      }
+      c.owner = owner; c.source = "Resume Database"; c.dateReceived = todayISO();
+      /* duplicate detection — against production data AND within this batch */
+      var key = normEmail(c.email) || normName(c.firstName, c.lastName);
+      var dup = findDuplicate(c, null);
+      if(dup){ rec.status = "skipped"; rec.detail = "duplicate of " + fullName(dup); results.push(rec); continue; }
+      if(key && key !== "|" && seenBatch[key]){ rec.status = "skipped"; rec.detail = "duplicate within batch"; results.push(rec); continue; }
+      if(key){ seenBatch[key] = 1; }
+      /* store the file — same bucket and path scheme as the single-file flow */
+      try{
+        var path = ORG + "/" + Date.now() + "_" + i + "_" + file.name.replace(/[^A-Za-z0-9._\-]/g, "_");
+        var up = await sb.storage.from("resumes").upload(path, file, { upsert: true });
+        if(up && !up.error){ c.resumePath = path; c.resumeFileName = file.name; }
+      }catch(eU){}
+      rows.push(candToRow(c));
+      rec.status = "created";
+      rec.detail = (rec.detail || "") + (c.summary ? "Executive Brief ✓" : "no text — fill manually") + (c.notes ? " · req matches ✓" : "");
+      results.push(rec);
+    }catch(eF){ rec.status = "failed"; rec.detail = String((eF && eF.message) || eF).slice(0, 80); results.push(rec); }
+  }
+  var okIns = true;
+  if(rows.length){ okIns = await run(sb.from("candidates").insert(rows), null); }
+  /* processing summary — every file accounted for, honestly */
+  var created = results.filter(function(r){ return r.status === "created"; }).length;
+  var skipped = results.filter(function(r){ return r.status === "skipped"; }).length;
+  var failed  = results.filter(function(r){ return r.status === "failed"; }).length;
+  var briefs  = results.filter(function(r){ return r.status === "created" && r.detail.indexOf("Executive Brief ✓") !== -1; }).length;
+  var m = document.getElementById("modal"); m.className = "modal"; m.innerHTML = "";
+  var head = el("div","mhead"); head.appendChild(el("h2", null, "Resume Ingestion Summary"));
+  var x = el("button","x","×"); x.setAttribute("data-close","1"); head.appendChild(x); m.appendChild(head);
+  var body = el("div","mbody");
+  body.appendChild(el("div","hint", created + " created (" + briefs + " with Executive Brief) · " + skipped + " duplicate" + (skipped === 1 ? "" : "s") + " skipped" + (failed ? " · " + failed + " failed" : "") + " · Owner: " + owner + " · TalentFit matches compute live on every profile."));
+  var t = el("table"); var th = el("thead"); var htr = el("tr");
+  ["File","Result","Detail"].forEach(function(h){ htr.appendChild(el("th", null, h)); });
+  th.appendChild(htr); t.appendChild(th);
+  var tb = el("tbody");
+  results.forEach(function(r){
+    var tr = el("tr");
+    tr.appendChild(el("td","nm", r.file));
+    tr.appendChild(el("td", null, r.status === "created" ? "✓ Created" : (r.status === "skipped" ? "○ Skipped" : "✗ Failed")));
+    tr.appendChild(el("td","sub2", r.detail || ""));
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb); body.appendChild(t); m.appendChild(body);
+  document.getElementById("scrim").classList.add("open");
+  if(!okIns){ toast("Some rows failed to save — see summary"); }
+}
 async function handleResumeFile(file){
   if(!file){ return; }
   setUpStat("Reading " + file.name + " ...");
@@ -7572,13 +7662,18 @@ document.getElementById("addBtn").addEventListener("click", function(){ openDeta
 (function(){
   var fr = document.getElementById("fromResumeBtn");
   if(!fr){ return; }
-  var inp = document.createElement("input"); inp.type = "file"; inp.accept = ".pdf,.doc,.docx"; inp.style.display = "none";
+  var inp = document.createElement("input"); inp.type = "file"; inp.accept = ".pdf,.doc,.docx"; inp.multiple = true; inp.style.display = "none";
   document.body.appendChild(inp);
-  inp.addEventListener("change", function(){ if(inp.files && inp.files[0]){ fromResume(inp.files[0]); inp.value = ""; } });
+  /* one file → unchanged review-modal flow · many files → identical pipeline per file + summary */
+  function routeResumes(files){
+    if(!files || !files.length){ return; }
+    if(files.length === 1){ fromResume(files[0]); } else { ingestResumes(files); }
+  }
+  inp.addEventListener("change", function(){ routeResumes(inp.files); inp.value = ""; });
   fr.addEventListener("click", function(){ inp.click(); });
   fr.addEventListener("dragover", function(e){ e.preventDefault(); fr.style.outline = "2px dashed var(--gold)"; });
   fr.addEventListener("dragleave", function(){ fr.style.outline = ""; });
-  fr.addEventListener("drop", function(e){ e.preventDefault(); fr.style.outline = ""; if(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]){ fromResume(e.dataTransfer.files[0]); } });
+  fr.addEventListener("drop", function(e){ e.preventDefault(); fr.style.outline = ""; if(e.dataTransfer){ routeResumes(e.dataTransfer.files); } });
 })();
 
 document.getElementById("bulkBtn").addEventListener("click", openBulk);
