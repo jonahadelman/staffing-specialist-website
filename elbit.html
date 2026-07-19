@@ -798,7 +798,13 @@ function candToRow(c){
     ta_reject_reason:c.taRejectReason||"", ta_reject_date:nz(c.taRejectDate), hm_reject_reason:c.hmRejectReason||"", hm_reject_date:nz(c.hmRejectDate),
     updated_at:new Date().toISOString() };
 }
-function rowToReq(r){ return { id:r.id, title:r.title||"", role:r.role||"", loc:r.loc||"", disc:r.discipline||"Other", urgency:r.urgency||"Open", priority:r.priority||"", reqStatus:r.req_status||"", rank:((r.rank!=null && r.rank!=="" && !isNaN(r.rank)) ? Number(r.rank) : null), desiredStart:r.desired_start||"", contingent:r.contingent||"", compMin:r.comp_min||"", compMax:r.comp_max||"", compTarget:r.comp_target||"", eicp:r.eicp||"", openings:r.openings||1, hm:r.hiring_manager||"", hmTitle:r.hm_title||"", hmEmail:r.hm_email||"", hmPhone:r.hm_phone||"", jobId:r.job_id||"", jd:r.jd||"", jdLink:r.jd_link||"", bench:r.bench===true, partner:r.partner||"", sourcingStatus:normSourcing(r.sourcing_status), benchStatus:r.bench_status||"waiting", createdAt:r.created_at||"", owner:r.tss_recruiter||"", department:r.department||"", program:r.program||"", benchNotes:r.bench_notes||"" }; }
+function rowToReq(r){ return { id:r.id, title:r.title||"", role:r.role||"", loc:r.loc||"", disc:r.discipline||"Other", urgency:r.urgency||"Open", priority:r.priority||"", reqStatus:r.req_status||"", rank:((r.rank!=null && r.rank!=="" && !isNaN(r.rank)) ? Number(r.rank) : null), desiredStart:r.desired_start||"", contingent:r.contingent||"", compMin:r.comp_min||"", compMax:r.comp_max||"", compTarget:r.comp_target||"", eicp:r.eicp||"", openings:r.openings||1, hm:r.hiring_manager||"", hmTitle:r.hm_title||"", hmEmail:r.hm_email||"", hmPhone:r.hm_phone||"", jobId:r.job_id||"", jd:r.jd||"", jdLink:r.jd_link||"", bench:r.bench===true, partner:r.partner||"", sourcingStatus:normSourcing(r.sourcing_status), benchStatus:r.bench_status||"waiting", createdAt:r.created_at||"", owner:r.tss_recruiter||"", taOwner:r.ta_owner||"", department:r.department||"", program:r.program||"", benchNotes:r.bench_notes||"" }; }
+/* Recruiting-Manager default rule (Release Commander, Phase 2.2A): division → manager */
+var TB_MGR_BY_DEPT = { "Electronic Systems":"EJ Demaree", "Warfighter Systems":"Jason Greer", "Corporate":"Holly Abessinio", "HiArc":"Holly Abessinio" };
+function tbMgrForReq(r){
+  if(r.taOwner && String(r.taOwner).trim()){ return String(r.taOwner).trim(); }
+  return TB_MGR_BY_DEPT[(r.department||"").trim()] || "";
+}
 /* OWNERSHIP MODEL v2 (Phase 2.3): ONE owner per requisition. Field of record: tss_recruiter
    column, surfaced everywhere as "Owner". ta_owner and partner are retired concepts —
    unreferenced by the application. */
@@ -4892,7 +4898,10 @@ function tbrOpenActionDialog(c, action, newStatus, parentSection){
 function renderTalentBench(host){
   var benchReqs = getBenchReqs();
   var showSrc = TB_FLAGS.sourcingStatus;
-  var partners = Array.from(new Set(benchReqs.map(function(r){ return r.owner || "Unowned"; }))).sort();
+  /* Recruiting-Manager totals for workload reporting (Level-1 rollup) */
+  var mgrTotals = {};
+  benchReqs.forEach(function(r){ var m = tbMgrForReq(r) || "Unassigned"; mgrTotals[m] = (mgrTotals[m]||0) + 1; });
+  var partners = Object.keys(mgrTotals).sort(function(a,b){ if(a==="Unassigned")return 1; if(b==="Unassigned")return -1; return mgrTotals[b]-mgrTotals[a]; }).map(function(m){ return m + " " + mgrTotals[m]; });
   var total = benchReqs.length;
   document.getElementById("viewMeta").textContent = total + " TalentBench position" + (total !== 1 ? "s" : "") + (partners.length ? " | " + partners.join(", ") : "");
 
@@ -4945,12 +4954,18 @@ function renderTalentBench(host){
     host.appendChild(em); return;
   }
 
-  /* Phase 2.3: ONE owner. The board groups by Owner — each recruiter sees their book together. */
-  var byPartner = {};
+  /* Phase 2.4: HIERARCHICAL GROUPING — Level 1: TA Owner (Recruiting Manager),
+     Level 2: TSS Recruiter (owner working the req). Presentation only; the data
+     model is unchanged. Both levels expand/collapse; counts at every level. */
+  if(!window.__TB_BENCH_COLLAPSE){ window.__TB_BENCH_COLLAPSE = { mgr:{}, rec:{} }; }
+  var COLL = window.__TB_BENCH_COLLAPSE;
+  var byMgr = {};
   benchReqs.forEach(function(r){
-    var p = r.owner || "Unowned";
-    if(!byPartner[p]){ byPartner[p] = []; }
-    byPartner[p].push(r);
+    var m = tbMgrForReq(r) || "Unassigned";
+    var rec = r.owner || "Unowned";
+    if(!byMgr[m]){ byMgr[m] = { total:0, recs:{} }; }
+    if(!byMgr[m].recs[rec]){ byMgr[m].recs[rec] = []; }
+    byMgr[m].recs[rec].push(r); byMgr[m].total++;
   });
 
   var table = el("table");
@@ -4964,16 +4979,39 @@ function renderTalentBench(host){
   });
   thead.appendChild(htr); table.appendChild(thead);
   var tb = el("tbody");
+  var COLS = showSrc ? 8 : 7;
 
-  Object.keys(byPartner).sort().forEach(function(partner){
-    var pReqs = byPartner[partner].slice().sort(function(a,b){ var ra=(a.rank==null?9999:a.rank), rb=(b.rank==null?9999:b.rank); return (ra-rb) || (a.title||"").localeCompare(b.title||""); });
+  var mgrNames = Object.keys(byMgr).sort(function(a,b){
+    if(a === "Unassigned") return 1; if(b === "Unassigned") return -1; return a.localeCompare(b);
+  });
+  mgrNames.forEach(function(mgr){
+    var g = byMgr[mgr];
+    var mgrCollapsed = COLL.mgr[mgr] === true;
+    var mh = el("tr","grp");
+    var mtd = el("td"); mtd.colSpan = COLS;
+    mtd.style.cssText = "cursor:pointer;font-weight:800;background:var(--panel2)";
+    mtd.textContent = (mgrCollapsed ? "\u25b8 " : "\u25be ") + mgr + (mgr === "Unassigned" ? "" : " \u2014 Recruiting Manager") + " (" + g.total + " req" + (g.total !== 1 ? "s" : "") + ")";
+    mtd.title = (mgrCollapsed ? "Expand" : "Collapse") + " " + mgr + "\u2019s organization \u2014 " + Object.keys(g.recs).length + " recruiter" + (Object.keys(g.recs).length !== 1 ? "s" : "");
+    mtd.addEventListener("click", function(e){ e.stopPropagation(); COLL.mgr[mgr] = !mgrCollapsed; refresh(); });
+    mh.appendChild(mtd); tb.appendChild(mh);
+    if(mgrCollapsed){ return; }
 
-    var grpHdr = el("tr","grp");
-    var grpTd = el("td"); grpTd.colSpan = showSrc ? 8 : 7;
-    grpTd.textContent = partner + " (" + pReqs.length + " req" + (pReqs.length !== 1 ? "s" : "") + ")";
-    grpHdr.appendChild(grpTd);
-    tb.appendChild(grpHdr);
+    Object.keys(g.recs).sort(function(a,b){
+      if(a === "Unowned") return 1; if(b === "Unowned") return -1; return a.localeCompare(b);
+    }).forEach(function(rec){
+      var rKey = mgr + "|" + rec;
+      var recCollapsed = COLL.rec[rKey] === true;
+      var list = g.recs[rec];
+      var rh = el("tr","grp");
+      var rtd = el("td"); rtd.colSpan = COLS;
+      rtd.style.cssText = "cursor:pointer;padding-left:28px;font-weight:700;color:" + (rec === "Unowned" ? "#92400e" : "var(--ink)");
+      rtd.textContent = (recCollapsed ? "\u25b8 " : "\u25be ") + rec + " (" + list.length + ")";
+      rtd.title = (recCollapsed ? "Expand" : "Collapse") + " " + rec + "\u2019s requisitions";
+      rtd.addEventListener("click", function(e){ e.stopPropagation(); COLL.rec[rKey] = !recCollapsed; refresh(); });
+      rh.appendChild(rtd); tb.appendChild(rh);
+      if(recCollapsed){ return; }
 
+      var pReqs = list.slice().sort(function(a,b){ var ra=(a.rank==null?9999:a.rank), rb=(b.rank==null?9999:b.rank); return (ra-rb) || (a.title||"").localeCompare(b.title||""); });
     pReqs.forEach(function(r){
       var reqLabel = (r.title || "") + " \u2013 " + (r.loc || "");
       var reqLabelAlt = (r.title || "") + " - " + (r.loc || "");
@@ -5046,7 +5084,8 @@ function renderTalentBench(host){
       cntTd.appendChild(cnt);
       tr.appendChild(cntTd);
 
-      tb.appendChild(tr);
+        tb.appendChild(tr);
+      });
     });
   });
   table.appendChild(tb);
@@ -5270,7 +5309,8 @@ async function saveBenchReq(editId){
     org: ORG, bench: true, urgency: "Open",
     title: bv("title"), job_id: bv("jobId"), loc: bv("loc"),
     hiring_manager: bv("hm"),
-    tss_recruiter: bv("owner"), /* single Owner — field of record */
+    tss_recruiter: bv("owner"), /* the recruiter working the req */
+    ta_owner: (typeof TB_MGR_BY_DEPT !== "undefined" ? (TB_MGR_BY_DEPT[bv("department")] || "") : ""), /* Recruiting Manager — auto from the division rule (Release Commander default) */
     department: bv("department"),
     program: bv("program"),
     priority: bv("priority"),
