@@ -4798,23 +4798,51 @@ function renderBenchCandidates(reqId){
     em2.appendChild(el("div",null,"Tag candidates with this req in their Target Reqs field."));
     body.appendChild(em2);
   } else {
+    /* ── B1: every candidate belongs to exactly one visible review state; every row
+       shows status, ownership, and one obvious action. Reuses tbrStatusPill + openDetail. ── */
+    function tbrStateOf(c){
+      var s = c.tbStatus;
+      if(!s || s === "Submitted" || s === "Under Review"){ return "Waiting Review"; }
+      if(s === "Closed"){ return "Completed"; }
+      return s; /* Accepted / Rejected / Needs More Information / Interview Requested */
+    }
+    var STATE_ORDER = ["Waiting Review","Needs More Information","Interview Requested","Accepted","Rejected","Completed"];
+    var groups = {};
+    sourced.forEach(function(c){ var k = tbrStateOf(c); (groups[k] = groups[k] || []).push(c); });
+    var GRID = "display:grid;grid-template-columns:1.2fr 1fr 1fr 150px 130px 66px;gap:0 12px;align-items:center";
     var lhdr = el("div");
-    lhdr.style.cssText = "display:grid;grid-template-columns:1fr 1fr 1fr 120px;gap:0 12px;padding:6px 0 10px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);margin-bottom:4px";
-    ["Name","Title","Company","Location"].forEach(function(h){ lhdr.appendChild(el("span",null,h)); });
+    lhdr.style.cssText = GRID + ";padding:6px 0 10px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);margin-bottom:4px";
+    ["Name","Title","Company","Recruiter Owner","Review Status",""].forEach(function(h){ lhdr.appendChild(el("span",null,h)); });
     body.appendChild(lhdr);
-    sourced.forEach(function(c){
-      var crow = el("div");
-      crow.style.cssText = "display:grid;grid-template-columns:1fr 1fr 1fr 120px;gap:0 12px;padding:11px 0;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background .15s";
-      crow.addEventListener("mouseover", function(){ crow.style.background = "var(--hover)"; });
-      crow.addEventListener("mouseout", function(){ crow.style.background = ""; });
-      crow.addEventListener("click", function(){ openDetail(c); });
-      var nm = el("span","nm", (c.firstName||c.fn||"") + " " + (c.lastName||c.ln||""));
-      nm.style.cssText = "font-weight:600;color:var(--gold);cursor:pointer";
-      crow.appendChild(nm);
-      crow.appendChild(el("span","sub2", c.title||"-"));
-      crow.appendChild(el("span","sub2", c.company||"-"));
-      crow.appendChild(el("span","sub2", c.location||"-"));
-      body.appendChild(crow);
+    STATE_ORDER.forEach(function(stateKey){
+      var list = groups[stateKey]; if(!list || !list.length){ return; }
+      var gh = el("div", null, stateKey + " (" + list.length + ")");
+      gh.style.cssText = "font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:12px 0 4px";
+      body.appendChild(gh);
+      list.forEach(function(c){
+        var crow = el("div");
+        crow.style.cssText = GRID + ";padding:11px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s";
+        crow.title = "Open " + fullName(c) + "’s full record — resume, TalentFit, review actions";
+        crow.addEventListener("mouseover", function(){ crow.style.background = "var(--hover)"; });
+        crow.addEventListener("mouseout", function(){ crow.style.background = ""; });
+        crow.addEventListener("click", function(){ openDetail(c); });
+        var nm = el("span","nm", fullName(c));
+        nm.style.cssText = "font-weight:600;color:var(--gold);cursor:pointer";
+        crow.appendChild(nm);
+        crow.appendChild(el("span","sub2", c.title||"-"));
+        crow.appendChild(el("span","sub2", c.company||"-"));
+        var ow = el("span","sub2", (c.owner && c.owner !== "Unassigned") ? c.owner : "Unassigned");
+        if(!c.owner || c.owner === "Unassigned"){ ow.style.cssText = "color:var(--muted);font-style:italic"; }
+        ow.title = (c.owner && c.owner !== "Unassigned") ? (c.owner + " owns this candidate") : "No recruiter owns this candidate yet — open the record to claim";
+        crow.appendChild(ow);
+        var pw = el("span"); var pl = tbrStatusPill(c.tbStatus);
+        if(!c.tbStatus){ pl.textContent = "Waiting Review"; pl.title = "No review decision yet — open the record to review"; }
+        pw.appendChild(pl); crow.appendChild(pw);
+        var go = el("span", null, "Open →");
+        go.style.cssText = "font-size:12px;font-weight:700;color:var(--gold);white-space:nowrap;text-align:right";
+        crow.appendChild(go);
+        body.appendChild(crow);
+      });
     });
   }
   m.appendChild(body);
