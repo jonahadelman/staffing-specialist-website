@@ -798,7 +798,7 @@ function candToRow(c){
     ta_reject_reason:c.taRejectReason||"", ta_reject_date:nz(c.taRejectDate), hm_reject_reason:c.hmRejectReason||"", hm_reject_date:nz(c.hmRejectDate),
     updated_at:new Date().toISOString() };
 }
-function rowToReq(r){ return { id:r.id, title:r.title||"", role:r.role||"", loc:r.loc||"", disc:r.discipline||"Other", urgency:r.urgency||"Open", priority:r.priority||"", reqStatus:r.req_status||"", rank:((r.rank!=null && r.rank!=="" && !isNaN(r.rank)) ? Number(r.rank) : null), desiredStart:r.desired_start||"", contingent:r.contingent||"", compMin:r.comp_min||"", compMax:r.comp_max||"", compTarget:r.comp_target||"", eicp:r.eicp||"", openings:r.openings||1, hm:r.hiring_manager||"", hmTitle:r.hm_title||"", hmEmail:r.hm_email||"", hmPhone:r.hm_phone||"", jobId:r.job_id||"", jd:r.jd||"", jdLink:r.jd_link||"", bench:r.bench===true, partner:r.partner||"", sourcingStatus:normSourcing(r.sourcing_status), benchStatus:r.bench_status||"waiting", createdAt:r.created_at||"" }; }
+function rowToReq(r){ return { id:r.id, title:r.title||"", role:r.role||"", loc:r.loc||"", disc:r.discipline||"Other", urgency:r.urgency||"Open", priority:r.priority||"", reqStatus:r.req_status||"", rank:((r.rank!=null && r.rank!=="" && !isNaN(r.rank)) ? Number(r.rank) : null), desiredStart:r.desired_start||"", contingent:r.contingent||"", compMin:r.comp_min||"", compMax:r.comp_max||"", compTarget:r.comp_target||"", eicp:r.eicp||"", openings:r.openings||1, hm:r.hiring_manager||"", hmTitle:r.hm_title||"", hmEmail:r.hm_email||"", hmPhone:r.hm_phone||"", jobId:r.job_id||"", jd:r.jd||"", jdLink:r.jd_link||"", bench:r.bench===true, partner:r.partner||"", sourcingStatus:normSourcing(r.sourcing_status), benchStatus:r.bench_status||"waiting", createdAt:r.created_at||"", taOwner:r.ta_owner||"", tssRecruiter:r.tss_recruiter||"" }; }
 function setReqs(arr){
   REQS = arr;
   REQ_OPTIONS = arr.filter(function(r){ return !r.bench; }).map(function(r){ return r.title + " \u2013 " + r.loc; });
@@ -2449,7 +2449,7 @@ function buildTeamNotes(context){
   hdr.appendChild(el("div","sub2", notes.length + " posted"));
   wrap.appendChild(hdr);
 
-  var feed = el("div"); feed.style.cssText = "max-height:240px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:4px 6px;background:var(--bg)";
+  var feed = el("div"); feed.id = "noteFeed_" + context; feed.style.cssText = "max-height:240px;overflow-y:auto;border:1px solid var(--line);border-radius:8px;padding:4px 6px;background:var(--bg)";
   if(!notes.length){
     var em = el("div","sub2","No notes yet. Be the first to post one for the group."); em.style.cssText = "padding:14px 8px;text-align:center;color:var(--muted)"; feed.appendChild(em);
   } else {
@@ -2506,7 +2506,13 @@ async function addProgramNote(context){
   if(res.error){ toast(res.error.message || "Could not post note."); return; }
   NOTES_COMPOSE = "";
   await loadNotes();
+  if(context === "talentbench"){ TALENTBENCH_NOTES_OPEN = true; } /* B2A: never post into a collapsed card */
   if(ui.view === "priolist" || ui.view === "talentbench" || ui.view === "tb_teamnotes" || ui.view === "tb_notes"){ refresh(); }
+  /* B2A: the note you just posted must be visible immediately — newest sorts last, so scroll the feed to it */
+  setTimeout(function(){
+    var f = document.getElementById("noteFeed_" + (context || "priolist"));
+    if(f){ f.scrollTop = f.scrollHeight; }
+  }, 80);
   toast("Note posted.");
 }
 async function saveProgramNote(id, text){
@@ -4498,6 +4504,54 @@ async function tbrBuildSection(c, body){
   hdr.appendChild(hdrLeft);
   section.appendChild(hdr);
 
+  /* ── B2A: ownership is always visible — requisition, TA Owner, TSS Recruiter.
+     Truthful when unassigned: shows "Not assigned yet", never a placeholder name. ── */
+  var ownReq = null;
+  {
+    var benchReqsOwn = getBenchReqs();
+    if(c.reqs && c.reqs.length){
+      benchReqsOwn.forEach(function(r){
+        var lbl = (r.title||'') + ' – ' + (r.loc||''), lblAlt = (r.title||'') + ' - ' + (r.loc||'');
+        if(c.reqs.indexOf(lbl) !== -1 || c.reqs.indexOf(lblAlt) !== -1){ ownReq = r; }
+      });
+    }
+  }
+  if(ownReq){
+    var ownLine = el('div');
+    ownLine.style.cssText = 'display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-bottom:12px;';
+    function ownBit(label, val, missingTip){
+      var s = el('span');
+      var l = el('span', null, label + ': '); l.style.cssText = 'color:var(--muted);font-weight:600;'; s.appendChild(l);
+      var v = el('b', null, val || 'Not assigned yet');
+      if(!val){ v.style.cssText = 'color:var(--muted);font-style:italic;font-weight:600;'; s.title = missingTip || ''; }
+      s.appendChild(v); return s;
+    }
+    ownLine.appendChild(ownBit('Requisition', (ownReq.jobId ? '#' + ownReq.jobId + ' — ' : '') + ownReq.title));
+    ownLine.appendChild(ownBit('TA Owner', ownReq.taOwner, 'No Talent Advisor assigned to this requisition yet — the administrator assigns owners in Platform Status'));
+    ownLine.appendChild(ownBit('TSS Recruiter', ownReq.tssRecruiter || ((c.owner && c.owner !== 'Unassigned') ? c.owner : ''), 'No recruiter assigned yet — claim the candidate or ask the administrator to assign the requisition'));
+    section.appendChild(ownLine);
+  }
+
+  /* B2A: persistent next-step line — set on load from current status, updated after every action */
+  var nextStepLine = el('div');
+  nextStepLine.setAttribute('data-tbr-nextstep','1');
+  nextStepLine.style.cssText = 'font-size:12.5px;font-weight:600;color:var(--gold);margin-bottom:12px;display:none;';
+  section.appendChild(nextStepLine);
+  function tbrNextStepText(status){
+    if(status === 'Accepted'){ return 'Next: submit to ' + ((ownReq && ownReq.taOwner) ? ownReq.taOwner : 'the TA owner') + '.'; }
+    if(status === 'Needs More Information'){ return 'Next: gather the requested information and re-review.'; }
+    if(status === 'Rejected'){ return 'Recorded. No further action required.'; }
+    if(status === 'Interview Requested'){ return 'Interview Request created — track scheduling in Interview Requests.'; }
+    if(status === 'Under Review'){ return 'Next: complete the review — Accept, Reject, or Request Interview.'; }
+    return '';
+  }
+  window.__tbrSetNextStep = function(status){
+    var tx = tbrNextStepText(status);
+    nextStepLine.textContent = tx ? ('→ ' + tx) : '';
+    nextStepLine.style.display = tx ? '' : 'none';
+  };
+  if(c.tbStatus){ window.__tbrSetNextStep(c.tbStatus); }
+
   /* Action buttons — only for authorized users */
   if(tbrCanReview() && c.id){
     var actions = el('div');
@@ -4665,6 +4719,7 @@ function tbrOpenActionDialog(c, action, newStatus, parentSection){
 
     if(ok){
       if(action !== 'Interview Requested'){ toast(action + ' saved'); } /* IR path shows its own, more specific toast */
+      try{ if(window.__tbrSetNextStep){ window.__tbrSetNextStep(newStatus); } }catch(eNS){} /* B2A: what happens next, immediately */
       dialog.remove();
       /* Update the candidate object in memory and re-render the section */
       c.tbStatus = newStatus;
