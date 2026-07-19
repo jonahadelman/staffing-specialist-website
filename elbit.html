@@ -6158,6 +6158,33 @@ function autoMatchReqs(text, cand){
     return out;
   }catch(e){ return ""; }
 }
+/* PRODUCTION FIX (launch, 2026-07-19): Executive Brief auto-generation.
+   The intake pipeline parsed every field but never composed the Executive Brief
+   (summary) — recruiters had to write it by hand after every upload. This
+   deterministic composer builds a professional brief from the parsed fields
+   (no AI, no network, fill-only-when-blank; recruiter reviews before Create). */
+function buildExecBrief(text){
+  try{
+    if(!text){ return ""; }
+    var title = ""; var company = ""; var loc = ""; var skills = []; var disc = "";
+    try{ title = grabTitle(text) || ""; }catch(e1){}
+    try{ company = grabCompany(text) || ""; }catch(e2){}
+    try{ loc = grabLocation(text) || ""; }catch(e3){}
+    try{ skills = grabSkills(text) || []; }catch(e4){}
+    try{ disc = guessDiscipline(text) || ""; }catch(e5){}
+    var parts = [];
+    var lead = title ? title : (disc ? (disc + " professional") : "Experienced professional");
+    /* skip the company when it's just an echo of the title line (parser artifact) */
+    var tl = title.toLowerCase(); var cl = company.toLowerCase();
+    if(company && !(cl && tl && (tl.indexOf(cl) !== -1 || cl.indexOf(tl) !== -1))){ lead += " at " + company; }
+    if(loc){ lead += ", based in " + loc; }
+    parts.push(lead + ".");
+    if(skills.length){ parts.push("Core strengths: " + skills.slice(0, 6).join(", ") + "."); }
+    if(disc && (!title || title.toLowerCase().indexOf(disc.toLowerCase()) === -1)){ parts.push(disc + " background."); }
+    parts.push("Full resume on file; parsed details below.");
+    return parts.join(" ");
+  }catch(e){ return ""; }
+}
 async function fromResume(file){
   if(!file){ return; }
   if(!/\.(pdf|docx?)$/i.test(file.name)){ toast("Drop a PDF or Word resume"); return; }
@@ -6203,6 +6230,7 @@ async function fromResume(file){
         if(note){ nt.value = note; filled.push("req matches + submission draft (in Notes)"); }
       }
     }catch(e4){}
+    try{ var smT = m.querySelector("[data-field='summary']"); if(smT && smT.value){ filled.unshift("Executive Brief"); } else { missed.push("Executive Brief"); } }catch(e6){}
     toast("Parsed: " + (filled.length ? filled.join(", ") : "nothing") + (missed.length ? "  |  Fill manually: " + missed.join(", ") : "") + ". Review, then click Create.");
   } else {
     toast("No text could be read from this file - fill the fields manually. (See status note above.)");
@@ -6232,6 +6260,10 @@ async function handleResumeFile(file){
     if(ph && !ph.value){ var p2 = grabPhone(text); if(p2){ ph.value = p2; } }
     var li = m.querySelector("[data-field='linkedin']");
     if(li && !li.value){ var l2 = grabLinkedin(text); if(l2){ li.value = l2; } }
+    /* Executive Brief auto-generation (launch fix): compose from parsed resume
+       text, fill only when the field is blank — never overwrite a written brief. */
+    var sm0 = m.querySelector("[data-field='summary']");
+    if(sm0 && !sm0.value){ var eb0 = buildExecBrief(text); if(eb0){ sm0.value = eb0; } }
   }
   // upload to storage
   setUpStat("Uploading " + file.name + " ...");
