@@ -1818,7 +1818,9 @@ function renderLeadershipBrief(host){
   var motion = Math.min(1, (interviewing.length + irsWeek.length) / Math.max(1, Math.round(openReqs.length * 0.35)));
   var offerFlow = Math.min(1, (offers.length + hired.length) / Math.max(1, Math.round(openReqs.length * 0.12)));
   var score = Math.round(coverage * 40 + responsiveness * 25 + motion * 20 + offerFlow * 15);
-  var grade = score >= 80 ? ["Healthy","--green"] : score >= 60 ? ["Stable — watch the flags","--gold"] : score >= 40 ? ["Strained","--orange"] : ["At Risk","--red"];
+  /* One read, three states, zero interpretation. The score survives only as a tiny
+     trend footnote — executives manage problems, not GPAs. */
+  var grade = score >= 80 ? ["Healthy","--green","🟢"] : score >= 40 ? ["Attention Needed","--gold","🟡"] : ["At Risk","--red","🔴"];
   document.getElementById("viewTitle").textContent = "";
   document.getElementById("viewMeta").textContent = "";
 
@@ -1832,12 +1834,37 @@ function renderLeadershipBrief(host){
   hl.appendChild(el("div","hint", tbClientDisplayName() + " · " + new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric" }) + " · prepared live for the staffing meeting"));
   head.appendChild(hl);
   var hs = el("div"); hs.style.cssText = "text-align:right";
-  var sc = el("div", null, String(score)); sc.style.cssText = "font-size:40px;font-weight:800;line-height:1;letter-spacing:-1px;color:" + cssVar(grade[1]);
-  sc.title = "Executive Health Score — requisition coverage (40) + follow-up responsiveness (25) + interview motion (20) + offer flow (15)";
+  var sc = el("div", null, grade[2] + " " + grade[0].toUpperCase());
+  sc.style.cssText = "font-size:19px;font-weight:800;letter-spacing:.6px;line-height:1.2;color:" + cssVar(grade[1]);
+  sc.title = "One read: green = healthy, yellow = attention needed, red = at risk. Today's Priorities below are the exact reasons — and what to do.";
   hs.appendChild(sc);
-  hs.appendChild(el("div","hint", grade[0]));
+  var scTiny = el("div","hint","Health Score: " + score);
+  scTiny.style.cssText += ";font-size:11px";
+  scTiny.title = "Trend number only — requisition coverage (40) + follow-up responsiveness (25) + interview motion (20) + offer flow (15). The status light is the read; nobody needs to decode this.";
+  hs.appendChild(scTiny);
   head.appendChild(hs);
   wrap.appendChild(head);
+  /* ── Today's Priorities — first thing on the page: what is broken, what to do.
+     Every row opens the exact records. The status light above is the "are we
+     healthy?"; this list is the "where are we bleeding?" ── */
+  function goView(v){ return function(){ ui.view = v; refresh(); }; }
+  var stalledIRs = irs.filter(function(ir){ if(ir.status !== "Requested"){ return false; } var d = Date.parse(ir.createdAt || ""); return d && (Date.now() - d) > 5 * 86400000; });
+  var bottlenecks = [];
+  if(starving.length){ bottlenecks.push([starving.length + " open requisition" + (starving.length === 1 ? "" : "s") + " with zero candidates in play", "--red", goView("autoslate"), "Opens AutoSlate — the fastest way to put candidates on these requisitions"]); }
+  if(fuOver.length){ bottlenecks.push([fuOver.length + " candidate" + (fuOver.length === 1 ? "" : "s") + " overdue for follow-up — at risk of going cold", "--yellow", goView("followup"), "Opens the follow-up worklist with days-overdue per candidate"]); }
+  if(hmWaitKeys.length){ bottlenecks.push([submitted.length + " candidate" + (submitted.length === 1 ? "" : "s") + " waiting on hiring-manager review — " + hmWaitKeys.slice(0,3).map(function(h){ return h + " (" + hmWait[h] + ")"; }).join(", "), "--orange", goView("submitted"), "Opens the submitted candidates each hiring manager is sitting on"]); }
+  if(offers.length){ bottlenecks.push([offers.length + " offer" + (offers.length === 1 ? "" : "s") + " awaiting candidate decision", "--gold", goView("offerpending"), "Opens the offers in motion"]); }
+  if(stalledIRs.length){ bottlenecks.push([stalledIRs.length + " interview request" + (stalledIRs.length === 1 ? "" : "s") + " unscheduled for more than 5 days", "--purple", goView("interviewrequests"), "Opens the interview request list"]); }
+  var pr = exSection("Today's Priorities", null);
+  if(!bottlenecks.length){
+    var allGood = el("div", null, "Nothing needs your attention today. Everything is on track.");
+    allGood.style.cssText = "font-size:14px;font-weight:700;color:" + cssVar("--green");
+    pr.appendChild(allGood);
+  } else {
+    bottlenecks.slice(0, 5).forEach(function(b){ exRow(pr, b[0], b[1], b[2], b[3]); });
+    var rest = el("div","hint","Everything else is on track.");
+    rest.style.marginTop = "6px"; pr.appendChild(rest);
+  }
   /* unified KPI strip — one row, no second-tier cards */
   var strip = el("div"); strip.style.cssText = "display:grid;grid-template-columns:repeat(6,1fr);gap:0;border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden;margin-bottom:22px";
   [["Open Reqs", openReqs.length, "Canonical open requisitions — same rule on every screen"],
@@ -1879,17 +1906,6 @@ function renderLeadershipBrief(host){
     }
     host2.appendChild(li); return li;
   }
-  /* top hiring bottlenecks */
-  var bn = exSection("Top Hiring Bottlenecks", "Where hiring momentum is being lost right now");
-  function goView(v){ return function(){ ui.view = v; refresh(); }; }
-  var bottlenecks = [];
-  if(starving.length){ bottlenecks.push([starving.length + " open requisition" + (starving.length === 1 ? "" : "s") + " with zero candidates in play", "--red", goView("autoslate"), "Opens AutoSlate — the fastest way to put candidates on these requisitions"]); }
-  if(hmWaitKeys.length){ bottlenecks.push([hmWaitKeys.length + " hiring manager" + (hmWaitKeys.length === 1 ? "" : "s") + " sitting on " + submitted.length + " submittal" + (submitted.length === 1 ? "" : "s") + " — " + hmWaitKeys.slice(0,3).map(function(h){ return h + " (" + hmWait[h] + ")"; }).join(", "), "--orange", goView("submitted"), "Opens the submitted candidates each hiring manager is sitting on"]); }
-  if(fuOver.length){ bottlenecks.push([fuOver.length + " candidate" + (fuOver.length === 1 ? "" : "s") + " at risk of going cold — recruiter follow-up overdue", "--yellow", goView("followup"), "Opens the follow-up worklist with days-overdue per candidate"]); }
-  var stalledIRs = irs.filter(function(ir){ if(ir.status !== "Requested"){ return false; } var d = Date.parse(ir.createdAt || ""); return d && (Date.now() - d) > 5 * 86400000; });
-  if(stalledIRs.length){ bottlenecks.push([stalledIRs.length + " interview request" + (stalledIRs.length === 1 ? "" : "s") + " unscheduled for more than 5 days", "--purple", goView("interviewrequests"), "Opens the interview request list"]); }
-  if(!bottlenecks.length){ bn.appendChild(el("div","hint","No structural bottlenecks. Momentum is with us.")); }
-  bottlenecks.slice(0, 5).forEach(function(b){ exRow(bn, b[0], b[1], b[2], b[3]); });
   /* momentum */
   var mo = exSection("Recruiting Momentum", "Last 7 days");
   exRow(mo, acts7 + " recruiter touchpoints logged (calls, emails, interviews, notes)");
@@ -1915,7 +1931,7 @@ function renderLeadershipBrief(host){
   /* executive summary — deterministic, from the same numbers as everything above */
   var es = exSection("Executive Summary", null);
   var sum = [];
-  sum.push("Recruiting is " + grade[0].toLowerCase().replace(" — watch the flags","") + " at " + score + "/100 across " + openReqs.length + " open requisitions.");
+  sum.push((grade[0] === "Healthy" ? "Recruiting is healthy" : grade[0] === "At Risk" ? "Recruiting is at risk" : "Recruiting needs attention") + " across " + openReqs.length + " open requisitions" + (bottlenecks.length ? " — " + bottlenecks.length + " priorit" + (bottlenecks.length === 1 ? "y" : "ies") + " listed above" : "") + ".");
   sum.push(((openReqs.length - starving.length)) + " of " + openReqs.length + " requisitions have candidates in play" + (starving.length ? "; " + starving.length + " need sourcing attention" : "") + ".");
   sum.push(interviewing.length + " candidates are interviewing, " + submitted.length + " await hiring-manager decisions, and " + offers.length + " offer" + (offers.length === 1 ? " is" : "s are") + " in motion.");
   if(fuOver.length){ sum.push("Follow-up hygiene needs attention: " + fuOver.length + " overdue."); }
@@ -1924,9 +1940,9 @@ function renderLeadershipBrief(host){
   /* copy for the meeting */
   var copy = el("button","btn gold","Copy Brief");
   copy.addEventListener("click", function(){
-    var lines = ["TSS Recruiting Health — " + tbClientDisplayName() + " — " + todayISO(), "Health Score: " + score + "/100 (" + grade[0] + ")", ""];
+    var lines = ["TSS Recruiting Health — " + tbClientDisplayName() + " — " + todayISO(), "Status: " + grade[2] + " " + grade[0].toUpperCase(), ""];
     lines.push("Open reqs: " + openReqs.length + " · Interviews this week: " + irsWeek.length + " · Interviewing: " + interviewing.length + " · Awaiting HM: " + submitted.length + " · Offers: " + offers.length + " · Hired: " + hired.length, "");
-    lines.push("BOTTLENECKS:"); bottlenecks.length ? bottlenecks.forEach(function(b){ lines.push("- " + b[0]); }) : lines.push("- none");
+    lines.push("TODAY'S PRIORITIES:"); bottlenecks.length ? bottlenecks.forEach(function(b){ lines.push("- " + b[0]); }) : lines.push("- none — everything on track");
     lines.push("", "OFFERS IN MOTION:"); offers.length ? offers.forEach(function(c){ lines.push("- " + fullName(c) + " — " + ((c.reqs||[])[0] || "")); }) : lines.push("- none");
     lines.push("", "CRITICAL REQUISITIONS:"); critical.length ? critical.slice(0, 10).forEach(function(r){ lines.push("- " + (r.jobId ? r.jobId + " · " : "") + r.title + " – " + r.loc + " (" + reqCandN(r) + " in play)"); }) : lines.push("- none");
     lines.push("", "SUMMARY: " + sum.join(" "));
@@ -2893,7 +2909,8 @@ function renderAutoSlate(host){
   strip2.appendChild(tile(posModerateOnly, "Positions With Moderate Matches Only", posModerateOnly ? "var(--orange)" : null));
   strip2.appendChild(tile(posNoViable, "Positions With No Viable Candidates", posNoViable ? "var(--red)" : null));
   strip2.appendChild(tile(readyContact, "Candidates Ready to Contact", "var(--blue)"));
-  strip2.appendChild(tile(avgScore + "%", "Average TalentFit Score"));
+  /* "Average TalentFit Score" tile removed — a vanity average nobody can act on.
+     The operational tiles above (strong / moderate-only / no-viable / ready) ARE the read. */
   host.appendChild(strip2);
 
   var hms = Object.keys(byHm).sort(function(a, b){
