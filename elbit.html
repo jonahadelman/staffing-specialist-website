@@ -1065,7 +1065,26 @@ function prioTag(text, varname){ var w = el("span"); w.style.cssText = "display:
 function toast(msg){ var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); }, 1900); }
 
 /* ---------- sidebar ---------- */
-var sectionCollapsed = {}; /* LAUNCH (2026-07-19): every nav section starts open — nothing hidden behind a collapsed chapter on first login */
+/* LAUNCH (2026-07-19): every nav chapter starts ROLLED UP — a neat sidebar on
+   first login. The chapter holding the active view opens itself automatically
+   (with urgent counts aggregated onto the My Work header while rolled up),
+   so nothing actionable is ever invisible. */
+var sectionCollapsed = { "My Work": true, "Open Requisitions": true, "Candidates": true, "Analytics": true, "Closed & Archived": true, "My Hiring": true, "Platform": true };
+/* Tidy on return: step away from the tab for a minute or more and the sidebar
+   rolls itself back up and the page scrolls to the top — the desk is always
+   neat when you come back to it. */
+var __tbAwayAt = 0;
+document.addEventListener("visibilitychange", function(){
+  try{
+    if(document.visibilityState === "hidden"){ __tbAwayAt = Date.now(); return; }
+    if(__tbAwayAt && (Date.now() - __tbAwayAt) > 60000){
+      for(var kTidy in sectionCollapsed){ sectionCollapsed[kTidy] = true; }
+      if(typeof renderTabs === "function"){ renderTabs(); }
+      window.scrollTo(0, 0);
+    }
+    __tbAwayAt = 0;
+  }catch(eTidy){}
+});
 function fuState(){
   var any = false, overdue = false;
   state.candidates.forEach(function(c){ var fr = followUp(c); if(fr.label !== ""){ any = true; if(fr.label === "Overdue"){ overdue = true; } } });
