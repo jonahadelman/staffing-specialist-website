@@ -534,7 +534,7 @@ input::placeholder, textarea::placeholder{ color:#9aa1b5; }
  <label>Recruiter</label><select class="fil" id="fOwner"></select>
  <label>Priority</label><select class="fil" id="fPriority"></select>
  <label>Discipline</label><select class="fil" id="fDiscipline"></select>
- <label>Location</label><select class="fil" id="fLoc"></select>
+ <label>Location</label><input class="fil" id="fLoc" list="fLocList" placeholder="City, state, ZIP — boolean OK (TX OR NH, Boston NOT remote)"><datalist id="fLocList"></datalist>
  <label>Target Requisition</label><select class="fil" id="fReq"></select>
  </div>
  </aside>
@@ -824,6 +824,7 @@ async function loadData(){
   if(c.error){ toast(c.error.message); }
   state.candidates = (c.data || []).map(rowToCand);
   try{ if(typeof fillLocFilter === "function"){ fillLocFilter(); } }catch(eFL2){}
+  try{ var foSel = document.getElementById("fOwner"); if(foSel){ var foCur = ui.fOwner; fillSelect(foSel, OWNERS, "All Recruiters"); foSel.value = foCur; } }catch(eFO2){}
   if(typeof BOARD !== "undefined" && BOARD.clearScoreCache){ BOARD.clearScoreCache(); }
   state.activities = (a.data || []).map(rowToAct);
   if(rq.data){ setReqs(rq.data.map(rowToReq)); }
@@ -1022,10 +1023,20 @@ function parseQuery(tokens){
 /* LAUNCH (2026-07-19): search-only haystack extension — req numbers and hiring
    manager names (via the candidate's tagged reqs) + department are searchable
    from the global bar. Scoring still uses the plain candHaystack. */
+var TB_STATES = {AL:"alabama",AK:"alaska",AZ:"arizona",AR:"arkansas",CA:"california",CO:"colorado",CT:"connecticut",DE:"delaware",FL:"florida",GA:"georgia",HI:"hawaii",ID:"idaho",IL:"illinois",IN:"indiana",IA:"iowa",KS:"kansas",KY:"kentucky",LA:"louisiana",ME:"maine",MD:"maryland",MA:"massachusetts",MI:"michigan",MN:"minnesota",MS:"mississippi",MO:"missouri",MT:"montana",NE:"nebraska",NV:"nevada",NH:"new hampshire",NJ:"new jersey",NM:"new mexico",NY:"new york",NC:"north carolina",ND:"north dakota",OH:"ohio",OK:"oklahoma",OR:"oregon",PA:"pennsylvania",RI:"rhode island",SC:"south carolina",SD:"south dakota",TN:"tennessee",TX:"texas",UT:"utah",VT:"vermont",VA:"virginia",WA:"washington",WV:"west virginia",WI:"wisconsin",WY:"wyoming",DC:"washington dc"};
+/* "TX" <-> "Texas": expand a location string with both forms so either is searchable */
+function tbLocExpand(loc){
+  var out = ""; var L = String(loc || ""); var Ll = L.toLowerCase();
+  for(var ab in TB_STATES){
+    if(new RegExp("\\b" + ab + "\\b").test(L)){ out += " " + TB_STATES[ab]; }
+    else if(Ll.indexOf(TB_STATES[ab]) !== -1){ out += " " + ab.toLowerCase(); }
+  }
+  return out.toLowerCase();
+}
 function candSearchHaystack(c){
   var extra = "";
   try{ reqsForTags(c.reqs).forEach(function(r){ extra += " " + (r.jobId || "") + " " + (r.hm || ""); }); }catch(eSH){}
-  return candHaystack(c) + " " + String(c.department || "").toLowerCase() + extra.toLowerCase();
+  return candHaystack(c) + " " + String(c.department || "").toLowerCase() + extra.toLowerCase() + tbLocExpand(c.location);
 }
 function matchesSearch(c){
   if(!ui.q || !ui.q.trim()){ return true; }
@@ -1043,7 +1054,13 @@ function passFilters(c){
   if(ui.fReq && (c.reqs||[]).indexOf(ui.fReq) === -1){ return false; }
   if(ui.fOwner && c.owner !== ui.fOwner){ return false; }
   if(ui.fPriority && c.priority !== ui.fPriority){ return false; }
-  if(ui.fLoc && String(c.location || "").trim() !== ui.fLoc){ return false; }
+  if(ui.fLoc){
+    var locTxt = String(c.location || "").toLowerCase() + tbLocExpand(c.location);
+    var locOk;
+    try{ locOk = parseQuery(tokenizeQuery(ui.fLoc))(locTxt); }
+    catch(eLQ){ locOk = locTxt.indexOf(ui.fLoc.toLowerCase().trim()) !== -1; }
+    if(!locOk){ return false; }
+  }
   if(ui.fHM && !reqsForTags(c.reqs).some(function(r){ return r.hm === ui.fHM; })){ return false; }
   if(ui.fDept){
     var pf = (typeof window.TB_reqProgram === "function") ? window.TB_reqProgram : null;
@@ -7910,7 +7927,7 @@ document.getElementById("q").addEventListener("keydown", function(e){
 });
 document.addEventListener("mousedown", function(e){ if(!e.target.closest(".search")){ closeQDrop(); } });
 document.getElementById("fStatus").addEventListener("change", function(e){ ui.fStatus = e.target.value; renderList(); });
-document.getElementById("fLoc").addEventListener("change", function(e){ ui.fLoc = e.target.value; renderList(); });
+document.getElementById("fLoc").addEventListener("input", function(e){ ui.fLoc = e.target.value; renderList(); });
 document.getElementById("fDept").addEventListener("change", function(e){ ui.fDept = e.target.value; renderList(); });
 document.getElementById("fHM").addEventListener("change", function(e){ ui.fHM = e.target.value; renderList(); });
 document.getElementById("fDiscipline").addEventListener("change", function(e){ ui.fDiscipline = e.target.value; renderList(); });
@@ -8014,8 +8031,8 @@ function fillLocFilter(){
     var seen = {}; var locs = [];
     (state.candidates || []).forEach(function(c){ var L = String(c.location || "").trim(); if(L && !seen[L.toLowerCase()]){ seen[L.toLowerCase()] = 1; locs.push(L); } });
     locs.sort(function(a, b){ return a.localeCompare(b); });
-    var sel = document.getElementById("fLoc"); if(!sel){ return; }
-    var cur = ui.fLoc; fillSelect(sel, locs, "All Locations"); sel.value = cur;
+    var dl = document.getElementById("fLocList"); if(!dl){ return; }
+    dl.innerHTML = ""; locs.forEach(function(L){ var op = el("option"); op.value = L; dl.appendChild(op); });
   }catch(eFL){}
 }
 boot();
@@ -8233,6 +8250,10 @@ table.tb-plain .nm{ font-weight:700 }
       if(una){ merged.push("Unassigned"); }
       OWNERS.length = 0;
       merged.forEach(function(o){ OWNERS.push(o); });
+      /* LAUNCH FIX (2026-07-19): the dropdowns filled at parse time — refresh
+         every OWNERS-fed select the moment the roster merge lands, so the
+         Recruiter filter can never show a stale list again. */
+      try{ var foM = document.getElementById("fOwner"); if(foM){ var foMv = ui.fOwner; fillSelect(foM, OWNERS, "All Recruiters"); foM.value = foMv; } }catch(eFOM){}
     }
   }catch(e0){}
 
