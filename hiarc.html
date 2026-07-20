@@ -1554,7 +1554,7 @@ function renderStartMyDay(host){
         row.title = t.s.req ? ("Strongest match: " + (t.s.req.title || "") + " \u2014 open the record") : "Open the record";
         row.addEventListener("mouseenter", function(){ row.style.background = "var(--panel2)"; });
         row.addEventListener("mouseleave", function(){ row.style.background = ""; });
-        var pct = el("b", null, BOARD.tier(t.s.verdict).icon); pct.title = BOARD.tier(t.s.verdict).label; pct.style.cssText = "font-size:14.5px;color:" + (t.s.score >= 72 ? "var(--green)" : "var(--gold)") + ";min-width:44px";
+        var pct = el("b", null, BOARD.tier(t.s.verdict).icon + " " + t.s.score + "%"); pct.title = BOARD.tier(t.s.verdict).label; pct.style.cssText = "font-size:14.5px;color:" + (t.s.score >= 72 ? "var(--green)" : "var(--gold)") + ";min-width:44px";
         var nm = el("span", null, fullName(t.c)); nm.style.cssText = "font-size:14px;font-weight:600;color:var(--ink)";
         row.appendChild(pct); row.appendChild(nm);
         row.addEventListener("click", function(){ openDetail(t.c); });
@@ -2916,7 +2916,7 @@ var BOARD = (function(){
         card.style.cssText="background:var(--bg);border:1px solid var(--line);border-left:3px solid "+vcolor(key)+";border-radius:8px;padding:10px 11px;margin-bottom:9px;cursor:pointer";
         var top=el("div"); top.style.cssText="display:flex;justify-content:space-between;align-items:baseline";
         var nm=el("div",null,fullName(c.ref)); nm.style.cssText="font-weight:700;color:var(--ink);font-size:13px";
-        var sc=el("div",null,tier(c.best.verdict).icon); sc.style.cssText="font-size:14px;font-weight:700;color:"+vcolor(key); sc.title=tier(c.best.verdict).label;
+        var sc=el("div",null,tier(c.best.verdict).icon + " " + c.best.score + "%"); sc.style.cssText="font-size:12px;font-weight:800;color:"+vcolor(key); sc.title=tier(c.best.verdict).label;
         top.appendChild(nm); top.appendChild(sc); card.appendChild(top);
         var role=el("div",null,c.best.req.title+(c.best.req.loc?(" \u00b7 "+c.best.req.loc):"")); role.style.cssText="color:var(--gold);font-size:12px;margin-top:3px";
         card.appendChild(role);
@@ -3141,7 +3141,7 @@ function renderAutoSlate(host){
         nm.appendChild(document.createTextNode(fullName(mch.c)));
         if(mch.c._xorg){ var ob = el("span", null, mch.c._xorg === "hiarc" ? "HiArc" : mch.c._xorg); ob.style.cssText = "margin-left:6px;font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--purple);background:rgba(124,58,237,.09);border-radius:4px;padding:1px 5px;vertical-align:1px"; nm.appendChild(ob); }
         var pctWrap = el("span"); pctWrap.style.cssText = "flex:0 0 70px;display:flex;flex-direction:column;gap:2px";
-        var pct = el("span", null, BOARD.tier(mch.verdict).icon); pct.title = BOARD.tier(mch.verdict).label; pct.style.cssText = "font-weight:800;font-size:15.5px;line-height:1;color:" + (mch.verdict === "strong" ? "var(--green)" : "var(--cyan)");
+        var pct = el("span", null, mch.score + "%"); pct.title = BOARD.tier(mch.verdict).icon + " " + BOARD.tier(mch.verdict).label; pct.style.cssText = "font-weight:800;font-size:15.5px;line-height:1;color:" + (mch.verdict === "strong" ? "var(--green)" : "var(--cyan)");
         var bar = el("span"); bar.style.cssText = "display:block;width:60px;height:4px;border-radius:3px;background:var(--line);overflow:hidden";
         var fill = el("span"); fill.style.cssText = "display:block;height:100%;width:" + mch.score + "%;border-radius:3px;background:" + (mch.verdict === "strong" ? "var(--green)" : "var(--cyan)");
         bar.appendChild(fill); pctWrap.appendChild(pct); pctWrap.appendChild(bar);
@@ -5576,15 +5576,39 @@ function renderResumeCheck(host){
 /* ---------- duplicate detection ---------- */
 function normEmail(e){ return (e||"").trim().toLowerCase(); }
 function normName(f,l){ return ((f||"").trim().toLowerCase() + "|" + (l||"").trim().toLowerCase()); }
+/* LAUNCH HARDENING (2026-07-19): duplicate detection matches on email, phone,
+   LinkedIn, exact name, and fuzzy name (punctuation, middle names/initials,
+   suffixes normalized) — one candidate, one record, on every intake path. */
+function normPhone(p){
+  var d = String(p || "").replace(/\D/g, "");
+  if(d.length === 11 && d.charAt(0) === "1"){ d = d.slice(1); }
+  return d.length === 10 ? d : "";
+}
+function normLinkedin(u){
+  var m = String(u || "").toLowerCase().match(/linkedin\.com\/in\/([a-z0-9\-_.%]+)/);
+  return m ? m[1].replace(/\/+$/, "") : "";
+}
+function normNameFuzzy(f, l){
+  var first = String(f || "").toLowerCase().replace(/[^a-z\s]/g, " ").trim().split(/\s+/)[0] || "";
+  var last = String(l || "").toLowerCase().replace(/[^a-z\s]/g, " ").trim()
+    .replace(/\b(jr|sr|ii|iii|iv|v|phd|pe|mba)\b/g, "").trim().split(/\s+/).pop() || "";
+  return (first && last) ? (first + "|" + last) : "";
+}
 function findDuplicate(cand, ignoreId){
   // Returns the existing candidate that duplicates `cand`, or null.
   var em = normEmail(cand.email);
+  var ph = normPhone(cand.phone);
+  var li = normLinkedin(cand.linkedin);
   var nm = normName(cand.firstName, cand.lastName);
+  var fz = normNameFuzzy(cand.firstName, cand.lastName);
   for(var i=0;i<state.candidates.length;i++){
     var x = state.candidates[i];
     if(ignoreId && x.id === ignoreId){ continue; }
     if(em && normEmail(x.email) === em){ return x; }
+    if(ph && normPhone(x.phone) === ph){ return x; }
+    if(li && normLinkedin(x.linkedin) === li){ return x; }
     if(!em && nm !== "|" && normName(x.firstName, x.lastName) === nm){ return x; }
+    if(!em && fz && normNameFuzzy(x.firstName, x.lastName) === fz){ return x; }
   }
   return null;
 }
@@ -5663,7 +5687,7 @@ function buildExecHeader(c){
       var bf = BOARD.scoreCandidate(c).best;
       if(bf && bf.verdict && bf.verdict !== "not"){
         var tfT = BOARD.tier(bf.verdict);
-        var tf = el("div", null, tfT.icon + " TalentFit: " + tfT.label);
+        var tf = el("div", null, tfT.icon + " TalentFit: " + tfT.label + " · " + bf.score + "%");
         tf.style.cssText = "font-size:12px;font-weight:800;color:#111318;margin-top:6px;";
         right.appendChild(tf);
       }
@@ -5782,13 +5806,13 @@ function openDetail(c){
           var afHero = el("div", "tfit-hero");
           var afRing = el("div", "tfit-ring tfit-v-" + best0.verdict);
           afRing.style.background = "conic-gradient(currentColor " + (Math.max(0, Math.min(100, best0.score)) * 3.6) + "deg, var(--tfit-track) 0)";
-          afRing.appendChild(el("span", "tfit-ring-tier", vT.icon));
+          afRing.appendChild(el("span", "tfit-ring-score", String(best0.score)));
           afHero.appendChild(afRing);
           var afHtx = el("div", "tfit-hero-tx");
           afHtx.appendChild(el("div", "tfit-hero-l", "Overall Fit"));
           var afChip = el("span", "tfit-chip tfit-v-" + best0.verdict);
           afChip.appendChild(el("i", "tfit-dot"));
-          afChip.appendChild(document.createTextNode(vT.label));
+          afChip.appendChild(document.createTextNode(vT.icon + " " + vT.label));
           afHtx.appendChild(afChip);
           afHero.appendChild(afHtx);
           afWrap.appendChild(afHero);
@@ -5800,7 +5824,7 @@ function openDetail(c){
             afLine.appendChild(el("span", "tfit-rank", String(i2 + 1)));
             afLine.appendChild(el("span", "tfit-title", q.title || ""));
             var rT = BOARD.tier(r2.verdict);
-            afLine.appendChild(el("span", "tfit-score tfit-v-" + r2.verdict, rT.icon + " " + rT.label));
+            afLine.appendChild(el("span", "tfit-score tfit-v-" + r2.verdict, r2.score + "% · " + rT.icon + " " + rT.label));
             afRow.appendChild(afLine);
             var afBar = el("div", "tfit-bar");
             var afFill = el("i", "tfit-fill tfit-v-" + r2.verdict);
@@ -5808,7 +5832,7 @@ function openDetail(c){
             afBar.appendChild(afFill);
             afRow.appendChild(afBar);
             afRow.appendChild(el("div", "tfit-meta", (q.jobId ? "[" + q.jobId + "] \u00b7 " : "") + (q.loc || "\u2014") + (q.bench ? " \u00b7 TalentBench" : "")));
-            if(r2.reasons && r2.reasons.length){ afRow.appendChild(el("div", "tfit-why", r2.reasons.join("  \u00b7  "))); }
+            if(r2.reasons && r2.reasons.length){ afRow.appendChild(el("div", "tfit-why", "Why this match:  " + r2.reasons.join("  \u00b7  "))); }
             afWrap.appendChild(afRow);
           });
         }
@@ -5847,7 +5871,7 @@ function openDetail(c){
               var tt = el("b", null, (q2.jobId ? q2.jobId + " · " : "") + (q2.title || "")); row2.appendChild(tt);
               var lc2 = el("span", null, (q2.loc || "") + (q2._xorg ? " · " + (q2.orgName || "Enterprise") : "")); lc2.style.cssText = "color:var(--muted);font-size:12px"; row2.appendChild(lc2);
               var pT2 = BOARD.tier(r2.verdict);
-              var sc2 = el("span", null, pT2.icon + " " + pT2.label);
+              var sc2 = el("span", null, r2.score + "% · " + pT2.icon + " " + pT2.label);
               sc2.style.cssText = "margin-left:auto;font-weight:800;font-size:12px;color:" + (r2.verdict === "strong" ? "var(--gold)" : r2.verdict === "moderate" ? "var(--cyan)" : "#e0a85a");
               row2.appendChild(sc2);
               if(!q2._xorg){
