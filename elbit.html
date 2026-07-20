@@ -534,6 +534,7 @@ input::placeholder, textarea::placeholder{ color:#9aa1b5; }
  <label>Recruiter</label><select class="fil" id="fOwner"></select>
  <label>Priority</label><select class="fil" id="fPriority"></select>
  <label>Discipline</label><select class="fil" id="fDiscipline"></select>
+ <label>Location</label><select class="fil" id="fLoc"></select>
  <label>Target Requisition</label><select class="fil" id="fReq"></select>
  </div>
  </aside>
@@ -702,7 +703,7 @@ var NOTES_COMPOSE = "";
 var NOTES_EDITING = null;
 var PROGNOTES_OPEN = false;
 var TALENTBENCH_NOTES_OPEN = false;
-var ui = { view:"guide", q:"", fStatus:"", fDiscipline:"", fReq:"", fOwner:"", fPriority:"", fDept:"", fHM:"" };
+var ui = { view:"guide", q:"", fStatus:"", fDiscipline:"", fReq:"", fOwner:"", fPriority:"", fDept:"", fHM:"", fLoc:"" };
 var openId = null;
 
 /* ---------- auth ---------- */
@@ -822,6 +823,7 @@ async function loadData(){
   var rq = await sb.from("reqs").select("*").eq("org", ORG).order("created_at", { ascending:true });
   if(c.error){ toast(c.error.message); }
   state.candidates = (c.data || []).map(rowToCand);
+  try{ if(typeof fillLocFilter === "function"){ fillLocFilter(); } }catch(eFL2){}
   if(typeof BOARD !== "undefined" && BOARD.clearScoreCache){ BOARD.clearScoreCache(); }
   state.activities = (a.data || []).map(rowToAct);
   if(rq.data){ setReqs(rq.data.map(rowToReq)); }
@@ -1017,10 +1019,18 @@ function parseQuery(tokens){
   var fn = parseOr();
   return fn || function(){ return true; };
 }
+/* LAUNCH (2026-07-19): search-only haystack extension — req numbers and hiring
+   manager names (via the candidate's tagged reqs) + department are searchable
+   from the global bar. Scoring still uses the plain candHaystack. */
+function candSearchHaystack(c){
+  var extra = "";
+  try{ reqsForTags(c.reqs).forEach(function(r){ extra += " " + (r.jobId || "") + " " + (r.hm || ""); }); }catch(eSH){}
+  return candHaystack(c) + " " + String(c.department || "").toLowerCase() + extra.toLowerCase();
+}
 function matchesSearch(c){
   if(!ui.q || !ui.q.trim()){ return true; }
-  try{ var fn = parseQuery(tokenizeQuery(ui.q)); return fn(candHaystack(c)); }
-  catch(e){ return candHaystack(c).indexOf(ui.q.toLowerCase()) !== -1; }
+  try{ var fn = parseQuery(tokenizeQuery(ui.q)); return fn(candSearchHaystack(c)); }
+  catch(e){ return candSearchHaystack(c).indexOf(ui.q.toLowerCase()) !== -1; }
 }
 function reqsForTags(tags){
   var out = [];
@@ -1033,6 +1043,7 @@ function passFilters(c){
   if(ui.fReq && (c.reqs||[]).indexOf(ui.fReq) === -1){ return false; }
   if(ui.fOwner && c.owner !== ui.fOwner){ return false; }
   if(ui.fPriority && c.priority !== ui.fPriority){ return false; }
+  if(ui.fLoc && String(c.location || "").trim() !== ui.fLoc){ return false; }
   if(ui.fHM && !reqsForTags(c.reqs).some(function(r){ return r.hm === ui.fHM; })){ return false; }
   if(ui.fDept){
     var pf = (typeof window.TB_reqProgram === "function") ? window.TB_reqProgram : null;
@@ -1045,7 +1056,7 @@ function currentList(){ var v = activeView(); return state.candidates.filter(fun
 /* ---------- helpers ---------- */
 function clearSearchFilters(){
   ui.q = ""; ui.fStatus = ""; ui.fDiscipline = ""; ui.fReq = ""; ui.fOwner = ""; ui.fPriority = ""; ui.fDept = ""; ui.fHM = "";
-  ["q","fStatus","fDiscipline","fReq","fOwner","fPriority","fDept","fHM"].forEach(function(id){ var elx = document.getElementById(id); if(elx){ elx.value = ""; } });
+  ["q","fStatus","fDiscipline","fReq","fOwner","fPriority","fDept","fHM","fLoc"].forEach(function(id){ var elx = document.getElementById(id); if(elx){ elx.value = ""; } });
   renderList();
 }
 /* Defect fix (v2.0 audit): protocol-less web links (e.g. "linkedin.com/in/x")
@@ -7899,6 +7910,7 @@ document.getElementById("q").addEventListener("keydown", function(e){
 });
 document.addEventListener("mousedown", function(e){ if(!e.target.closest(".search")){ closeQDrop(); } });
 document.getElementById("fStatus").addEventListener("change", function(e){ ui.fStatus = e.target.value; renderList(); });
+document.getElementById("fLoc").addEventListener("change", function(e){ ui.fLoc = e.target.value; renderList(); });
 document.getElementById("fDept").addEventListener("change", function(e){ ui.fDept = e.target.value; renderList(); });
 document.getElementById("fHM").addEventListener("change", function(e){ ui.fHM = e.target.value; renderList(); });
 document.getElementById("fDiscipline").addEventListener("change", function(e){ ui.fDiscipline = e.target.value; renderList(); });
@@ -7996,6 +8008,16 @@ fillSelect(document.getElementById("fDiscipline"), DISCIPLINES, "All Disciplines
 fillSelect(document.getElementById("fReq"), REQ_OPTIONS, "All Reqs");
 fillSelect(document.getElementById("fOwner"), OWNERS, "All Recruiters");
 fillSelect(document.getElementById("fPriority"), PRIORITY, "All Priorities");
+/* Location filter — controlled list from live candidate data, refreshed on load */
+function fillLocFilter(){
+  try{
+    var seen = {}; var locs = [];
+    (state.candidates || []).forEach(function(c){ var L = String(c.location || "").trim(); if(L && !seen[L.toLowerCase()]){ seen[L.toLowerCase()] = 1; locs.push(L); } });
+    locs.sort(function(a, b){ return a.localeCompare(b); });
+    var sel = document.getElementById("fLoc"); if(!sel){ return; }
+    var cur = ui.fLoc; fillSelect(sel, locs, "All Locations"); sel.value = cur;
+  }catch(eFL){}
+}
 boot();
 </script>
 
