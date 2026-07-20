@@ -2725,6 +2725,13 @@ var BOARD = (function(){
     return "thin";
   }
   function juniorRead(txt){
+    /* EA FINDING #1 · FIX 1 (2026-07-20): seniority evidence overrides the junior read.
+       "Mentored junior engineers" is proof of seniority, not juniority. Guards first: */
+    var lvG = detectLevel(txt);
+    if(lvG === "sr" || lvG === "principal" || lvG === "staff" || lvG === "manager" ||
+       lvG === "director" || lvG === "chief" || lvG === "vp" || lvG === "executive") return false;
+    var allY = txt.match(/(\d{1,2})\+?\s*years/gi);
+    if(allY){ for(var gi = 0; gi < allY.length; gi++){ if(parseInt(allY[gi], 10) >= 8) return false; } }
     var m=txt.match(/(\d{1,2})\+?\s*years/i);
     if(m && parseInt(m[1],10)<6) return true;
     if(/\b[1-4]\s*years\b/i.test(txt)) return true;
@@ -2956,7 +2963,7 @@ var BOARD = (function(){
     cc.results=results; cc.best=results[0]||{verdict:"not", score:0, req:{title:"(no reqs in scope)", loc:""}};
     return cc;
   }
-  return {render:render, scoreCandidate:scoreCandidate, scoreCandidateAgainst:scoreCandidateAgainst, clearScoreCache:clearScoreCache, tier:tier};
+  return {render:render, scoreCandidate:scoreCandidate, scoreCandidateAgainst:scoreCandidateAgainst, clearScoreCache:clearScoreCache, tier:tier, reqFn:reqFn};
 })();
 
 /* ═══ AutoSlate™ v1 (Intelligence Layer) — ranked hiring-manager slates with
@@ -5789,7 +5796,31 @@ function openDetail(c){
     try{
       if(!isNew && typeof BOARD !== "undefined" && BOARD.scoreCandidate){
         var afRes = BOARD.scoreCandidate(c);
-        var afTop = ((afRes && afRes.results) || []).filter(function(r2){ return r2.verdict === "strong" || r2.verdict === "moderate" || r2.verdict === "stretch"; }).slice(0, 6);
+        var afTop = ((afRes && afRes.results) || []).filter(function(r2){
+            if(r2.verdict === "strong" || r2.verdict === "moderate") return true;
+            if(r2.verdict !== "stretch") return false;
+            /* EA FINDING #1 · FIX 2 (2026-07-20) — recruiter-trust display gate:
+               when the candidate's discipline is known, a stretch row is shown only if
+               the requisition's discipline is known AND compatible. Presentation only —
+               TalentFit calculations are unchanged. Unknown-discipline candidates keep
+               today's behavior; empty list falls to the certified No Current Match state. */
+            var cfn = afRes.fn;
+            if(!cfn || cfn === "ANY" || cfn === "UNK") return true;
+            var rfn = (BOARD.reqFn ? BOARD.reqFn(r2.req) : "ANY");
+            if(!rfn || rfn === "ANY") return false;
+            var COMPAT = {
+              EE:{EE:1,SE:1,TEST:1,MFG:1,SW:1,REL:1,CM:1}, SW:{SW:1,SE:1,EE:1,TEST:1,CYBER:1,CM:1},
+              SE:{SE:1,EE:1,SW:1,TEST:1,MECH:1,MFG:1,REL:1,CM:1,QA:1}, MECH:{MECH:1,SE:1,MFG:1,TEST:1,QA:1,REL:1},
+              MFG:{MFG:1,MECH:1,EE:1,QA:1,TEST:1,SE:1,SC:1}, QA:{QA:1,MFG:1,SE:1,TEST:1,REL:1},
+              TEST:{TEST:1,EE:1,SE:1,SW:1,QA:1,MECH:1}, REL:{REL:1,QA:1,EE:1,SE:1,TEST:1},
+              CYBER:{CYBER:1,SW:1,ITOPS:1,SE:1}, ITOPS:{ITOPS:1,CYBER:1,SW:1},
+              PM:{PM:1,SCHED:1,SC:1,CM:1}, SCHED:{SCHED:1,PM:1,SC:1,CM:1},
+              SC:{SC:1,PM:1,SCHED:1,MFG:1}, CM:{CM:1,SCHED:1,PM:1,SE:1,QA:1},
+              CONTRACTS:{CONTRACTS:1,SC:1,PM:1}
+            };
+            var allow = COMPAT[cfn];
+            return allow ? !!allow[rfn] : (rfn === cfn);
+          }).slice(0, 6);
         var afWrap = el("div", "fld full tfit");
         var afHead = el("div", "tfit-head");
         afHead.appendChild(el("span", "tfit-logo", "TalentFit\u2122"));
