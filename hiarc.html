@@ -2654,7 +2654,7 @@ var BOARD = (function(){
     var pm   = score(/program manager|project manager|\bpmo\b|program management/i, /\bpmp\b|earned value|\bevms?\b|integrated master schedule|risk management/i);
     var ktr  = score(/contracts? (manager|director|specialist|administrator|professional)|subcontracts?|legal counsel|general counsel|attorney|head of contracts/i, /\bfar\b|\bdfars\b|negotiat|contract administration/i);
     var cy  = score(/cyber ?security|information security|security engineer|\bisso\b|\bissm\b/i, /\brmf\b|nist 800|\bstig\b|\bacas\b|emass|cissp|devsecops/i);
-    var qa  = score(/quality engineer|quality systems engineer|supplier quality|quality assurance/i, /\bcapa\b|\bncmr\b|iso 13485|as9100|iso 9001|\bfmea\b|audit/i);
+    var qa  = score(/quality engineer|quality systems engineer|supplier quality|quality assurance|(?:senior\s+|sr\.?\s+)?(?:director|manager|vp|vice president|head)\s*(?:[–\-—,]|of)?\s*quality|quality\s+(?:director|leader(?:ship)?|manager|executive)|design quality/i, /\bcapa\b|\bncmr\b|iso 13485|as9100|iso 9001|\bfmea\b|audit|operational excellence|continuous improvement/i);
     var te  = score(/test engineer|test and evaluation|\bt&e\b/i, /flight test|qualification test|\bhil\b|\batp\b|test procedure|test readiness/i);
     var cmf = score(/configuration (analyst|manager|management)/i, /configuration management|change control|\bccb\b|baseline/i);
     var ito = score(/systems administrator|network engineer|help ?desk|iam analyst|identity (operations|governance)|security administration analyst/i, /active directory|\bldap\b|\bsso\b|\brbac\b|\bvpn\b|windows server/i);
@@ -5802,18 +5802,22 @@ function openDetail(c){
           afWrap.appendChild(afEmpty);
         } else {
           var best0 = afTop[0];
-          var vT = BOARD.tier(best0.verdict);
+          /* LAUNCH CONTRACT S3: never force a weak recommendation. If nothing reaches
+             moderate-or-better, the hero says so honestly — closest req is reference only. */
+          var noCur = best0.verdict !== "strong" && best0.verdict !== "moderate";
+          var vT = noCur ? { icon: "⚪", label: "No Current Match" } : BOARD.tier(best0.verdict);
           var afHero = el("div", "tfit-hero");
-          var afRing = el("div", "tfit-ring tfit-v-" + best0.verdict);
+          var afRing = el("div", "tfit-ring tfit-v-" + (noCur ? "not" : best0.verdict));
           afRing.style.background = "conic-gradient(currentColor " + (Math.max(0, Math.min(100, best0.score)) * 3.6) + "deg, var(--tfit-track) 0)";
           afRing.appendChild(el("span", "tfit-ring-score", String(best0.score)));
           afHero.appendChild(afRing);
           var afHtx = el("div", "tfit-hero-tx");
           afHtx.appendChild(el("div", "tfit-hero-l", "Overall Fit"));
-          var afChip = el("span", "tfit-chip tfit-v-" + best0.verdict);
+          var afChip = el("span", "tfit-chip tfit-v-" + (noCur ? "not" : best0.verdict));
           afChip.appendChild(el("i", "tfit-dot"));
           afChip.appendChild(document.createTextNode(vT.icon + " " + vT.label));
           afHtx.appendChild(afChip);
+          if(noCur){ afHtx.appendChild(el("div", "tfit-hero-l", "No moderate-or-better fit across open reqs — closest shown for reference only")); }
           afHero.appendChild(afHtx);
           afWrap.appendChild(afHero);
           afWrap.appendChild(el("div", "tfit-sect", "Best Matches"));
@@ -6489,7 +6493,7 @@ async function ingestResumes(files, opts){
   function liveRow(r){
     var tr = el("tr");
     tr.appendChild(el("td","nm", r.file));
-    tr.appendChild(el("td", null, r.status === "created" ? "✓ Complete" : (r.status === "skipped" ? "○ Duplicate" : "✗ Failed")));
+    tr.appendChild(el("td", null, r.status === "created" ? "✓ Complete" : (r.status === "merged" ? "⇄ Merged (duplicate)" : (r.status === "skipped" ? "○ Duplicate" : "✗ Failed"))));
     tr.appendChild(el("td","sub2", r.detail || ""));
     tb.appendChild(tr);
   }
@@ -6528,9 +6532,53 @@ async function ingestResumes(files, opts){
       /* duplicate detection — against production data AND within this batch */
       var key = normEmail(c.email) || normName(c.firstName, c.lastName);
       var dup = findDuplicate(c, null);
-      if(dup){ rec.status = "skipped"; rec.detail = "duplicate of " + fullName(dup); results.push(rec); liveRow(rec); hint.textContent = "Processing " + results.length + " of " + list.length + "…"; continue; }
-      if(key && key !== "|" && seenBatch[key]){ rec.status = "skipped"; rec.detail = "duplicate within batch"; results.push(rec); liveRow(rec); hint.textContent = "Processing " + results.length + " of " + list.length + "…"; continue; }
-      if(key){ seenBatch[key] = 1; }
+      if(dup){
+        /* LAUNCH CONTRACT S2: existing person → MERGE, never a second record, never a silent skip.
+           Store the file as a resume version, enrich only-blank fields, and preserve
+           name / owner / status / notes / activities untouched. Same version model as Replace:
+           files keep their own storage paths; the activity references the version. */
+        rec.status = "merged";
+        try{
+          var vpath = ORG + "/" + Date.now() + "_" + i + "_" + file.name.replace(/[^A-Za-z0-9._\-]/g, "_");
+          var vup = await sb.storage.from("resumes").upload(vpath, file, { upsert: true });
+          var vok = vup && !vup.error;
+          var patch = {};
+          if(!dup.email && c.email){ patch.email = c.email; }
+          if(!dup.phone && c.phone){ patch.phone = c.phone; }
+          if(!dup.linkedin && c.linkedin){ patch.linkedin = c.linkedin; }
+          if(!dup.location && c.location){ patch.location = c.location; }
+          if(!dup.title && c.title){ patch.title = c.title; }
+          if(!dup.company && c.company){ patch.company = c.company; }
+          if((!dup.skills || !dup.skills.length) && c.skills && c.skills.length){ patch.skills = c.skills; }
+          if(!dup.summary && c.summary){ patch.summary = c.summary; }
+          if(!dup.resumeText && c.resumeText){ patch.resume_text = String(c.resumeText).slice(0, 60000); }
+          var becameCurrent = false;
+          if(vok && !dup.resumePath){ patch.resume_path = vpath; patch.resume_file_name = file.name; becameCurrent = true; }
+          if(Object.keys(patch).length){ await run(sb.from("candidates").update(patch).eq("id", dup.id), null); }
+          try{
+            await sb.from("activities").insert({ org: ORG, candidate_id: dup.id, type: "Note", date: todayISO(),
+              owner: (dup.owner && dup.owner !== "Unassigned") ? dup.owner : (typeof meOwnerName === "function" ? meOwnerName() : ""),
+              notes: "Resume " + (becameCurrent ? "attached" : "version stored") + " via Bulk Add (duplicate detected — merged): " + file.name + (vok ? " [" + vpath + "]" : " (file store failed)") + (becameCurrent ? "" : " · current resume unchanged") });
+          }catch(eA){}
+          var enr = Object.keys(patch).filter(function(k){ return k !== "resume_path" && k !== "resume_file_name"; }).length;
+          rec.detail = "merged into " + fullName(dup) + (becameCurrent ? " · resume attached ✓" : (vok ? " · version stored ✓ (current resume unchanged)" : " · file store failed")) + (enr ? " · " + enr + " blank field" + (enr === 1 ? "" : "s") + " enriched" : "") + " · owner " + (dup.owner || "Unassigned") + " preserved";
+        }catch(eM){ rec.detail = "merged into " + fullName(dup) + " · " + String((eM && eM.message) || eM).slice(0, 70); }
+        results.push(rec); liveRow(rec); hint.textContent = "Processing " + results.length + " of " + list.length + "…"; continue;
+      }
+      if(key && key !== "|" && seenBatch[key]){
+        /* same person twice in one drop: first file created the pending record — this file is its version */
+        var pend = seenBatch[key] && seenBatch[key].c ? seenBatch[key] : null;
+        rec.status = "merged";
+        try{
+          var vpath2 = ORG + "/" + Date.now() + "_" + i + "_" + file.name.replace(/[^A-Za-z0-9._\-]/g, "_");
+          var vup2 = await sb.storage.from("resumes").upload(vpath2, file, { upsert: true });
+          var vok2 = vup2 && !vup2.error;
+          if(pend && vok2 && !pend.c.resumePath){ pend.c.resumePath = vpath2; pend.c.resumeFileName = file.name; rows[pend.rowIdx] = candToRow(pend.c); }
+          rec.detail = "duplicate within batch — one candidate" + (vok2 ? " · file stored as version [" + vpath2 + "]" : " · file store failed");
+        }catch(eB){ rec.detail = "duplicate within batch · " + String((eB && eB.message) || eB).slice(0, 70); }
+        results.push(rec); liveRow(rec); hint.textContent = "Processing " + results.length + " of " + list.length + "…"; continue;
+      }
+      if(key){ seenBatch[key] = { c: c, rowIdx: rows.length }; }
       /* store the file — same bucket and path scheme as the single-file flow */
       try{
         var path = ORG + "/" + Date.now() + "_" + i + "_" + file.name.replace(/[^A-Za-z0-9._\-]/g, "_");
@@ -6548,12 +6596,13 @@ async function ingestResumes(files, opts){
   if(rows.length){ okIns = await run(sb.from("candidates").insert(rows), null); }
   /* completion summary — every file accounted for, honestly */
   var created = results.filter(function(r){ return r.status === "created"; }).length;
+  var merged  = results.filter(function(r){ return r.status === "merged"; }).length;
   var skipped = results.filter(function(r){ return r.status === "skipped"; }).length;
   var failed  = results.filter(function(r){ return r.status === "failed"; }).length;
   var briefs  = results.filter(function(r){ return r.status === "created" && r.detail.indexOf("Executive Brief ✓") !== -1; }).length;
   var stored  = results.filter(function(r){ return r.status === "created" && r.detail.indexOf("stored ✓") !== -1; }).length;
   h2.textContent = "Resume Ingestion Summary";
-  hint.textContent = list.length + " processed · " + created + " candidate" + (created === 1 ? "" : "s") + " created · " + stored + " resume" + (stored === 1 ? "" : "s") + " stored · " + briefs + " Executive Brief" + (briefs === 1 ? "" : "s") + " · " + skipped + " duplicate" + (skipped === 1 ? "" : "s") + (failed ? " · " + failed + " failed" : "") + " · Owner: " + owner + " · TalentFit matches compute live on every profile.";
+  hint.textContent = list.length + " processed · " + created + " candidate" + (created === 1 ? "" : "s") + " created · " + stored + " resume" + (stored === 1 ? "" : "s") + " stored · " + briefs + " Executive Brief" + (briefs === 1 ? "" : "s") + " · " + merged + " merged into existing (resume attached, owner preserved)" + (skipped ? " · " + skipped + " duplicate" + (skipped === 1 ? "" : "s") : "") + (failed ? " · " + failed + " failed" : "") + " · Owner: " + owner + " · TalentFit matches compute live on every profile.";
   if(!okIns){ toast("Some rows failed to save — see summary"); }
 }
 async function handleResumeFile(file){
