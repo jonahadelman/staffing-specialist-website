@@ -1065,7 +1065,7 @@ function prioTag(text, varname){ var w = el("span"); w.style.cssText = "display:
 function toast(msg){ var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); }, 1900); }
 
 /* ---------- sidebar ---------- */
-var sectionCollapsed = { "Analytics": true }; /* daily-work chapters start open; reporting starts closed */
+var sectionCollapsed = {}; /* LAUNCH (2026-07-19): every nav section starts open — nothing hidden behind a collapsed chapter on first login */
 function fuState(){
   var any = false, overdue = false;
   state.candidates.forEach(function(c){ var fr = followUp(c); if(fr.label !== ""){ any = true; if(fr.label === "Overdue"){ overdue = true; } } });
@@ -10765,7 +10765,11 @@ body.tb-overlay-open{ overflow:hidden; }
        "anthony@...": { workstation: "admin",     programs: "*" },
        "nicole@...":  { workstation: "executive", programs: "*" }  */
   };
-  var WS_HOME = { recruiter:"guide", manager:"tb_ws_manager", hm:"tb_hm_review", executive:"tb_brief", admin:"tb_ws_admin" };
+  /* LAUNCH (2026-07-19): everyone with an operating desk lands on Start My Day.
+     HMs keep their read-only review desk (no Start My Day in that workspace);
+     executives keep Recruiting Health. Team Health / Platform Status stay one
+     click away in the nav. */
+  var WS_HOME = { recruiter:"guide", manager:"guide", hm:"tb_hm_review", executive:"tb_brief", admin:"guide" };
   var WS_LABEL = { recruiter:"Recruiter Workstation", manager:"Recruiting Manager Workstation", hm:"Hiring Manager Workstation", executive:"Executive Workstation", admin:"Administrator Workstation" };
 
   /* ── ADMIN IMPERSONATION: become any user for support, training, QA.
@@ -11806,7 +11810,7 @@ body.tb-overlay-open{ overflow:hidden; }
     window.tbApplyWorkstation(false);
     try{ tbIntelligence(); }catch(eInt){}
     var home = WS_HOME[window.TB_WS] || "guide";
-    if(window.TB_WS !== "recruiter" && ui.view === "guide"){ ui.view = home; }
+    if((window.TB_WS === "hm" || window.TB_WS === "executive") && ui.view === "guide"){ ui.view = home; }
     refresh();
   }, 600);
   /* nav labeling per workstation */
