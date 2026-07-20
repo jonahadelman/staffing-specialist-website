@@ -11960,7 +11960,12 @@ body.tb-overlay-open{ overflow:hidden; }
     }catch(eIB){}
     /* topbar: recruiters recruit; admins administer */
     try{
-      var adminBtns = ["importBtn","exportBtn","dayforceBtn","bulkBtn"], recruitBtns = ["fromResumeBtn","addBtn"];
+      /* EA DIRECTIVE (2026-07-20, widened by Product Owner): there are no admin-only data
+       operations — recruiters and recruiting managers do everything an admin would.
+       Full toolbar (Bulk Add, Import CSV, Export, Dayforce CSV, From Resume, + Candidate)
+       for recruiter / manager / admin. HM + Executive desks stay read-oriented; View-Only
+       accounts unchanged (applyViewOnly still governs). */
+      var adminBtns = [], recruitBtns = ["fromResumeBtn","addBtn","bulkBtn","importBtn","exportBtn","dayforceBtn"];
       adminBtns.forEach(function(id){ var b = document.getElementById(id); if(b){ b.style.display = (ws === "admin") ? "" : "none"; } });
       recruitBtns.forEach(function(id){ var b = document.getElementById(id); if(b){ b.style.display = (ws === "recruiter" || ws === "manager" || ws === "admin") ? "" : "none"; } });
       var fb = document.querySelector(".side .filterbox"); var fh = fb ? fb.previousElementSibling : null;
