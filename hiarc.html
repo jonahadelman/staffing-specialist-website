@@ -1653,7 +1653,10 @@ function renderStartMyDay(host){
     cb.addEventListener("change", function(){ it.done = cb.checked; tbDeskSave("checklist", data); renderList(); });
     var tx = el("span", null, it.text); tx.style.cssText = "flex:1;font-size:13px;color:" + (it.done ? "var(--muted)" : "var(--ink)") + (it.done ? ";text-decoration:line-through" : "");
     var dl = el("button","btn sm ghost","✕"); dl.title = "Remove"; dl.addEventListener("click", function(){ data.items = data.items.filter(function(x){ return x.id !== it.id; }); tbDeskSave("checklist", data); renderList(); });
-    li.appendChild(cb); li.appendChild(tx); li.appendChild(dl); cl.appendChild(li);
+    var edB = tbPencil("Edit task"); /* RC1.4: same record updated in place — never duplicated */
+    function beginEditT(){ tbInlineEdit(li, [{ value: it.text }], function(vals){ it.text = String(vals[0]).trim(); tbDeskSave("checklist", data); renderList(); }, function(){ renderList(); }); }
+    edB.addEventListener("click", beginEditT); tx.style.cursor = "pointer"; tx.title = "Click to edit"; tx.addEventListener("click", beginEditT);
+    li.appendChild(cb); li.appendChild(tx); li.appendChild(edB); li.appendChild(dl); cl.appendChild(li);
   });
   if(data.items.length > 12){ cl.appendChild(el("div","hint","+ " + (data.items.length - 12) + " more below the fold — clear completed to tidy up.")); }
   if(data.items.some(function(i){ return i.done; })){
@@ -1691,7 +1694,13 @@ function renderStartMyDay(host){
       var hit = (g.n || 0) >= g.target;
       lab.style.cssText = "flex:1;font-size:13px;font-weight:600;color:" + (hit ? "var(--green)" : "var(--ink)");
       var dl2 = el("button","btn sm ghost","✕"); dl2.title = "Remove"; dl2.addEventListener("click", function(){ all[wk] = goals.filter(function(x){ return x.id !== g.id; }); tbDeskSave("goals", all); renderList(); });
-      top.appendChild(minus); top.appendChild(plus); top.appendChild(lab); top.appendChild(dl2); li.appendChild(top);
+      var edG = tbPencil("Edit goal text and target");
+      function beginEditG(){ tbInlineEdit(li, [{ value: g.text }, { value: g.target, type: "number" }], function(vals){
+        g.text = String(vals[0]).trim();
+        var t2 = String(vals[1] || "").trim(); if(t2 !== ""){ var pn2 = parseInt(t2); if(!isNaN(pn2) && pn2 >= 0){ g.target = pn2; } }
+        all[wk] = goals; tbDeskSave("goals", all); renderList(); }, function(){ renderList(); }); }
+      edG.addEventListener("click", beginEditG); lab.style.cursor = "pointer"; lab.title = "Click to edit"; lab.addEventListener("click", beginEditG);
+      top.appendChild(minus); top.appendChild(plus); top.appendChild(lab); top.appendChild(edG); top.appendChild(dl2); li.appendChild(top);
       var track = el("div"); track.style.cssText = "height:6px;border-radius:999px;background:var(--panel2);margin:6px 2px 2px;overflow:hidden";
       var fill = el("div"); fill.style.cssText = "height:100%;border-radius:999px;width:" + Math.min(100, Math.round(100 * (g.n || 0) / g.target)) + "%;background:" + (hit ? "var(--green)" : "var(--gold)") + ";transition:width .2s";
       track.appendChild(fill); li.appendChild(track);
@@ -1700,7 +1709,13 @@ function renderStartMyDay(host){
       cb2.addEventListener("change", function(){ g.done = cb2.checked; all[wk] = goals; tbDeskSave("goals", all); renderList(); });
       var tx2 = el("span", null, g.text); tx2.style.cssText = "flex:1;font-size:13px;color:" + (g.done ? "var(--muted)" : "var(--ink)") + (g.done ? ";text-decoration:line-through" : "");
       var dl3 = el("button","btn sm ghost","✕"); dl3.addEventListener("click", function(){ all[wk] = goals.filter(function(x){ return x.id !== g.id; }); tbDeskSave("goals", all); renderList(); });
-      top.appendChild(cb2); top.appendChild(tx2); top.appendChild(dl3); li.appendChild(top);
+      var edG2 = tbPencil("Edit goal");
+      function beginEditG2(){ tbInlineEdit(li, [{ value: g.text }, { value: g.target || "", type: "number" }], function(vals){
+        g.text = String(vals[0]).trim();
+        var t3 = String(vals[1] || "").trim(); if(t3 !== ""){ var pn3 = parseInt(t3); if(!isNaN(pn3) && pn3 >= 0){ g.target = pn3; g.n = g.n || 0; } }
+        all[wk] = goals; tbDeskSave("goals", all); renderList(); }, function(){ renderList(); }); }
+      edG2.addEventListener("click", beginEditG2); tx2.style.cursor = "pointer"; tx2.title = "Click to edit"; tx2.addEventListener("click", beginEditG2);
+      top.appendChild(cb2); top.appendChild(tx2); top.appendChild(edG2); top.appendChild(dl3); li.appendChild(top);
     }
     gl.appendChild(li);
   });
@@ -1810,6 +1825,42 @@ function tbDeskKey(kind){
   if(window.TB_IMPERSONATE){ return "tb_" + kind + "_" + ORG + "_imp_" + window.TB_IMPERSONATE.name.toLowerCase().replace(/\s+/g, "_"); } /* never mix admin's personal desk with theirs */
   return "tb_" + kind + "_" + ORG + "_" + (CURRENT_USER ? CURRENT_USER.id : "anon");
 }
+function tbInlineEdit(li, fields, onCommit, onCancel){
+  /* RC1.4: swap a row into edit mode. Enter/Save/blur commit; Escape cancels;
+     blank text is rejected (revert on blur, hold focus on explicit save). */
+  while(li.firstChild){ li.removeChild(li.firstChild); }
+  var wrap = el("div"); wrap.style.cssText = "display:flex;flex:1;gap:6px;align-items:center;width:100%";
+  var inputs = fields.map(function(f){
+    var i = el("input"); i.type = f.type || "text"; i.value = (f.value == null ? "" : String(f.value));
+    if(f.type === "number"){ i.min = "0"; i.style.cssText = "width:64px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);font:inherit;font-size:13px"; i.title = "Weekly target"; }
+    else { i.style.cssText = "flex:1;min-width:0;padding:6px 9px;border:1px solid var(--gold);border-radius:7px;background:var(--bg);color:var(--ink);font:inherit;font-size:13px"; }
+    wrap.appendChild(i); return i; });
+  var sv = el("button","btn sm gold","Save"); sv.type = "button";
+  var cx = el("button","btn sm ghost","✕"); cx.type = "button"; cx.title = "Cancel (Esc)";
+  wrap.appendChild(sv); wrap.appendChild(cx); li.appendChild(wrap);
+  var settled = false;
+  function finish(commit, fromBlur){
+    if(settled){ return; }
+    if(commit){
+      var txt = String(inputs[0].value || "").trim();
+      if(!txt){
+        if(fromBlur){ settled = true; onCancel(); return; } /* blank on blur = revert, never saved */
+        inputs[0].style.borderColor = "var(--red, #e05252)"; inputs[0].focus(); return; /* blank rejected */
+      }
+      settled = true; onCommit(inputs.map(function(i){ return i.value; }));
+    } else { settled = true; onCancel(); }
+  }
+  inputs.forEach(function(i){ i.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); finish(true); }
+    if(e.key === "Escape"){ e.preventDefault(); finish(false); } }); });
+  wrap.addEventListener("focusout", function(){ setTimeout(function(){
+    if(settled){ return; }
+    if(!wrap.contains(document.activeElement)){ finish(true, true); } }, 120); });
+  sv.addEventListener("click", function(){ finish(true); });
+  cx.addEventListener("click", function(){ finish(false); });
+  inputs[0].focus(); try{ inputs[0].setSelectionRange(inputs[0].value.length, inputs[0].value.length); }catch(eS){}
+}
+function tbPencil(title){ var b = el("button","btn sm ghost","✎"); b.type = "button"; b.title = title || "Edit"; b.style.opacity = ".8"; return b; }
 function tbDeskLoad(kind, fallback){ try{ var v = JSON.parse(localStorage.getItem(tbDeskKey(kind))); return v === null || v === undefined ? fallback : v; }catch(e){ return fallback; } }
 function tbDeskSave(kind, val){ try{ localStorage.setItem(tbDeskKey(kind), JSON.stringify(val)); }catch(e){} }
 function tbDeskHint(host, txt){ var h = el("div","hint", txt); h.style.cssText = "margin-bottom:14px"; host.appendChild(h); }
@@ -1834,7 +1885,10 @@ function renderChecklist(host){
     cb.addEventListener("change", function(){ it.done = cb.checked; tbDeskSave("checklist", data); renderList(); });
     var tx = el("span", null, it.text); tx.style.cssText = "flex:1;font-size:13px;color:" + (it.done ? "var(--muted)" : "var(--ink)") + (it.done ? ";text-decoration:line-through" : "");
     var dl = el("button","btn sm ghost","✕"); dl.title = "Remove"; dl.addEventListener("click", function(){ data.items = data.items.filter(function(x){ return x.id !== it.id; }); tbDeskSave("checklist", data); renderList(); });
-    li.appendChild(cb); li.appendChild(tx); li.appendChild(dl); card.appendChild(li);
+    var edS = tbPencil("Edit task");
+    function beginEditS(){ tbInlineEdit(li, [{ value: it.text }], function(vals){ it.text = String(vals[0]).trim(); tbDeskSave("checklist", data); renderList(); }, function(){ renderList(); }); }
+    edS.addEventListener("click", beginEditS); tx.style.cursor = "pointer"; tx.title = "Click to edit"; tx.addEventListener("click", beginEditS);
+    li.appendChild(cb); li.appendChild(tx); li.appendChild(edS); li.appendChild(dl); card.appendChild(li);
   });
   if(data.items.some(function(i){ return i.done; })){
     var cc = el("button","btn sm ghost","Clear completed"); cc.style.marginTop = "12px";
@@ -1874,7 +1928,10 @@ function renderWeeklyGoals(host){
     cb.addEventListener("change", function(){ g.done = cb.checked; all[wk] = goals; tbDeskSave("goals", all); renderList(); });
     var tx = el("span", null, g.text); tx.style.cssText = "flex:1;font-size:13px;color:" + (g.done ? "var(--muted)" : "var(--ink)") + (g.done ? ";text-decoration:line-through" : "");
     var dl = el("button","btn sm ghost","✕"); dl.title = "Remove"; dl.addEventListener("click", function(){ all[wk] = goals.filter(function(x){ return x.id !== g.id; }); tbDeskSave("goals", all); renderList(); });
-    li.appendChild(cb); li.appendChild(tx); li.appendChild(dl); card.appendChild(li);
+    var edW = tbPencil("Edit goal");
+    function beginEditW(){ tbInlineEdit(li, [{ value: g.text }], function(vals){ g.text = String(vals[0]).trim(); all[wk] = goals; tbDeskSave("goals", all); renderList(); }, function(){ renderList(); }); }
+    edW.addEventListener("click", beginEditW); tx.style.cursor = "pointer"; tx.title = "Click to edit"; tx.addEventListener("click", beginEditW);
+    li.appendChild(cb); li.appendChild(tx); li.appendChild(edW); li.appendChild(dl); card.appendChild(li);
   });
   host.appendChild(card);
 }
@@ -2407,7 +2464,185 @@ function renderManagers(host){
   }
 }
 function abbrevTitle(t){ if(!t){ return t; } var m=[[/\bPrincipal\b/gi,"Prin."],[/\bEngineering\b/gi,"Eng"],[/\bEngineer\b/gi,"Eng"],[/\bManagement\b/gi,"Mgmt"],[/\bManager\b/gi,"Mgr"],[/\bSenior\b/gi,"Sr"],[/\bDevelopment\b/gi,"Dev"],[/\bIntegration\b/gi,"Integ"],[/\bAdministrator\b/gi,"Admin"],[/\bSpecialist\b/gi,"Spec."]]; m.forEach(function(x){ t=t.replace(x[0],x[1]); }); return t; }
+/* ═══ RC1.4 — PERSISTED CANDIDATE-TO-REQUISITION COVERAGE ═══
+   Assignments are persisted facts, never render-time inventions:
+   · [Assignment] activities (latest per candidate) — TalentFit-qualifying pairs with score/verdict/flag,
+     written at intake and by the certification backfill; deterministic and reconstructable by re-running
+     the certified engine on the same records.
+   · c.reqs target tags — manual / historical recruiter placements (never auto-removed).
+   Every count below is the length of the exact candidate list it opens to. */
+var TB_RPO_ENGAGEMENT = { org: "elbit", label: "Elbit RPO Engagement — SBMC + Warfighter Engineering",
+  members: { "Jonah Adelman": 1, "Amy Vella": 1 }, memberDomains: ["thestaffingspecialist.com"],
+  programs: {
+    "SBMC": { "1263": 1, "1329": 1, "1508": 1, "1264": 1, "1267": 1, "1276": 1, "1277": 1, "1381": 1, "1509": 1 },
+    "Warfighter Engineering (618)": { "1448": 1, "1321": 1, "1319": 1, "1311": 1, "1310": 1, "1309": 1 } } };
+var TB_PROGRAM_ORDER = ["MTC", "SBMC", "Warfighter Engineering (618)", "Warfighter Systems", "Electronic Systems", "Corporate Engineering", "CT Office", "Integrated Solutions", "SlingWorks", "HiArc"];
+function tbReqProgram(r){
+  var j = String((r && r.jobId) || "");
+  if(typeof ORG === "undefined" || ORG === TB_RPO_ENGAGEMENT.org){
+    for(var p in TB_RPO_ENGAGEMENT.programs){ if(TB_RPO_ENGAGEMENT.programs[p][j]){ return p; } }
+  }
+  var blob = ((r && r.title) || "") + " " + ((r && r.program) || "") + " " + ((r && r.department) || "");
+  if(/\bMTC\b|Mobile Tactical Cannon/i.test(blob)){ return "MTC"; }
+  if(/SBMC/i.test(blob)){ return "SBMC"; }
+  return (r && r.department) || (r && r.program) || "Other Programs";
+}
+function tbParseAssignLedger(){
+  var latest = {};
+  ((typeof state !== "undefined" && state && state.activities) || []).forEach(function(a){
+    if(!a || !a.notes || a.notes.indexOf("[Assignment]") !== 0){ return; }
+    var cur = latest[a.candidateId];
+    if(!cur || String(a.date || "") >= String(cur.date || "")){ latest[a.candidateId] = a; }
+  });
+  var out = {};
+  Object.keys(latest).forEach(function(cid){
+    var m2 = latest[cid].notes.match(/qualifying requisitions: ([^·]+)/);
+    var pairs = [];
+    if(m2){ pairs = m2[1].split(",").map(function(s){ var p = s.trim().split(":");
+      return { j: p[0], score: parseInt(p[1]) || 0, verdict: p[2] || "", flag: p[3] === "v" }; })
+      .filter(function(p2){ return p2.j; }); }
+    out[cid] = { date: latest[cid].date, pairs: pairs };
+  });
+  return out;
+}
+function tbCoveragePool(){
+  var home = ((typeof state !== "undefined" && state && state.candidates) || []).filter(function(c){ return c.status !== "Archived"; });
+  var shared = ((window.XORG && XORG.cands) || []).filter(function(c){ return (c.status || "") !== "Archived"; });
+  return home.concat(shared.filter(function(c){ return !home.some(function(hc){ return hc.id === c.id; }); }));
+}
+var TB_INPROCESS_SET = { "Submitted": 1, "TA Interview": 1, "Interviewing Stage 1": 1, "Interviewing Stage 2": 1, "Interviewing Stage 3": 1, "Panel / Final Interview": 1, "Offer Pending": 1, "Offer Accepted - Hired": 1, "On Hold": 1 };
+function tbReqCoverage(r, ledger, pool){
+  ledger = ledger || tbParseAssignLedger();
+  pool = pool || tbCoveragePool();
+  var label = ((r && r.title) || "") + " – " + ((r && r.loc) || "");
+  var titlePrefix = ((r && r.title) || "") + " – ";
+  var list = [];
+  pool.forEach(function(c){
+    var led = ledger[c.id];
+    var pair = null;
+    if(led){ for(var i = 0; i < led.pairs.length; i++){ if(String(led.pairs[i].j) === String(r.jobId || "")){ pair = led.pairs[i]; break; } } }
+    var manual = (c.reqs || []).some(function(t){ return t === label || (r.title && String(t).indexOf(titlePrefix) === 0); });
+    if(!pair && !manual){ return; }
+    var band, score = pair ? pair.score : null;
+    if(TB_INPROCESS_SET[c.status || ""]){ band = "IN PROCESS"; }
+    else if(pair && pair.score >= 90 && !pair.flag){ band = "IMMEDIATE SUBMISSION"; }
+    else if(pair && pair.score >= 80){ band = "RECRUITER CALL FIRST"; }
+    else if(pair){ band = "MANUAL REVIEW"; }
+    else { band = "MANUAL ASSIGNMENT"; }
+    list.push({ c: c, score: score, band: band, flag: pair ? pair.flag : false,
+      source: pair ? (manual ? "talentfit + manual" : "talentfit") : "manual/historical",
+      evalDate: led ? (led.date || "") : "" });
+  });
+  list.sort(function(a, b){ return (b.score == null ? -1 : b.score) - (a.score == null ? -1 : a.score); });
+  function n(bn){ return list.filter(function(x){ return x.band === bn; }).length; }
+  var qualified = list.filter(function(x){ return x.score != null; }).length;
+  return { list: list, total: list.length, imm: n("IMMEDIATE SUBMISSION"), call: n("RECRUITER CALL FIRST"),
+    man: n("MANUAL REVIEW") + n("MANUAL ASSIGNMENT"), inproc: n("IN PROCESS"), qualified: qualified };
+}
+function tbReqHealth(qualified){
+  if(qualified >= 10){ return { dot: "🟢", label: "10+ qualified" }; }
+  if(qualified >= 5){ return { dot: "🟡", label: "5–9 qualified" }; }
+  if(qualified >= 1){ return { dot: "🟠", label: "1–4 qualified" }; }
+  return { dot: "🔴", label: "0 qualified — needs sourcing" };
+}
+function tbMyReqSet(open){
+  var me = ""; try{ me = (typeof meOwnerName === "function" ? meOwnerName() : "") || ""; }catch(eMe){}
+  var em = ""; try{ em = ((typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) || "").toLowerCase(); }catch(eEm){}
+  var isRpo = !!TB_RPO_ENGAGEMENT.members[me] || TB_RPO_ENGAGEMENT.memberDomains.some(function(d){ return em.indexOf("@" + d) > 0; });
+  var inEng = {};
+  if(isRpo && (typeof ORG === "undefined" || ORG === TB_RPO_ENGAGEMENT.org)){
+    for(var p in TB_RPO_ENGAGEMENT.programs){ for(var j in TB_RPO_ENGAGEMENT.programs[p]){ inEng[j] = 1; } }
+  }
+  return open.filter(function(r){ return inEng[String(r.jobId || "")] || (me && (r.owner || "") === me); });
+}
+if(typeof window !== "undefined"){ if(window.TB_REQVIEW_MODE === undefined){ window.TB_REQVIEW_MODE = "my"; } if(!window.TB_REQGROUP_OPEN){ window.TB_REQGROUP_OPEN = {}; } }
+function tbPrevVisit(){
+  if(typeof window === "undefined"){ return ""; }
+  if(window.TB_SESSION_PREV === undefined){
+    try{ window.TB_SESSION_PREV = tbDeskLoad("lastvisit", "") || ""; tbDeskSave("lastvisit", new Date().toISOString()); }
+    catch(ePV){ window.TB_SESSION_PREV = ""; }
+  }
+  return window.TB_SESSION_PREV;
+}
 function renderReqs(host){
+  /* RC1.4: "My Open Requisitions" (program-grouped book of business) is the default;
+     "All Requisitions" keeps the original flat directory untouched. */
+  var meta = document.getElementById("viewMeta");
+  var bar = el("div"); bar.style.cssText = "display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap";
+  var bMy = el("button", "btn sm" + (window.TB_REQVIEW_MODE !== "all" ? " gold" : ""), "My Open Requisitions");
+  var bAll = el("button", "btn sm" + (window.TB_REQVIEW_MODE === "all" ? " gold" : ""), "All Requisitions");
+  bMy.addEventListener("click", function(){ window.TB_REQVIEW_MODE = "my"; host.innerHTML = ""; renderReqs(host); });
+  bAll.addEventListener("click", function(){ window.TB_REQVIEW_MODE = "all"; host.innerHTML = ""; renderReqs(host); });
+  bar.appendChild(bMy); bar.appendChild(bAll);
+  if(window.TB_REQVIEW_MODE === "all"){ host.appendChild(bar); renderReqsAll(host); return; }
+  var canonBase = window.TB_METRICS ? TB_METRICS.canonicalReqEntries(REQS).map(function(e){ return e.req; }) : REQS;
+  var open = canonBase.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : !r.bench; });
+  var mine = tbMyReqSet(open);
+  var scope = mine.length ? mine : open; var scopedToMe = mine.length > 0;
+  var ledger = tbParseAssignLedger(); var pool = tbCoveragePool(); var prev = (tbPrevVisit() || "").slice(0, 10);
+  var cov = {}; scope.forEach(function(r){ cov[r.id] = tbReqCoverage(r, ledger, pool); });
+  var totalAssigned = 0; scope.forEach(function(r){ totalAssigned += cov[r.id].total; });
+  if(meta){ meta.textContent = (scopedToMe ? "Your book of business · " : "No personally assigned requisitions — showing all open · ") + scope.length + " open req" + (scope.length === 1 ? "" : "s") + " · " + totalAssigned + " assigned candidates · counts open to the exact records behind them"; }
+  host.appendChild(bar);
+  if(scopedToMe && TB_RPO_ENGAGEMENT.members[(function(){ try{ return meOwnerName(); }catch(e){ return ""; } })()]){
+    var eng = el("div","hint", TB_RPO_ENGAGEMENT.label + " — " + scope.length + " requisitions kicked off to the RPO."); eng.style.marginBottom = "10px"; host.appendChild(eng);
+  }
+  var groups = {};
+  scope.forEach(function(r){ var p = tbReqProgram(r); (groups[p] = groups[p] || []).push(r); });
+  var names = Object.keys(groups).sort(function(a, b){
+    var ia = TB_PROGRAM_ORDER.indexOf(a), ib = TB_PROGRAM_ORDER.indexOf(b);
+    if(ia < 0){ ia = 99; } if(ib < 0){ ib = 99; }
+    return (ia - ib) || a.localeCompare(b);
+  });
+  names.forEach(function(pn){
+    var rs = groups[pn];
+    rs.sort(function(a, b){
+      var qa = cov[a.id].qualified, qb = cov[b.id].qualified;
+      if((qa === 0) !== (qb === 0)){ return qa === 0 ? -1 : 1; }
+      if(qa !== qb){ return qa - qb; }
+      var pa = parseInt(a.priority) || 9, pb = parseInt(b.priority) || 9;
+      return (pa - pb) || String(a.jobId || "").localeCompare(String(b.jobId || ""));
+    });
+    var gImm = 0, gCall = 0, gMan = 0, gTot = 0, gZero = 0;
+    rs.forEach(function(r){ var cv = cov[r.id]; gImm += cv.imm; gCall += cv.call; gMan += cv.man; gTot += cv.total; if(cv.qualified === 0){ gZero++; } });
+    var det = el("details"); det.style.cssText = "border:1px solid var(--line);border-radius:12px;background:var(--panel);margin:0 0 14px;padding:0 14px";
+    det.open = (window.TB_REQGROUP_OPEN[pn] === undefined) ? true : !!window.TB_REQGROUP_OPEN[pn];
+    det.addEventListener("toggle", function(){ window.TB_REQGROUP_OPEN[pn] = det.open; });
+    var sum = el("summary"); sum.style.cssText = "cursor:pointer;padding:13px 2px;font-weight:800;color:var(--ink);font-size:14px";
+    sum.textContent = pn;
+    var ss = el("span","sub2","  · " + rs.length + " open req" + (rs.length === 1 ? "" : "s") + " · " + gTot + " assigned · " + gImm + " Immediate Submission · " + gCall + " Call First · " + gMan + " Manual Review" + (gZero ? " · " + gZero + " need sourcing" : ""));
+    ss.style.fontWeight = "600"; sum.appendChild(ss); det.appendChild(sum);
+    var table = el("table"); var thead = el("thead"); var htr = el("tr");
+    ["", "Req", "Title", "Hiring Manager", "Recruiter", "Location", "Assigned", "Immediate", "Call First", "Manual", "In Process", "New", "Follow-ups"].forEach(function(hh){ htr.appendChild(el("th", null, hh)); });
+    thead.appendChild(htr); table.appendChild(thead);
+    var tb2 = el("tbody");
+    rs.forEach(function(r){
+      var cv = cov[r.id]; var hlt = tbReqHealth(cv.qualified);
+      var newN = prev ? cv.list.filter(function(x){ return (x.c.dateReceived || "") >= prev; }).length : 0;
+      var fuN = cv.list.filter(function(x){ try{ return followUp(x.c).label !== ""; }catch(eF){ return false; } }).length;
+      var tr = el("tr","click"); tr.setAttribute("data-reqview", r.id);
+      var hd = el("td", null, hlt.dot); hd.title = hlt.label; tr.appendChild(hd);
+      tr.appendChild(el("td","sub2", r.jobId || "-"));
+      var tt = el("td"); tt.appendChild(el("span","nm", r.title || "-")); tr.appendChild(tt);
+      tr.appendChild(el("td","sub2", r.hm || "-"));
+      tr.appendChild(el("td","sub2", r.owner || "-"));
+      var lc = el("td","sub2", r.loc || "-"); lc.style.whiteSpace = "nowrap"; tr.appendChild(lc);
+      var at = el("td", null, String(cv.total)); at.style.fontWeight = "800"; at.title = "Opens the exact assigned candidate list"; tr.appendChild(at);
+      tr.appendChild(el("td", null, cv.imm ? String(cv.imm) : "—"));
+      tr.appendChild(el("td", null, cv.call ? String(cv.call) : "—"));
+      tr.appendChild(el("td", null, cv.man ? String(cv.man) : "—"));
+      tr.appendChild(el("td", null, cv.inproc ? String(cv.inproc) : "—"));
+      tr.appendChild(el("td", null, newN ? ("+" + newN) : "—"));
+      tr.appendChild(el("td", null, fuN ? String(fuN) : "—"));
+      tb2.appendChild(tr);
+    });
+    table.appendChild(tb2); det.appendChild(table);
+    det.appendChild(el("div", null, " "));
+    host.appendChild(det);
+  });
+  if(!names.length){ var emp2 = el("div","empty"); emp2.appendChild(el("div","big","No open requisitions assigned to you")); emp2.appendChild(el("div", null, "Use All Requisitions for the full company view.")); host.appendChild(emp2); }
+}
+function renderReqsAll(host){
   /* Central selector: Open Requisitions = not bench, not filled/closed/cancelled/archived */
   function isClosedReq(r){ return window.TB_METRICS ? TB_METRICS.isClosedReq(r) : /(filled|closed|cancell?ed|archived)/.test((r.reqStatus||'').toLowerCase()); }
   /* DEDUPE FIRST, then classify — a req whose duplicate rows disagree on
@@ -2440,9 +2675,8 @@ function renderReqs(host){
     var roletd = el("td"); var roleSpan = el("span","nm", r.role || r.title || "-"); roletd.appendChild(roleSpan); if(r.role && r.title && r.role !== r.title){ var titleSpan = el("div","sub2", r.title); roletd.appendChild(titleSpan); } tr.appendChild(roletd);
     var locTd = el("td","sub2", r.loc || "-"); locTd.style.whiteSpace = "nowrap"; tr.appendChild(locTd);
     tr.appendChild(el("td","sub2", r.hm || "-"));
-    var labelP = REQ_OPTIONS[REQS.indexOf(r)];
-    var taggedP = state.candidates.filter(function(c){ return (c.reqs||[]).indexOf(labelP) !== -1; }).length;
-    tr.appendChild(el("td", null, String(taggedP)));
+    var covP = tbReqCoverage(r); /* RC1.4: same derivation the grouped view and req detail use — one source of truth */
+    tr.appendChild(el("td", null, String(covP.total)));
     
     var jdt = el("td");
     if(r.jdLink){ var a = el("a","tag gold","Open"); a.href = r.jdLink; a.target = "_blank"; a.setAttribute("data-stop","1"); jdt.appendChild(a); }
@@ -6192,6 +6426,15 @@ async function saveCandidate(){
             notes: "[TalentFit Routing] Previous: — (new record) → New owner: " + (n.owner || "Unassigned") +
                    " — best match: " + routedInfo.req + " (" + routedInfo.score + "%) · uploaded by " +
                    (typeof meOwnerName === "function" ? meOwnerName() : "") });
+          try{
+            var openLg = (typeof REQS !== "undefined" ? REQS : []).filter(function(r2){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r2) : !r2.bench; });
+            var scLg = BOARD.scoreCandidateAgainst(n, openLg);
+            var qLg = (scLg.results || []).filter(function(x){ return (x.verdict === "strong" || x.verdict === "moderate") && x.score >= 70; })
+              .sort(function(a, b){ return b.score - a.score; })
+              .map(function(x){ return (x.req.jobId || "") + ":" + x.score + ":" + x.verdict + ":" + (((x.reasons || []).some(function(z){ return /secondary discipline|adjacent discipline|over-leveled/.test(z); })) ? "v" : "-"); });
+            if(qLg.length){ await sb.from("activities").insert({ org: ORG, candidate_id: newId, type: "Note", date: todayISO(), owner: "",
+              notes: "[Assignment] TalentFit evaluation " + todayISO() + " — qualifying requisitions: " + qLg.join(", ") + " · source: talentfit · by " + (typeof meOwnerName === "function" ? meOwnerName() : "") }); }
+          }catch(eLG){}
           if(typeof reloadSoft === "function"){ await reloadSoft(); }
         }
       }catch(eRA){}
@@ -6673,6 +6916,12 @@ function routeIntakeOwner(c){
     /* P0.6A (PO rule, 2026-07-21): a TalentFit score below 70 is a pass — it must not
        trigger automatic ownership. Functional compatibility (verdict) remains mandatory
        and a 70+ score never overrides a discipline mismatch. */
+    /* RC1.4: persist every qualifying pair, not just the best — the assignment ledger. */
+    var qualAll = (sc.results || []).filter(function(x){ return (x.verdict === "strong" || x.verdict === "moderate") && x.score >= 70; })
+      .sort(function(a, b){ return b.score - a.score; })
+      .map(function(x){ return (x.req.jobId || "") + ":" + x.score + ":" + x.verdict + ":" + (((x.reasons || []).some(function(z){ return /secondary discipline|adjacent discipline|over-leveled/.test(z); })) ? "v" : "-"); })
+      .filter(function(s){ return s.indexOf(":") > 0; });
+    c._assignAll = qualAll.join(", ");
     if(best && best.score >= TB_ROUTING_MIN && best.req && best.req.owner){
       var o = reqOwnerToCandOwner(best.req.owner);
       if(o){ c._routedReq = (best.req.jobId ? "Req " + best.req.jobId + " — " : "") + (best.req.title || "");
@@ -6835,6 +7084,10 @@ async function ingestResumes(files, opts){
       if(!rw || !rw.id){ return; }
       var rec2 = results.filter(function(x){ return x.status === "created" && x._cand && normEmail(x._cand.email) === normEmail(rw.email) ; })[0];
       var routed = rec2 && rec2._cand && rec2._cand._routedReq ? (rec2._cand._routedReq + " (" + rec2._cand._routedScore + "%)") : "";
+      if(rec2 && rec2._cand && rec2._cand._assignAll){
+        actRows.push({ org: ORG, candidate_id: rw.id, type: "Note", date: todayISO(), owner: "",
+          notes: "[Assignment] TalentFit evaluation " + todayISO() + " — qualifying requisitions: " + rec2._cand._assignAll + " · source: talentfit · by " + owner });
+      }
       actRows.push({ org: ORG, candidate_id: rw.id, type: "Note", date: todayISO(),
         owner: (rw.owner && rw.owner !== "Unassigned") ? rw.owner : "",
         notes: "[TalentFit Routing] Previous: — (new record) → New owner: " + (rw.owner || "Unassigned") +
@@ -7538,6 +7791,57 @@ function viewReq(r){
   if(r.jdLink){ var lk = el("div","fld full"); lk.appendChild(el("label", null, "Job Description Link")); var a = el("a","tag gold","Open job description"); a.href = r.jdLink; a.target = "_blank"; lk.appendChild(a); g.appendChild(lk); }
   try{ var _skV = buildSourcingToolkit(r); _skV.className = "fld full stk"; g.appendChild(_skV); }catch(eSKV){}
   var jdWrap = el("div","fld full"); jdWrap.appendChild(el("label", null, "Job Description")); if(r.jd && String(r.jd).trim()){ jdWrap.appendChild(renderJD(r.jd)); } else { jdWrap.appendChild(el("div","roval","-")); } g.appendChild(jdWrap);
+  /* RC1.4: Assigned Candidates — the exact records behind every coverage count. */
+  try{
+    var covD = tbReqCoverage(r);
+    var awrap = el("div","fld full");
+    awrap.appendChild(el("label", null, "Assigned Candidates — " + covD.total + " (" + covD.imm + " Immediate · " + covD.call + " Call First · " + covD.man + " Manual · " + covD.inproc + " In Process)"));
+    if(!covD.total){ awrap.appendChild(el("div","roval", tbReqHealth(0).dot + " No assigned candidates — sourcing gap. The playbook for this req leads with the LinkedIn search.")); }
+    else{
+      var lastAct = {}; ((state && state.activities) || []).forEach(function(a){ if(a && a.candidateId){ if(!lastAct[a.candidateId] || String(a.date||"") > String(lastAct[a.candidateId]||"")){ lastAct[a.candidateId] = a.date || ""; } } });
+      var sortKey = "score"; var sortDir = -1;
+      var tblA = el("table"); var thA = el("thead"); var trA = el("tr");
+      [["Candidate","name"],["Score","score"],["Band","band"],["Status","status"],["Owner","owner"],["Location","loc"],["Last Activity","act"],["Next Follow-up","fu"],["Source","src"],["",""]]
+        .forEach(function(col){ var th = el("th", null, col[0]); if(col[1]){ th.style.cursor = "pointer"; th.title = "Sort"; th.addEventListener("click", function(){ if(sortKey === col[1]){ sortDir = -sortDir; } else { sortKey = col[1]; sortDir = (col[1] === "score" ? -1 : 1); } drawA(); }); } trA.appendChild(th); });
+      thA.appendChild(trA); tblA.appendChild(thA);
+      var tbA = el("tbody"); tblA.appendChild(tbA);
+      function rowVal(x){
+        if(sortKey === "name"){ return fullName(x.c).toLowerCase(); }
+        if(sortKey === "score"){ return x.score == null ? -1 : x.score; }
+        if(sortKey === "band"){ return x.band; }
+        if(sortKey === "status"){ return x.c.status || ""; }
+        if(sortKey === "owner"){ return x.c.owner || ""; }
+        if(sortKey === "loc"){ return x.c.location || ""; }
+        if(sortKey === "act"){ return lastAct[x.c.id] || ""; }
+        if(sortKey === "fu"){ return x.c.nextFollowUp || "9999"; }
+        if(sortKey === "src"){ return x.source; }
+        return 0;
+      }
+      function drawA(){
+        tbA.innerHTML = "";
+        covD.list.slice().sort(function(a, b){ var va = rowVal(a), vb = rowVal(b); return (va < vb ? -1 : va > vb ? 1 : 0) * sortDir; })
+          .forEach(function(x){
+            var tr2 = el("tr");
+            var nmTd = el("td"); var nb = el("a","nm", fullName(x.c)); nb.href = "javascript:void(0)";
+            nb.addEventListener("click", function(){ try{ closeModal(); openDetail(x.c); }catch(eOD){} });
+            nmTd.appendChild(nb); tr2.appendChild(nmTd);
+            tr2.appendChild(el("td", null, x.score == null ? "—" : (x.score + "%")));
+            var bd = el("td","sub2", x.band + (x.flag ? " · VERIFY" : "")); tr2.appendChild(bd);
+            tr2.appendChild(el("td","sub2", x.c.status || "New"));
+            tr2.appendChild(el("td","sub2", x.c.owner || "Unassigned"));
+            tr2.appendChild(el("td","sub2", (x.c.location || "—").slice(0, 26)));
+            tr2.appendChild(el("td","sub2", lastAct[x.c.id] || "—"));
+            tr2.appendChild(el("td","sub2", x.c.nextFollowUp || "—"));
+            tr2.appendChild(el("td","sub2", x.source));
+            var op = el("td"); var ob = el("button","btn sm ghost","Open"); ob.addEventListener("click", function(){ try{ closeModal(); openDetail(x.c); }catch(eO2){} }); op.appendChild(ob); tr2.appendChild(op);
+            tbA.appendChild(tr2);
+          });
+      }
+      drawA();
+      awrap.appendChild(tblA);
+    }
+    g.appendChild(awrap);
+  }catch(eCovD){}
   body.appendChild(g); m.appendChild(body);
   var foot = el("div","mfoot"); foot.appendChild(el("div")); var right = el("div","right");
   if(!VIEW_ONLY && r.bench){ var db = el("button","btn","Delete Position"); db.style.cssText = "color:var(--red,#e55);border-color:var(--red,#e55)"; db.setAttribute("data-benchdel", r.id); right.appendChild(db); var ebn = el("button","btn","Edit"); ebn.setAttribute("data-reqedit", r.id); right.appendChild(ebn); }
