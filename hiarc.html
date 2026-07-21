@@ -674,6 +674,27 @@ var SOURCE = ["LinkedIn","Referral","Direct Applicant","Resume Database","Recrui
 var DISCIPLINES = ["Program Management","Systems Engineering","Engineering Leadership","Electrical / Hardware","Mechanical / Hardware","Software","Test & Evaluation","Configuration Management","Manufacturing","Quality","Supply Chain","Cyber / DevSecOps","Other"];
 var ACT_TYPES = ["Call","Email","LinkedIn Message","Text","Voicemail","Meeting","Interview Scheduled","Interview Completed","HM Interview Feedback","Candidate Interview Feedback","TA Interview Feedback","Panel Interview Scorecard","Declined by HM (Resume)","Declined by HM (Post-Interview)","Resume Submitted","Status Change","Note","Other"];
 var OWNERS = CONFIG.owners;
+/* LAUNCH DATA FIX (PO 2026-07-21) — Recruiter Identity Rule, first brick: login email → canonical
+   identity, checked BEFORE any name heuristics. VERIFIED = seen working in production;
+   EXPECTED = generated per the approved first.last@elbitsystems-us.com convention (mailbox/auth
+   existence not yet confirmed — see launch roster). Never a guess: identities with unknown
+   surnames (Anthony, Isabella) are deliberately absent pending PO input. */
+window.TB_IDENTITY_EMAIL_MAP = {
+  "jonah@thestaffingspecialist.com":            "Jonah Adelman",      /* VERIFIED */
+  "jonah.adelman1979@gmail.com":                "Jonah Adelman",      /* VERIFIED (admin assignment) */
+  "amy@thestaffingspecialist.com":              "Amy Vella",          /* VERIFIED */
+  "anna.hodges@elbitsystems-us.com":            "Anna Hodges",        /* VERIFIED (production activity stamp) */
+  "ej.demaree@elbitsystems-us.com":             "Earl (EJ) Demaree",  /* PO-confirmed convention */
+  "ej.demaree@thestaffingspecialist.com":       "Earl (EJ) Demaree",
+  "taylor.jones@elbitsystems-us.com":           "Taylor Jones",       /* EXPECTED */
+  "amie.zick@elbitsystems-us.com":              "Amie Zick",          /* EXPECTED */
+  "schanna.brewer@elbitsystems-us.com":         "Schanna Brewer",     /* EXPECTED */
+  "bradley.loomis@elbitsystems-us.com":         "Bradley Loomis",     /* EXPECTED */
+  "holly.abessinio@elbitsystems-us.com":        "Holly Abessinio",    /* EXPECTED */
+  "shelley.woodcock@elbitsystems-us.com":       "Shelley Woodcock",   /* EXPECTED */
+  "christopher.brannan@elbitsystems-us.com":    "Christopher Brannan",/* EXPECTED */
+  "jason.greer@elbitsystems-us.com":            "Jason Greer"         /* EXPECTED */
+};
 var MANAGERS = CONFIG.managers || [];
 var REQS = CONFIG.reqs;
 var REQ_OPTIONS = CONFIG.reqOptions;
@@ -6578,6 +6599,7 @@ var TB_ROUTING_MIN = 70; /* P0.6A universal actionable/routing threshold */
 function ingestOwnerDefault(){
   try{
     var em = (typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email : "";
+    if(window.TB_IDENTITY_EMAIL_MAP && window.TB_IDENTITY_EMAIL_MAP[em.trim().toLowerCase()]){ return window.TB_IDENTITY_EMAIL_MAP[em.trim().toLowerCase()]; } /* LAUNCH DATA FIX */
     var fn = em.split("@")[0].split(/[._\-]/)[0].toLowerCase();
     if(fn){
       for(var i = 0; i < OWNERS.length; i++){
@@ -10932,8 +10954,10 @@ body.tb-overlay-open{ overflow:hidden; }
     var row = candToRow(c);
     row.org = ORG;
     row.status = "New";
-    var _meFirst = ((CURRENT_USER && CURRENT_USER.email) || "").trim().split("@")[0].split(/[._+\-]/)[0].toLowerCase();
-    var _meOwner = (typeof OWNERS !== "undefined" ? OWNERS : []).filter(function(o){ var ol = o.toLowerCase(); return ol === _meFirst || ol.indexOf(_meFirst + " ") === 0; })[0]; /* P0.7: canonical identity */
+    var _meEmail = ((CURRENT_USER && CURRENT_USER.email) || "").trim().toLowerCase();
+    var _meFirst = _meEmail.split("@")[0].split(/[._+\-]/)[0];
+    var _meOwner = (window.TB_IDENTITY_EMAIL_MAP && window.TB_IDENTITY_EMAIL_MAP[_meEmail]) ||
+      (typeof OWNERS !== "undefined" ? OWNERS : []).filter(function(o){ var ol = o.toLowerCase(); return ol === _meFirst || ol.indexOf(_meFirst + " ") === 0; })[0]; /* P0.7 + LAUNCH DATA FIX: email map wins */
     row.owner = _meOwner || ((typeof OWNERS !== "undefined" && OWNERS.indexOf(row.owner) >= 0) ? row.owner : "Unassigned"); /* the recruiter starting the process owns the candidate */
     row.notes = ((row.notes || "") + "\n[Added to pipeline from the shared talent pool " + new Date().toISOString().slice(0,10) + " — the original record is unchanged; status there was “" + (c.status || "?") + "”. One resume, referenced, not copied.]").trim();
     delete row.id;
@@ -11161,7 +11185,9 @@ body.tb-overlay-open{ overflow:hidden; }
       var ihit = (typeof OWNERS !== "undefined" ? OWNERS : []).filter(function(o){ var ol = o.toLowerCase(); return ol === inm.toLowerCase() || ol.indexOf(inm.toLowerCase() + " ") === 0; })[0]; /* P0.7: canonical identity */
       return ihit || inm;
     }
-    var first = ((CURRENT_USER && CURRENT_USER.email) || "").trim().split("@")[0].split(/[._+\-]/)[0].toLowerCase();
+    var emFull = ((CURRENT_USER && CURRENT_USER.email) || "").trim().toLowerCase();
+    if(window.TB_IDENTITY_EMAIL_MAP && window.TB_IDENTITY_EMAIL_MAP[emFull]){ return window.TB_IDENTITY_EMAIL_MAP[emFull]; } /* LAUNCH DATA FIX: email map wins — fixes ej.demaree → "Earl (EJ) Demaree" */
+    var first = emFull.split("@")[0].split(/[._+\-]/)[0];
     var hit = (typeof OWNERS !== "undefined" ? OWNERS : []).filter(function(o){ var ol = o.toLowerCase(); return ol === first || ol.indexOf(first + " ") === 0; })[0]; /* P0.7: canonical identity — roster first tokens are unique by rule */
     return hit || (first ? first.charAt(0).toUpperCase() + first.slice(1) : "");
   }
