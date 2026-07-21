@@ -2654,13 +2654,14 @@ var BOARD = (function(){
     var pm   = score(/program manager|project manager|\bpmo\b|program management/i, /\bpmp\b|earned value|\bevms?\b|integrated master schedule|risk management/i);
     var ktr  = score(/contracts? (manager|director|specialist|administrator|professional)|subcontracts?|legal counsel|general counsel|attorney|head of contracts/i, /\bfar\b|\bdfars\b|negotiat|contract administration/i);
     var cy  = score(/cyber ?security|information security|security engineer|\bisso\b|\bissm\b/i, /\brmf\b|nist 800|\bstig\b|\bacas\b|emass|cissp|devsecops/i);
+    var fin = score(/financial analyst|senior accountant|staff accountant|\bcontroller\b|\bfp&a\b|finance manager|treasury analyst|cost account/i, /\bgaap\b|general ledger|month-end close|variance analysis|\bsap fico\b|accounts payable|accounts receivable|budget(ing)? and forecast/i);
     var qa  = score(/quality engineer|quality systems engineer|supplier quality|quality assurance|(?:senior\s+|sr\.?\s+)?(?:director|manager|vp|vice president|head)\s*(?:[–\-—,]|of)?\s*quality|quality\s+(?:director|leader(?:ship)?|manager|executive)|design quality/i, /\bcapa\b|\bncmr\b|iso 13485|as9100|iso 9001|\bfmea\b|audit|operational excellence|continuous improvement/i);
     var te  = score(/test engineer|test and evaluation|\bt&e\b/i, /flight test|qualification test|\bhil\b|\batp\b|test procedure|test readiness/i);
     var cmf = score(/configuration (analyst|manager|management)/i, /configuration management|change control|\bccb\b|baseline/i);
     var ito = score(/systems administrator|network engineer|help ?desk|iam analyst|identity (operations|governance)|security administration analyst/i, /active directory|\bldap\b|\bsso\b|\brbac\b|\bvpn\b|windows server/i);
     var rel = score(/reliability engineer/i, /\bdfr\b|\bhalt\b|\bhass\b|\bmtbf\b|reliasoft|weibull|\bfracas\b/i);
     var sch = score(/master (program |production )?scheduler|master planner|program schedul|production (planner|scheduler)|planning analyst|\bscheduler\b/i, /integrated master schedule|\bims\b|ms project|microsoft project|primavera|\bp6\b|critical path|schedule (risk|baseline|health|variance)/i);
-    var arr = [["SW",sw],["EE",ee],["SE",se],["MFG",mfg],["SC",sc],["MECH",mech],["PM",pm],["CONTRACTS",ktr],["CYBER",cy],["QA",qa],["TEST",te],["CM",cmf],["ITOPS",ito],["REL",rel],["SCHED",sch]];
+    var arr = [["SW",sw],["EE",ee],["SE",se],["MFG",mfg],["SC",sc],["MECH",mech],["PM",pm],["CONTRACTS",ktr],["CYBER",cy],["QA",qa],["TEST",te],["CM",cmf],["ITOPS",ito],["REL",rel],["SCHED",sch],["FIN",fin]]; /* P0.6A */
     arr.sort(function(a,b){ return b[1]-a[1]; });
     if(arr[0][1]===0) return {primary:"UNK", set:[]};
     var top = arr[0][1];
@@ -2739,6 +2740,7 @@ var BOARD = (function(){
     return false;
   }
   function reqFnOne(t){
+    if(/financial analyst|finance|accountant|accounting|payroll|treasury|invoicing|billing|\bfp&a\b|controller/i.test(t)) return "FIN"; /* P0.6A: Req 1546 class defect */
     if(/contracts?|counsel|legal/i.test(t)) return "CONTRACTS";
     if(/cyber|security engineer|information security/i.test(t)) return "CYBER";
     if(/reliability/i.test(t)) return "REL";
@@ -5816,7 +5818,7 @@ function openDetail(c){
               CYBER:{CYBER:1,SW:1,ITOPS:1,SE:1}, ITOPS:{ITOPS:1,CYBER:1,SW:1},
               PM:{PM:1,SCHED:1,SC:1,CM:1}, SCHED:{SCHED:1,PM:1,SC:1,CM:1},
               SC:{SC:1,PM:1,SCHED:1,MFG:1}, CM:{CM:1,SCHED:1,PM:1,SE:1,QA:1},
-              CONTRACTS:{CONTRACTS:1,SC:1,PM:1}
+              CONTRACTS:{CONTRACTS:1,SC:1,PM:1}, FIN:{FIN:1,SC:1,PM:1}
             };
             var allow = COMPAT[cfn];
             return allow ? !!allow[rfn] : (rfn === cfn);
@@ -6509,14 +6511,19 @@ function routeIntakeOwner(c){
     var sc = BOARD.scoreCandidateAgainst(c, open);
     var best = (sc.results || []).filter(function(x){ return x.verdict === "strong" || x.verdict === "moderate"; })
       .sort(function(a, b){ return b.score - a.score; })[0];
-    if(best && best.req && best.req.owner){
+    /* P0.6A (PO rule, 2026-07-21): a TalentFit score below 70 is a pass — it must not
+       trigger automatic ownership. Functional compatibility (verdict) remains mandatory
+       and a 70+ score never overrides a discipline mismatch. */
+    if(best && best.score >= TB_ROUTING_MIN && best.req && best.req.owner){
       var o = reqOwnerToCandOwner(best.req.owner);
       if(o){ c._routedReq = (best.req.jobId ? "Req " + best.req.jobId + " — " : "") + (best.req.title || "");
              c._routedScore = best.score; return o; }
     }
+    if(best && best.score < TB_ROUTING_MIN){ c._routeMiss = best.score; }
   }catch(eR){}
   return "";
 }
+var TB_ROUTING_MIN = 70; /* P0.6A universal actionable/routing threshold */
 function ingestOwnerDefault(){
   try{
     var em = (typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email : "";
@@ -6666,7 +6673,7 @@ async function ingestResumes(files, opts){
       actRows.push({ org: ORG, candidate_id: rw.id, type: "Note", date: todayISO(),
         owner: (rw.owner && rw.owner !== "Unassigned") ? rw.owner : "",
         notes: "[TalentFit Routing] Previous: — (new record) → New owner: " + (rw.owner || "Unassigned") +
-               (routed ? " — best match: " + routed : " — no strong open-req match; review manually") +
+               (routed ? " — best match: " + routed : (rec2 && rec2._cand && rec2._cand._routeMiss ? " — no qualifying match reached the routing threshold (70); best was " + rec2._cand._routeMiss + "% — review manually" : " — no strong open-req match; review manually")) +
                " · uploaded by " + owner });
     });
     if(actRows.length){ await sb.from("activities").insert(actRows); }
@@ -7405,10 +7412,10 @@ function tbNewReqScan(row){
     var hits = pool.map(function(c){
       var sc = BOARD.scoreCandidateAgainst(c, [reqShape]);
       return { c:c, r:(sc.results && sc.results[0]) || { score:0, verdict:"not", reasons:[] } };
-    }).filter(function(h){ return h.r.verdict === "strong" || h.r.verdict === "moderate"; });
+    }).filter(function(h){ return (h.r.verdict === "strong" || h.r.verdict === "moderate") && h.r.score >= TB_ROUTING_MIN; }); /* P0.6A: only 70+ compatible = actionable */
     hits.sort(function(a,b){ return b.r.score - a.r.score; });
     hits = hits.slice(0, 25);
-    if(!hits.length){ toast("TalentFit scanned " + pool.length + " candidates for " + reqShape.title + " — no moderate-or-better matches yet."); return; }
+    if(!hits.length){ toast("No Current Qualified Match — TalentFit scanned " + pool.length + " candidates for " + reqShape.title + "; none reached the 70-point actionable threshold."); return; }
     var m = document.getElementById("modal"); m.className = "modal wide"; m.innerHTML = "";
     var head = el("div","mhead"); head.appendChild(el("h2", null, "🧠 TalentFit — " + reqShape.title));
     var x = el("button","x","×"); x.setAttribute("data-close","1"); head.appendChild(x); m.appendChild(head);
@@ -7426,7 +7433,7 @@ function tbNewReqScan(row){
       var sc2 = el("span", null, h.r.score + " · " + (h.r.verdict === "strong" ? "Strong" : "Moderate"));
       sc2.style.cssText = "margin-left:auto;font-weight:800;font-size:12px;white-space:nowrap;color:" + (h.r.verdict === "strong" ? "var(--gold)" : "var(--cyan)");
       rrow.appendChild(sc2);
-      if(!h.c._xorg && !VIEW_ONLY){
+      if(!h.c._xorg && !VIEW_ONLY && h.r.score >= TB_ROUTING_MIN){
         var tg = el("button","btn sm ghost","Tag to req"); tg.type = "button"; tg.title = "Add this requisition to " + fullName(h.c) + "’s target reqs";
         tg.addEventListener("click", async function(){
           tg.disabled = true; tg.textContent = "Tagged ✓";
