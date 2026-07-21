@@ -2869,7 +2869,7 @@ var BOARD = (function(){
     if(sites.length){
       for(var si=0;si<sites.length;si++){
         var site=sites[si];
-        var isLocal = (probe && site.cand.test(probe)) || (!probe && site.cand.test(c.txt.slice(0,300))) || (site.key==="Merrimack NH" && candLocs.indexOf("MRMK")>=0);
+        var isLocal = (probe && site.cand.test(probe)) || (!probe && site.cand.test(c.txt.slice(0,300))) || (!probe && site.key==="Merrimack NH" && candLocs.indexOf("MRMK")>=0); /* RC1.3: structured location outranks resume-text site hints (PO location-integrity directive) */
         if(isLocal) return {s:20, why:"local to " + site.key + " site"};
       }
       if(reqRemote) return {s:14, why:"remote req"};
@@ -2879,7 +2879,7 @@ var BOARD = (function(){
     }
     var rll=rl.toLowerCase();
     var reqNH=/merrimack|nashua|manchester|new hampshire|\bnh\b|03054/.test(rll) || rll.trim()==="";
-    if(candLocs.indexOf("MRMK")>=0 && (reqNH || !reqRemote)) return {s:20, why:"NH/commute match"};
+    if((!probe || /merrimack|nashua|manchester|new hampshire|\bnh\b|massachusetts|\bma\b|boston/i.test(probe)) && candLocs.indexOf("MRMK")>=0 && (reqNH || !reqRemote)) return {s:20, why:"NH/commute match"}; /* RC1.3: text-derived NH locality only when the structured location agrees or is absent */
     if(reqRemote && candLocs.indexOf("REMOTE")>=0) return {s:14, why:"remote-eligible"};
     if(candLocs.indexOf("REMOTE")>=0) return {s:10, why:"remote candidate"};
     return {s:6, why:"relocation needed"};
