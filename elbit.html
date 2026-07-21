@@ -929,6 +929,7 @@ function tbNameLooksValid(n){
   var VERB = /^(led|managed|developed|designed|delivered|created|built|implemented|responsible|oversaw|having)$/i;
   for (var i = 0; i < toks.length; i++){
     var t = toks[i].replace(/,/g, "");
+    if (/^[("'][A-Za-z.'\-]{1,15}[)"']$/.test(t)) continue; /* RC1.1: parenthetical/quoted nicknames — William (Bill) Clark, Earl (EJ) Demaree */
     if (SECT.test(t) || VERB.test(t)) return false;
     if (/^[A-Z]\.?$/.test(t)) continue;
     if (SUFF.test(t) || PART.test(t)) continue;
@@ -937,6 +938,17 @@ function tbNameLooksValid(n){
     if (t.length > 2 && /\.$/.test(t)) return false;
   }
   return true;
+}
+/* RC1.1 — identity precedence step 3: derive a name from the email local part when the
+   header yields nothing. Conservative: needs 2-3 clean alphabetic segments; generic
+   mailbox words never become people. charles.guthy@ → Charles Guthy; dkphillips1991@ → no. */
+function tbEmailName(em){
+  var loc = String(em || "").split("@")[0].replace(/\d+$/, "");
+  var GEN = /^(info|admin|contact|hr|jobs|resume|mail|hello|office|sales|support|careers|recruiting|talent)$/i;
+  var segs = loc.split(/[._\-]+/).filter(function(s){ return s.length >= 2 && /^[a-z]+$/i.test(s) && !GEN.test(s); });
+  if (segs.length < 2 || segs.length > 3) return null;
+  var cap = function(s){ return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase(); };
+  return { first: cap(segs[0]), last: segs.slice(1).map(cap).join(" ") };
 }
 function fullName(c){
   var n = ((c.firstName || "") + " " + (c.lastName || "")).trim();
@@ -6409,15 +6421,24 @@ function grabName(text, filename){
       res.first = words[0]; res.last = words[words.length - 1]; return res;
     }
   }
+  /* RC1.1 precedence 3 (PO 2026-07-21): email-derived identity outranks filename guessing —
+     charles.guthy@gmail.com → Charles Guthy. Resume body text can never reach the name fields. */
+  try{
+    var _em = (typeof grabEmail === "function") ? grabEmail(text || "") : "";
+    var _en = _em ? tbEmailName(_em) : null;
+    if(_en && tbNameLooksValid(_en.first + " " + _en.last)){ res.first = _en.first; res.last = _en.last; return res; }
+  }catch(eEN){}
   var base = (filename || "").replace(/\.[^.]+$/, "");
-  base = base.replace(/[_\-]+/g, " ").replace(/\b(resume|cv|curriculum vitae|final|copy|updated?|new)\b/ig, " ").replace(/\s+/g, " ").trim();
+  base = base.replace(/[_\-]+/g, " ").replace(/\b(resume|cv|curriculum vitae|final|copy|updated?|new)\b/ig, " ")
+             .replace(/\b(19|20)\d{2}\b/g, " ").replace(/\b\d+\b/g, " ").replace(/'s\b/ig, " ")
+             .replace(/([a-z])([A-Z])/g, "$1 $2").replace(/\s+/g, " ").trim(); /* RC1.1: strip years/counters, split CamelCase */
   if(/,/.test(base)){
     var parts = base.split(",");
     if(parts.length >= 2 && parts[0].trim() && parts[1].trim()){ res.last = parts[0].trim().split(/\s+/)[0]; res.first = parts[1].trim().split(/\s+/)[0]; return res; }
   }
   var fw = base.split(/\s+/).filter(Boolean);
-  if(fw.length >= 2){ res.first = fw[0]; res.last = fw[fw.length - 1]; }
-  else if(fw.length === 1){ res.first = fw[0]; }
+  if(fw.length >= 2 && tbNameLooksValid(fw[0] + " " + fw[fw.length - 1])){ res.first = fw[0]; res.last = fw[fw.length - 1]; }
+  else if(fw.length === 1){ res.first = fw[0]; } /* single token: the display guard renders Name Requires Review */
   return res;
 }
 function grabLocation(text){
