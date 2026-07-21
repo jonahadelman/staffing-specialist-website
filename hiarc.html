@@ -6665,7 +6665,7 @@ async function ingestResumes(files, opts){
       var routed = rec2 && rec2._cand && rec2._cand._routedReq ? (rec2._cand._routedReq + " (" + rec2._cand._routedScore + "%)") : "";
       actRows.push({ org: ORG, candidate_id: rw.id, type: "Note", date: todayISO(),
         owner: (rw.owner && rw.owner !== "Unassigned") ? rw.owner : "",
-        notes: "[TalentFit Routing] New candidate routed to " + (rw.owner || "Unassigned") +
+        notes: "[TalentFit Routing] Previous: — (new record) → New owner: " + (rw.owner || "Unassigned") +
                (routed ? " — best match: " + routed : " — no strong open-req match; review manually") +
                " · uploaded by " + owner });
     });
