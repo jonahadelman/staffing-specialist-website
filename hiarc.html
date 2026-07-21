@@ -2668,9 +2668,9 @@ var BOARD = (function(){
     }
     var sw  = score(/software engineer|firmware engineer|embedded software|software developer|principal software/i, /software|firmware|\bc\+\+|\bc#|embedded|\brtos\b|application develop/i);
     var ee  = score(/electrical (hardware )?engineer|electronics engineer|hardware engineer|electrical design|dfx electrical/i, /electrical|electronic|\bpcb\b|schematic|\bfpga\b|\banalog\b|circuit/i);
-    var se  = score(/systems? engineer|system architect|requirements engineer/i, /systems engineering|requirements|system integration|\bv&v\b|verification and validation/i);
-    var mfg = score(/manufacturing engineer|npi engineer|process engineer|production engineer|industrial engineer/i, /manufacturing|\bnpi\b|\bdfm\b|\bdfx\b|process capability|tooling|fixture|production/i);
-    var sc  = score(/supply chain|procurement|sourcing|commodity manager|supplier quality|\bbuyer\b/i, /supply chain|supplier|sourcing|procurement|commodity/i);
+    var se  = score(/(?<!manufacturing )systems? engineer|system architect|requirements engineer/i, /(?<!manufacturing )systems engineering|requirements|system integration|\bv&v\b|verification and validation/i); /* TF-BENCH: an M.S. in Manufacturing Systems Engineering is manufacturing evidence, not a systems-engineering career */
+    var mfg = score(/manufacturing engineer|npi engineer|process engineer|production engineer|industrial engineer|tooling engineer|automation engineer|manufacturing systems/i, /manufacturing|\bnpi\b|\bdfm\b|\bdfx\b|process capability|tooling|fixture|production|robotics|\bscada\b|\bfanuc\b|work cell/i);
+    var sc  = score(/supply chain (manager|director|analyst|lead|specialist|management professional)|procurement|strategic sourcing|commodity manager|supplier quality|purchasing (manager|agent|specialist)|\bbuyer\b/i, /supply chain|supplier|sourcing|purchasing|commodity/i); /* TF-BENCH: bare "supply chain" (taught a course, coordinated with the team) is WEAK evidence only — the strong form requires a procurement ROLE. A manufacturing leader must never classify SC off one phrase. */
     var mech= score(/mechanical engineer|mechanical design/i, /mechanical|solidworks|\bgd&t\b|tolerance/i);
     var pm   = score(/program manager|project manager|\bpmo\b|program management/i, /\bpmp\b|earned value|\bevms?\b|integrated master schedule|risk management/i);
     var ktr  = score(/contracts? (manager|director|specialist|administrator|professional)|subcontracts?|legal counsel|general counsel|attorney|head of contracts/i, /\bfar\b|\bdfars\b|negotiat|contract administration/i);
@@ -2686,7 +2686,11 @@ var BOARD = (function(){
     arr.sort(function(a,b){ return b[1]-a[1]; });
     if(arr[0][1]===0) return {primary:"UNK", set:[]};
     var top = arr[0][1];
-    var set = arr.filter(function(p){ return p[1]>0 && p[1] >= top-2; }).map(function(p){ return p[0]; });
+    /* TF-BENCH (2026-07-21): function membership needs REAL role evidence — absolute floor 3
+       (at least a strong role phrase in the body). One incidental mention (+1 weak) or a
+       fringe hit can never grant a profession. */
+    var set = arr.filter(function(p){ return p[1] >= 3 && p[1] >= top-2; }).map(function(p){ return p[0]; });
+    if(set.indexOf(arr[0][0]) < 0){ set.unshift(arr[0][0]); }
     return {primary:arr[0][0], set:set};
   }
   function detectLevel(txt){
@@ -2874,7 +2878,8 @@ var BOARD = (function(){
     
     if(!fnOK) return {req:req, score:8, verdict:"not", reasons:["discipline mismatch ("+c.fn+" vs "+rfn+")"]};
     if(rfn === "ANY"){ s+=14; reasons.push("general requisition — no specialty extracted"); }
-    else { s+=28; reasons.push("discipline match"); }
+    else if(rfn === c.fn){ s+=28; reasons.push("discipline match"); }
+    else { s+=20; reasons.push("secondary discipline match (primary: " + c.fn + ")"); } /* TF-BENCH: function first — a non-primary profession is credited, but never as fully as the person's actual career */
     var ls=locScore(req.loc, c); s+=ls.s; reasons.push(ls.why);
     if(d===0){s+=18;reasons.push("seniority on-level");}
     else if(d===1||d===-1){s+=12;reasons.push(d>0?"slightly senior":"slightly junior");}
@@ -2883,6 +2888,20 @@ var BOARD = (function(){
     var sigHits=[];
     SIGNALS.forEach(function(sig){ if(sig.re.test(c.txt)){ s+=sig.w; sigHits.push(sig.label); } });
     if(sigHits.length) reasons.push("signals: "+sigHits.slice(0,5).join(", "));
+    /* TF-BENCH (2026-07-21): requisition-evidence scoring — distinct JD terms found in the
+       candidate's own text. Per-req, profession-neutral, and the honest path to 70+ for
+       functions whose vocabulary isn't in the defense SIGNALS list (finance, procurement, PM).
+       Runs only after the function gate; every cap below still clamps it. */
+    try{
+      var jdSrc = String(req.jd || "").toLowerCase();
+      if(jdSrc){
+        var jdTerms = jdSrc.split(/[^a-z0-9&+#-]+/).filter(function(w,i,a){ return w.length >= 4 && a.indexOf(w) === i; }).slice(0, 60);
+        var jdHits = 0;
+        for(var ji = 0; ji < jdTerms.length; ji++){ if(c.txt.indexOf(jdTerms[ji]) >= 0){ jdHits++; } }
+        var jdPts = jdHits >= 7 ? 15 : (jdHits >= 5 ? 12 : (jdHits >= 3 ? 8 : 0));
+        if(jdPts){ s += jdPts; reasons.push("JD evidence: " + jdHits + " terms"); }
+      }
+    }catch(eJD){}
     if(c.domain==="off"){ s=Math.min(s,33); reasons.push("off-domain cap"); }
     else if(c.domain==="thin"){ var tc=(LEVELORD[c.level]>=4)?68:55; s=Math.min(s,tc); reasons.push("thin-domain cap"); }
     if(c.junior){ s=Math.min(s, want>=3?40:50); reasons.push("junior cap"); }
@@ -6331,7 +6350,26 @@ async function extractText(file){
 }
 function grabName(text, filename){
   var res = { first:"", last:"" };
-  var head = (text || "").replace(/\r/g, "").split("\n").slice(0, 8).join("\n");
+  /* TF-BENCH (2026-07-21): some PDF text layers emit spaced glyphs ("D o y le C. Phillips").
+     Collapse runs of single-letter tokens in the header lines so real names parse.
+     Fixes the "D yle" rendering defect and the name-line misparse that fed misclassification. */
+  var _glyphFix = function(s){
+    return s.split("\n").map(function(ln){
+      var toks = ln.trim().split(/\s+/);
+      if(toks.length >= 4 && toks.filter(function(t){ return t.length === 1 && /[A-Za-z]/.test(t); }).length >= 3){
+        var out = [], buf = "";
+        toks.forEach(function(t){
+          if(/^[A-Za-z]$/.test(t)){ buf += t; }
+          else if(buf && /^[a-z]{1,3}[.,]?$/.test(t)){ buf += t; out.push(buf); buf = ""; }
+          else { if(buf){ out.push(buf); buf = ""; } out.push(t); }
+        });
+        if(buf){ out.push(buf); }
+        return out.join(" ");
+      }
+      return ln;
+    }).join("\n");
+  };
+  var head = _glyphFix((text || "").replace(/\r/g, "")).split("\n").slice(0, 8).join("\n");
   var lines = head.split(/\n|\s{2,}/).map(function(s){ return s.trim(); }).filter(Boolean);
   var bad = /resume|curriculum|vitae|\bcv\b|address|phone|e-?mail|linkedin|github|portfolio|profile|summary|objective|experience|education|http|www\.|@|\d/i;
   for(var i = 0; i < lines.length; i++){
