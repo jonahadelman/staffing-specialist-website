@@ -919,7 +919,30 @@ async function run(promise, okMsg){
 }
 
 /* ---------- computed ---------- */
-function fullName(c){ return (c.firstName + " " + c.lastName).trim(); }
+function tbNameLooksValid(n){
+  var toks = String(n || "").trim().split(/\s+/).filter(Boolean);
+  if (!toks.length) return true; /* blank handled by callers */
+  if (toks.length < 2) return false;
+  var PART = /^(de|del|della|la|le|da|dos|das|van|von|der|den|di|al|bin|ibn|el|st\.?|mac|mc|te|ter|zu|y)$/i;
+  var SUFF = /^(jr\.?|sr\.?|ii|iii|iv|v)$/i;
+  var SECT = /^(summary|experience|education|skills|objective|profile|management|process|development|professional|references|projects|certifications|internal|resume|contact)$/i;
+  var VERB = /^(led|managed|developed|designed|delivered|created|built|implemented|responsible|oversaw|having)$/i;
+  for (var i = 0; i < toks.length; i++){
+    var t = toks[i].replace(/,/g, "");
+    if (SECT.test(t) || VERB.test(t)) return false;
+    if (/^[A-Z]\.?$/.test(t)) continue;
+    if (SUFF.test(t) || PART.test(t)) continue;
+    if (!/^[A-Z]/.test(t)) return false;
+    if (t.length === 1) return false;
+    if (t.length > 2 && /\.$/.test(t)) return false;
+  }
+  return true;
+}
+function fullName(c){
+  var n = ((c.firstName || "") + " " + (c.lastName || "")).trim();
+  if (n && !tbNameLooksValid(n)) return "Name Requires Review"; /* RC1: resume-body fragments never render as people */
+  return n;
+}
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 function followUp(c){
   if(c.status === "Archived" || !c.nextFollowUp){ return {label:"", color:"--muted"}; }
@@ -1575,7 +1598,7 @@ function renderStartMyDay(host){
         row.title = t.s.req ? ("Strongest match: " + (t.s.req.title || "") + " \u2014 open the record") : "Open the record";
         row.addEventListener("mouseenter", function(){ row.style.background = "var(--panel2)"; });
         row.addEventListener("mouseleave", function(){ row.style.background = ""; });
-        var pct = el("b", null, BOARD.tier(t.s.verdict).icon + " " + t.s.score + "%"); pct.title = BOARD.tier(t.s.verdict).label; pct.style.cssText = "font-size:14.5px;color:" + (t.s.score >= 72 ? "var(--green)" : "var(--gold)") + ";min-width:44px";
+        var pct = el("b", null, BOARD.tier(t.s.verdict, t.s.score).icon + " " + t.s.score + "%"); pct.title = BOARD.tier(t.s.verdict, t.s.score).label; pct.style.cssText = "font-size:14.5px;color:" + (t.s.score >= 72 ? "var(--green)" : "var(--gold)") + ";min-width:44px";
         var nm = el("span", null, fullName(t.c)); nm.style.cssText = "font-size:14px;font-weight:600;color:var(--ink)";
         row.appendChild(pct); row.appendChild(nm);
         row.addEventListener("click", function(){ openDetail(t.c); });
@@ -2655,7 +2678,14 @@ var BOARD = (function(){
     stretch: {icon:"\u{1F949}", label:"Possible Match"},
     not:     {icon:"⚪",    label:"Unlikely Match"}
   };
-  function tier(v){ return TIERS[v] || TIERS.not; }
+  function tier(v, s){
+    var base = TIERS[v] || TIERS.not;
+    if (typeof s === "number" && isFinite(s)){ /* RC1 (PO 2026-07-21): labels follow the score band, not the verdict */
+      var lbl = s >= 90 ? "Excellent Match" : s >= 80 ? "Strong Match" : s >= 70 ? "Potential Match" : "Needs Review";
+      return { icon: base.icon, label: lbl };
+    }
+    return base;
+  }
 
   function detectFn(txt){
     var head = txt.slice(0,240);
@@ -2965,7 +2995,7 @@ var BOARD = (function(){
         card.style.cssText="background:var(--bg);border:1px solid var(--line);border-left:3px solid "+vcolor(key)+";border-radius:8px;padding:10px 11px;margin-bottom:9px;cursor:pointer";
         var top=el("div"); top.style.cssText="display:flex;justify-content:space-between;align-items:baseline";
         var nm=el("div",null,fullName(c.ref)); nm.style.cssText="font-weight:700;color:var(--ink);font-size:13px";
-        var sc=el("div",null,tier(c.best.verdict).icon + " " + c.best.score + "%"); sc.style.cssText="font-size:12px;font-weight:800;color:"+vcolor(key); sc.title=tier(c.best.verdict).label;
+        var sc=el("div",null,tier(c.best.verdict).icon + " " + c.best.score + "%"); sc.style.cssText="font-size:12px;font-weight:800;color:"+vcolor(key); sc.title=tier(c.best.verdict, c.best.score).label;
         top.appendChild(nm); top.appendChild(sc); card.appendChild(top);
         var role=el("div",null,c.best.req.title+(c.best.req.loc?(" \u00b7 "+c.best.req.loc):"")); role.style.cssText="color:var(--gold);font-size:12px;margin-top:3px";
         card.appendChild(role);
@@ -3154,7 +3184,7 @@ function renderAutoSlate(host){
       var needsRelo = function(m){ return (m.reasons || []).some(function(rr){ return /relocation/i.test(rr); }); };
       var sm = x.list.length + " candidate" + (x.list.length === 1 ? "" : "s") + " meet" + (x.list.length === 1 ? "s" : "") + " the requirements. ";
       sm += fullName(top.c) + " is the strongest overall fit (" + top.score + "%) — " + (top.reasons || []).slice(0, 3).join(", ") + ".";
-      if(x.list[1]){ var m2 = x.list[1]; sm += " " + fullName(m2.c) + (needsRelo(m2) ? " is technically qualified but would require relocation" : " is a close second (" + BOARD.tier(m2.verdict).label + ")") + "."; }
+      if(x.list[1]){ var m2 = x.list[1]; sm += " " + fullName(m2.c) + (needsRelo(m2) ? " is technically qualified but would require relocation" : " is a close second (" + BOARD.tier(m2.verdict, m2.score).label + ")") + "."; }
       if(x.list[2]){ sm += " " + fullName(x.list[2].c) + " is a " + (x.list[2].verdict === "strong" ? "strong alternative" : "lower-confidence match") + "."; }
       var smWrap = document.createElement("details"); smWrap.style.cssText = "margin:5px 0 7px";
       var smSum = document.createElement("summary");
@@ -3190,11 +3220,11 @@ function renderAutoSlate(host){
         nm.appendChild(document.createTextNode(fullName(mch.c)));
         if(mch.c._xorg){ var ob = el("span", null, "Shared"); ob.style.cssText = "margin-left:6px;font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--purple);background:rgba(124,58,237,.09);border-radius:4px;padding:1px 5px;vertical-align:1px"; nm.appendChild(ob); }
         var pctWrap = el("span"); pctWrap.style.cssText = "flex:0 0 70px;display:flex;flex-direction:column;gap:2px";
-        var pct = el("span", null, mch.score + "%"); pct.title = BOARD.tier(mch.verdict).icon + " " + BOARD.tier(mch.verdict).label; pct.style.cssText = "font-weight:800;font-size:15.5px;line-height:1;color:" + (mch.verdict === "strong" ? "var(--green)" : "var(--cyan)");
+        var pct = el("span", null, mch.score + "%"); pct.title = BOARD.tier(mch.verdict, mch.score).icon + " " + BOARD.tier(mch.verdict, mch.score).label; pct.style.cssText = "font-weight:800;font-size:15.5px;line-height:1;color:" + (mch.verdict === "strong" ? "var(--green)" : "var(--cyan)");
         var bar = el("span"); bar.style.cssText = "display:block;width:60px;height:4px;border-radius:3px;background:var(--line);overflow:hidden";
         var fill = el("span"); fill.style.cssText = "display:block;height:100%;width:" + mch.score + "%;border-radius:3px;background:" + (mch.verdict === "strong" ? "var(--green)" : "var(--cyan)");
         bar.appendChild(fill); pctWrap.appendChild(pct); pctWrap.appendChild(bar);
-        var vd = el("span", null, BOARD.tier(mch.verdict).icon + " " + BOARD.tier(mch.verdict).label);
+        var vd = el("span", null, BOARD.tier(mch.verdict, mch.score).icon + " " + BOARD.tier(mch.verdict, mch.score).label);
         vd.style.cssText = "font-size:10.5px;font-weight:700;border-radius:999px;padding:2px 9px;" + (mch.verdict === "strong" ? "color:var(--green);background:rgba(21,128,61,.1)" : "color:var(--cyan);background:rgba(8,145,178,.1)");
         var why = el("span"); why.style.cssText = "flex:1;display:flex;gap:6px;flex-wrap:wrap;overflow:hidden";
         (mch.reasons || []).slice(0, 4).forEach(function(rr){
@@ -3253,7 +3283,7 @@ function buildSubmissionPackage(hm, sec){
   var lines = ["Hi " + first + ",", "", "Sending you " + sel.length + " ranked candidate" + (sel.length === 1 ? "" : "s") + " for your open position" + (sel.length === 1 ? "" : "s") + " — scored and slated by TalentFit. Highlights below; resumes available on request.", ""];
   sel.forEach(function(m, i){
     lines.push((i + 1) + ". " + fullName(m.c) + " — " + m.req.title + (m.req.jobId ? " (Req " + m.req.jobId + ")" : ""));
-    lines.push("   Fit: " + BOARD.tier(m.verdict).label + " · " + (m.reasons || []).slice(0, 3).join(" · "));
+    lines.push("   Fit: " + BOARD.tier(m.verdict, m.score).label + " · " + (m.reasons || []).slice(0, 3).join(" · "));
     if(m.c.title || m.c.company){ lines.push("   Currently: " + [m.c.title, m.c.company].filter(Boolean).join(" at ") + (m.c._xorg ? "  [Enterprise Library: " + (m.c._xorg === "hiarc" ? "HiArc" : m.c._xorg) + "]" : "")); }
     if(m.c.summary){ lines.push("   " + String(m.c.summary).split(/(?<=\.)\s/)[0]); }
     lines.push("");
@@ -3262,7 +3292,7 @@ function buildSubmissionPackage(hm, sec){
   var emailTxt = lines.join("\n");
   var csv = "Rank,Candidate,Fit Tier,Verdict,Position,Req,Current Title,Company,Location,Email,Phone,Resume Link\n" + sel.map(function(m, i){
     function q(v){ v = String(v == null ? "" : v); return '"' + v.replace(/"/g, '""') + '"'; }
-    return [i + 1, q(fullName(m.c)), q(BOARD.tier(m.verdict).label), m.verdict, q(m.req.title), q(m.req.jobId || ""), q(m.c.title), q(m.c.company), q(m.c.location), q(m.c.email), q(m.c.phone), q(m.c.resumeLink || "")].join(",");
+    return [i + 1, q(fullName(m.c)), q(BOARD.tier(m.verdict, m.score).label), m.verdict, q(m.req.title), q(m.req.jobId || ""), q(m.c.title), q(m.c.company), q(m.c.location), q(m.c.email), q(m.c.phone), q(m.c.resumeLink || "")].join(",");
   }).join("\n");
   var mo = document.getElementById("modal"); mo.className = "modal"; mo.innerHTML = "";
   var head = el("div","mhead"); head.appendChild(el("h2", null, "Submission Package — " + hm));
@@ -3289,7 +3319,7 @@ function buildSubmissionPackage(hm, sec){
   tbl.appendChild(thr);
   sel.slice(0, 6).forEach(function(m, i){
     var tr = el("tr");
-    [i + 1, fullName(m.c), BOARD.tier(m.verdict).icon + " " + BOARD.tier(m.verdict).label, m.req.title, m.req.jobId || "-"].forEach(function(v){ var td = el("td", null, String(v)); td.style.cssText = "padding:4px 8px;border-bottom:1px solid var(--line)"; tr.appendChild(td); });
+    [i + 1, fullName(m.c), BOARD.tier(m.verdict, m.score).icon + " " + BOARD.tier(m.verdict, m.score).label, m.req.title, m.req.jobId || "-"].forEach(function(v){ var td = el("td", null, String(v)); td.style.cssText = "padding:4px 8px;border-bottom:1px solid var(--line)"; tr.appendChild(td); });
     tbl.appendChild(tr);
   });
   if(sel.length > 6){ var mr = el("div", null, "+ " + (sel.length - 6) + " more in the download"); mr.style.cssText = "font-size:11px;color:var(--muted);padding:5px 8px"; body.appendChild(tbl); body.appendChild(mr); } else { body.appendChild(tbl); }
@@ -5735,7 +5765,7 @@ function buildExecHeader(c){
     if(typeof BOARD !== "undefined" && BOARD.scoreCandidate){
       var bf = BOARD.scoreCandidate(c).best;
       if(bf && bf.verdict && bf.verdict !== "not"){
-        var tfT = BOARD.tier(bf.verdict);
+        var tfT = BOARD.tier(bf.verdict, bf.score);
         var tf = el("div", null, tfT.icon + " TalentFit: " + tfT.label + " · " + bf.score + "%");
         tf.style.cssText = "font-size:12px;font-weight:800;color:#111318;margin-top:6px;";
         right.appendChild(tf);
@@ -5910,7 +5940,7 @@ function openDetail(c){
           /* LAUNCH CONTRACT S3: never force a weak recommendation. If nothing reaches
              moderate-or-better, the hero says so honestly — closest req is reference only. */
           var noCur = best0.verdict !== "strong" && best0.verdict !== "moderate";
-          var vT = noCur ? { icon: "⚪", label: "No Current Match" } : BOARD.tier(best0.verdict);
+          var vT = noCur ? { icon: "⚪", label: "No Current Match" } : BOARD.tier(best0.verdict, best0.score);
           var afHero = el("div", "tfit-hero");
           var afRing = el("div", "tfit-ring tfit-v-" + (noCur ? "not" : best0.verdict));
           afRing.style.background = "conic-gradient(currentColor " + (Math.max(0, Math.min(100, best0.score)) * 3.6) + "deg, var(--tfit-track) 0)";
@@ -5932,7 +5962,7 @@ function openDetail(c){
             var afLine = el("div", "tfit-line");
             afLine.appendChild(el("span", "tfit-rank", String(i2 + 1)));
             afLine.appendChild(el("span", "tfit-title", q.title || ""));
-            var rT = BOARD.tier(r2.verdict);
+            var rT = BOARD.tier(r2.verdict, r2.score);
             afLine.appendChild(el("span", "tfit-score tfit-v-" + r2.verdict, r2.score + "% · " + rT.icon + " " + rT.label));
             afRow.appendChild(afLine);
             var afBar = el("div", "tfit-bar");
@@ -5979,7 +6009,7 @@ function openDetail(c){
               var rk = el("span", null, String(i2 + 1)); rk.style.cssText = "font-size:11px;font-weight:800;color:var(--muted);min-width:14px"; row2.appendChild(rk);
               var tt = el("b", null, (q2.jobId ? q2.jobId + " · " : "") + (q2.title || "")); row2.appendChild(tt);
               var lc2 = el("span", null, (q2.loc || "") + (q2._xorg ? " · Shared" : "")); lc2.style.cssText = "color:var(--muted);font-size:12px"; row2.appendChild(lc2);
-              var pT2 = BOARD.tier(r2.verdict);
+              var pT2 = BOARD.tier(r2.verdict, r2.score);
               var sc2 = el("span", null, r2.score + "% · " + pT2.icon + " " + pT2.label);
               sc2.style.cssText = "margin-left:auto;font-weight:800;font-size:12px;color:" + (r2.verdict === "strong" ? "var(--gold)" : r2.verdict === "moderate" ? "var(--cyan)" : "#e0a85a");
               row2.appendChild(sc2);
@@ -6375,7 +6405,7 @@ function grabName(text, filename){
   for(var i = 0; i < lines.length; i++){
     var ln = lines[i].replace(/[,|].*$/, "").trim();
     var words = ln.split(/\s+/);
-    if(words.length >= 2 && words.length <= 4 && !bad.test(ln) && /^[A-Za-z][A-Za-z'.\-]*(\s+[A-Za-z][A-Za-z'.\-]*){1,3}$/.test(ln)){
+    if(words.length >= 2 && words.length <= 4 && !bad.test(ln) && /^[A-Za-z][A-Za-z'.\-]*(\s+[A-Za-z][A-Za-z'.\-]*){1,3}$/.test(ln) && tbNameLooksValid(ln)){ /* RC1: reject body fragments */
       res.first = words[0]; res.last = words[words.length - 1]; return res;
     }
   }
