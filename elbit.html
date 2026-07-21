@@ -810,7 +810,7 @@ function rowToCand(r){
     taRejectReason:r.ta_reject_reason||"", taRejectDate:r.ta_reject_date||"", hmRejectReason:r.hm_reject_reason||"", hmRejectDate:r.hm_reject_date||"",
     createdAt:r.created_at, updatedAt:r.updated_at };
 }
-function rowToAct(r){ return { id:r.id, candidateId:r.candidate_id, type:r.type||"Note", date:r.date||"", notes:r.notes||"", owner:r.owner||"" }; }
+function rowToAct(r){ return { id:r.id, candidateId:r.candidate_id, type:r.type||"Note", date:r.date||"", notes:r.notes||"", owner:r.owner||"", createdAt:r.created_at||"" }; } /* RC1.5.1: intra-day ordering for the assignment ledger */
 function candToRow(c){
   return { org:ORG, first_name:c.firstName||"", last_name:c.lastName||"", email:c.email||"", phone:c.phone||"",
     location:c.location||"", relocate:c.relocate||"", title:c.title||"", company:c.company||"", skills:c.skills||[], discipline:c.discipline||"",
@@ -2492,7 +2492,8 @@ function tbParseAssignLedger(){
   ((typeof state !== "undefined" && state && state.activities) || []).forEach(function(a){
     if(!a || !a.notes || a.notes.indexOf("[Assignment]") !== 0){ return; }
     var cur = latest[a.candidateId];
-    if(!cur || String(a.date || "") >= String(cur.date || "")){ latest[a.candidateId] = a; }
+    var ak = String(a.createdAt || a.date || ""), ck = String((cur && (cur.createdAt || cur.date)) || "");
+    if(!cur || ak >= ck){ latest[a.candidateId] = a; } /* RC1.5.1: same-day supersedes resolve by creation timestamp */
   });
   var out = {};
   Object.keys(latest).forEach(function(cid){
@@ -2539,6 +2540,20 @@ function tbReqCoverage(r, ledger, pool){
   return { list: list, total: list.length, imm: n("IMMEDIATE SUBMISSION"), call: n("RECRUITER CALL FIRST"),
     man: n("MANUAL REVIEW") + n("MANUAL ASSIGNMENT"), inproc: n("IN PROCESS"), qualified: qualified };
 }
+function tbSourceBadges(src){
+  /* RC1.6: assignment sources render as clean branded badges — never wrapped raw strings */
+  var wrap = el("span"); wrap.style.cssText = "display:inline-flex;gap:4px;flex-wrap:nowrap;white-space:nowrap";
+  var MAP = { "talentfit": ["TalentFit", "var(--gold)", "rgba(212,175,55,.12)"], "manual": ["Manual", "#7fa7d9", "rgba(127,167,217,.12)"],
+    "import": ["Import", "#9aa7b8", "rgba(154,167,184,.14)"], "historical": ["Historical", "#9aa7b8", "rgba(154,167,184,.14)"] };
+  String(src || "").split("+").map(function(s){ return s.trim().replace(/\/.*$/, "").toLowerCase(); }).filter(Boolean).forEach(function(k){
+    var m = MAP[k] || [k.charAt(0).toUpperCase() + k.slice(1), "#9aa7b8", "rgba(154,167,184,.14)"];
+    var b = el("span", null, m[0]);
+    b.style.cssText = "display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.02em;color:" + m[1] + ";background:" + m[2] + ";border:1px solid " + m[1] + "33;white-space:nowrap;line-height:1.5";
+    wrap.appendChild(b);
+  });
+  return wrap;
+}
+var TB_BAND_ORDER = { "IMMEDIATE SUBMISSION": 1, "RECRUITER CALL FIRST": 2, "MANUAL REVIEW": 3, "MANUAL ASSIGNMENT": 3.5, "IN PROCESS": 4 };
 function tbReqHealth(qualified){
   if(qualified >= 10){ return { dot: "🟢", label: "10+ qualified" }; }
   if(qualified >= 5){ return { dot: "🟡", label: "5–9 qualified" }; }
@@ -7791,61 +7806,152 @@ function viewReq(r){
   if(r.jdLink){ var lk = el("div","fld full"); lk.appendChild(el("label", null, "Job Description Link")); var a = el("a","tag gold","Open job description"); a.href = r.jdLink; a.target = "_blank"; lk.appendChild(a); g.appendChild(lk); }
   try{ var _skV = buildSourcingToolkit(r); _skV.className = "fld full stk"; g.appendChild(_skV); }catch(eSKV){}
   var jdWrap = el("div","fld full"); jdWrap.appendChild(el("label", null, "Job Description")); if(r.jd && String(r.jd).trim()){ jdWrap.appendChild(renderJD(r.jd)); } else { jdWrap.appendChild(el("div","roval","-")); } g.appendChild(jdWrap);
-  /* RC1.4: Assigned Candidates — the exact records behind every coverage count. */
+  /* RC1.6: Assigned Candidates — contained sheet: summary header · sticky table header ·
+     independently scrolling body · truthful scores ("Not Evaluated", never a defaulted 100) ·
+     source badges · band-grouped default sort · filters · rejected separated. */
   try{
     var covD = tbReqCoverage(r);
+    var REJ = function(c2){ return /reject/i.test(c2.status || "") || !!(c2.taRejectReason || c2.hmRejectReason); };
+    var activeList = covD.list.filter(function(x){ return !REJ(x.c); });
+    var rejList = covD.list.filter(function(x){ return REJ(x.c); });
     var awrap = el("div","fld full");
-    awrap.appendChild(el("label", null, "Assigned Candidates — " + covD.total + " (" + covD.imm + " Immediate · " + covD.call + " Call First · " + covD.man + " Manual · " + covD.inproc + " In Process)"));
-    if(!covD.total){ awrap.appendChild(el("div","roval", tbReqHealth(0).dot + " No assigned candidates — sourcing gap. The playbook for this req leads with the LinkedIn search.")); }
-    else{
+    /* summary header */
+    var sumBar = el("div");
+    sumBar.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:2px 0 10px";
+    function chip(txt, strong){ var s = el("span", null, txt); s.style.cssText = "padding:3px 11px;border-radius:20px;border:1px solid var(--line);background:var(--panel2);font-size:12px;" + (strong ? "font-weight:800;color:var(--ink)" : "color:var(--muted)"); return s; }
+    sumBar.appendChild(chip("Assigned: " + covD.total, true));
+    sumBar.appendChild(chip("Immediate Submission " + covD.imm));
+    sumBar.appendChild(chip("Call First " + covD.call));
+    sumBar.appendChild(chip("Manual Review " + covD.man));
+    sumBar.appendChild(chip("In Process " + covD.inproc));
+    if(rejList.length){ sumBar.appendChild(chip("Rejected " + rejList.length + " (hidden)")); }
+    if(!(r.jd && String(r.jd).trim())){ var jdW = chip("⚠ No JD — scores are title-driven; verify before acting"); jdW.style.color = "var(--gold)"; sumBar.appendChild(jdW); }
+    awrap.appendChild(el("label", null, "Assigned Candidates"));
+    awrap.appendChild(sumBar);
+    if(!covD.total){
+      awrap.appendChild(el("div","roval", tbReqHealth(0).dot + " No assigned candidates — sourcing gap. The playbook for this req leads with the LinkedIn search."));
+    } else {
+      /* filters */
+      var fBar = el("div"); fBar.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 8px";
+      function mkSel(label2, opts){ var s2 = el("select"); s2.style.cssText = "padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);font:inherit;font-size:12px";
+        var o0 = el("option", null, label2); o0.value = ""; s2.appendChild(o0);
+        opts.forEach(function(o){ var op2 = el("option", null, o); op2.value = o; s2.appendChild(op2); }); return s2; }
+      var uniq = function(arr){ return Array.from(new Set(arr.filter(Boolean))).sort(); };
+      var fBand = mkSel("All recommendations", uniq(covD.list.map(function(x){ return x.band; })));
+      var fStatus = mkSel("All statuses", uniq(covD.list.map(function(x){ return x.c.status || "New"; })));
+      var fOwner = mkSel("All owners", uniq(covD.list.map(function(x){ return x.c.owner || "Unassigned"; })));
+      var fSrc = mkSel("All sources", ["TalentFit","Manual","TalentFit + Manual"]);
+      var fMin = el("input"); fMin.type = "number"; fMin.placeholder = "Min %"; fMin.min = "0"; fMin.max = "100";
+      fMin.style.cssText = "width:70px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);font:inherit;font-size:12px";
+      var showRej = el("button","btn sm ghost", rejList.length ? ("Show rejected (" + rejList.length + ")") : "No rejected"); var rejOn = false;
+      if(!rejList.length){ showRej.disabled = true; }
+      var clearF = el("button","btn sm ghost","Clear filters");
+      [fBand, fStatus, fOwner, fSrc].forEach(function(s3){ fBar.appendChild(s3); });
+      fBar.appendChild(fMin); fBar.appendChild(showRej); fBar.appendChild(clearF);
+      awrap.appendChild(fBar);
+      /* contained scroll region with sticky header */
+      var scroller = el("div");
+      scroller.style.cssText = "max-height:46vh;overflow-y:auto;overflow-x:auto;border:1px solid var(--line);border-radius:10px";
+      var tblA = el("table");
+      tblA.style.cssText = "width:100%;min-width:980px;border-collapse:separate;border-spacing:0;table-layout:fixed";
       var lastAct = {}; ((state && state.activities) || []).forEach(function(a){ if(a && a.candidateId){ if(!lastAct[a.candidateId] || String(a.date||"") > String(lastAct[a.candidateId]||"")){ lastAct[a.candidateId] = a.date || ""; } } });
-      var sortKey = "score"; var sortDir = -1;
-      var tblA = el("table"); var thA = el("thead"); var trA = el("tr");
-      [["Candidate","name"],["Score","score"],["Band","band"],["Status","status"],["Owner","owner"],["Location","loc"],["Last Activity","act"],["Next Follow-up","fu"],["Source","src"],["",""]]
-        .forEach(function(col){ var th = el("th", null, col[0]); if(col[1]){ th.style.cursor = "pointer"; th.title = "Sort"; th.addEventListener("click", function(){ if(sortKey === col[1]){ sortDir = -sortDir; } else { sortKey = col[1]; sortDir = (col[1] === "score" ? -1 : 1); } drawA(); }); } trA.appendChild(th); });
+      var evalDates = {}; covD.list.forEach(function(x){ evalDates[x.c.id] = x.evalDate || ""; });
+      var sortKey = "default"; var sortDir = 1;
+      var COLS = [["Candidate","name",170],["TalentFit","score",110],["Recommendation","band",150],["Status","status",120],["Owner","owner",120],["Location","loc",130],["Last Evaluated","eval",105],["Next Follow-Up","fu",105],["Assignment Source","src",150],["Action","",110]];
+      var thA = el("thead"); var trA = el("tr");
+      COLS.forEach(function(col){
+        var th = el("th", null, col[0]);
+        th.style.cssText = "position:sticky;top:0;background:var(--panel);z-index:2;white-space:nowrap;padding:8px;border-bottom:1px solid var(--line);width:" + col[2] + "px";
+        if(col[1]){ th.style.cursor = "pointer"; th.title = "Sort";
+          th.addEventListener("click", function(){ if(sortKey === col[1]){ sortDir = -sortDir; } else { sortKey = col[1]; sortDir = (col[1] === "score" ? -1 : 1); } drawA(); }); }
+        trA.appendChild(th);
+      });
       thA.appendChild(trA); tblA.appendChild(thA);
       var tbA = el("tbody"); tblA.appendChild(tbA);
       function rowVal(x){
         if(sortKey === "name"){ return fullName(x.c).toLowerCase(); }
         if(sortKey === "score"){ return x.score == null ? -1 : x.score; }
-        if(sortKey === "band"){ return x.band; }
+        if(sortKey === "band"){ return TB_BAND_ORDER[x.band] || 9; }
         if(sortKey === "status"){ return x.c.status || ""; }
         if(sortKey === "owner"){ return x.c.owner || ""; }
         if(sortKey === "loc"){ return x.c.location || ""; }
-        if(sortKey === "act"){ return lastAct[x.c.id] || ""; }
+        if(sortKey === "eval"){ return evalDates[x.c.id] || ""; }
         if(sortKey === "fu"){ return x.c.nextFollowUp || "9999"; }
         if(sortKey === "src"){ return x.source; }
         return 0;
       }
+      function defaultSort(a, b){
+        var ba = TB_BAND_ORDER[a.band] || 9, bb = TB_BAND_ORDER[b.band] || 9;
+        if(ba !== bb){ return ba - bb; }
+        return (b.score == null ? -1 : b.score) - (a.score == null ? -1 : a.score);
+      }
+      function tdc(txt, wrapLines){ var td = el("td","sub2", txt);
+        td.style.cssText = "padding:7px 8px;border-bottom:1px solid var(--line);overflow:hidden;text-overflow:ellipsis;" +
+          (wrapLines ? "white-space:normal;word-break:normal;overflow-wrap:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;" : "white-space:nowrap;");
+        return td; }
       function drawA(){
         tbA.innerHTML = "";
-        covD.list.slice().sort(function(a, b){ var va = rowVal(a), vb = rowVal(b); return (va < vb ? -1 : va > vb ? 1 : 0) * sortDir; })
-          .forEach(function(x){
-            var tr2 = el("tr");
-            var nmTd = el("td"); var nb = el("a","nm", fullName(x.c)); nb.href = "javascript:void(0)";
-            nb.addEventListener("click", function(){ try{ closeModal(); openDetail(x.c); }catch(eOD){} });
-            nmTd.appendChild(nb); tr2.appendChild(nmTd);
-            tr2.appendChild(el("td", null, x.score == null ? "—" : (x.score + "%")));
-            var bd = el("td","sub2", x.band + (x.flag ? " · VERIFY" : "")); tr2.appendChild(bd);
-            tr2.appendChild(el("td","sub2", x.c.status || "New"));
-            tr2.appendChild(el("td","sub2", x.c.owner || "Unassigned"));
-            tr2.appendChild(el("td","sub2", (x.c.location || "—").slice(0, 26)));
-            tr2.appendChild(el("td","sub2", lastAct[x.c.id] || "—"));
-            tr2.appendChild(el("td","sub2", x.c.nextFollowUp || "—"));
-            tr2.appendChild(el("td","sub2", x.source));
-            var op = el("td"); var ob = el("button","btn sm ghost","Open"); ob.addEventListener("click", function(){ try{ closeModal(); openDetail(x.c); }catch(eO2){} }); op.appendChild(ob); tr2.appendChild(op);
-            tbA.appendChild(tr2);
-          });
+        var rows2 = (rejOn ? covD.list : activeList).slice();
+        if(fBand.value){ rows2 = rows2.filter(function(x){ return x.band === fBand.value; }); }
+        if(fStatus.value){ rows2 = rows2.filter(function(x){ return (x.c.status || "New") === fStatus.value; }); }
+        if(fOwner.value){ rows2 = rows2.filter(function(x){ return (x.c.owner || "Unassigned") === fOwner.value; }); }
+        if(fSrc.value === "TalentFit"){ rows2 = rows2.filter(function(x){ return x.source === "talentfit"; }); }
+        if(fSrc.value === "Manual"){ rows2 = rows2.filter(function(x){ return x.source === "manual/historical"; }); }
+        if(fSrc.value === "TalentFit + Manual"){ rows2 = rows2.filter(function(x){ return x.source === "talentfit + manual"; }); }
+        var mn = parseInt(fMin.value); if(!isNaN(mn)){ rows2 = rows2.filter(function(x){ return x.score != null && x.score >= mn; }); }
+        rows2.sort(sortKey === "default" ? defaultSort : function(a, b){ var va = rowVal(a), vb = rowVal(b); return (va < vb ? -1 : va > vb ? 1 : 0) * sortDir; });
+        rows2.forEach(function(x){
+          var tr2 = el("tr");
+          var nmTd = tdc("", true); nmTd.className = ""; var nb = el("a","nm", fullName(x.c)); nb.href = "javascript:void(0)"; nb.title = "Open candidate profile";
+          nb.addEventListener("click", function(){ try{ closeModal(); openDetail(x.c); }catch(eOD){} });
+          nmTd.appendChild(nb); tr2.appendChild(nmTd);
+          /* truthful score: engine value or Not Evaluated — never defaulted */
+          var scTd = tdc("", false);
+          if(x.score == null){ scTd.textContent = "Not Evaluated"; scTd.style.color = "var(--muted)"; }
+          else { var sc2 = el("b", null, x.score + "%"); sc2.style.color = "var(--ink)";
+            var lb = el("span","sub2", "  " + (typeof BOARD !== "undefined" && BOARD.tier ? BOARD.tier(x.score >= 70 ? "strong" : "not", x.score).label : ""));
+            scTd.appendChild(sc2); scTd.appendChild(lb); }
+          tr2.appendChild(scTd);
+          var recTd = tdc(x.band === "MANUAL ASSIGNMENT" ? "Manual Review" : (x.band.charAt(0) + x.band.slice(1).toLowerCase()), false);
+          if(x.flag){ recTd.textContent += " · VERIFY"; }
+          tr2.appendChild(recTd);
+          tr2.appendChild(tdc(x.c.status || "New", false));
+          tr2.appendChild(tdc(x.c.owner || "Unassigned", true));
+          tr2.appendChild(tdc((x.c.location || "—"), true));
+          tr2.appendChild(tdc(evalDates[x.c.id] || "—", false));
+          tr2.appendChild(tdc(x.c.nextFollowUp || "—", false));
+          var srcTd = el("td"); srcTd.style.cssText = "padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap";
+          srcTd.appendChild(tbSourceBadges(x.source)); tr2.appendChild(srcTd);
+          var op = el("td"); op.style.cssText = "padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap";
+          var ob = el("button","btn sm ghost","Open Candidate");
+          ob.addEventListener("click", function(){ try{ closeModal(); openDetail(x.c); }catch(eO2){} }); op.appendChild(ob); tr2.appendChild(op);
+          tbA.appendChild(tr2);
+        });
+        if(!rows2.length){ var er = el("tr"); var etd = el("td","sub2","No candidates match the current filters."); etd.colSpan = COLS.length; etd.style.padding = "12px"; er.appendChild(etd); tbA.appendChild(er); }
       }
+      [fBand, fStatus, fOwner, fSrc].forEach(function(s4){ s4.addEventListener("change", drawA); });
+      fMin.addEventListener("input", drawA);
+      showRej.addEventListener("click", function(){ rejOn = !rejOn; showRej.textContent = rejOn ? "Hide rejected" : ("Show rejected (" + rejList.length + ")"); drawA(); });
+      clearF.addEventListener("click", function(){ fBand.value = ""; fStatus.value = ""; fOwner.value = ""; fSrc.value = ""; fMin.value = ""; drawA(); });
       drawA();
-      awrap.appendChild(tblA);
+      scroller.appendChild(tblA);
+      awrap.appendChild(scroller);
     }
     g.appendChild(awrap);
   }catch(eCovD){}
   body.appendChild(g); m.appendChild(body);
   var foot = el("div","mfoot"); foot.appendChild(el("div")); var right = el("div","right");
   if(!VIEW_ONLY && r.bench){ var db = el("button","btn","Delete Position"); db.style.cssText = "color:var(--red,#e55);border-color:var(--red,#e55)"; db.setAttribute("data-benchdel", r.id); right.appendChild(db); var ebn = el("button","btn","Edit"); ebn.setAttribute("data-reqedit", r.id); right.appendChild(ebn); }
-  if(!VIEW_ONLY && !r.bench){ var delB = el("button","btn sm danger","Delete Position"); delB.type="button"; delB.style.marginRight="8px"; delB.addEventListener("click", function(){ if(confirm("Delete this position permanently? Closing or archiving is usually safer \u2014 this cannot be undone.")){ closeModal(); deleteReq(r.id); } }); foot.firstChild.appendChild(delB); var eb = el("button","btn","Edit"); eb.setAttribute("data-reqedit", r.id); right.appendChild(eb); }
+  if(!VIEW_ONLY && !r.bench){
+    /* RC1.6: destructive action is never the easiest click — behind a disclosure, still confirmation-gated */
+    var moreB = el("button","btn sm ghost","More \u25BE"); moreB.type = "button"; moreB.title = "More actions";
+    var delB = el("button","btn sm danger","Delete Position"); delB.type = "button"; delB.style.cssText = "margin-left:8px;display:none";
+    moreB.addEventListener("click", function(){ delB.style.display = (delB.style.display === "none") ? "" : "none"; });
+    delB.addEventListener("click", function(){ if(confirm("Delete this position permanently? Closing or archiving is usually safer \u2014 this cannot be undone.")){ closeModal(); deleteReq(r.id); } });
+    foot.firstChild.appendChild(moreB); foot.firstChild.appendChild(delB);
+    var eb = el("button","btn","Edit"); eb.setAttribute("data-reqedit", r.id); right.appendChild(eb);
+    var doneB = el("button","btn gold","Done"); doneB.type = "button"; doneB.setAttribute("data-close","1"); right.appendChild(doneB);
+  }
   /* Position lifecycle quick actions (confirmation-gated) */
   if(!VIEW_ONLY){
     var closedNow = /(filled|closed|cancell?ed|archived)/i.test(r.reqStatus || "");
