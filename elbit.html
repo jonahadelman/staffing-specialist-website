@@ -5700,6 +5700,18 @@ function buildExecHeader(c){
         tf.style.cssText = "font-size:12px;font-weight:800;color:#111318;margin-top:6px;";
         right.appendChild(tf);
       }
+      /* LAUNCH item 9 (PO 2026-07-21): the routed match is visible on the read-only profile too —
+         same routing-audit source as the edit view; recruiters never dig through activity logs. */
+      try{
+        var mrA2 = (state.activities || []).filter(function(a2){ return a2.candidateId === c.id && /\[TalentFit Routing\][\s\S]*best match:/.test(a2.notes || ""); })
+          .sort(function(x2,y2){ return String(y2.date||"").localeCompare(String(x2.date||"")); })[0];
+        var mrM2 = mrA2 ? (mrA2.notes || "").match(/best match: (.+?) \((\d+)%\)/) : null;
+        if(mrM2){
+          var mr2 = el("div", null, "⚡ Matched Requisition: " + mrM2[1] + " · " + mrM2[2] + "%" + (mrA2.date ? " · Matched " + mrA2.date : ""));
+          mr2.style.cssText = "font-size:12px;font-weight:700;color:var(--gold,#b8860b);margin-top:4px;";
+          right.appendChild(mr2);
+        }
+      }catch(eMR2){}
     }
   }catch(e){}
   w.appendChild(right);
@@ -6084,7 +6096,24 @@ async function saveCandidate(){
       return;
     }
     if(newPath){ n.resumePath = newPath; n.resumeFileName = newFile || n.resumeFileName; }
+    var routedInfo = null; try{ routedInfo = JSON.parse(m.getAttribute("data-routedinfo") || "null"); }catch(eRI){}
     closeModal(); await run(sb.from("candidates").insert(candToRow(n)), "Created");
+    /* item 9 + P0.6 trail parity (2026-07-21): single-file intake writes the same routing
+       audit entry as bulk — Previous / New owner / Requisition / Score / uploader. */
+    if(routedInfo && routedInfo.req && n.email){
+      try{
+        var qN = await sb.from("candidates").select("id").eq("org", ORG).eq("email", n.email).limit(1);
+        var newId = qN && qN.data && qN.data[0] && qN.data[0].id;
+        if(newId){
+          await sb.from("activities").insert({ org: ORG, candidate_id: newId, type: "Note", date: todayISO(),
+            owner: n.owner || "Unassigned",
+            notes: "[TalentFit Routing] Previous: — (new record) → New owner: " + (n.owner || "Unassigned") +
+                   " — best match: " + routedInfo.req + " (" + routedInfo.score + "%) · uploaded by " +
+                   (typeof meOwnerName === "function" ? meOwnerName() : "") });
+          if(typeof reloadSoft === "function"){ await reloadSoft(); }
+        }
+      }catch(eRA){}
+    }
   }
 }
 async function deleteCandidate(){ if(!openId){ return; } var id = openId; closeModal(); await run(sb.from("candidates").delete().eq("id", id), "Deleted"); }
@@ -6766,6 +6795,10 @@ async function handleResumeFile(file){
         var mrCk = m.querySelector('input[data-reqopt="' + routeC._routedReqTag.replace(/"/g, '\\"') + '"]');
         if(mrCk && !mrCk.checked){ mrCk.checked = true; }
       }
+      /* item 9 + P0.6 trail parity: stash the route so saveCandidate can write the same
+         [TalentFit Routing] audit entry the bulk path writes. */
+      if(routedOw && routeC._routedReq){ m.setAttribute("data-routedinfo", JSON.stringify({ req: routeC._routedReq, score: routeC._routedScore || 0 })); }
+      else { m.removeAttribute("data-routedinfo"); }
     }
   }catch(eRoute){}
 
