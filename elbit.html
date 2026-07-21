@@ -3146,7 +3146,7 @@ function renderAutoSlate(host){
         var rk = el("span", null, "#" + (i + 1)); rk.style.cssText = "flex:0 0 24px;font-weight:800;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums";
         var nm = el("span"); nm.style.cssText = "font-weight:700;font-size:13.5px;min-width:145px;color:var(--ink)";
         nm.appendChild(document.createTextNode(fullName(mch.c)));
-        if(mch.c._xorg){ var ob = el("span", null, mch.c._xorg === "hiarc" ? "HiArc" : mch.c._xorg); ob.style.cssText = "margin-left:6px;font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--purple);background:rgba(124,58,237,.09);border-radius:4px;padding:1px 5px;vertical-align:1px"; nm.appendChild(ob); }
+        if(mch.c._xorg){ var ob = el("span", null, "Shared"); ob.style.cssText = "margin-left:6px;font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--purple);background:rgba(124,58,237,.09);border-radius:4px;padding:1px 5px;vertical-align:1px"; nm.appendChild(ob); }
         var pctWrap = el("span"); pctWrap.style.cssText = "flex:0 0 70px;display:flex;flex-direction:column;gap:2px";
         var pct = el("span", null, mch.score + "%"); pct.title = BOARD.tier(mch.verdict).icon + " " + BOARD.tier(mch.verdict).label; pct.style.cssText = "font-weight:800;font-size:15.5px;line-height:1;color:" + (mch.verdict === "strong" ? "var(--green)" : "var(--cyan)");
         var bar = el("span"); bar.style.cssText = "display:block;width:60px;height:4px;border-radius:3px;background:var(--line);overflow:hidden";
@@ -5904,7 +5904,7 @@ function openDetail(c){
               row2.title = q2._xorg ? ("A " + (q2.orgName || "partner-workspace") + " requisition — visible enterprise-wide, opened from its own workspace") : "Open this requisition";
               var rk = el("span", null, String(i2 + 1)); rk.style.cssText = "font-size:11px;font-weight:800;color:var(--muted);min-width:14px"; row2.appendChild(rk);
               var tt = el("b", null, (q2.jobId ? q2.jobId + " · " : "") + (q2.title || "")); row2.appendChild(tt);
-              var lc2 = el("span", null, (q2.loc || "") + (q2._xorg ? " · " + (q2.orgName || "Enterprise") : "")); lc2.style.cssText = "color:var(--muted);font-size:12px"; row2.appendChild(lc2);
+              var lc2 = el("span", null, (q2.loc || "") + (q2._xorg ? " · Shared" : "")); lc2.style.cssText = "color:var(--muted);font-size:12px"; row2.appendChild(lc2);
               var pT2 = BOARD.tier(r2.verdict);
               var sc2 = el("span", null, r2.score + "% · " + pT2.icon + " " + pT2.label);
               sc2.style.cssText = "margin-left:auto;font-weight:800;font-size:12px;color:" + (r2.verdict === "strong" ? "var(--gold)" : r2.verdict === "moderate" ? "var(--cyan)" : "#e0a85a");
@@ -6490,6 +6490,33 @@ async function fromResume(file){
    One file keeps the review-modal flow unchanged; multiple files run the
    identical pipeline per file and end with a processing summary. No second
    workflow was created. */
+/* P0 BLOCKER 2 (2026-07-20): ownership represents responsibility, never the uploader.
+   Route each new candidate to the recruiter who owns their best-matching ACTIVE requisition. */
+function reqOwnerToCandOwner(full){
+  var f = String(full || "").trim(); if(!f){ return ""; }
+  var toks = f.split(/\s+/).map(function(t){ return t.replace(/[()]/g, "").toLowerCase(); }).filter(Boolean);
+  for(var i = 0; i < OWNERS.length; i++){
+    var o = String(OWNERS[i]).toLowerCase();
+    for(var j = 0; j < toks.length; j++){ if(o === toks[j] || o.indexOf(toks[j] + " ") === 0){ return OWNERS[i]; } }
+  }
+  return f; /* full-name fallback — still displayed and reportable */
+}
+function routeIntakeOwner(c){
+  try{
+    var open = (typeof REQS !== "undefined" ? REQS : []).filter(function(r){
+      return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : !r.bench; });
+    if(!open.length || typeof BOARD === "undefined" || !BOARD.scoreCandidateAgainst){ return ""; }
+    var sc = BOARD.scoreCandidateAgainst(c, open);
+    var best = (sc.results || []).filter(function(x){ return x.verdict === "strong" || x.verdict === "moderate"; })
+      .sort(function(a, b){ return b.score - a.score; })[0];
+    if(best && best.req && best.req.owner){
+      var o = reqOwnerToCandOwner(best.req.owner);
+      if(o){ c._routedReq = (best.req.jobId ? "Req " + best.req.jobId + " — " : "") + (best.req.title || "");
+             c._routedScore = best.score; return o; }
+    }
+  }catch(eR){}
+  return "";
+}
 function ingestOwnerDefault(){
   try{
     var em = (typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email : "";
@@ -6559,7 +6586,9 @@ async function ingestResumes(files, opts){
         }catch(ePf){}
       }
       if(opts.disc && (!c.discipline || c.discipline === "Other")){ c.discipline = opts.disc; }
-      c.owner = owner; c.source = source; c.dateReceived = todayISO();
+      /* P0 B2: TalentFit routes ownership; uploader is recorded in the activity, not as owner */
+      c.owner = routeIntakeOwner(c) || "Unassigned";
+      c.source = source; c.dateReceived = todayISO();
       /* duplicate detection — against production data AND within this batch */
       var key = normEmail(c.email) || normName(c.firstName, c.lastName);
       var dup = findDuplicate(c, null);
@@ -6617,6 +6646,7 @@ async function ingestResumes(files, opts){
         if(up && !up.error){ c.resumePath = path; c.resumeFileName = file.name; }
       }catch(eU){}
       rows.push(candToRow(c));
+      rec._cand = c;
       rec.status = "created";
       rec.detail = (rec.detail || "") + (c.summary ? "Executive Brief ✓" : "no text — fill manually") + (c.notes ? " · req matches ✓" : "") + (c.resumePath ? " · stored ✓" : " · file store failed");
       results.push(rec); liveRow(rec);
@@ -6624,7 +6654,23 @@ async function ingestResumes(files, opts){
     hint.textContent = "Processing " + results.length + " of " + list.length + "…";
   }
   var okIns = true;
-  if(rows.length){ okIns = await run(sb.from("candidates").insert(rows), null); }
+  var insRes = null;
+  if(rows.length){ insRes = await sb.from("candidates").insert(rows).select(); okIns = !(insRes && insRes.error); if(!okIns && insRes && insRes.error){ toast(insRes.error.message); } }
+  /* P0 B3: routed candidates appear in the owning recruiter's routed work immediately */
+  try{
+    var actRows = [];
+    ((insRes && insRes.data) || []).forEach(function(rw){
+      if(!rw || !rw.id){ return; }
+      var rec2 = results.filter(function(x){ return x.status === "created" && x._cand && normEmail(x._cand.email) === normEmail(rw.email) ; })[0];
+      var routed = rec2 && rec2._cand && rec2._cand._routedReq ? (rec2._cand._routedReq + " (" + rec2._cand._routedScore + "%)") : "";
+      actRows.push({ org: ORG, candidate_id: rw.id, type: "Note", date: todayISO(),
+        owner: (rw.owner && rw.owner !== "Unassigned") ? rw.owner : "",
+        notes: "[TalentFit Routing] New candidate routed to " + (rw.owner || "Unassigned") +
+               (routed ? " — best match: " + routed : " — no strong open-req match; review manually") +
+               " · uploaded by " + owner });
+    });
+    if(actRows.length){ await sb.from("activities").insert(actRows); }
+  }catch(eAct){}
   /* completion summary — every file accounted for, honestly */
   var created = results.filter(function(r){ return r.status === "created"; }).length;
   var merged  = results.filter(function(r){ return r.status === "merged"; }).length;
@@ -6633,7 +6679,7 @@ async function ingestResumes(files, opts){
   var briefs  = results.filter(function(r){ return r.status === "created" && r.detail.indexOf("Executive Brief ✓") !== -1; }).length;
   var stored  = results.filter(function(r){ return r.status === "created" && r.detail.indexOf("stored ✓") !== -1; }).length;
   h2.textContent = "Resume Ingestion Summary";
-  hint.textContent = list.length + " processed · " + created + " candidate" + (created === 1 ? "" : "s") + " created · " + stored + " resume" + (stored === 1 ? "" : "s") + " stored · " + briefs + " Executive Brief" + (briefs === 1 ? "" : "s") + " · " + merged + " merged into existing (resume attached, owner preserved)" + (skipped ? " · " + skipped + " duplicate" + (skipped === 1 ? "" : "s") : "") + (failed ? " · " + failed + " failed" : "") + " · Owner: " + owner + " · TalentFit matches compute live on every profile.";
+  hint.textContent = list.length + " processed · " + created + " candidate" + (created === 1 ? "" : "s") + " created · " + stored + " resume" + (stored === 1 ? "" : "s") + " stored · " + briefs + " Executive Brief" + (briefs === 1 ? "" : "s") + " · " + merged + " merged into existing (resume attached, owner preserved)" + (skipped ? " · " + skipped + " duplicate" + (skipped === 1 ? "" : "s") : "") + (failed ? " · " + failed + " failed" : "") + " · Ownership routed by TalentFit to the owning recruiters (uploader: " + owner + ") · TalentFit matches compute live on every profile.";
   if(!okIns){ toast("Some rows failed to save — see summary"); }
 }
 async function handleResumeFile(file){
@@ -10712,7 +10758,7 @@ body.tb-overlay-open{ overflow:hidden; }
           if(nm){
             /* origin badge on EVERY enterprise row: 🟦 HiArc · 🟩 Elbit — small, instant, not flashy */
             if(c._xorg || LIB_PAINT){
-              var b = el("span", null, c._xorg ? orgLabel(c._xorg) : orgLabel(ORG));
+              var b = el("span", null, c._xorg ? "Shared" : orgLabel(ORG));
               b.style.cssText = "margin-left:7px;font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;border-radius:4px;padding:1px 6px;vertical-align:1px;" +
                 (c._xorg ? "color:#2563eb;background:rgba(37,99,235,.10)" : "color:#15803d;background:rgba(21,128,61,.10)");
               b.title = c._xorg ? ("Enterprise candidate — originally sourced by " + orgLabel(c._xorg) + "; one record, one resume") : ("Sourced by " + orgLabel(ORG));
@@ -10728,7 +10774,7 @@ body.tb-overlay-open{ overflow:hidden; }
             if(cue){
               var st = el("span", null, cue);
               st.style.cssText = "margin-left:6px;font-size:9.5px;font-weight:700;color:" + (availCat(c) === "offer" ? "var(--red)" : "var(--orange)");
-              st.title = orgLabel(c._xorg) + " – " + c.status + " — in another client's recruiting process; not available talent";
+              st.title = c.status + " — in another recruiting process; not available talent";
               nm.appendChild(st);
             }
           }
@@ -10748,13 +10794,13 @@ body.tb-overlay-open{ overflow:hidden; }
       try{
         var mh = document.querySelector("#modal .mhead h2");
         if(mh){
-          var ob = el("span", null, "Enterprise Candidate · Originally sourced by " + orgLabel(c._xorg)); ob.style.cssText = "margin-left:10px;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#2563eb;background:rgba(37,99,235,.10);border-radius:5px;padding:2px 8px;vertical-align:3px";
+          var ob = el("span", null, "Shared Talent · view-only — add to your pipeline to recruit"); ob.style.cssText = "margin-left:10px;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#2563eb;background:rgba(37,99,235,.10);border-radius:5px;padding:2px 8px;vertical-align:3px";
           mh.appendChild(ob);
           var mcat = availCat(c);
           if(XORG_CUE[mcat]){
             var sb2 = el("span", null, XORG_CUE[mcat]);
             sb2.style.cssText = "margin-left:6px;font-size:10px;font-weight:700;vertical-align:3px;color:" + (mcat === "offer" ? "var(--red)" : "var(--orange)");
-            sb2.title = orgLabel(c._xorg) + " – " + c.status + " — in another client's recruiting process";
+            sb2.title = c.status + " — in another recruiting process";
             mh.appendChild(sb2);
           }
         }
@@ -10768,13 +10814,13 @@ body.tb-overlay-open{ overflow:hidden; }
         }
         if(foot && !was){
           if(availCat(c) === "available"){
-            var ad = el("button","btn gold","Add to " + orgLabel(ORG) + " Pipeline"); ad.type = "button";
-            ad.title = "Start recruiting this candidate for " + orgLabel(ORG) + " — assign requisitions, add notes, submit to hiring managers. One candidate, one resume: the " + orgLabel(c._xorg) + " record is never changed.";
+            var ad = el("button","btn gold","Add to My Pipeline"); ad.type = "button";
+            ad.title = "Start recruiting this candidate — assign requisitions, add notes, submit to hiring managers. One candidate, one resume: the " + orgLabel(c._xorg) + " record is never changed.";
             ad.addEventListener("click", function(){ adoptCandidate(c); });
             foot.insertBefore(ad, foot.firstChild);
           }else{
             /* founder rule: mid-process / hired candidates are not available talent — no Adopt */
-            var lk = el("span", null, availCat(c) === "offer" ? "Locked — offer pending at " + orgLabel(c._xorg) : "In process at " + orgLabel(c._xorg) + " — can’t be added to a pipeline right now");
+            var lk = el("span", null, availCat(c) === "offer" ? "Locked — offer pending in another process" : "In another recruiting process — can’t be added to a pipeline right now");
             lk.style.cssText = "font-size:11.5px;font-weight:600;color:var(--muted);margin-right:10px;align-self:center";
             foot.insertBefore(lk, foot.firstChild);
           }
@@ -10783,11 +10829,11 @@ body.tb-overlay-open{ overflow:hidden; }
     };
   }
   window.adoptCandidate = async function(c){
-    var msg = "Start recruiting " + fullName(c) + " for " + orgLabel(ORG) + "?\n\n" +
-      "• " + fullName(c) + " joins the " + orgLabel(ORG) + " pipeline on your desk.\n" +
+    var msg = "Start recruiting " + fullName(c) + "?\n\n" +
+      "• " + fullName(c) + " joins your pipeline on your desk.\n" +
       "• Assign requisitions, add notes, submit to hiring managers.\n" +
       "• One candidate, one resume — nothing is duplicated.\n" +
-      "• The " + orgLabel(c._xorg) + " record is never changed.";
+      "• The original record is never changed.";
     if(!window.confirm(msg)){ return; }
     var row = candToRow(c);
     row.org = ORG;
@@ -10795,14 +10841,14 @@ body.tb-overlay-open{ overflow:hidden; }
     var _meFirst = ((CURRENT_USER && CURRENT_USER.email) || "").trim().split("@")[0].split(/[._+\-]/)[0].toLowerCase();
     var _meOwner = (typeof OWNERS !== "undefined" ? OWNERS : []).filter(function(o){ return o.toLowerCase() === _meFirst; })[0];
     row.owner = _meOwner || ((typeof OWNERS !== "undefined" && OWNERS.indexOf(row.owner) >= 0) ? row.owner : "Unassigned"); /* the recruiter starting the process owns the candidate */
-    row.notes = ((row.notes || "") + "\n[Added to " + orgLabel(ORG) + " pipeline from " + orgLabel(c._xorg) + " " + new Date().toISOString().slice(0,10) + " — the " + orgLabel(c._xorg) + " record is unchanged; status there was “" + (c.status || "?") + "”. One resume, referenced, not copied.]").trim();
+    row.notes = ((row.notes || "") + "\n[Added to pipeline from the shared talent pool " + new Date().toISOString().slice(0,10) + " — the original record is unchanged; status there was “" + (c.status || "?") + "”. One resume, referenced, not copied.]").trim();
     delete row.id;
     var ins = await sb.from("candidates").insert(row).select().single();
     if(ins.error){ toast("Adopt failed: " + ins.error.message.slice(0, 60)); return; }
     XORG.cands = XORG.cands.filter(function(x){ return x !== c && x.id !== c.id; });
     try{ state.candidates.push(rowToCand(ins.data)); }catch(eP){}
     closeModal();
-    toast(fullName(c) + " added to the " + orgLabel(ORG) + " pipeline — the " + orgLabel(c._xorg) + " record is untouched");
+    toast(fullName(c) + " added to your pipeline — the original record is untouched");
     try{ renderTabs(); renderList(); }catch(eR){}
   };
 
@@ -10813,8 +10859,8 @@ body.tb-overlay-open{ overflow:hidden; }
     return [
       ["enterprise", "Enterprise", function(){ return true; }],
       ["elbit", orgLabel(ORG), function(c){ return !c._xorg; }],
-      ["hiarc", XORG.orgs.length ? orgLabel(XORG.orgs[0]) : "Other", function(c){ return !!c._xorg; }],
-      ["shared", "Shared Candidates", function(c){ return !!c._shared; }],
+      ["hiarc", "Shared", function(c){ return !!c._xorg; }], /* SPEC P0-5: no company names in recruiter UI */
+      ["shared", "In Both Pipelines", function(c){ return !!c._shared; }],
       ["recent", "Recently Added", function(c){ var d = Date.parse(c.dateReceived || ""); return d && (now - d) < recentMs; }],
       ["mine", "Owned By Me", function(c){ return (c.owner || "").toLowerCase().indexOf(meFirst) === 0 && meFirst; }]
     ];
