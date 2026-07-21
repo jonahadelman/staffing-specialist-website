@@ -5648,7 +5648,7 @@ function renderRich(host, text){
   }
   flushText();
 }
-function newBlank(){ return { id:null, firstName:"", lastName:"", email:"", phone:"", location:"", relocate:"", title:"", company:"", skills:[], source:"Other", status:"New", priority:"Medium", owner:OWNERS[0] || "Unassigned", discipline:"", reqs:[], opportunity:false, dayforceBadge:false, summary:"", dateReceived:todayISO(), lastContacted:"", nextFollowUp:"", resumeLink:"", resumeFileName:"", resumePath:"", resumeText:"", linkedin:"", notes:"" }; }
+function newBlank(){ return { id:null, firstName:"", lastName:"", email:"", phone:"", location:"", relocate:"", title:"", company:"", skills:[], source:"Other", status:"New", priority:"Medium", owner:"Unassigned" /* P0.5: never default a person — TalentFit routes, or the recruiter chooses deliberately */, discipline:"", reqs:[], opportunity:false, dayforceBadge:false, summary:"", dateReceived:todayISO(), lastContacted:"", nextFollowUp:"", resumeLink:"", resumeFileName:"", resumePath:"", resumeText:"", linkedin:"", notes:"" }; }
 
 function programLocations(c){
   var labels = c.reqs || []; var locs = [];
@@ -5740,7 +5740,7 @@ function openDetail(c){
     g.appendChild(field("Discipline","discipline",c.discipline,"select",[""].concat(DISCIPLINES)));
     g.appendChild(field("Current Title","title",c.title)); g.appendChild(field("Current Company","company",c.company));
     g.appendChild(field("Source","source",c.source,"select",SOURCE)); g.appendChild(field("Status","status",c.status,"select",STATUS));
-    g.appendChild(field("Priority","priority",c.priority,"select",PRIORITY)); g.appendChild(field("Recruiter Owner","owner",c.owner,"select",OWNERS));
+    g.appendChild(field("Priority","priority",c.priority,"select",PRIORITY)); g.appendChild(field("Recruiter Owner","owner",c.owner || "Unassigned","select",OWNERS) /* P0.5: never default a person */);
     g.appendChild(field("Date Received","dateReceived",c.dateReceived,"date")); g.appendChild(field("Last Contacted","lastContacted",c.lastContacted,"date"));
     g.appendChild(field("Next Follow Up","nextFollowUp",c.nextFollowUp,"date"));
     var skillsF = field("Skills (comma separated)","skills",(c.skills||[]).join(", ")); skillsF.className = "fld full"; g.appendChild(skillsF); body.appendChild(g);
@@ -6708,6 +6708,29 @@ async function handleResumeFile(file){
     /* Executive Brief auto-generation (launch fix): compose from parsed resume
        text, fill only when the field is blank — never overwrite a written brief. */
     var sm0 = m.querySelector("[data-field='summary']");
+  /* P0.5 (2026-07-20): resume intake ownership is TalentFit's decision, not the recruiter's.
+     Route from parsed text, set the owner field, and lock it. Manual + Candidate entry
+     (no resume) keeps the editable field — that is not resume intake. */
+  try{
+    var owSel = m.querySelector("[data-field='owner']");
+    var isNewCand = !m.getAttribute("data-id") || m.getAttribute("data-isnew") === "1";
+    if(owSel && text && !openId){ /* NEW candidates only — Replace flow never re-routes ownership (S2: preserved) */
+      var routeC = { firstName:(m.querySelector("[data-field='firstName']")||{}).value||"",
+        lastName:(m.querySelector("[data-field='lastName']")||{}).value||"",
+        title:(m.querySelector("[data-field='title']")||{}).value||"",
+        location:(m.querySelector("[data-field='location']")||{}).value||"",
+        skills:[], discipline:"", summary:"", notes:"", resumeText: text.slice(0, 40000) };
+      var routedOw = routeIntakeOwner(routeC);
+      owSel.value = routedOw || "Unassigned";
+      if(owSel.value !== (routedOw || "Unassigned")){ /* value not in OWNERS list — fall back visibly */ owSel.value = "Unassigned"; }
+      owSel.disabled = true;
+      owSel.title = routedOw ? ("Routed by TalentFit" + (routeC._routedReq ? " — best match: " + routeC._routedReq + " (" + routeC._routedScore + "%)" : "")) : "No strong open-req match — routed to Unassigned for review";
+      var owHint = m.querySelector("#tbRouteHint");
+      if(!owHint){ owHint = el("div", "sub2"); owHint.id = "tbRouteHint"; owHint.style.cssText = "margin-top:4px;color:var(--muted);font-size:11.5px"; if(owSel.parentElement){ owSel.parentElement.appendChild(owHint); } }
+      owHint.textContent = routedOw ? ("⚡ Ownership routed by TalentFit" + (routeC._routedReq ? " — " + routeC._routedReq + " (" + routeC._routedScore + "%)" : "")) : "⚡ No strong open-req match — Unassigned for manual review";
+    }
+  }catch(eRoute){}
+
     if(sm0 && !sm0.value){ var eb0 = buildExecBrief(text); if(eb0){ sm0.value = eb0; } }
     else if(sm0 && sm0.value && m.getAttribute("data-storedresume")){
       /* REPLACE flow: re-run the Executive Brief from the new resume. The
