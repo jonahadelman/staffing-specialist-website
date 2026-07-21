@@ -11543,7 +11543,7 @@ body.tb-overlay-open{ overflow:hidden; }
     if(first === "nicole"){ return "executive"; }
     if(first === "ej" || first === "earl"){ return "manager"; } /* P0.7-WS: Working Recruiting Manager — full recruiter desk + Team views; must resolve BEFORE the view-only fallback so a mis-set role can never demote a working manager to the Executive desk */
     if(typeof MANAGERS !== "undefined" && MANAGERS.some(function(m){ return (m.email || "").toLowerCase() === email; })){ return "hm"; }
-    if(typeof VIEW_ONLY !== "undefined" && VIEW_ONLY){ return "executive"; } /* read-only accounts get the executive experience */
+    if(typeof VIEW_ONLY !== "undefined" && VIEW_ONLY){ return "recruiter"; } /* RC1.5 (PO 2026-07-21): read-only accounts get the full recruiter view — they can dive into the database; View Only still blocks every write. Named executives (Nicole, explicit assignments) keep the Executive Command Center. */
     return "recruiter";
   }
   window.TB_WS = null;
@@ -11551,7 +11551,7 @@ body.tb-overlay-open{ overflow:hidden; }
   var EXEC_VIEWS = { tb_brief:1, dashboard:1, reqs:1, talentbench:1, all:1, tb_people_hm:1, tb_people_rec:1 };
   window.TB_WS_FILTER = function(v){
     var ws = window.TB_WS || "recruiter";
-    if(ws === "hm"){ return v.ws === "hm"; }
+    if(ws === "hm"){ return !v.ws || v.ws === "hm"; } /* RC1.5 (PO 2026-07-21): everyone gets the Recruiter Workspace — hiring managers keep their My Hiring desk AND the full recruiter/database views. Writes still governed by role (View Only enforced). */
     if(ws === "executive"){ return !v.ws && EXEC_VIEWS[v.id]; }
     if(ws === "manager"){ return !v.ws || v.ws === "manager"; }
     if(ws === "admin"){ return !v.ws || v.ws === "admin"; }
