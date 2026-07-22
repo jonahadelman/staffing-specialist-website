@@ -842,7 +842,24 @@ function setReqs(arr){
 }
 async function loadData(){ window._tbScoreMemo = {}; /* live-score memo resets with every data snapshot */
   var c = await sb.from("candidates").select("*").eq("org", ORG).order("created_at", { ascending:false });
-  var a = await sb.from("activities").select("*").eq("org", ORG).order("date", { ascending:false });
+  /* RC1.15/S2-CRIT (found in Sprint 2, 2026-07-22): the activities fetch had no explicit limit, so
+     PostgREST silently capped it at 1,000 rows — Elbit already has 1,459. The oldest ~460 activities
+     (including some candidates' ONLY [Assignment] ledger note) were invisible: ledger membership,
+     history, and momentum silently wrong. Fix: deterministic paging (stable two-key order), 10-page
+     safety bound; falls back to the plain query where range() is unavailable (test harness). */
+  var a;
+  if(sb.from("activities").select("*").range){
+    a = { data: [], error: null };
+    var __apg = 0, __apage;
+    do {
+      __apage = await sb.from("activities").select("*").eq("org", ORG).order("date", { ascending:false }).order("created_at", { ascending:false }).range(__apg*1000, __apg*1000+999);
+      if(__apage.error){ a = __apage; break; }
+      a.data = a.data.concat(__apage.data || []);
+      __apg++;
+    } while(__apage.data && __apage.data.length === 1000 && __apg < 10);
+  } else {
+    a = await sb.from("activities").select("*").eq("org", ORG).order("date", { ascending:false });
+  }
   var rq = await sb.from("reqs").select("*").eq("org", ORG).order("created_at", { ascending:true });
   if(c.error){ toast(c.error.message); }
   state.candidates = (c.data || []).map(rowToCand);
@@ -6313,7 +6330,16 @@ function openDetail(c){
     var oppWrap = el("div","fld full"); oppWrap.style.marginTop = "12px"; var oppLab = el("label","reqck"); oppLab.style.fontWeight = "600"; var oppCk = el("input"); oppCk.type = "checkbox"; oppCk.setAttribute("data-oppflag","1"); if(c.opportunity){ oppCk.checked = true; } oppLab.appendChild(oppCk); var oppTx = el("span", null, "Opportunity Hire \u2013 high potential, no current opening"); oppTx.style.color = cssVar("--gold"); oppLab.appendChild(oppTx); oppWrap.appendChild(oppLab); body.appendChild(oppWrap); var dfWrap = el("div","fld full"); dfWrap.style.marginTop = "10px"; var dfLab = el("label","reqck"); dfLab.style.fontWeight = "600"; var dfCk = el("input"); dfCk.type = "checkbox"; dfCk.setAttribute("data-dayforce","1"); if(c.dayforceBadge){ dfCk.checked = true; } dfLab.appendChild(dfCk); var dfTx = el("span", null, "Applied to Dayforce (confirmed applied on careers portal)"); dfTx.style.color = cssVar("--green"); dfLab.appendChild(dfTx); dfWrap.appendChild(dfLab); body.appendChild(dfWrap);
     var rqWrap = el("div","fld full"); rqWrap.style.marginTop = "12px"; rqWrap.appendChild(el("label", null, "Target Reqs (tag one or more)"));
     var rg = el("div","reqgrid");
-    ALL_REQ_OPTIONS.forEach(function(r, ri){ var rObjC = REQS[ri]; var jidC = (rObjC && rObjC.jobId && rObjC.jobId.match(/^\d/)) ? " – Req "+rObjC.jobId : ""; var lab = el("label","reqck"); var ck = el("input"); ck.type = "checkbox"; ck.setAttribute("data-reqopt", r); if((c.reqs||[]).indexOf(r) !== -1){ ck.checked = true; } lab.appendChild(ck); lab.appendChild(el("span", null, r+jidC)); rg.appendChild(lab); });
+    /* RC1.15 Sprint-2 (PO 2026-07-22): closed / not-managed reqs never render as tagging targets,
+       and each row carries ITS OWN req id (data-reqjid) so duplicate title+loc labels cannot smear
+       one req's number across distinct requisitions ("Duplicate ID" false positives). */
+    ALL_REQ_OPTIONS.forEach(function(r, ri){ var rObjC = REQS[ri];
+      if(rObjC && /(filled|closed|cancell?ed|archived|not managed)/i.test(String(rObjC.reqStatus || "") + " " + String(rObjC.urgency || ""))){ return; }
+      var jidC = (rObjC && rObjC.jobId && String(rObjC.jobId).match(/^\d/)) ? " – Req " + rObjC.jobId : "";
+      var lab = el("label","reqck"); var ck = el("input"); ck.type = "checkbox"; ck.setAttribute("data-reqopt", r);
+      if(rObjC && rObjC.jobId){ ck.setAttribute("data-reqjid", String(rObjC.jobId)); }
+      if((c.reqs||[]).indexOf(r) !== -1){ ck.checked = true; }
+      lab.appendChild(ck); lab.appendChild(el("span", null, r + jidC)); rg.appendChild(lab); });
     rqWrap.appendChild(rg); body.appendChild(rqWrap);
     var linkF = field("Resume Link","resumeLink",c.resumeLink,"url"); linkF.className = "fld full"; body.appendChild(linkF);
     var liF = field("LinkedIn Profile","linkedin",c.linkedin,"url"); liF.className = "fld full"; body.appendChild(liF);
@@ -11130,14 +11156,14 @@ h3.sech .secount.urgent{ color:var(--red); border-color:var(--red); background:r
       var cut = raw.lastIndexOf(" – ");
       var titleRaw = cut > 0 ? raw.slice(0, cut) : raw;
       var locRaw = cut > 0 ? raw.slice(cut + 3) : "";
-      var jobId = "";
-      try{
+      var jobId = (input.getAttribute("data-reqjid") || "").trim(); /* RC1.15: the row's own req id — never a first-match-by-label guess */
+      if(!jobId){ try{
         (typeof REQS !== "undefined" ? REQS : []).some(function(r){
           var l1 = (r.title||"") + " – " + (r.loc||""), l2 = (r.title||"") + " - " + (r.loc||"");
           if(raw === l1 || raw === l2){ jobId = String(r.jobId||"").trim(); return true; }
           return false;
         });
-      }catch(e){}
+      }catch(e){} }
       var mTitle = titleRaw.match(/^(.*?)\s*\((.+)\)\s*$/);
       var it = { lab:lab, input:input, raw:raw, jobId:jobId,
                  title:prettyTitle(mTitle ? mTitle[1] : titleRaw),
@@ -12692,8 +12718,15 @@ body.tb-overlay-open{ overflow:hidden; }
     [["Candidates", (state.candidates||[]).length], ["Requisitions", REQS.length], ["Interview Requests", (state.interviewRequests||[]).length], ["Hiring Managers", (state.managers||MANAGERS||[]).length], ["Activities", (state.activities||[]).length]].forEach(function(m){
       var b = wsCard("min-width:130px;padding:12px 18px");
       var n = el("div", null, String(m[1])); n.style.cssText = "font-size:24px;font-weight:800";
+      if(m[0] === "Activities"){ n.setAttribute("data-acttile", "1"); }
       b.appendChild(n); b.appendChild(el("div","hint", m[0])); strip.appendChild(b);
     });
+    /* RC1.15/S2: the tile reports the database truth, not the in-memory page */
+    try{
+      sb.from("activities").select("id", { count: "exact", head: true }).eq("org", ORG).then(function(rc){
+        if(rc && typeof rc.count === "number"){ var tn = strip.querySelector("[data-acttile]"); if(tn){ tn.textContent = String(rc.count); } }
+      });
+    }catch(eAC){}
     wrap.appendChild(strip);
     /* feature flags */
     var ff = wsCard("margin-bottom:14px"); ff.appendChild(wsHead("Feature Flags"));
