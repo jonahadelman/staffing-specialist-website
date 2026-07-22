@@ -7235,6 +7235,19 @@ async function ingestResumes(files, opts){
         var up = await sb.storage.from("resumes").upload(path, file, { upsert: true });
         if(up && !up.error){ c.resumePath = path; c.resumeFileName = file.name; }
       }catch(eU){}
+      /* LAUNCH QA (2026-07-22): in-batch duplicate guard — same person twice in one
+         drop must not create two records (findDuplicate only sees saved state). */
+      var pendDup = rows.some(function(rw){
+        return (rw.email && c.email && String(rw.email).trim().toLowerCase() === String(c.email).trim().toLowerCase()) ||
+               (rw.phone && c.phone && String(rw.phone).replace(/\D/g, "").slice(-10) === String(c.phone).replace(/\D/g, "").slice(-10) && String(rw.phone).replace(/\D/g, "").length >= 10);
+      });
+      if(pendDup){
+        rec.status = "skipped";
+        rec.detail = "duplicate of another file in this same upload — one record kept";
+        results.push(rec); liveRow(rec);
+        hint.textContent = "Processing " + results.length + " of " + list.length + "…";
+        continue;
+      }
       rows.push(candToRow(c));
       rec._cand = c;
       rec.status = "created";
@@ -7246,6 +7259,16 @@ async function ingestResumes(files, opts){
   var okIns = true;
   var insRes = null;
   if(rows.length){ insRes = await sb.from("candidates").insert(rows).select(); okIns = !(insRes && insRes.error); if(!okIns && insRes && insRes.error){ toast(insRes.error.message); } }
+  /* LAUNCH QA (2026-07-22): append inserted records to in-memory state immediately —
+     a rapid follow-up upload of the same person must find them even if the data
+     reload is still throttled. */
+  try{
+    if(okIns && insRes && insRes.data){
+      insRes.data.forEach(function(rw){
+        if(!state.candidates.some(function(x){ return x.id === rw.id; })){ state.candidates.unshift(rowToCand(rw)); }
+      });
+    }
+  }catch(eOpt){}
   /* P0 B3: routed candidates appear in the owning recruiter's routed work immediately */
   try{
     var actRows = [];
@@ -8968,7 +8991,7 @@ function tbRefreshFilterOptions(){
       refill("fDept", depts.sort(), "All Departments");
     }
     refill("fHM", MANAGERS.map(function(m){ return m.name; }).concat(reqsAll.map(function(r){ return r.hm || ""; })), "All Hiring Managers");
-    refill("fOwner", OWNERS.concat((state.candidates || []).map(function(c){ return c.owner || ""; })), "All Recruiters");
+    refill("fOwner", OWNERS.slice(), "All Recruiters"); /* P0.7 Recruiter Identity Rule: canonical roster only — a record's non-canonical saved owner survives per-selection via refill's keep-current logic */
   }catch(eRF){}
 }
 function fillLocFilter(){
@@ -13126,6 +13149,7 @@ window.TB_SRC_LIB = {"SE_MER":{"label":"Systems Engineering — GNC / Environmen
   function ciMath(profile, band){
     var base = num(profile && profile.base), target = num(profile && profile.target), min = num(profile && profile.min);
     var bMin = num(band && band.min), bMax = num(band && band.max);
+    if(base < 0 || target < 0 || min < 0) return null; /* LAUNCH QA: garbage/negative input → locked, never nonsense */
     if(!base && !target) return null;
     var rec = target ? Math.round(target * 0.98 / 500) * 500 : Math.round(base * 1.10 / 500) * 500;
     if(bMax && rec > bMax) rec = bMax;
@@ -13268,7 +13292,7 @@ window.TB_SRC_LIB = {"SE_MER":{"label":"Systems Engineering — GNC / Environmen
     list.sort(function(a, b){ return (ORDER[a.bp.status] || 9) - (ORDER[b.bp.status] || 9) || String(a.bp.title).localeCompare(String(b.bp.title)); });
     var head = document.createElement("div"); head.className = "mhead";
     var filled = list.filter(function(x){ return x.bp.status === "Filled"; }).length;
-    head.innerHTML = "<h2>Recruiting Intelligence Library™ <span style='font-size:12px;color:var(--muted,#67728a);font-weight:500'>" + list.length + " blueprints · " + filled + " filled · knowledge never deleted while it's earned</span></h2>";
+    head.innerHTML = "<h2>Recruiting Intelligence Library™ <span style='font-size:12px;color:var(--muted,#67728a);font-weight:500'>" + list.length + " TalentBlueprints™ · " + filled + " filled · knowledge never deleted while it's earned</span></h2>";
     var xb = document.createElement("button"); xb.className = "x"; xb.textContent = "×"; xb.setAttribute("data-close", "1"); head.appendChild(xb);
     m.appendChild(head);
     var body = document.createElement("div"); body.className = "mbody";
@@ -13316,7 +13340,7 @@ window.TB_SRC_LIB = {"SE_MER":{"label":"Systems Engineering — GNC / Environmen
     var bp = x.bp;
     var m = document.getElementById("modal"); m.className = "modal"; m.innerHTML = "";
     var head = document.createElement("div"); head.className = "mhead";
-    head.innerHTML = "<h2>Blueprint — Req " + esc(bp.jobId) + " · " + esc(bp.title) + "</h2>";
+    head.innerHTML = "<h2>TalentBlueprint™ — Req " + esc(bp.jobId) + " · " + esc(bp.title) + "</h2>";
     var xb = document.createElement("button"); xb.className = "x"; xb.textContent = "×"; xb.setAttribute("data-close", "1"); head.appendChild(xb);
     m.appendChild(head);
     var body = document.createElement("div"); body.className = "mbody";
@@ -13385,7 +13409,7 @@ window.TB_SRC_LIB = {"SE_MER":{"label":"Systems Engineering — GNC / Environmen
           var b = document.createElement("button");
           b.className = "vtab"; b.setAttribute("data-bp-lib", "1");
           b.innerHTML = "<span>Intelligence Library™</span>";
-          b.title = "Auto-generated Recruiting Blueprints for every requisition — searches, personas, InMail campaigns, comp strategy, interview guides, and preserved outcomes";
+          b.title = "Auto-generated TalentBlueprints™ for every requisition — searches, personas, InMail campaigns, comp strategy, interview guides, and preserved outcomes";
           b.addEventListener("click", libModal);
           box.appendChild(b);
         }
