@@ -7949,8 +7949,7 @@ function viewReq(r){
     moreB.addEventListener("click", function(){ delB.style.display = (delB.style.display === "none") ? "" : "none"; });
     delB.addEventListener("click", function(){ if(confirm("Delete this position permanently? Closing or archiving is usually safer \u2014 this cannot be undone.")){ closeModal(); deleteReq(r.id); } });
     foot.firstChild.appendChild(moreB); foot.firstChild.appendChild(delB);
-    var eb = el("button","btn","Edit"); eb.setAttribute("data-reqedit", r.id); right.appendChild(eb);
-    var doneB = el("button","btn gold","Done"); doneB.type = "button"; doneB.setAttribute("data-close","1"); right.appendChild(doneB);
+    var eb = el("button","btn","Edit"); eb.setAttribute("data-reqedit", r.id); right.appendChild(eb); /* RC1.6.1: viewReq appends the single Done itself — no extra button here */
   }
   /* Position lifecycle quick actions (confirmation-gated) */
   if(!VIEW_ONLY){
