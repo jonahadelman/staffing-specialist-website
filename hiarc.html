@@ -23,7 +23,7 @@
   .wrap{max-width:1420px;margin:0 auto;padding:0 22px} /* RC1.15.1: Picture-A baseline restored verbatim */
   /* ── HEADER ── */
   header{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.05)}
-  .topbar{display:flex;align-items:center;gap:10px;padding:10px 0;flex-wrap:nowrap} /* RC1.18/hdr: one row on desktop; search absorbs the squeeze instead of the user cluster orphaning to a 2nd line. Mobile (<=820) restores wrap below. */
+  .topbar{display:flex;align-items:center;gap:10px;padding:10px 0;flex-wrap:wrap}
   .brand{display:flex;align-items:center;gap:10px}
   .brand-logo{width:32px;height:32px;flex-shrink:0}
   .brand-text{display:flex;flex-direction:column;gap:0px}
@@ -31,7 +31,7 @@
   .brand-text .brand-sub{font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.2px}
   .vobadge{background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold);border-radius:20px;padding:3px 11px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
   .grow{flex:1}
-  .userbox{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);flex-shrink:0;white-space:nowrap} /* RC1.18/hdr: user identity + Sign Out stay intact and never wrap */
+  .userbox{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
   .search{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:200px;flex-shrink:1}
   .search input{background:transparent;border:0;color:var(--ink);width:100%;outline:none}
   .search input::placeholder{color:var(--gray)}
@@ -60,9 +60,9 @@
   .btn.danger:hover{border-color:var(--red);color:var(--red)}
   .btn.block{width:100%;padding:11px;font-size:14px;justify-content:center}
   /* ── LAYOUT ── */
-  .layout{display:grid;grid-template-columns:230px 1fr;gap:0;padding:0 0 60px} /* RC1.15.3: workstation sits ~30px higher — top gap trimmed, widths/spacing untouched */
+  .layout{display:grid;grid-template-columns:230px 1fr;gap:0;padding:18px 0 60px} /* RC1.15.3: workstation sits ~30px higher — top gap trimmed, widths/spacing untouched */
   /* ── SIDEBAR ── */
-  .side{position:sticky;top:53px;align-self:start;max-height:calc(100vh - 53px);overflow-y:auto;overflow-x:hidden;border-right:1px solid var(--line);background:var(--panel);padding:6px 0 32px} /* RC1.15.3: -8px top */ /* RC1.15: uppercase letter-spacing bleeds ~4px — never a horizontal scrollbar */
+  .side{position:sticky;top:53px;align-self:start;max-height:calc(100vh - 53px);overflow-y:auto;border-right:1px solid var(--line);background:var(--panel);padding:14px 0 32px} /* RC1.15.3: -8px top */ /* RC1.15: uppercase letter-spacing bleeds ~4px — never a horizontal scrollbar */
   .side h3{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:var(--gray);margin:20px 0 5px;font-family:inherit;font-weight:700;padding:0 16px}
   .side h3:first-child{margin-top:8px}
   .vtab{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:transparent;border:0;color:var(--muted);padding:8px 16px;border-radius:0;font-size:13px;font-weight:500;transition:background .1s,color .1s;position:relative}
@@ -85,7 +85,7 @@
   .filterbox label:first-child{margin-top:0}
   select.fil{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
   /* ── MAIN ── */
-  .main{min-width:0;padding:6px 24px 60px;overflow-y:auto} /* RC1.15.3: -14px top */
+  .main{min-width:0;padding:20px 24px 60px;overflow-y:auto} /* RC1.15.3: -14px top */
   .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
   .toolbar .title{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.2px}
   .toolbar .meta{color:var(--muted);font-size:12px}
@@ -210,9 +210,10 @@
      gutters that EXACTLY match the sidebar text (16px) and main content (24px),
      so the logo lines up with the nav and Sign Out lines up with the content. */
   /* RC1.15.2 (PO 2026-07-22): the 1600px override was the horizontal stretch — REMOVED. The base .wrap cap of 1420px now governs on every screen, so the workstation is centered with left/right margins exactly like Picture A. */
+  .wrap{max-width:1600px} /* 7/20 baseline: full-width frame */
   .topbar{padding-left:16px;padding-right:24px}
   .topbar .grow{flex:0 0 0;width:0;min-width:0}
-  .topbar .search{flex:0 1 320px;min-width:0;max-width:480px;margin-right:auto} /* RC1.15.2: A's search is shorter/better-balanced. RC1.18/hdr: shrinkable (min-width:0) so the row never breaks; basis 320 keeps the approved wide-width look. */
+  .topbar .search{flex:1 1 auto;max-width:560px;margin-right:auto}
   /* Empty & feedback states — consistent, intentional, premium */
   .empty{padding:52px 32px;border:1px dashed var(--line);border-radius:var(--radius-lg);background:var(--panel);color:var(--muted)}
   .empty .big{font-size:16px;color:var(--ink);margin-bottom:6px}
@@ -311,7 +312,7 @@
     body.nav-open .navscrim{opacity:1;pointer-events:auto}
     .main{padding:16px 14px 56px;overflow-x:auto}
     .topbar .search{flex:1 1 100%;max-width:none;margin:4px 0 0}
-    .topbar{gap:8px;row-gap:6px;flex-wrap:wrap} /* RC1.18/hdr: mobile keeps the deliberate wrap (search to its own row) */
+    .topbar{gap:8px;row-gap:6px}
   }
   @media (max-width:480px){
     .toolbar .title{font-size:20px}
@@ -1500,42 +1501,42 @@ function renderStartMyDay(host){
      show a quiet placeholder and fill it in when background scoring finishes */
   var readyN = window.__TB_SCORES_WARM ? tbCountReady() : -2;
 
-  var hero = el("div"); hero.style.cssText = "position:relative;border-radius:14px;overflow:hidden;margin:0 0 8px;border:1px solid var(--line);box-shadow:0 8px 26px rgba(10,18,30,.14)"; /* LAUNCH POLISH v2: full width of the uncapped frame */
+  var hero = el("div"); hero.style.cssText = "position:relative;border-radius:18px;overflow:hidden;margin:2px 0 20px;border:1px solid var(--line);box-shadow:0 10px 34px rgba(10,18,30,.16)"; /* LAUNCH POLISH v2: full width of the uncapped frame */
   var bg = el("div"); bg.style.cssText = "position:absolute;inset:-14px;background:url(\"data:image/svg+xml;utf8," + encodeURIComponent(window.TB_HERO_ART[(typeof ORG !== "undefined" && ORG === "hiarc") ? "medical" : "defense"]) + "\") center/cover no-repeat;filter:blur(3px) saturate(1.05)";
   hero.appendChild(bg);
-  var ov = el("div"); ov.style.cssText = "position:absolute;inset:0;background:linear-gradient(115deg, rgba(7,12,20,.88) 0%, rgba(9,16,27,.78) 42%, rgba(9,16,27,.40) 100%)"; /* HERO FINAL: artwork breathes */
+  var ov = el("div"); ov.style.cssText = "position:absolute;inset:0;background:linear-gradient(115deg, rgba(7,12,20,.94) 0%, rgba(9,16,27,.86) 42%, rgba(9,16,27,.55) 100%)"; /* HERO FINAL: artwork breathes */
   hero.appendChild(ov);
-  var hc = el("div"); hc.style.cssText = "position:relative;padding:clamp(14px,1.15vw,20px) clamp(20px,1.7vw,30px) clamp(12px,1vw,16px);color:#fff"; /* HERO FINAL: -20-25% height — header, not banner */
+  var hc = el("div"); hc.style.cssText = "position:relative;padding:46px 44px 40px;color:#fff"; /* HERO FINAL: -20-25% height — header, not banner */
   var brandLine = el("div", null, "The Staffing Specialist Workstation\u2122");
-  brandLine.style.cssText = "font-size:9px;font-weight:800;letter-spacing:2.6px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:2px";
+  brandLine.style.cssText = "font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:6px";
   hc.appendChild(brandLine);
   var WS_MOTTO = { recruiter:"Build the future.", manager:"Build recruiting excellence.", hm:"Build your team.", executive:"Build organizational capability.", admin:"Build the recruiting infrastructure." };
   var wsKey = window.TB_WS || "recruiter";
   var wsLine = el("div", null, (({manager:"Recruiting Manager Workstation",hm:"Hiring Manager Workstation",executive:"Executive Workstation",admin:"Administrator Workstation"})[wsKey] || "Recruiter Workstation") + "  \u2014  " + (WS_MOTTO[wsKey] || WS_MOTTO.recruiter));
-  wsLine.style.cssText = "font-size:9.5px;font-weight:800;letter-spacing:2.1px;text-transform:uppercase;color:#9cc4f2;margin-bottom:6px";
+  wsLine.style.cssText = "font-size:10.5px;font-weight:800;letter-spacing:2.4px;text-transform:uppercase;color:#9cc4f2;margin-bottom:14px";
   hc.appendChild(wsLine);
-  var h1 = el("div", null, tbGreeting()); h1.style.cssText = "font-size:clamp(30px,2vw,38px);font-weight:800;letter-spacing:-.4px;line-height:1.06"; /* HERO FINAL: 52-56px band */
+  var h1 = el("div", null, tbGreeting()); h1.style.cssText = "font-size:34px;font-weight:800;letter-spacing:-.6px;line-height:1.12"; /* HERO FINAL: 52-56px band */
   hc.appendChild(h1);
   var sub = el("div", null, new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric" }) + "  \u00b7  " + tbClientDisplayName() + (window.TB_PROGRAM ? "  \u00b7  " + window.TB_PROGRAM : ""));
-  sub.style.cssText = "font-size:clamp(10px,.66vw,11px);color:rgba(255,255,255,.72);margin-top:3px;font-weight:500";
+  sub.style.cssText = "font-size:13.5px;color:rgba(255,255,255,.72);margin-top:8px;font-weight:500";
   hc.appendChild(sub);
   /* the mission is the emotional center — it owns this section */
-  var mWrap = el("div"); mWrap.style.cssText = "margin:8px 0 9px;padding:6px 12px;border-top:1px solid rgba(255,255,255,.16);border-bottom:1px solid rgba(255,255,255,.16);max-width:78ch"; /* HERO FINAL: ~15% smaller footprint, breathes via padding */
+  var mWrap = el("div"); mWrap.style.cssText = "margin:24px 0 26px;padding:16px 0;border-top:1px solid rgba(255,255,255,.16);border-bottom:1px solid rgba(255,255,255,.16);max-width:640px"; /* HERO FINAL: ~15% smaller footprint, breathes via padding */
   var mLabel = el("div", null, "\ud83d\udee1 Today\u2019s Mission");
-  mLabel.style.cssText = "font-size:9px;font-weight:800;letter-spacing:2.2px;text-transform:uppercase;color:#c8a96a;margin-bottom:4px";
+  mLabel.style.cssText = "font-size:10px;font-weight:800;letter-spacing:2.6px;text-transform:uppercase;color:#c8a96a;margin-bottom:9px";
   mWrap.appendChild(mLabel);
   var mission = el("div", null, tbMissionOfTheDay());
-  mission.style.cssText = "font-size:clamp(14px,.8vw,15px);line-height:1.45;color:#fff;font-weight:700;letter-spacing:-.1px;text-shadow:0 1px 8px rgba(0,0,0,.35)"; /* HERO FINAL: prominent, not dominant */
+  mission.style.cssText = "font-size:17.5px;line-height:1.55;color:rgba(255,255,255,.95);font-weight:600;letter-spacing:-.1px"; /* HERO FINAL: prominent, not dominant */
   mWrap.appendChild(mission);
   hc.appendChild(mWrap);
-  var chips = el("div"); chips.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;align-items:center";
+  var chips = el("div"); chips.style.cssText = "display:flex;gap:10px;flex-wrap:wrap;align-items:center";
   function heroChip(n, label, view, tip){
     var b = el("button", null); b.type = "button"; b.title = tip;
-    b.style.cssText = "display:inline-flex;align-items:baseline;gap:7px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(6px);border-radius:999px;padding:7px 14px;color:#fff;font:inherit;cursor:pointer;transition:background .15s"; /* LAUNCH POLISH: ~13% taller */
+    b.style.cssText = "display:inline-flex;align-items:baseline;gap:7px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(6px);border-radius:999px;padding:8px 16px;color:#fff;font:inherit;cursor:pointer;transition:background .15s"; /* LAUNCH POLISH: ~13% taller */
     b.addEventListener("mouseenter", function(){ b.style.background = "rgba(255,255,255,.20)"; b.style.borderColor = "rgba(255,255,255,.5)"; b.style.transform = "translateY(-1px)"; });
     b.addEventListener("mouseleave", function(){ b.style.background = "rgba(255,255,255,.10)"; b.style.borderColor = "rgba(255,255,255,.22)"; b.style.transform = ""; });
-    var nn = el("b", null, String(n)); nn.style.cssText = "font-size:16px;font-weight:800";
-    b.appendChild(nn); b.appendChild(el("span", null, label)).style.cssText = "font-size:12px;font-weight:600;color:rgba(255,255,255,.85)";
+    var nn = el("b", null, String(n)); nn.style.cssText = "font-size:16.5px;font-weight:800";
+    b.appendChild(nn); b.appendChild(el("span", null, label)).style.cssText = "font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85)";
     b.addEventListener("click", function(){ ui.view = view; refresh(); });
     chips.appendChild(b);
   }
@@ -1549,7 +1550,7 @@ function renderStartMyDay(host){
     tbWarmScores(function(){ try{ if(_chipRef && _chipRef.isConnected){ var _n = tbCountReady(); _chipRef.textContent = String(_n); if(pulse && pulse.isConnected){ pulse.textContent = tbPulseText(_n); } } }catch(eC){} });
   }
   var cta = el("button", null, "Start My Day"); cta.type = "button";
-  cta.style.cssText = "margin-left:auto;align-self:center;background:var(--gold);border:0;border-radius:9px;color:#fff;font:inherit;font-size:12.5px;font-weight:700;padding:10px 24px;min-height:40px;cursor:pointer;box-shadow:0 3px 12px rgba(59,91,255,.35);transition:transform .14s,opacity .14s"; /* HERO FINAL: sits level with the KPI chips */
+  cta.style.cssText = "margin-left:auto;background:var(--gold);border:0;border-radius:10px;color:#fff;font:inherit;font-size:14px;font-weight:700;padding:11px 26px;cursor:pointer;box-shadow:0 4px 16px rgba(59,91,255,.35);transition:transform .14s,opacity .14s"; /* HERO FINAL: sits level with the KPI chips */
   cta.addEventListener("mouseenter", function(){ cta.style.transform = "translateY(-1px)"; cta.style.opacity = ".92"; });
   cta.addEventListener("mouseleave", function(){ cta.style.transform = ""; cta.style.opacity = "1"; });
   cta.addEventListener("click", function(){ var p = document.getElementById("tbPrio"); if(p){ p.scrollIntoView({ behavior: "smooth", block: "start" }); } });
@@ -1562,7 +1563,7 @@ function renderStartMyDay(host){
      ONE line only — the hero stays clean; luxury is whitespace. ── */
   var activeN = cands.filter(function(c){ return c.status !== "Archived" && c.status !== "Offer Accepted - Hired"; }).length;
   var openReqN = 0; try{ openReqN = (window.TB_METRICS ? TB_METRICS.canonicalReqEntries(REQS).map(function(e){ return e.req; }) : REQS).filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : !r.bench; }).length; }catch(ePl){}
-  var pulse = el("div"); pulse.style.cssText = "font-size:11.5px;color:var(--muted);margin:-2px 0 10px;padding:0 4px"; /* LAUNCH POLISH v2: widgets ride ~12px higher */
+  var pulse = el("div"); pulse.style.cssText = "font-size:12.5px;color:var(--muted);margin:-8px 0 16px;padding:0 4px"; /* LAUNCH POLISH v2: widgets ride ~12px higher */
   function tbPulseText(ready){
     var recN = 0; try{ recN = (typeof tbRecsForMe === "function") ? tbRecsForMe().length : 0; }catch(eR2){}
     var base = "\ud83e\udde0 TalentFit analyzed " + activeN + " candidates against " + openReqN + " open requisitions" + (ready >= 0 ? " \u2014 " + ready + " ready for review" : "");
@@ -1602,7 +1603,7 @@ function renderStartMyDay(host){
   var openReqs = canon.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : !r.bench; });
   var starving = tbStarvingReqs(openReqs); /* RC1.14 count-sync: shared definition */
 
-  var pc = el("div"); pc.id = "tbPrio"; pc.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:12px;scroll-margin-top:70px";
+  var pc = el("div"); pc.id = "tbPrio"; pc.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:16px;scroll-margin-top:70px";
   var pt = el("div", null, "Today's Priorities"); pt.style.cssText = "font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--gray);margin-bottom:10px";
   pc.appendChild(pt);
   function prio(colorVar, n, label, view, always, tip){
@@ -1641,7 +1642,7 @@ function renderStartMyDay(host){
     pc.appendChild(el("div","hint","Clear board. Get ahead: refresh TalentFit and work the slates."));
   }
   /* ── Row A: Today's Priorities | TalentFit Ready (the AI worked before you clicked) ── */
-  function smdGrid(){ var g = el("div"); g.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px"; if(window.innerWidth < 900){ g.style.gridTemplateColumns = "1fr"; } return g; }
+  function smdGrid(){ var g = el("div"); g.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px"; if(window.innerWidth < 900){ g.style.gridTemplateColumns = "1fr"; } return g; }
   function smdCard(title, tip){
     var c = el("div"); c.style.cssText = "background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px";
     var h = el("div", null, title); h.style.cssText = "font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--gray);margin-bottom:10px";
