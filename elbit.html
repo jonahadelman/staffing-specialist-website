@@ -23,7 +23,7 @@
   .wrap{max-width:1420px;margin:0 auto;padding:0 22px} /* RC1.15.1: Picture-A baseline restored verbatim */
   /* ── HEADER ── */
   header{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.05)}
-  .topbar{display:flex;align-items:center;gap:10px;padding:10px 0;flex-wrap:wrap}
+  .topbar{display:flex;align-items:center;gap:10px;padding:10px 0;flex-wrap:nowrap} /* RC1.18/hdr: one row on desktop; search absorbs the squeeze instead of the user cluster orphaning to a 2nd line. Mobile (<=820) restores wrap below. */
   .brand{display:flex;align-items:center;gap:10px}
   .brand-logo{width:32px;height:32px;flex-shrink:0}
   .brand-text{display:flex;flex-direction:column;gap:0px}
@@ -31,7 +31,7 @@
   .brand-text .brand-sub{font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.2px}
   .vobadge{background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold);border-radius:20px;padding:3px 11px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
   .grow{flex:1}
-  .userbox{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
+  .userbox{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);flex-shrink:0;white-space:nowrap} /* RC1.18/hdr: user identity + Sign Out stay intact and never wrap */
   .search{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:200px;flex-shrink:1}
   .search input{background:transparent;border:0;color:var(--ink);width:100%;outline:none}
   .search input::placeholder{color:var(--gray)}
@@ -212,7 +212,7 @@
   /* RC1.15.2 (PO 2026-07-22): the 1600px override was the horizontal stretch — REMOVED. The base .wrap cap of 1420px now governs on every screen, so the workstation is centered with left/right margins exactly like Picture A. */
   .topbar{padding-left:16px;padding-right:24px}
   .topbar .grow{flex:0 0 0;width:0;min-width:0}
-  .topbar .search{flex:1 1 auto;max-width:480px;margin-right:auto} /* RC1.15.2: A's search is shorter/better-balanced */
+  .topbar .search{flex:0 1 320px;min-width:0;max-width:480px;margin-right:auto} /* RC1.15.2: A's search is shorter/better-balanced. RC1.18/hdr: shrinkable (min-width:0) so the row never breaks; basis 320 keeps the approved wide-width look. */
   /* Empty & feedback states — consistent, intentional, premium */
   .empty{padding:52px 32px;border:1px dashed var(--line);border-radius:var(--radius-lg);background:var(--panel);color:var(--muted)}
   .empty .big{font-size:16px;color:var(--ink);margin-bottom:6px}
@@ -311,7 +311,7 @@
     body.nav-open .navscrim{opacity:1;pointer-events:auto}
     .main{padding:16px 14px 56px;overflow-x:auto}
     .topbar .search{flex:1 1 100%;max-width:none;margin:4px 0 0}
-    .topbar{gap:8px;row-gap:6px}
+    .topbar{gap:8px;row-gap:6px;flex-wrap:wrap} /* RC1.18/hdr: mobile keeps the deliberate wrap (search to its own row) */
   }
   @media (max-width:480px){
     .toolbar .title{font-size:20px}
