@@ -3784,8 +3784,9 @@ function buildSubmissionPackage(hm, sec){
     try{
       if(typeof tbCompIntel === "function"){
         var ciP = tbCompIntel(m.c.id);
+        var ciNum19 = function(x){ if(x==null||x==="") return 0; var t=String(x).toLowerCase().replace(/[$,\s]/g,""); var mu=1; var mmm=t.match(/^(-?[0-9]*\.?[0-9]+)(k|m)$/); if(mmm){ t=mmm[1]; mu=(mmm[2]==="m")?1000000:1000; } var nn=Number(t); return isFinite(nn)?nn*mu:0; }; /* RC1.19/D4 */
         var ciB = (typeof tbCompIntelMath === "function" && ciP) ? tbCompIntelMath(ciP, { min: m.req.compMin, max: m.req.compMax }) : null;
-        if(ciB){ lines.push("   CompIntel™: current " + (ciP.base ? "$" + Number(String(ciP.base).replace(/[$,\s]/g,"")).toLocaleString() : "—") + " · target " + (ciP.target ? "$" + Number(String(ciP.target).replace(/[$,\s]/g,"")).toLocaleString() : "—") + " · recommended offer $" + ciB.rec.toLocaleString() + (ciB.signOn ? " +$" + ciB.signOn.toLocaleString() + " sign-on" : "") + " · offer probability " + ciB.prob + "% · " + ciB.market + " (" + (ciP.confidence === "Verified" ? "verified" : "estimated") + ")"); }
+        if(ciB){ lines.push("   CompIntel™: current " + (ciP.base ? "$" + ciNum19(ciP.base).toLocaleString() : "—") + " · target " + (ciP.target ? "$" + ciNum19(ciP.target).toLocaleString() : "—") + " · recommended offer $" + ciB.rec.toLocaleString() + (ciB.signOn ? " +$" + ciB.signOn.toLocaleString() + " sign-on" : "") + " · offer probability " + ciB.prob + "% · " + ciB.market + " (" + (ciP.confidence === "Verified" ? "verified" : "estimated") + ")"); }
         else { lines.push("   CompIntel™: not on file — capture compensation before offer stage"); }
       }
     }catch(eCI){}
@@ -8027,7 +8028,7 @@ async function saveInterviewRequest(){
   var candId = null; var key = cand.toLowerCase();
   (state.candidates || []).forEach(function(c){ if(fullName(c).toLowerCase() === key){ candId = c.id; } });
   var roleVal = v("irRole").trim(); var reqIdVal = null;
-  var ri = REQ_OPTIONS.indexOf(roleVal); if(ri !== -1 && REQS[ri]){ reqIdVal = REQS[ri].id; }
+  var ri = ALL_REQ_OPTIONS.indexOf(roleVal); if(ri !== -1 && REQS[ri]){ reqIdVal = REQS[ri].id; } /* RC1.19/D1: REQ_OPTIONS is bench-filtered; ALL_REQ_OPTIONS is REQS-aligned */
   var lenRaw = v("irLength").trim(); var lenVal = (lenRaw === "" ? null : parseInt(lenRaw, 10)); if(lenVal != null && isNaN(lenVal)){ lenVal = null; }
   var tz = v("irTz") || "Eastern (ET)"; var dtRaw = v("irDate"); var dtVal = null; if(dtRaw){ var du = wallToUtc(dtRaw, tzIana(tz)); if(du){ dtVal = du.toISOString(); } }
   var row = { org:ORG, candidate_name:cand, candidate_id:candId, hiring_manager:v("irHM").trim(), role:roleVal, req_id:reqIdVal, format:v("irFormat"), panel_members:v("irPanel").trim(), length_minutes:lenVal, presentation_required:ck("irPresReq"), presentation_notes:v("irPresNotes").trim(), notes:v("irNotes").trim(), interview_date:dtVal, time_zone:tz, status:v("irStatus") || "Requested" };
@@ -8531,8 +8532,8 @@ function fitParagraph(c, reqLabel){
       }
     }
   }catch(eFP){}
-  if(role){ seg.push("For " + role + ", this background maps directly onto the role's core requirements."); }
-  seg.push(first + " is available to interview promptly \u2014 happy to coordinate a time.");
+  if(role && _hit && _hit.verdict === "strong"){ seg.push("For " + role + ", this background maps directly onto the role's core requirements."); } /* RC1.19/D3: only when TalentFit rates strong */
+  seg.push("Happy to coordinate an interview time."); /* RC1.19/D3: removed unsupported availability claim */
   return seg.join(" ");
 }
 function buildSubmissionHTML(cands, reqTitle){
@@ -8856,7 +8857,7 @@ function submitCandidate(){ if(!openId){ return; } var c = state.candidates.filt
   openSubmission([c], (c.reqs||[])[0] || ""); }
 function submitReq(reqId){
   var r = REQS.filter(function(x){ return x.id === reqId; })[0]; if(!r){ return; }
-  var idx = REQS.indexOf(r); var label = REQ_OPTIONS[idx];
+  var idx = REQS.indexOf(r); var label = ALL_REQ_OPTIONS[idx]; /* RC1.19/D2: REQS-aligned ALL_REQ_OPTIONS */
   var cands = state.candidates.filter(function(c){ return (c.reqs||[]).indexOf(label) !== -1; });
   if(cands.length === 0){ toast("No candidates tagged to this req yet"); return; }
   openSubmission(cands, r.title + " - " + r.loc);
@@ -13130,7 +13131,7 @@ window.TB_SRC_LIB = {"SE_MER":{"label":"Systems Engineering — GNC / Environmen
   if(typeof window === "undefined"){ return; }
 
   /* ---------- helpers ---------- */
-  function num(v){ if(v == null || v === "") return 0; var n = Number(String(v).replace(/[$,\s]/g, "")); return isFinite(n) ? n : 0; }
+  function num(v){ if(v == null || v === "") return 0; var s = String(v).toLowerCase().replace(/[$,\s]/g, ""); var mult = 1; var mm = s.match(/^(-?[0-9]*\.?[0-9]+)(k|m)$/); if(mm){ s = mm[1]; mult = (mm[2] === "m") ? 1000000 : 1000; } var n = Number(s); return isFinite(n) ? n * mult : 0; } /* RC1.19/D4: k/m shorthand */
   function fmt$(n){ if(!n) return "—"; return "$" + Math.round(n).toLocaleString("en-US"); }
   function esc(s){ var d = document.createElement("div"); d.textContent = String(s == null ? "" : s); return d.innerHTML; }
   function today(){ return (typeof todayISO === "function") ? todayISO() : new Date().toISOString().slice(0, 10); }
