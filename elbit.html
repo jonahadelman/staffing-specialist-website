@@ -60,9 +60,9 @@
   .btn.danger:hover{border-color:var(--red);color:var(--red)}
   .btn.block{width:100%;padding:11px;font-size:14px;justify-content:center}
   /* ── LAYOUT ── */
-  .layout{display:grid;grid-template-columns:230px 1fr;gap:0;padding:18px 0 60px}
+  .layout{display:grid;grid-template-columns:230px 1fr;gap:0;padding:0 0 60px} /* RC1.15.3: workstation sits ~30px higher — top gap trimmed, widths/spacing untouched */
   /* ── SIDEBAR ── */
-  .side{position:sticky;top:53px;align-self:start;max-height:calc(100vh - 53px);overflow-y:auto;overflow-x:hidden;border-right:1px solid var(--line);background:var(--panel);padding:14px 0 32px} /* RC1.15: uppercase letter-spacing bleeds ~4px — never a horizontal scrollbar */
+  .side{position:sticky;top:53px;align-self:start;max-height:calc(100vh - 53px);overflow-y:auto;overflow-x:hidden;border-right:1px solid var(--line);background:var(--panel);padding:6px 0 32px} /* RC1.15.3: -8px top */ /* RC1.15: uppercase letter-spacing bleeds ~4px — never a horizontal scrollbar */
   .side h3{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:var(--gray);margin:20px 0 5px;font-family:inherit;font-weight:700;padding:0 16px}
   .side h3:first-child{margin-top:8px}
   .vtab{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:transparent;border:0;color:var(--muted);padding:8px 16px;border-radius:0;font-size:13px;font-weight:500;transition:background .1s,color .1s;position:relative}
@@ -85,7 +85,7 @@
   .filterbox label:first-child{margin-top:0}
   select.fil{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
   /* ── MAIN ── */
-  .main{min-width:0;padding:20px 24px 60px;overflow-y:auto}
+  .main{min-width:0;padding:6px 24px 60px;overflow-y:auto} /* RC1.15.3: -14px top */
   .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
   .toolbar .title{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.2px}
   .toolbar .meta{color:var(--muted);font-size:12px}
@@ -1050,6 +1050,16 @@ function activeView(){ for(var i=0;i<VIEWS.length;i++){ if(VIEWS[i].id===ui.view
 function candHaystack(c){
   return [fullName(c),c.email,c.phone,c.title,c.company,(c.skills||[]).join(" "),c.location,c.summary,c.resumeText,c.notes,c.source,c.owner,c.discipline,(c.reqs||[]).join(" ")].join(" ").toLowerCase();
 }
+/* TF-001 (PO 2026-07-22): gap-DISCLOSURE clauses name the tools/domains a candidate LACKS
+   ("gap: wfm/timekeeping domain vs. defense cm tools (windchill/teamcenter)"). Keyword scoring
+   read those as positive evidence, inflating off-domain candidates to false 100s. The SCORING
+   haystack drops disclosed-gap segments so a stated gap can never score as a strength. The SEARCH
+   haystack (candHaystack) is intentionally left raw — search should still find any mentioned term. */
+function tfStripGaps(t){
+  var GAP = /\bgaps?\s*:|\bdomain gap\b|disclosed[^.;\n]*gap|flagged transparently|vs\.?\s+defense\b|does not (have|appear)|no (direct )?experience (with|in)|limited exposure|would need to (learn|develop)|not evidenced/i;
+  return String(t||"").split(/(?<=[.;\n\u2022|])/).filter(function(seg){ return !GAP.test(seg); }).join(" ");
+}
+function scoreHaystack(c){ return tfStripGaps(candHaystack(c)); }
 /* Boolean search: supports AND, OR, NOT (and -term), "quoted phrases", parentheses.
    Plain space-separated words behave as AND (like before). Case-insensitive. */
 function tokenizeQuery(q){
@@ -3365,6 +3375,18 @@ var BOARD = (function(){
       if(/(bachelor|\bb\.?s\.?\b|master|\bm\.?s\.?\b|ph\.?d|degree)/i.test(c.txt)){ s+=1; }
       if(want>=4 && /managed|direct reports|people manager|engineering manager/i.test(c.txt)){ s+=2; strengths.push("leadership record for a leadership requisition"); }
     }
+    /* ── TF-002 (PO 2026-07-22): a business-application / back-office profile (workforce
+       management, timekeeping, HRIS, payroll, help desk, bookkeeping) with NO engineering,
+       hardware, or defense evidence is off-domain for a technical requisition — a recruiter
+       would never submit a WFM/timekeeping analyst for a defense Configuration/Systems/etc.
+       role no matter how the word "configuration" overlaps. Gap text is already stripped from
+       c.txt, so disclosed tools never count as evidence here. ── */
+    var __ENGREQ = {SE:1,EE:1,SW:1,MECH:1,MFG:1,TEST:1,CM:1,OPTICS:1,TECH:1,MAINT:1,REL:1,CYBER:1,ITOPS:1};
+    if(__ENGREQ[rfn]){
+      var __bizApp = /\b(timekeeping|time\s*&?\s*attendance|workforce management|\bwfm\b|workforce technology|\bhris\b|payroll|kronos|workday|peoplesoft|help ?desk|accounts payable|accounts receivable|bookkeeping)\b/i.test(c.txt);
+      var __engEvid = /\b(engineer|hardware|firmware|circuit|\bpcb\b|\bfpga\b|schematic|mechanical|solidworks|\bcad\b|avionic|radar|missile|weapon|munition|manufacturing|\bplc\b|\bscada\b|configuration control board|\bccb\b|engineering change|teamcenter|windchill|\bplm\b|\bdoors\b|mil-?std|test procedure|integration and test|electro.?optic|photonic)\b/i.test(c.txt);
+      if(__bizApp && !__engEvid){ capMax=Math.min(capMax,40); gaps.push("business-application/back-office profile — no engineering evidence for a technical requisition"); }
+    }
     /* ── caps (certified behavior preserved) ── */
     if(c.domain==="off"){ capMax=Math.min(capMax,33); gaps.push("off-domain cap applied"); }
     else if(c.domain==="thin"){ var tc=(LEVELORD[c.level]>=4)?68:55; capMax=Math.min(capMax,tc); gaps.push("thin-domain cap applied"); }
@@ -3415,7 +3437,7 @@ var BOARD = (function(){
   function clearScoreCache(){ _scoreCache = {}; }
   function scoreCandidate(c){
     if(c && c.id && _scoreCache[c.id]){ return _scoreCache[c.id]; }
-    var txt = candHaystack(c);
+    var txt = scoreHaystack(c); /* TF-001: gap-stripped for scoring */
     var cc = {ref:c, txt:txt};
     var f = detectFn(txt);
     cc.fn=f.primary; cc.fnset=f.set;
@@ -3496,7 +3518,7 @@ var BOARD = (function(){
     /* TalentFit on an arbitrary requisition set — powers the scoped Run buttons
        on the candidate profile (My Reqs / All Programs / Enterprise). Never cached:
        the scope changes per click, so results are always computed fresh. */
-    var txt = candHaystack(c);
+    var txt = scoreHaystack(c); /* TF-001: gap-stripped for scoring */
     var cc = {ref:c, txt:txt};
     var f = detectFn(txt);
     cc.fn=f.primary; cc.fnset=f.set;
