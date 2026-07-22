@@ -209,10 +209,10 @@
   /* App shell: wider container (less dead margin on big screens) + header content
      gutters that EXACTLY match the sidebar text (16px) and main content (24px),
      so the logo lines up with the nav and Sign Out lines up with the content. */
-  .wrap{max-width:1600px} /* RC1.15.1: the original desktop frame — exactly as the approved Picture-A baseline */
+  /* RC1.15.2 (PO 2026-07-22): the 1600px override was the horizontal stretch — REMOVED. The base .wrap cap of 1420px now governs on every screen, so the workstation is centered with left/right margins exactly like Picture A. */
   .topbar{padding-left:16px;padding-right:24px}
   .topbar .grow{flex:0 0 0;width:0;min-width:0}
-  .topbar .search{flex:1 1 auto;max-width:560px;margin-right:auto}
+  .topbar .search{flex:1 1 auto;max-width:480px;margin-right:auto} /* RC1.15.2: A's search is shorter/better-balanced */
   /* Empty & feedback states — consistent, intentional, premium */
   .empty{padding:52px 32px;border:1px dashed var(--line);border-radius:var(--radius-lg);background:var(--panel);color:var(--muted)}
   .empty .big{font-size:16px;color:var(--ink);margin-bottom:6px}
