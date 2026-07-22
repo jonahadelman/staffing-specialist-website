@@ -1456,29 +1456,29 @@ function renderStartMyDay(host){
   var hero = el("div"); hero.style.cssText = "position:relative;border-radius:18px;overflow:hidden;margin:2px 0 10px;border:1px solid var(--line);box-shadow:0 10px 34px rgba(10,18,30,.16)"; /* LAUNCH POLISH v2: full width of the uncapped frame */
   var bg = el("div"); bg.style.cssText = "position:absolute;inset:-14px;background:url(\"data:image/svg+xml;utf8," + encodeURIComponent(window.TB_HERO_ART[(typeof ORG !== "undefined" && ORG === "hiarc") ? "medical" : "defense"]) + "\") center/cover no-repeat;filter:blur(3px) saturate(1.05)";
   hero.appendChild(bg);
-  var ov = el("div"); ov.style.cssText = "position:absolute;inset:0;background:linear-gradient(115deg, rgba(7,12,20,.94) 0%, rgba(9,16,27,.86) 42%, rgba(9,16,27,.55) 100%)";
+  var ov = el("div"); ov.style.cssText = "position:absolute;inset:0;background:linear-gradient(115deg, rgba(7,12,20,.88) 0%, rgba(9,16,27,.78) 42%, rgba(9,16,27,.40) 100%)"; /* HERO FINAL: artwork breathes */
   hero.appendChild(ov);
-  var hc = el("div"); hc.style.cssText = "position:relative;padding:clamp(40px,3vw,58px) clamp(36px,3vw,56px) clamp(36px,2.6vw,48px);color:#fff"; /* LAUNCH POLISH */
+  var hc = el("div"); hc.style.cssText = "position:relative;padding:clamp(26px,2vw,38px) clamp(32px,2.6vw,48px) clamp(22px,1.7vw,30px);color:#fff"; /* HERO FINAL: -20-25% height — header, not banner */
   var brandLine = el("div", null, "The Staffing Specialist Workstation\u2122");
-  brandLine.style.cssText = "font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:6px";
+  brandLine.style.cssText = "font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:4px";
   hc.appendChild(brandLine);
   var WS_MOTTO = { recruiter:"Build the future.", manager:"Build recruiting excellence.", hm:"Build your team.", executive:"Build organizational capability.", admin:"Build the recruiting infrastructure." };
   var wsKey = window.TB_WS || "recruiter";
   var wsLine = el("div", null, (({manager:"Recruiting Manager Workstation",hm:"Hiring Manager Workstation",executive:"Executive Workstation",admin:"Administrator Workstation"})[wsKey] || "Recruiter Workstation") + "  \u2014  " + (WS_MOTTO[wsKey] || WS_MOTTO.recruiter));
-  wsLine.style.cssText = "font-size:10.5px;font-weight:800;letter-spacing:2.4px;text-transform:uppercase;color:#9cc4f2;margin-bottom:14px";
+  wsLine.style.cssText = "font-size:10.5px;font-weight:800;letter-spacing:2.4px;text-transform:uppercase;color:#9cc4f2;margin-bottom:10px";
   hc.appendChild(wsLine);
-  var h1 = el("div", null, tbGreeting()); h1.style.cssText = "font-size:clamp(38px,3.2vw,60px);font-weight:800;letter-spacing:-.6px;line-height:1.1"; /* LAUNCH POLISH: executive scale */
+  var h1 = el("div", null, tbGreeting()); h1.style.cssText = "font-size:clamp(36px,2.8vw,54px);font-weight:800;letter-spacing:-.6px;line-height:1.08"; /* HERO FINAL: 52-56px band */
   hc.appendChild(h1);
   var sub = el("div", null, new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric" }) + "  \u00b7  " + tbClientDisplayName() + (window.TB_PROGRAM ? "  \u00b7  " + window.TB_PROGRAM : ""));
-  sub.style.cssText = "font-size:clamp(13.5px,1vw,15.5px);color:rgba(255,255,255,.72);margin-top:8px;font-weight:500";
+  sub.style.cssText = "font-size:clamp(13px,.95vw,15px);color:rgba(255,255,255,.72);margin-top:6px;font-weight:500";
   hc.appendChild(sub);
   /* the mission is the emotional center — it owns this section */
-  var mWrap = el("div"); mWrap.style.cssText = "margin:24px 0 26px;padding:16px 0;border-top:1px solid rgba(255,255,255,.16);border-bottom:1px solid rgba(255,255,255,.16);max-width:72ch"; /* LAUNCH POLISH: wider, still readable */
+  var mWrap = el("div"); mWrap.style.cssText = "margin:14px 0 16px;padding:12px 18px;border-top:1px solid rgba(255,255,255,.16);border-bottom:1px solid rgba(255,255,255,.16);max-width:72ch"; /* HERO FINAL: ~15% smaller footprint, breathes via padding */
   var mLabel = el("div", null, "\ud83d\udee1 Today\u2019s Mission");
   mLabel.style.cssText = "font-size:10px;font-weight:800;letter-spacing:2.6px;text-transform:uppercase;color:#c8a96a;margin-bottom:9px";
   mWrap.appendChild(mLabel);
   var mission = el("div", null, tbMissionOfTheDay());
-  mission.style.cssText = "font-size:clamp(19px,1.2vw,21.5px);line-height:1.55;color:#fff;font-weight:700;letter-spacing:-.1px;text-shadow:0 1px 8px rgba(0,0,0,.35)"; /* LAUNCH POLISH v2: mission carries the card */
+  mission.style.cssText = "font-size:clamp(17.5px,1.02vw,19px);line-height:1.5;color:#fff;font-weight:700;letter-spacing:-.1px;text-shadow:0 1px 8px rgba(0,0,0,.35)"; /* HERO FINAL: prominent, not dominant */
   mWrap.appendChild(mission);
   hc.appendChild(mWrap);
   var chips = el("div"); chips.style.cssText = "display:flex;gap:10px;flex-wrap:wrap;align-items:center";
@@ -1502,7 +1502,7 @@ function renderStartMyDay(host){
     tbWarmScores(function(){ try{ if(_chipRef && _chipRef.isConnected){ var _n = tbCountReady(); _chipRef.textContent = String(_n); if(pulse && pulse.isConnected){ pulse.textContent = tbPulseText(_n); } } }catch(eC){} });
   }
   var cta = el("button", null, "Start My Day"); cta.type = "button";
-  cta.style.cssText = "margin-left:auto;background:var(--gold);border:0;border-radius:12px;color:#fff;font:inherit;font-size:15.5px;font-weight:700;padding:16px 34px;min-height:56px;cursor:pointer;box-shadow:0 4px 16px rgba(59,91,255,.35);transition:transform .14s,opacity .14s"; /* LAUNCH POLISH: 56px command button */
+  cta.style.cssText = "margin-left:auto;align-self:center;background:var(--gold);border:0;border-radius:11px;color:#fff;font:inherit;font-size:15px;font-weight:700;padding:13px 30px;min-height:50px;cursor:pointer;box-shadow:0 4px 16px rgba(59,91,255,.35);transition:transform .14s,opacity .14s"; /* HERO FINAL: sits level with the KPI chips */
   cta.addEventListener("mouseenter", function(){ cta.style.transform = "translateY(-1px)"; cta.style.opacity = ".92"; });
   cta.addEventListener("mouseleave", function(){ cta.style.transform = ""; cta.style.opacity = "1"; });
   cta.addEventListener("click", function(){ var p = document.getElementById("tbPrio"); if(p){ p.scrollIntoView({ behavior: "smooth", block: "start" }); } });
