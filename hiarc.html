@@ -19,7 +19,7 @@
   h1,h2,h3{font-family:inherit;font-weight:700;margin:0}
   button{font-family:inherit;cursor:pointer}
   input,select,textarea{font-family:inherit;font-size:14px}
-  .wrap{max-width:1420px;margin:0 auto;padding:0 22px}
+  .wrap{max-width:none;margin:0 auto;padding:0 22px} /* LAUNCH POLISH v2: command-center full-bleed — text columns stay capped individually */
   /* ── HEADER ── */
   header{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.05)}
   .topbar{display:flex;align-items:center;gap:10px;padding:10px 0;flex-wrap:wrap}
@@ -208,7 +208,7 @@
   /* App shell: wider container (less dead margin on big screens) + header content
      gutters that EXACTLY match the sidebar text (16px) and main content (24px),
      so the logo lines up with the nav and Sign Out lines up with the content. */
-  .wrap{max-width:1600px}
+  .wrap{max-width:none}
   .topbar{padding-left:16px;padding-right:24px}
   .topbar .grow{flex:0 0 0;width:0;min-width:0}
   .topbar .search{flex:1 1 auto;max-width:560px;margin-right:auto}
@@ -836,6 +836,7 @@ function setReqs(arr){
   REQ_OPTIONS = arr.filter(function(r){ return !r.bench; }).map(function(r){ return r.title + " \u2013 " + r.loc; });
   ALL_REQ_OPTIONS = arr.map(function(r){ return r.title + " \u2013 " + r.loc; });
   var sel = document.getElementById("fReq"); var cur = ui.fReq; fillSelect(sel, REQ_OPTIONS, "All Reqs"); sel.value = cur;
+  try{ if(typeof tbRefreshFilterOptions === "function"){ tbRefreshFilterOptions(); } }catch(eRF3){}
   if(typeof BOARD !== "undefined" && BOARD.clearScoreCache){ BOARD.clearScoreCache(); }
 }
 async function loadData(){
@@ -845,6 +846,7 @@ async function loadData(){
   if(c.error){ toast(c.error.message); }
   state.candidates = (c.data || []).map(rowToCand);
   try{ if(typeof fillLocFilter === "function"){ fillLocFilter(); } }catch(eFL2){}
+  try{ if(typeof tbRefreshFilterOptions === "function"){ tbRefreshFilterOptions(); } }catch(eRF2){}
   try{ var foSel = document.getElementById("fOwner"); if(foSel){ var foCur = ui.fOwner; fillSelect(foSel, OWNERS, "All Recruiters"); foSel.value = foCur; } }catch(eFO2){}
   if(typeof BOARD !== "undefined" && BOARD.clearScoreCache){ BOARD.clearScoreCache(); }
   state.activities = (a.data || []).map(rowToAct);
@@ -1225,6 +1227,16 @@ function renderTabs(){
     }
     b.setAttribute("data-view", v.id); box.appendChild(b);
   });
+  /* RC1.10 (PO request): LinkedIn Sourcing Library — pinned at the bottom of the workstation nav */
+  try{
+    var liH = el("h3","sech","Sourcing");
+    box.appendChild(liH);
+    var liB = el("button","vtab");
+    liB.appendChild(el("span", null, "LinkedIn Sourcing Library \u2197"));
+    liB.title = "Search nets, Booleans, target companies and InMail sequences for every open requisition and TalentBench role — opens in a new tab";
+    liB.addEventListener("click", function(){ window.open("https://www.thestaffingspecialist.com/talentbase-sourcing-x7q4n9r2.html", "_blank", "noopener"); });
+    box.appendChild(liB);
+  }catch(eLI){}
 }
 function fillSelect(sel, opts, blank){ sel.innerHTML = ""; var o0 = el("option", null, blank); o0.value = ""; sel.appendChild(o0); opts.forEach(function(o){ var op = el("option", null, o); op.value = o; sel.appendChild(op); }); }
 
@@ -1419,7 +1431,7 @@ function renderStartMyDay(host){
   document.getElementById("viewTitle").textContent = "";
   document.getElementById("viewMeta").textContent = "";
 
-  var wrap = el("div"); wrap.style.cssText = "max-width:1020px";
+  var wrap = el("div"); wrap.style.cssText = "max-width:none;width:100%"; /* LAUNCH POLISH: hero spans the full content area — no artificial cap */
 
   /* ═══ THE FIRST FIVE SECONDS — walking into headquarters, not opening software ═══ */
   var irsTodayN = irs.filter(function(ir){ return (ir.interviewDate || "").slice(0,10) === today && ir.status !== "Cancelled"; }).length;
@@ -1441,12 +1453,12 @@ function renderStartMyDay(host){
      show a quiet placeholder and fill it in when background scoring finishes */
   var readyN = window.__TB_SCORES_WARM ? tbCountReady() : -2;
 
-  var hero = el("div"); hero.style.cssText = "position:relative;border-radius:18px;overflow:hidden;margin:2px 0 20px;border:1px solid var(--line);box-shadow:0 10px 34px rgba(10,18,30,.16)";
+  var hero = el("div"); hero.style.cssText = "position:relative;border-radius:18px;overflow:hidden;margin:2px 0 10px;border:1px solid var(--line);box-shadow:0 10px 34px rgba(10,18,30,.16)"; /* LAUNCH POLISH v2: full width of the uncapped frame */
   var bg = el("div"); bg.style.cssText = "position:absolute;inset:-14px;background:url(\"data:image/svg+xml;utf8," + encodeURIComponent(window.TB_HERO_ART[(typeof ORG !== "undefined" && ORG === "hiarc") ? "medical" : "defense"]) + "\") center/cover no-repeat;filter:blur(3px) saturate(1.05)";
   hero.appendChild(bg);
   var ov = el("div"); ov.style.cssText = "position:absolute;inset:0;background:linear-gradient(115deg, rgba(7,12,20,.94) 0%, rgba(9,16,27,.86) 42%, rgba(9,16,27,.55) 100%)";
   hero.appendChild(ov);
-  var hc = el("div"); hc.style.cssText = "position:relative;padding:46px 44px 40px;color:#fff";
+  var hc = el("div"); hc.style.cssText = "position:relative;padding:clamp(40px,3vw,58px) clamp(36px,3vw,56px) clamp(36px,2.6vw,48px);color:#fff"; /* LAUNCH POLISH */
   var brandLine = el("div", null, "The Staffing Specialist Workstation\u2122");
   brandLine.style.cssText = "font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:6px";
   hc.appendChild(brandLine);
@@ -1455,28 +1467,28 @@ function renderStartMyDay(host){
   var wsLine = el("div", null, (({manager:"Recruiting Manager Workstation",hm:"Hiring Manager Workstation",executive:"Executive Workstation",admin:"Administrator Workstation"})[wsKey] || "Recruiter Workstation") + "  \u2014  " + (WS_MOTTO[wsKey] || WS_MOTTO.recruiter));
   wsLine.style.cssText = "font-size:10.5px;font-weight:800;letter-spacing:2.4px;text-transform:uppercase;color:#9cc4f2;margin-bottom:14px";
   hc.appendChild(wsLine);
-  var h1 = el("div", null, tbGreeting()); h1.style.cssText = "font-size:34px;font-weight:800;letter-spacing:-.6px;line-height:1.12";
+  var h1 = el("div", null, tbGreeting()); h1.style.cssText = "font-size:clamp(38px,3.2vw,60px);font-weight:800;letter-spacing:-.6px;line-height:1.1"; /* LAUNCH POLISH: executive scale */
   hc.appendChild(h1);
   var sub = el("div", null, new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric" }) + "  \u00b7  " + tbClientDisplayName() + (window.TB_PROGRAM ? "  \u00b7  " + window.TB_PROGRAM : ""));
-  sub.style.cssText = "font-size:13.5px;color:rgba(255,255,255,.72);margin-top:8px;font-weight:500";
+  sub.style.cssText = "font-size:clamp(13.5px,1vw,15.5px);color:rgba(255,255,255,.72);margin-top:8px;font-weight:500";
   hc.appendChild(sub);
   /* the mission is the emotional center — it owns this section */
-  var mWrap = el("div"); mWrap.style.cssText = "margin:24px 0 26px;padding:16px 0;border-top:1px solid rgba(255,255,255,.16);border-bottom:1px solid rgba(255,255,255,.16);max-width:640px";
+  var mWrap = el("div"); mWrap.style.cssText = "margin:24px 0 26px;padding:16px 0;border-top:1px solid rgba(255,255,255,.16);border-bottom:1px solid rgba(255,255,255,.16);max-width:72ch"; /* LAUNCH POLISH: wider, still readable */
   var mLabel = el("div", null, "\ud83d\udee1 Today\u2019s Mission");
   mLabel.style.cssText = "font-size:10px;font-weight:800;letter-spacing:2.6px;text-transform:uppercase;color:#c8a96a;margin-bottom:9px";
   mWrap.appendChild(mLabel);
   var mission = el("div", null, tbMissionOfTheDay());
-  mission.style.cssText = "font-size:17.5px;line-height:1.55;color:rgba(255,255,255,.95);font-weight:600;letter-spacing:-.1px";
+  mission.style.cssText = "font-size:clamp(19px,1.2vw,21.5px);line-height:1.55;color:#fff;font-weight:700;letter-spacing:-.1px;text-shadow:0 1px 8px rgba(0,0,0,.35)"; /* LAUNCH POLISH v2: mission carries the card */
   mWrap.appendChild(mission);
   hc.appendChild(mWrap);
   var chips = el("div"); chips.style.cssText = "display:flex;gap:10px;flex-wrap:wrap;align-items:center";
   function heroChip(n, label, view, tip){
     var b = el("button", null); b.type = "button"; b.title = tip;
-    b.style.cssText = "display:inline-flex;align-items:baseline;gap:7px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(6px);border-radius:999px;padding:8px 16px;color:#fff;font:inherit;cursor:pointer;transition:background .15s";
-    b.addEventListener("mouseenter", function(){ b.style.background = "rgba(255,255,255,.18)"; });
-    b.addEventListener("mouseleave", function(){ b.style.background = "rgba(255,255,255,.10)"; });
-    var nn = el("b", null, String(n)); nn.style.cssText = "font-size:16.5px;font-weight:800";
-    b.appendChild(nn); b.appendChild(el("span", null, label)).style.cssText = "font-size:12.5px;font-weight:600;color:rgba(255,255,255,.85)";
+    b.style.cssText = "display:inline-flex;align-items:baseline;gap:8px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(6px);border-radius:999px;padding:10px 19px;color:#fff;font:inherit;cursor:pointer;transition:background .15s"; /* LAUNCH POLISH: ~13% taller */
+    b.addEventListener("mouseenter", function(){ b.style.background = "rgba(255,255,255,.20)"; b.style.borderColor = "rgba(255,255,255,.5)"; b.style.transform = "translateY(-1px)"; });
+    b.addEventListener("mouseleave", function(){ b.style.background = "rgba(255,255,255,.10)"; b.style.borderColor = "rgba(255,255,255,.22)"; b.style.transform = ""; });
+    var nn = el("b", null, String(n)); nn.style.cssText = "font-size:18.5px;font-weight:800";
+    b.appendChild(nn); b.appendChild(el("span", null, label)).style.cssText = "font-size:13.5px;font-weight:600;color:rgba(255,255,255,.85)";
     b.addEventListener("click", function(){ ui.view = view; refresh(); });
     chips.appendChild(b);
   }
@@ -1490,7 +1502,7 @@ function renderStartMyDay(host){
     tbWarmScores(function(){ try{ if(_chipRef && _chipRef.isConnected){ var _n = tbCountReady(); _chipRef.textContent = String(_n); if(pulse && pulse.isConnected){ pulse.textContent = tbPulseText(_n); } } }catch(eC){} });
   }
   var cta = el("button", null, "Start My Day"); cta.type = "button";
-  cta.style.cssText = "margin-left:auto;background:var(--gold);border:0;border-radius:10px;color:#fff;font:inherit;font-size:14px;font-weight:700;padding:11px 26px;cursor:pointer;box-shadow:0 4px 16px rgba(59,91,255,.35);transition:transform .14s,opacity .14s";
+  cta.style.cssText = "margin-left:auto;background:var(--gold);border:0;border-radius:12px;color:#fff;font:inherit;font-size:15.5px;font-weight:700;padding:16px 34px;min-height:56px;cursor:pointer;box-shadow:0 4px 16px rgba(59,91,255,.35);transition:transform .14s,opacity .14s"; /* LAUNCH POLISH: 56px command button */
   cta.addEventListener("mouseenter", function(){ cta.style.transform = "translateY(-1px)"; cta.style.opacity = ".92"; });
   cta.addEventListener("mouseleave", function(){ cta.style.transform = ""; cta.style.opacity = "1"; });
   cta.addEventListener("click", function(){ var p = document.getElementById("tbPrio"); if(p){ p.scrollIntoView({ behavior: "smooth", block: "start" }); } });
@@ -1503,7 +1515,7 @@ function renderStartMyDay(host){
      ONE line only — the hero stays clean; luxury is whitespace. ── */
   var activeN = cands.filter(function(c){ return c.status !== "Archived" && c.status !== "Offer Accepted - Hired"; }).length;
   var openReqN = 0; try{ openReqN = (window.TB_METRICS ? TB_METRICS.canonicalReqEntries(REQS).map(function(e){ return e.req; }) : REQS).filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : !r.bench; }).length; }catch(ePl){}
-  var pulse = el("div"); pulse.style.cssText = "font-size:12.5px;color:var(--muted);margin:-8px 0 16px;padding:0 4px";
+  var pulse = el("div"); pulse.style.cssText = "font-size:12.5px;color:var(--muted);margin:-2px 0 12px;padding:0 4px"; /* LAUNCH POLISH v2: widgets ride ~12px higher */
   function tbPulseText(ready){
     var recN = 0; try{ recN = (typeof tbRecsForMe === "function") ? tbRecsForMe().length : 0; }catch(eR2){}
     var base = "\ud83e\udde0 TalentFit analyzed " + activeN + " candidates against " + openReqN + " open requisitions" + (ready >= 0 ? " \u2014 " + ready + " ready for review" : "");
@@ -2471,9 +2483,10 @@ function abbrevTitle(t){ if(!t){ return t; } var m=[[/\bPrincipal\b/gi,"Prin."],
      the certified engine on the same records.
    · c.reqs target tags — manual / historical recruiter placements (never auto-removed).
    Every count below is the length of the exact candidate list it opens to. */
-var TB_RPO_ENGAGEMENT = { org: "elbit", label: "Elbit RPO Engagement — SBMC + Warfighter Engineering",
+var TB_RPO_ENGAGEMENT = { org: "elbit", label: "Elbit RPO Engagement — MTC + SBMC + Warfighter Engineering",
   members: { "Jonah Adelman": 1, "Amy Vella": 1 }, memberDomains: ["thestaffingspecialist.com"],
   programs: {
+    "MTC": { "1257": 1, "1289": 1, "1366": 1, "1367": 1, "1487": 1, "1488": 1, "1491": 1, "1492": 1, "1497": 1, "1501": 1, "1502": 1, "1503": 1, "1516": 1, "1524": 1, "1525": 1 }, /* PO 2026-07-22: MTC reqs join the book, grouped + labeled MTC */
     "SBMC": { "1263": 1, "1329": 1, "1508": 1, "1264": 1, "1267": 1, "1276": 1, "1277": 1, "1381": 1, "1509": 1 },
     "Warfighter Engineering (618)": { "1448": 1, "1321": 1, "1319": 1, "1311": 1, "1310": 1, "1309": 1 } } };
 var TB_PROGRAM_ORDER = ["MTC", "SBMC", "Warfighter Engineering (618)", "Warfighter Systems", "Electronic Systems", "Corporate Engineering", "CT Office", "Integrated Solutions", "SlingWorks", "HiArc"];
@@ -2942,7 +2955,7 @@ var BOARD = (function(){
   function tier(v, s){
     var base = TIERS[v] || TIERS.not;
     if (typeof s === "number" && isFinite(s)){ /* RC1 (PO 2026-07-21): labels follow the score band, not the verdict */
-      var lbl = s >= 90 ? "Excellent Match" : s >= 80 ? "Strong Match" : s >= 70 ? "Potential Match" : "Needs Review";
+      var lbl = s >= 90 ? "Excellent Match" : s >= 80 ? "Strong Match" : s >= 70 ? "Potential Match" : s >= 55 ? "Weak Match" : "Poor Match"; /* RC1.10: five bands per PO scoring rules */
       return { icon: base.icon, label: lbl };
     }
     return base;
@@ -2973,7 +2986,18 @@ var BOARD = (function(){
     var ito = score(/systems administrator|network engineer|help ?desk|iam analyst|identity (operations|governance)|security administration analyst/i, /active directory|\bldap\b|\bsso\b|\brbac\b|\bvpn\b|windows server/i);
     var rel = score(/reliability engineer/i, /\bdfr\b|\bhalt\b|\bhass\b|\bmtbf\b|reliasoft|weibull|\bfracas\b/i);
     var sch = score(/master (program |production )?scheduler|master planner|program schedul|production (planner|scheduler)|planning analyst|\bscheduler\b/i, /integrated master schedule|\bims\b|ms project|microsoft project|primavera|\bp6\b|critical path|schedule (risk|baseline|health|variance)/i);
-    var arr = [["SW",sw],["EE",ee],["SE",se],["MFG",mfg],["SC",sc],["MECH",mech],["PM",pm],["CONTRACTS",ktr],["CYBER",cy],["QA",qa],["TEST",te],["CM",cmf],["ITOPS",ito],["REL",rel],["SCHED",sch],["FIN",fin]]; /* P0.6A */
+    /* RC1.10: candidate-side detectors for every family in the requisition population */
+    var hr  = score(/human resources (generalist|manager|business partner|director)|hr (generalist|manager|business partner|director)|\bhrbp\b|people operations/i, /employee relations|onboarding|\bhris\b|benefits administration|performance management|workday|\bfmla\b/i);
+    var ta  = score(/\brecruiter\b|talent acquisition|talent advisor|sourcing specialist|executive search/i, /full.?cycle recruit|candidate pipeline|boolean search|applicant tracking|\bats\b|linkedin recruiter|req(uisition)? load/i);
+    var secf= score(/facility security officer|\bfso\b|\bafso\b|industrial security|personnel security (manager|specialist|officer)|security manager/i, /nispom|\bdcsa\b|\bdiss\b|\bnbis\b|clearance processing|insider threat|classified (information|material)|\bsci\b/i);
+    var mkt = score(/marketing (manager|specialist|lead|director|coordinator)|trade show|event (marketing|manager|coordinator|lead)|communications (manager|specialist)/i, /exhibit|booth|campaign|brand|sponsorship|social media|event logistics/i);
+    var bd  = score(/business development|capture manager|growth (officer|director)|\bbd\b (director|manager|lead)/i, /capture|pipeline|proposal|customer engagement|shipley|\bpwin\b/i);
+    var tec = score(/engineering technician|electronics technician|test technician|engineering technologist|avionics technician|maintenance technician|\btechnician\b/i, /soldering|ipc-?a-?610|j-?std|oscilloscope|multimeter|troubleshoot|bench (test|repair)|schematics?/i);
+    var mnt = score(/maintenance (mechanic|technician)|industrial maintenance|millwright|facilities technician|general maintenance/i, /preventive maintenance|hydraulic|pneumatic|\bhvac\b|\bplc\b|conveyor|pumps?/i);
+    var opt = score(/optical engineer|metrology engineer|photonics|vacuum engineer|laser engineer/i, /zemax|interferomet|\buhv\b|thin film|deposition|cleanroom|image intensif|opto.?mechanical/i);
+    var dat = score(/data analyst|data engineer|business intelligence analyst/i, /\bsql\b|power bi|tableau|\betl\b|data pipeline|dashboards?/i);
+    var ops = score(/operations analyst|business operations|operations manager/i, /process improvement|\bkpis?\b|standard operating|\bsops?\b|operational reporting/i);
+    var arr = [["SW",sw],["EE",ee],["SE",se],["MFG",mfg],["SC",sc],["MECH",mech],["PM",pm],["CONTRACTS",ktr],["CYBER",cy],["QA",qa],["TEST",te],["CM",cmf],["ITOPS",ito],["REL",rel],["SCHED",sch],["FIN",fin],["HR",hr],["TA",ta],["SEC",secf],["MKT",mkt],["BD",bd],["TECH",tec],["MAINT",mnt],["OPTICS",opt],["DATA",dat],["OPS",ops]]; /* P0.6A + RC1.10 */
     arr.sort(function(a,b){ return b[1]-a[1]; });
     if(arr[0][1]===0) return {primary:"UNK", set:[]};
     var top = arr[0][1];
@@ -3056,19 +3080,31 @@ var BOARD = (function(){
     return false;
   }
   function reqFnOne(t){
-    if(/financial analyst|finance|accountant|accounting|payroll|treasury|invoicing|billing|\bfp&a\b|controller/i.test(t)) return "FIN"; /* P0.6A: Req 1546 class defect */
-    if(/contracts?|counsel|legal/i.test(t)) return "CONTRACTS";
-    if(/cyber|security engineer|information security/i.test(t)) return "CYBER";
+    /* RC1.10: full-population taxonomy — order is most-specific first. */
+    if(/financial analyst|finance|accountant|accounting|payroll|treasury|invoicing|billing|\bfp&a\b|controller|proposal analyst|cost account/i.test(t)) return "FIN"; /* P0.6A: Req 1546 class defect */
+    if(/data analyst|data engineer|business intelligence/i.test(t)) return "DATA";
+    if(/business operations|operations analyst/i.test(t)) return "OPS";
+    if(/contracts?|counsel|legal|subcontract/i.test(t)) return "CONTRACTS";
+    if(/cyber|security engineer|information security|cloud engineer|vulnerability management|\bgrc\b/i.test(t)) return "CYBER";
+    if(/facility security|\bafso\b|\bfso\b|personnel security|industrial security|security (officer|manager|specialist)/i.test(t)) return "SEC";
     if(/reliability/i.test(t)) return "REL";
     if(/quality/i.test(t)) return "QA";
     if(/test engineer|test & evaluation|test and evaluation/i.test(t)) return "TEST";
     if(/configuration/i.test(t)) return "CM";
     if(/schedul|\bplanner\b/i.test(t)) return "SCHED";
     if(/program manager|project manager|\bpmo\b/i.test(t)) return "PM";
-    if(/software|firmware/i.test(t)) return "SW";
+    if(/human resources|hr generalist|\bhrbp\b|people operations/i.test(t)) return "HR";
+    if(/talent advisor|talent acquisition|recruiter|recruiting/i.test(t)) return "TA";
+    if(/marketing|trade show|\bevents?\b|communications/i.test(t)) return "MKT";
+    if(/business development|capture manager|advanced concepts|growth officer/i.test(t)) return "BD";
+    if(/desktop support|help ?desk|information technology|enterprise applications|data integration|network engineer|systems administrator/i.test(t)) return "ITOPS";
+    if(/metrology|photonics|\buhv\b|ultra high vacuum|optical engineer|laser engineer|modeling engineer/i.test(t)) return "OPTICS";
+    if(/technician|technologist|field service/i.test(t)) return "TECH";
+    if(/maintenance mechanic|general maintenance|millwright|facilities (technician|mechanic)/i.test(t)) return "MAINT";
+    if(/software|firmware|algorithm|machine learning|\bai engineer\b|full stack|front end/i.test(t)) return "SW";
     if(/chief engineer/i.test(t)) return "SE";
     if(/systems? engineer|system architect/i.test(t)) return "SE";
-    if(/supply chain|procurement|sourcing|commodity|\bbuyer\b/i.test(t)) return "SC";
+    if(/supply chain|procurement|sourcing|commodity|\bbuyer\b|material program|trade compliance/i.test(t)) return "SC";
     if(/manufacturing|\bnpi\b|process engineer|production/i.test(t)) return "MFG";
     if(/electrical|electronic|hardware|\bee\b|dfx|dfm/i.test(t)) return "EE";
     if(/mechanical/i.test(t)) return "MECH";
@@ -3160,48 +3196,141 @@ var BOARD = (function(){
       return {req:req, score:5, verdict:"not", reasons:[(c.fn === "CONTRACTS" ? "contracts/legal" : "IT-operations") + " profile vs " + (rfn === "ANY" ? "technical" : rfn) + " req"]};
     }
     if(rfn === "CONTRACTS" && c.fnset.indexOf("CONTRACTS") < 0){ return {req:req, score:5, verdict:"not", reasons:["req needs contracts/legal background"]}; }
-    var ADJ = { REL:["QA"], QA:["REL","MFG"], TEST:["SE","EE","MFG"], CM:["SE","QA"], CYBER:["ITOPS","SW"], MFG:["MECH","QA"], PM:["SE","MFG"] };
-    var adjacentOnly = false;
-    if(rfn !== "ANY" && c.fnset.indexOf(rfn) < 0 && ADJ[rfn] && ADJ[rfn].some(function(a){ return c.fnset.indexOf(a) >= 0; })){
-      adjacentOnly = true;
+    /* ════ RC1.10 — PROFESSION-FIRST MATCHING HIERARCHY (PO directive, 2026-07-22) ════
+       Order of evaluation: 1) primary job function  2) location  3) relevant years
+       4) required skills/keywords. Secondary factors refine an already-good match;
+       they can never create one. Keywords refine; they never create. */
+    var ADJ = { REL:["QA"], QA:["REL","MFG"], TEST:["SE","EE","MFG","TECH"], CM:["SE","QA"], CYBER:["ITOPS","SW"], MFG:["MECH","QA"], PM:["SE","MFG","SCHED"], SCHED:["PM"], HR:["TA"], TA:["HR"], TECH:["MAINT","TEST","EE"], MAINT:["TECH"], OPTICS:["EE","MECH","MFG"], DATA:["FIN","OPS"], OPS:["FIN","DATA","SC"], FIN:["DATA","OPS"], SC:["OPS","CONTRACTS"], CONTRACTS:["SC"], MKT:["BD"], BD:["MKT"], SW:["CYBER"], EE:["TEST"], SE:["TEST"], MECH:["MFG"] };
+    var strengths=[], gaps=[], capMax=100;
+    function fin(sc, vd){
+      var rs = strengths.map(function(x){ return "\u2713 " + x; }).concat(gaps.map(function(x){ return "\u2022 " + x; }));
+      return {req:req, score:sc, verdict:vd, reasons:rs, strengths:strengths, gaps:gaps};
     }
-    var fnOK = (rfn==="ANY") || (c.fnset.indexOf(rfn)>=0) || adjacentOnly;
-    
-    if(!fnOK) return {req:req, score:8, verdict:"not", reasons:["discipline mismatch ("+c.fn+" vs "+rfn+")"]};
-    if(rfn === "ANY"){ s+=14; reasons.push("general requisition — no specialty extracted"); }
-    else if(rfn === c.fn){ s+=28; reasons.push("discipline match"); }
-    else { s+=20; reasons.push("secondary discipline match (primary: " + c.fn + ")"); } /* TF-BENCH: function first — a non-primary profession is credited, but never as fully as the person's actual career */
-    var ls=locScore(req.loc, c); s+=ls.s; reasons.push(ls.why);
-    if(d===0){s+=18;reasons.push("seniority on-level");}
-    else if(d===1||d===-1){s+=12;reasons.push(d>0?"slightly senior":"slightly junior");}
-    else if(d>=2){s+=8;reasons.push("over-leveled");}
-    else {s+=3;reasons.push("under-leveled");}
-    var sigHits=[];
-    SIGNALS.forEach(function(sig){ if(sig.re.test(c.txt)){ s+=sig.w; sigHits.push(sig.label); } });
-    if(sigHits.length) reasons.push("signals: "+sigHits.slice(0,5).join(", "));
-    /* TF-BENCH (2026-07-21): requisition-evidence scoring — distinct JD terms found in the
-       candidate's own text. Per-req, profession-neutral, and the honest path to 70+ for
-       functions whose vocabulary isn't in the defense SIGNALS list (finance, procurement, PM).
-       Runs only after the function gate; every cap below still clamps it. */
-    try{
-      var jdSrc = String(req.jd || "").toLowerCase();
-      if(jdSrc){
-        var jdTerms = jdSrc.split(/[^a-z0-9&+#-]+/).filter(function(w,i,a){ return w.length >= 4 && a.indexOf(w) === i; }).slice(0, 60);
-        var jdHits = 0;
-        for(var ji = 0; ji < jdTerms.length; ji++){ if(c.txt.indexOf(jdTerms[ji]) >= 0){ jdHits++; } }
-        var jdPts = jdHits >= 7 ? 15 : (jdHits >= 5 ? 12 : (jdHits >= 3 ? 8 : 0));
-        if(jdPts){ s += jdPts; reasons.push("JD evidence: " + jdHits + " terms"); }
+    /* ── 1. PRIMARY JOB FUNCTION — the dominant factor ── */
+    var profPts=0;
+    if(rfn === "ANY"){
+      profPts=18; strengths.push("general requisition — no specialty extracted");
+      capMax=Math.min(capMax,58); gaps.push("unclassified-req cap applied");
+    } else if(c.fn === rfn){
+      profPts=45; strengths.push("primary profession match: " + fnName(rfn));
+    } else if(c.fn === "UNK"){
+      profPts=12; capMax=Math.min(capMax,69);
+      gaps.push("primary profession could not be verified from the resume — manual review");
+    } else if(c.fnset.indexOf(rfn) >= 0){
+      profPts=26; capMax=Math.min(capMax,79);
+      strengths.push("secondary discipline match (primary: " + fnName(c.fn) + ")");
+      gaps.push("primary profession is " + fnName(c.fn) + ", not " + fnName(rfn) + " — recruiter review required");
+    } else if(ADJ[rfn] && ADJ[rfn].some(function(a){ return c.fnset.indexOf(a) >= 0; })){
+      profPts=14; capMax=Math.min(capMax,65);
+      gaps.push("adjacent discipline (" + fnName(c.fn) + " vs " + fnName(rfn) + ") — cross-functional move");
+    } else {
+      gaps.push("different profession (" + fnName(c.fn) + " vs " + fnName(rfn) + ") — do not recommend");
+      return fin(10, "not");
+    }
+    s += profPts;
+    /* ── 2. LOCATION — required second factor ── */
+    var ls=locScore(req.loc, c); s+=ls.s;
+    var reqRemote=/remote/i.test(String(req.loc||""));
+    if(ls.s >= 14){ strengths.push(ls.why); }
+    else if(ls.s >= 11){ strengths.push("open to relocation"); capMax=Math.min(capMax,87); }
+    else { gaps.push(reqRemote ? ls.why : ("not local — " + ls.why)); if(!reqRemote){ capMax=Math.min(capMax,79); } }
+    /* ── 3. RELEVANT experience — never total career length for out-of-function work ── */
+    var ry=tbReqYears(req, rlevel);
+    var cyx=tbRelevantYears(c, rfn);
+    var yPts;
+    if(!cyx.known){
+      yPts=8; gaps.push("relevant tenure unverified — confirm years of " + fnName(rfn==="ANY"?c.fn:rfn) + " experience on the resume");
+    } else if(ry <= 0){
+      yPts=12; strengths.push(cyx.y + " yrs relevant experience (entry-level requisition)");
+    } else {
+      var ratio = cyx.y / ry;
+      if(ratio >= 1){ yPts=15; strengths.push("~" + cyx.y + " yrs relevant experience (req asks " + ry + "+)"); }
+      else if(ratio >= 0.7){ yPts=11; strengths.push("~" + cyx.y + " yrs relevant vs " + ry + "+ required — close"); }
+      else if(ratio >= 0.45){ yPts=7; gaps.push("light on required experience (~" + cyx.y + " yrs vs " + ry + "+ required)"); }
+      else { yPts=3; gaps.push("significant experience gap (~" + cyx.y + " yrs vs " + ry + "+ required)"); }
+    }
+    s += yPts;
+    /* seniority alignment (small refiner — hard filters already blocked absurd gaps) */
+    if(d===0){ s+=6; strengths.push("seniority on-level"); }
+    else if(d===1||d===-1){ s+=4; strengths.push(d>0?"slightly senior":"slightly junior"); }
+    else if(d>=2){ s+=2; capMax=Math.min(capMax,84); gaps.push("over-leveled for this requisition"); }
+    else { capMax=Math.min(capMax,74); gaps.push("under-leveled for this requisition"); }
+    /* ── 4. REQUIRED SKILLS / KEYWORDS — refine, never create ── */
+    var skPts=0;
+    var jdSrc=String(req.jd||"").toLowerCase();
+    if(jdSrc.length >= 200){
+      var STOPW={"with":1,"that":1,"this":1,"from":1,"will":1,"have":1,"your":1,"their":1,"work":1,"team":1,"years":1,"ability":1,"experience":1,"required":1,"preferred":1,"including":1,"other":1,"must":1,"strong":1,"skills":1,"knowledge":1,"requirements":1,"responsibilities":1,"position":1,"candidate":1,"should":1,"within":1,"using":1,"across":1,"related":1,"such":1,"more":1,"than":1,"they":1,"them":1,"were":1,"been":1,"also":1,"able":1,"well":1,"each":1,"perform":1,"performs":1,"duties":1,"role":1,"job":1,"description":1,"equal":1,"opportunity":1,"employer":1,"status":1,"employment":1,"applicants":1,"qualified":1};
+      var jdTerms=jdSrc.split(/[^a-z0-9&+#-]+/).filter(function(w,i,a){ return w.length>=4 && !STOPW[w] && a.indexOf(w)===i; }).slice(0,80);
+      var hitsL=[], missL=[];
+      for(var ji=0;ji<jdTerms.length;ji++){
+        if(c.txt.indexOf(jdTerms[ji])>=0){ hitsL.push(jdTerms[ji]); }
+        else if(jdTerms[ji].length>=6 && missL.length<8){ missL.push(jdTerms[ji]); }
       }
-    }catch(eJD){}
-    if(c.domain==="off"){ s=Math.min(s,33); reasons.push("off-domain cap"); }
-    else if(c.domain==="thin"){ var tc=(LEVELORD[c.level]>=4)?68:55; s=Math.min(s,tc); reasons.push("thin-domain cap"); }
-    if(c.junior){ s=Math.min(s, want>=3?40:50); reasons.push("junior cap"); }
-    if(rfn === "ANY"){ s=Math.min(s, 58); reasons.push("unclassified-req cap"); }
-    if(s<0)s=0; if(s>100)s=100;
-    if(adjacentOnly){ if(s > 58) s = 58; reasons.push("adjacent discipline (" + c.fn + " vs " + rfn + ")"); }
-    if(rfn === "CONTRACTS" && c.fnset.indexOf("CONTRACTS") >= 0 && s < 45){ s = 45; reasons.push("specialist in-lane floor"); }
-    var verdict = s>=72?"strong": s>=52?"moderate": s>=38?"stretch":"not";
-    return {req:req, score:s, verdict:verdict, reasons:reasons};
+      var nH=hitsL.length;
+      skPts = nH>=10?20 : nH>=7?16 : nH>=5?12 : nH>=3?7 : nH>=1?3 : 0;
+      if(nH>=3){ strengths.push("JD skills evidence: " + hitsL.slice(0,4).join(", ") + (nH>4 ? " +" + (nH-4) + " more" : "")); }
+      else { gaps.push("few JD skill terms found in the resume (" + nH + ")"); }
+      if(missL.length){ gaps.push("not evidenced: " + missL.slice(0,3).join(", ")); }
+    } else {
+      var sigHits=[];
+      SIGNALS.forEach(function(sig){ if(sig.re.test(c.txt)){ sigHits.push(sig.label); } });
+      skPts = Math.min(10, sigHits.length*2);
+      if(sigHits.length){ strengths.push("domain signals: " + sigHits.slice(0,4).join(", ")); }
+      gaps.push("no JD on file — skills scored from domain signals only");
+    }
+    s += skPts;
+    /* ── SECONDARY factors — improve an already-good match only ── */
+    if(Math.min(s,capMax) >= 70){
+      var reqTxt=(String(req.title||"") + " " + jdSrc).toLowerCase();
+      if(/clearance|\bsecret\b|ts\/sci/.test(reqTxt) && /clearance|\bsecret\b|ts\/sci/i.test(c.txt)){ s+=3; strengths.push("security clearance evidence"); }
+      if(/(bachelor|\bb\.?s\.?\b|master|\bm\.?s\.?\b|ph\.?d|degree)/i.test(c.txt)){ s+=1; }
+      if(want>=4 && /managed|direct reports|people manager|engineering manager/i.test(c.txt)){ s+=2; strengths.push("leadership record for a leadership requisition"); }
+    }
+    /* ── caps (certified behavior preserved) ── */
+    if(c.domain==="off"){ capMax=Math.min(capMax,33); gaps.push("off-domain cap applied"); }
+    else if(c.domain==="thin"){ var tc=(LEVELORD[c.level]>=4)?68:55; capMax=Math.min(capMax,tc); gaps.push("thin-domain cap applied"); }
+    if(c.junior){ capMax=Math.min(capMax, want>=3?40:50); gaps.push("junior cap applied"); }
+    s=Math.max(0, Math.min(100, Math.min(s, capMax)));
+    if(rfn === "CONTRACTS" && c.fnset.indexOf("CONTRACTS") >= 0 && s < 45){ s=45; strengths.push("specialist in-lane floor"); }
+    /* ── Excellent floor: 90+ is reserved for profession + location + experience + skills all verified ── */
+    if(s >= 90 && !(c.fn === rfn && ls.s >= 14 && yPts >= 11 && skPts >= 12)){
+      s = 89;
+      gaps.push("held below Excellent — profession, location, experience and skills must all be verified for a 90+ score");
+    }
+    var verdict = s>=90 ? "strong" : s>=70 ? "moderate" : s>=55 ? "stretch" : "not";
+    return fin(s, verdict);
+  }
+  /* RC1.10 helpers — profession names, relevant-years extraction, required years */
+  var FN_NAMES = {SW:"Software", EE:"Electrical Engineering", SE:"Systems Engineering", MFG:"Manufacturing", SC:"Supply Chain", MECH:"Mechanical Engineering", PM:"Program Management", CONTRACTS:"Contracts", CYBER:"Cyber/Information Security", QA:"Quality", TEST:"Test Engineering", CM:"Configuration Management", ITOPS:"IT Operations", REL:"Reliability Engineering", SCHED:"Planning/Scheduling", FIN:"Finance", HR:"Human Resources", TA:"Recruiting/Talent Acquisition", SEC:"Industrial Security", MKT:"Marketing/Events", BD:"Business Development", TECH:"Engineering Technician", MAINT:"Industrial Maintenance", OPTICS:"Optics/Photonics", DATA:"Data Analytics", OPS:"Business Operations", UNK:"Unclassified", ANY:"General"};
+  function fnName(k){ return FN_NAMES[k] || k; }
+  function tbCareerYears(txt){
+    var best=0, m;
+    var claims=txt.match(/(\d{1,2})\s*\+?\s*years/gi)||[];
+    for(var i=0;i<claims.length;i++){ var nY=parseInt(claims[i],10); if(nY>best && nY<=45){ best=nY; } }
+    var re=/(19|20)(\d{2})\s*(?:[-\u2013\u2014]|to)\s*(?:(19|20)(\d{2})|present|current|now|today)/gi;
+    var minS=9999, maxE=0, nowY=new Date().getFullYear();
+    while((m=re.exec(txt))){
+      var a=parseInt(m[1]+m[2],10);
+      var b=m[3] ? parseInt(m[3]+m[4],10) : nowY;
+      if(a>=1980 && a<=nowY && b>=a && b<=nowY+1){ if(a<minS){minS=a;} if(b>maxE){maxE=b;} }
+    }
+    var span=(maxE>minS)?(maxE-minS):0; if(span>45){span=45;}
+    var y=Math.max(best,span);
+    return {y:y, known:y>0};
+  }
+  function tbRelevantYears(c, rfn){
+    /* Primary profession = their career IS the function. Secondary/adjacent = only a
+       fraction of the career is in-function; never credit the full number. */
+    if(rfn==="ANY" || c.fn===rfn){ return tbCareerYears(c.txt); }
+    var base=tbCareerYears(c.txt);
+    if(!base.known){ return base; }
+    return {y:Math.round(base.y*0.4), known:true};
+  }
+  function tbReqYears(req, rlevel){
+    var m=String(req.jd||"").match(/(\d{1,2})\s*\+?\s*(?:or more\s+)?years/i);
+    if(m){ var nR=parseInt(m[1],10); if(nR>=1 && nR<=25){ return nR; } }
+    var DEF={intern:0, junior:1, mid:3, sr:7, principal:10, manager:8, director:12, vp:15};
+    return (DEF[rlevel]!=null)?DEF[rlevel]:3;
   }
   var _scoreCache = {};
   function clearScoreCache(){ _scoreCache = {}; }
@@ -3226,7 +3355,7 @@ var BOARD = (function(){
     return cssVar("--muted");
   }
   function render(host){
-    document.getElementById("viewMeta").textContent = "TalentFit: candidates are profiled (experience level + discipline), hard-filtered for compatibility, then ranked. A candidate appears only at \u{1F949} Possible Match or better.";
+    document.getElementById("viewMeta").textContent = "TalentFit: primary profession first, then location, then relevant experience, then required skills. Secondary factors refine a match — they never create one. A candidate appears here only at 70+ (Potential Match) or better.";
     if(!REQS || !REQS.length){
       var none=el("div","empty"); none.appendChild(el("div","big","No open reqs"));
       none.appendChild(el("div",null,"Add requisitions under Open Reqs and candidates will be scored against them here."));
@@ -3235,14 +3364,17 @@ var BOARD = (function(){
     var scored = (window.TB_ENTERPRISE_LIBRARY_V1 && window.XORG && window.XORG.loaded ? state.candidates.concat(window.XORG.recruitable ? window.XORG.recruitable() : window.XORG.cands) : state.candidates).filter(function(c){ return c.status!=="Archived"; }).map(scoreCandidate);
     var buckets={strong:[],moderate:[],stretch:[]}, off=0;
     scored.forEach(function(c){
-      var v=c.best.verdict;
-      if(v==="strong"||v==="moderate"||v==="stretch") buckets[v].push(c); else off++;
+      var sBest=(c.best && typeof c.best.score==="number") ? c.best.score : 0; /* RC1.10: columns bucket by score band */
+      if(sBest>=90){ buckets.strong.push(c); }
+      else if(sBest>=80){ buckets.moderate.push(c); }
+      else if(sBest>=70){ buckets.stretch.push(c); }
+      else { off++; }
     });
     ["strong","moderate","stretch"].forEach(function(b){
       buckets[b].sort(function(a,b2){ return b2.best.score-a.best.score; });
     });
     var grid=el("div"); grid.style.cssText="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start";
-    var cols=[["strong","\u{1F947} Excellent Match"],["moderate","\u{1F948} Strong Match"],["stretch","\u{1F949} Possible Match"]];
+    var cols=[["strong","\u{1F947} Excellent Match (90+)"],["moderate","\u{1F948} Strong Match (80-89)"],["stretch","\u{1F949} Potential Match (70-79)"]];
     cols.forEach(function(pair){
       var key=pair[0], list=buckets[key];
       var col=el("div"); col.style.cssText="background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;min-height:120px";
@@ -3277,7 +3409,7 @@ var BOARD = (function(){
       grid.appendChild(col);
     });
     host.appendChild(grid);
-    var foot=el("div",null,off+" candidate"+(off===1?"":"s")+" rated ⚪ Unlikely Match and not shown here (incompatible or unranked). They remain in the database under All Candidates.");
+    var foot=el("div",null,off+" candidate"+(off===1?"":"s")+" scored below 70 (Weak or Poor Match) and not shown here. They remain in the database under All Candidates.");
     foot.style.cssText="margin-top:16px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:12px";
     host.appendChild(foot);
   }
@@ -6193,8 +6325,13 @@ function openDetail(c){
         }catch(eMR){}
         if(!afTop.length){
           var afEmpty = el("div", "tfit-empty");
-          afEmpty.appendChild(el("div", "tfit-empty-t", "No matches yet"));
-          afEmpty.appendChild(el("div", "tfit-empty-s", "No moderate-or-better TalentFit matches against current reqs."));
+          /* RC1.10: Poor-band profiles use the SAME chip language as every other state —
+             the certified No Current Match presentation, never a fabricated match. */
+          var afChipN = el("span", "tfit-chip tfit-v-not");
+          afChipN.appendChild(el("i", "tfit-dot"));
+          afChipN.appendChild(document.createTextNode("⚪ No Current Match"));
+          afEmpty.appendChild(afChipN);
+          afEmpty.appendChild(el("div", "tfit-empty-s", "No requisition reaches Potential (70) or better for this profile — nothing is force-recommended."));
           afWrap.appendChild(afEmpty);
         } else {
           var best0 = afTop[0];
@@ -6944,7 +7081,15 @@ function routeIntakeOwner(c){
              c._routedReqTag = (best.req.title || "") + " – " + (best.req.loc || ""); /* LAUNCH item 9: persistent target-req tag */
              return o; }
     }
-    if(best && best.score < TB_ROUTING_MIN){ c._routeMiss = best.score; }
+    /* RC1.10 follow-through: verdicts now align to score bands (moderate starts at 70),
+       so a sub-70 "best" can no longer carry a qualified verdict. The near-miss
+       human-review note keys off the Weak band (55-69) of the overall best result —
+       same certified workflow, engine-truthful trigger. */
+    if(!c._routedReq){
+      var nearBest = (sc.results || []).filter(function(x){ return x.score >= 55 && x.score < TB_ROUTING_MIN; })
+        .sort(function(a2, b2){ return b2.score - a2.score; })[0];
+      if(nearBest){ c._routeMiss = nearBest.score; }
+    }
   }catch(eR){}
   return "";
 }
@@ -8790,6 +8935,33 @@ fillSelect(document.getElementById("fReq"), REQ_OPTIONS, "All Reqs");
 fillSelect(document.getElementById("fOwner"), OWNERS, "All Recruiters");
 fillSelect(document.getElementById("fPriority"), PRIORITY, "All Priorities");
 /* Location filter — controlled list from live candidate data, refreshed on load */
+function tbRefreshFilterOptions(){
+  /* LAUNCH BUG FIX (PO 2026-07-22): HiArc rendered the same Candidate Filters
+     component, but Department only ever filled inside the Elbit-only departments
+     layer, and the HM/Recruiter lists were static config snapshots. Every
+     workspace now derives options from ITS OWN live data (union with config so
+     no saved value orphans). Current selections survive the refill. */
+  try{
+    function refill(id, values, blank){
+      var sel = document.getElementById(id); if(!sel){ return; }
+      var cur = sel.value;
+      var seen = {}, out = [];
+      values.forEach(function(v){ v = String(v == null ? "" : v).trim(); if(v && !seen[v.toLowerCase()]){ seen[v.toLowerCase()] = 1; out.push(v); } });
+      fillSelect(sel, out, blank);
+      if(cur){ sel.value = cur; if(sel.value !== cur){ var op = el("option", null, cur); op.value = cur; sel.appendChild(op); sel.value = cur; } }
+    }
+    var reqsAll = (typeof REQS !== "undefined" && REQS) ? REQS : [];
+    if(!window.TB_PROGRAMS){
+      /* Non-Elbit workspaces: Department comes from the workspace's own requisition
+         department/program fields — dynamic, org-scoped by construction. */
+      var depts = reqsAll.map(function(r){ return (r.prog || r.dept || r.department || r.program || ""); });
+      (state.candidates || []).forEach(function(c){ if(c.dept){ depts.push(c.dept); } });
+      refill("fDept", depts.sort(), "All Departments");
+    }
+    refill("fHM", MANAGERS.map(function(m){ return m.name; }).concat(reqsAll.map(function(r){ return r.hm || ""; })), "All Hiring Managers");
+    refill("fOwner", OWNERS.concat((state.candidates || []).map(function(c){ return c.owner || ""; })), "All Recruiters");
+  }catch(eRF){}
+}
 function fillLocFilter(){
   try{
     var seen = {}; var locs = [];
