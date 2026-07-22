@@ -15,12 +15,12 @@
     --orange:#c2410c;--purple:#7c3aed;--gray:#676d86;--red:#dc2626;--green:#15803d;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:15px;line-height:1.5;zoom:1.08} /* RC1.15: 8% over original — inside the PO's 5–10% band */
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:15px;line-height:1.5} /* RC1.15.1: native scale — pixel-for-pixel with the Picture-A baseline */
   @media (max-width:900px){ body{zoom:1} } /* UI SCALE v3: enterprise scale is a desktop affordance — small screens keep native scale so responsive layouts are untouched */ /* UI SCALE v3 (PO 2026-07-22): whole app renders at 122% of the original baseline — enterprise density, one lever. Hero styles below are pre-divided so the approved hero keeps its absolute size. */
   h1,h2,h3{font-family:inherit;font-weight:700;margin:0}
   button{font-family:inherit;cursor:pointer}
   input,select,textarea{font-family:inherit;font-size:14px}
-  .wrap{max-width:1320px;margin:0 auto;padding:0 22px} /* RC1.15 (PO 2026-07-22): original geometry restored — the workstation is a capped, centered frame again; no full-bleed hero, no empty dark expanse on the right */
+  .wrap{max-width:1420px;margin:0 auto;padding:0 22px} /* RC1.15.1: Picture-A baseline restored verbatim */
   /* ── HEADER ── */
   header{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.05)}
   .topbar{display:flex;align-items:center;gap:10px;padding:10px 0;flex-wrap:wrap}
@@ -60,12 +60,12 @@
   .btn.danger:hover{border-color:var(--red);color:var(--red)}
   .btn.block{width:100%;padding:11px;font-size:14px;justify-content:center}
   /* ── LAYOUT ── */
-  .layout{display:grid;grid-template-columns:212px 1fr;gap:0;padding:12px 0 48px}
+  .layout{display:grid;grid-template-columns:230px 1fr;gap:0;padding:18px 0 60px}
   /* ── SIDEBAR ── */
   .side{position:sticky;top:53px;align-self:start;max-height:calc(100vh - 53px);overflow-y:auto;overflow-x:hidden;border-right:1px solid var(--line);background:var(--panel);padding:14px 0 32px} /* RC1.15: uppercase letter-spacing bleeds ~4px — never a horizontal scrollbar */
-  .side h3{font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gray);margin:14px 0 4px;font-family:inherit;font-weight:700;padding:0 14px}
+  .side h3{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:var(--gray);margin:20px 0 5px;font-family:inherit;font-weight:700;padding:0 16px}
   .side h3:first-child{margin-top:8px}
-  .vtab{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:transparent;border:0;color:var(--muted);padding:6px 14px;border-radius:0;font-size:12.5px;font-weight:500;transition:background .1s,color .1s;position:relative}
+  .vtab{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:transparent;border:0;color:var(--muted);padding:8px 16px;border-radius:0;font-size:13px;font-weight:500;transition:background .1s,color .1s;position:relative}
   .vtab:hover{background:var(--bg);color:var(--ink)}
   .vtab.active{background:var(--gold-dim);color:var(--gold);font-weight:700}
   .vtab.active::before{content:"";position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--gold);border-radius:0 3px 3px 0}
@@ -85,7 +85,7 @@
   .filterbox label:first-child{margin-top:0}
   select.fil{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
   /* ── MAIN ── */
-  .main{min-width:0;padding:14px 20px 48px;overflow-y:auto}
+  .main{min-width:0;padding:20px 24px 60px;overflow-y:auto}
   .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
   .toolbar .title{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.2px}
   .toolbar .meta{color:var(--muted);font-size:12px}
@@ -209,7 +209,7 @@
   /* App shell: wider container (less dead margin on big screens) + header content
      gutters that EXACTLY match the sidebar text (16px) and main content (24px),
      so the logo lines up with the nav and Sign Out lines up with the content. */
-  /* RC1.15: full-bleed override removed — the 1320px frame governs again */
+  .wrap{max-width:1600px} /* RC1.15.1: the original desktop frame — exactly as the approved Picture-A baseline */
   .topbar{padding-left:16px;padding-right:24px}
   .topbar .grow{flex:0 0 0;width:0;min-width:0}
   .topbar .search{flex:1 1 auto;max-width:560px;margin-right:auto}
@@ -1504,7 +1504,7 @@ function renderStartMyDay(host){
   var wsLine = el("div", null, (({manager:"Recruiting Manager Workstation",hm:"Hiring Manager Workstation",executive:"Executive Workstation",admin:"Administrator Workstation"})[wsKey] || "Recruiter Workstation") + "  \u2014  " + (WS_MOTTO[wsKey] || WS_MOTTO.recruiter));
   wsLine.style.cssText = "font-size:9.5px;font-weight:800;letter-spacing:2.1px;text-transform:uppercase;color:#9cc4f2;margin-bottom:6px";
   hc.appendChild(wsLine);
-  var h1 = el("div", null, tbGreeting()); h1.style.cssText = "font-size:clamp(26px,1.85vw,33px);font-weight:800;letter-spacing:-.4px;line-height:1.06"; /* HERO FINAL: 52-56px band */
+  var h1 = el("div", null, tbGreeting()); h1.style.cssText = "font-size:clamp(30px,2vw,38px);font-weight:800;letter-spacing:-.4px;line-height:1.06"; /* HERO FINAL: 52-56px band */
   hc.appendChild(h1);
   var sub = el("div", null, new Date().toLocaleDateString("en-US",{ weekday:"long", month:"long", day:"numeric" }) + "  \u00b7  " + tbClientDisplayName() + (window.TB_PROGRAM ? "  \u00b7  " + window.TB_PROGRAM : ""));
   sub.style.cssText = "font-size:clamp(10px,.66vw,11px);color:rgba(255,255,255,.72);margin-top:3px;font-weight:500";
@@ -1515,17 +1515,17 @@ function renderStartMyDay(host){
   mLabel.style.cssText = "font-size:9px;font-weight:800;letter-spacing:2.2px;text-transform:uppercase;color:#c8a96a;margin-bottom:4px";
   mWrap.appendChild(mLabel);
   var mission = el("div", null, tbMissionOfTheDay());
-  mission.style.cssText = "font-size:clamp(12.5px,.72vw,13px);line-height:1.45;color:#fff;font-weight:700;letter-spacing:-.1px;text-shadow:0 1px 8px rgba(0,0,0,.35)"; /* HERO FINAL: prominent, not dominant */
+  mission.style.cssText = "font-size:clamp(14px,.8vw,15px);line-height:1.45;color:#fff;font-weight:700;letter-spacing:-.1px;text-shadow:0 1px 8px rgba(0,0,0,.35)"; /* HERO FINAL: prominent, not dominant */
   mWrap.appendChild(mission);
   hc.appendChild(mWrap);
   var chips = el("div"); chips.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;align-items:center";
   function heroChip(n, label, view, tip){
     var b = el("button", null); b.type = "button"; b.title = tip;
-    b.style.cssText = "display:inline-flex;align-items:baseline;gap:6px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(6px);border-radius:999px;padding:5px 12px;color:#fff;font:inherit;cursor:pointer;transition:background .15s"; /* LAUNCH POLISH: ~13% taller */
+    b.style.cssText = "display:inline-flex;align-items:baseline;gap:7px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(6px);border-radius:999px;padding:7px 14px;color:#fff;font:inherit;cursor:pointer;transition:background .15s"; /* LAUNCH POLISH: ~13% taller */
     b.addEventListener("mouseenter", function(){ b.style.background = "rgba(255,255,255,.20)"; b.style.borderColor = "rgba(255,255,255,.5)"; b.style.transform = "translateY(-1px)"; });
     b.addEventListener("mouseleave", function(){ b.style.background = "rgba(255,255,255,.10)"; b.style.borderColor = "rgba(255,255,255,.22)"; b.style.transform = ""; });
-    var nn = el("b", null, String(n)); nn.style.cssText = "font-size:14.5px;font-weight:800";
-    b.appendChild(nn); b.appendChild(el("span", null, label)).style.cssText = "font-size:11px;font-weight:600;color:rgba(255,255,255,.85)";
+    var nn = el("b", null, String(n)); nn.style.cssText = "font-size:16px;font-weight:800";
+    b.appendChild(nn); b.appendChild(el("span", null, label)).style.cssText = "font-size:12px;font-weight:600;color:rgba(255,255,255,.85)";
     b.addEventListener("click", function(){ ui.view = view; refresh(); });
     chips.appendChild(b);
   }
@@ -1539,7 +1539,7 @@ function renderStartMyDay(host){
     tbWarmScores(function(){ try{ if(_chipRef && _chipRef.isConnected){ var _n = tbCountReady(); _chipRef.textContent = String(_n); if(pulse && pulse.isConnected){ pulse.textContent = tbPulseText(_n); } } }catch(eC){} });
   }
   var cta = el("button", null, "Start My Day"); cta.type = "button";
-  cta.style.cssText = "margin-left:auto;align-self:center;background:var(--gold);border:0;border-radius:8px;color:#fff;font:inherit;font-size:11.5px;font-weight:700;padding:8px 20px;min-height:34px;cursor:pointer;box-shadow:0 3px 12px rgba(59,91,255,.35);transition:transform .14s,opacity .14s"; /* HERO FINAL: sits level with the KPI chips */
+  cta.style.cssText = "margin-left:auto;align-self:center;background:var(--gold);border:0;border-radius:9px;color:#fff;font:inherit;font-size:12.5px;font-weight:700;padding:10px 24px;min-height:40px;cursor:pointer;box-shadow:0 3px 12px rgba(59,91,255,.35);transition:transform .14s,opacity .14s"; /* HERO FINAL: sits level with the KPI chips */
   cta.addEventListener("mouseenter", function(){ cta.style.transform = "translateY(-1px)"; cta.style.opacity = ".92"; });
   cta.addEventListener("mouseleave", function(){ cta.style.transform = ""; cta.style.opacity = "1"; });
   cta.addEventListener("click", function(){ var p = document.getElementById("tbPrio"); if(p){ p.scrollIntoView({ behavior: "smooth", block: "start" }); } });
@@ -1552,7 +1552,7 @@ function renderStartMyDay(host){
      ONE line only — the hero stays clean; luxury is whitespace. ── */
   var activeN = cands.filter(function(c){ return c.status !== "Archived" && c.status !== "Offer Accepted - Hired"; }).length;
   var openReqN = 0; try{ openReqN = (window.TB_METRICS ? TB_METRICS.canonicalReqEntries(REQS).map(function(e){ return e.req; }) : REQS).filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : !r.bench; }).length; }catch(ePl){}
-  var pulse = el("div"); pulse.style.cssText = "font-size:10px;color:var(--muted);margin:-2px 0 8px;padding:0 4px"; /* LAUNCH POLISH v2: widgets ride ~12px higher */
+  var pulse = el("div"); pulse.style.cssText = "font-size:11.5px;color:var(--muted);margin:-2px 0 10px;padding:0 4px"; /* LAUNCH POLISH v2: widgets ride ~12px higher */
   function tbPulseText(ready){
     var recN = 0; try{ recN = (typeof tbRecsForMe === "function") ? tbRecsForMe().length : 0; }catch(eR2){}
     var base = "\ud83e\udde0 TalentFit analyzed " + activeN + " candidates against " + openReqN + " open requisitions" + (ready >= 0 ? " \u2014 " + ready + " ready for review" : "");
