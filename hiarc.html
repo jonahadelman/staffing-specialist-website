@@ -1264,7 +1264,8 @@ window.addEventListener("scroll", function(){ if(TB_INFOTIP && !TB_INFOTIP_PINNE
 var TB_INFOTIP_COPY = {
   reqs: "Jobs actively managed by The Staffing Specialist from intake through hire.",
   talentbench: "Jobs that begin with TalentBench's qualified candidate pipeline before external recruiting is required.",
-  board: "TalentFit\u2122 automatically ranks candidates based on role alignment, experience, skills, and hiring priorities to help recruiters focus on the strongest matches first."
+  board: "TalentFit\u2122 automatically ranks candidates based on role alignment, experience, skills, and hiring priorities to help recruiters focus on the strongest matches first.",
+  autoslate: "AutoSlate\u2122 automates the operational work of recruiting by organizing candidate activity, preparing submissions, updating workflows, generating follow-up tasks, and ensuring every candidate continues moving through the hiring process\u2014so recruiters spend less time managing administration and more time hiring exceptional talent."
 };
 
 function renderTabs(){
@@ -1309,7 +1310,7 @@ function renderTabs(){
     var b = el("button","vtab" + (v.id===ui.view ? " active" : "") + (fu ? " fu-" + fu : ""));
     b.appendChild(el("span", null, v.name));
     /* RC2.0.1 navigation copy release: accessible info tooltips beside renamed nav items — display only */
-    if(v.id === "reqs" || v.id === "talentbench" || v.id === "board"){
+    if(v.id === "reqs" || v.id === "talentbench" || v.id === "board" || v.id === "autoslate"){
       b.appendChild(tbInfoIcon(TB_INFOTIP_COPY[v.id], 11));
     }
     if(count !== "" && count !== null){
@@ -3619,6 +3620,10 @@ function slateDispoSet(candId, reqId, d){
 function slateDispoClear(){ try{ localStorage.removeItem(SLATE_DISPO_KEY()); }catch(e){} }
 function renderAutoSlate(host){
   document.getElementById("viewTitle").textContent = "AutoSlate™ — Ranked Hiring Manager Slates";
+  (function(){ /* RC2.0.2: AutoSlate header info icon — display only */
+    var _i = tbInfoIcon(TB_INFOTIP_COPY.autoslate, 12); _i.style.verticalAlign = "middle";
+    document.getElementById("viewTitle").appendChild(_i);
+  })();
   host.innerHTML = "";
   var DISPO = slateDispoAll();
   /* refresh line: slates are recomputed from live data on every visit */
