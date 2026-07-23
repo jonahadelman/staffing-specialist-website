@@ -1216,6 +1216,57 @@ function fuState(){
   state.candidates.forEach(function(c){ var fr = followUp(c); if(fr.label !== ""){ any = true; if(fr.label === "Overdue"){ overdue = true; } } });
   return overdue ? "red" : (any ? "amber" : "");
 }
+
+/* ── RC2.0.1 accessible info tooltips (defect fix): hover + focus + click/tap open, outside/Escape close,
+      single instance, fixed-position (zero layout shift), no navigation. Display layer only. ── */
+var TB_INFOTIP = null, TB_INFOTIP_ANCHOR = null, TB_INFOTIP_PINNED = false;
+function tbTipHide(){ if(TB_INFOTIP){ try{ TB_INFOTIP.parentNode.removeChild(TB_INFOTIP); }catch(eTH){} } if(TB_INFOTIP_ANCHOR){ try{ TB_INFOTIP_ANCHOR.removeAttribute("aria-describedby"); }catch(eTA){} } TB_INFOTIP = null; TB_INFOTIP_ANCHOR = null; TB_INFOTIP_PINNED = false; }
+function tbTipShow(anchor, text, pinned){
+  tbTipHide();
+  var tip = document.createElement("div");
+  tip.className = "tb-infotip"; tip.id = "tbInfoTip"; tip.setAttribute("role", "tooltip");
+  tip.textContent = text;
+  tip.style.cssText = "position:fixed;z-index:1300;max-width:290px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.45;color:var(--ink);box-shadow:0 6px 22px rgba(0,0,0,.13);";
+  document.body.appendChild(tip);
+  var r = anchor.getBoundingClientRect();
+  var top = r.bottom + 6;
+  var left = Math.max(8, Math.min(r.left, window.innerWidth - tip.offsetWidth - 12));
+  if(top + tip.offsetHeight > window.innerHeight - 8){ top = Math.max(8, r.top - tip.offsetHeight - 6); }
+  tip.style.top = top + "px"; tip.style.left = left + "px";
+  TB_INFOTIP = tip; TB_INFOTIP_ANCHOR = anchor; TB_INFOTIP_PINNED = !!pinned;
+  try{ anchor.setAttribute("aria-describedby", "tbInfoTip"); }catch(eTS){}
+}
+function tbInfoIcon(text, fontSize){
+  var s = document.createElement("span");
+  s.className = "tb-infoicon"; s.textContent = "\u24D8";
+  s.setAttribute("role", "button"); s.setAttribute("tabindex", "0"); s.setAttribute("aria-label", "More information");
+  s.style.cssText = "margin-left:6px;opacity:.45;cursor:help;font-size:" + (fontSize || 11) + "px;display:inline-block;";
+  s.addEventListener("mouseenter", function(){ if(!TB_INFOTIP_PINNED){ tbTipShow(s, text, false); } });
+  s.addEventListener("mouseleave", function(){ if(!TB_INFOTIP_PINNED){ tbTipHide(); } });
+  s.addEventListener("focus", function(){ if(!TB_INFOTIP_PINNED){ tbTipShow(s, text, false); } });
+  s.addEventListener("blur", function(){ if(!TB_INFOTIP_PINNED){ tbTipHide(); } });
+  s.addEventListener("pointerdown", function(ev){ ev.stopPropagation(); }); /* nav fires on pointerdown (tbNavHandle) — contain it */
+  s.addEventListener("mousedown", function(ev){ ev.stopPropagation(); });
+  s.addEventListener("touchstart", function(ev){ ev.stopPropagation(); }, { passive: true });
+  s.addEventListener("click", function(ev){
+    ev.preventDefault(); ev.stopPropagation(); /* icon click must never reach the nav button */
+    if(TB_INFOTIP && TB_INFOTIP_ANCHOR === s && TB_INFOTIP_PINNED){ tbTipHide(); } else { tbTipShow(s, text, true); }
+  });
+  s.addEventListener("keydown", function(ev){
+    if(ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); ev.stopPropagation();
+      if(TB_INFOTIP && TB_INFOTIP_ANCHOR === s && TB_INFOTIP_PINNED){ tbTipHide(); } else { tbTipShow(s, text, true); } }
+  });
+  return s;
+}
+document.addEventListener("click", function(e){ if(TB_INFOTIP && !(e.target.closest && e.target.closest(".tb-infoicon"))){ tbTipHide(); } }, true);
+document.addEventListener("keydown", function(e){ if(e.key === "Escape" && TB_INFOTIP){ tbTipHide(); } });
+window.addEventListener("scroll", function(){ if(TB_INFOTIP && !TB_INFOTIP_PINNED){ tbTipHide(); } }, true);
+var TB_INFOTIP_COPY = {
+  reqs: "Jobs actively managed by The Staffing Specialist from intake through hire.",
+  talentbench: "Jobs that begin with TalentBench's qualified candidate pipeline before external recruiting is required.",
+  board: "TalentFit\u2122 automatically ranks candidates based on role alignment, experience, skills, and hiring priorities to help recruiters focus on the strongest matches first."
+};
+
 function renderTabs(){
   var box = document.getElementById("tabs"); box.innerHTML = "";
   var actSec = (activeView()||{}).section || "";
@@ -1257,14 +1308,9 @@ function renderTabs(){
     var fu = (v.id === "followup") ? fuState() : "";
     var b = el("button","vtab" + (v.id===ui.view ? " active" : "") + (fu ? " fu-" + fu : ""));
     b.appendChild(el("span", null, v.name));
-    /* RC2.0 navigation copy release: info tooltips beside renamed nav items — display only, no behavior change */
+    /* RC2.0.1 navigation copy release: accessible info tooltips beside renamed nav items — display only */
     if(v.id === "reqs" || v.id === "talentbench" || v.id === "board"){
-      var nfo = el("span", null, "\u24D8");
-      nfo.style.cssText = "margin-left:6px;opacity:.45;cursor:help;font-size:11px;";
-      nfo.title = (v.id === "reqs") ? "Jobs actively managed by The Staffing Specialist from intake through hire."
-                : (v.id === "talentbench") ? "Jobs that begin with TalentBench's qualified candidate pipeline before external recruiting is required."
-                : "TalentFit\u2122 automatically ranks candidates based on role alignment, experience, skills, and hiring priorities to help recruiters focus on the strongest matches first.";
-      b.appendChild(nfo);
+      b.appendChild(tbInfoIcon(TB_INFOTIP_COPY[v.id], 11));
     }
     if(count !== "" && count !== null){
       var cb = el("span","count", String(count));
@@ -1292,16 +1338,12 @@ function fillSelect(sel, opts, blank){ sel.innerHTML = ""; var o0 = el("option",
 /* ---------- list ---------- */
 function renderList(){
   document.getElementById("viewTitle").textContent = String(activeView().name || "").replace(/^[^A-Za-z0-9]+\s*/, "");
-  (function(){ /* RC2.0 navigation copy release: info icon beside renamed page headers — display only */
+  (function(){ /* RC2.0.1 navigation copy release: accessible info icon beside renamed page headers — display only */
     var _av = activeView() || {};
     if(_av.special === "reqs" || _av.special === "talentbench" || _av.special === "board"){
-      var _vt = document.getElementById("viewTitle");
-      var _i = el("span", null, "\u24D8");
-      _i.style.cssText = "margin-left:6px;opacity:.45;cursor:help;font-size:12px;vertical-align:middle;";
-      _i.title = (_av.special === "reqs") ? "Jobs actively managed by The Staffing Specialist from intake through hire."
-               : (_av.special === "talentbench") ? "Jobs that begin with TalentBench's qualified candidate pipeline before external recruiting is required."
-               : "TalentFit\u2122 automatically ranks candidates based on role alignment, experience, skills, and hiring priorities to help recruiters focus on the strongest matches first.";
-      _vt.appendChild(_i);
+      var _i = tbInfoIcon(TB_INFOTIP_COPY[_av.special], 12);
+      _i.style.verticalAlign = "middle";
+      document.getElementById("viewTitle").appendChild(_i);
     }
   })();
   document.getElementById("viewMeta").textContent = ""; /* each view sets its own meta — never inherit the last view's */
