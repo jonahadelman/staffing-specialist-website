@@ -1026,8 +1026,8 @@ var VIEWS = [
   { id:"tb_mynotes", hidden:true, name:"My Notes", fn:function(){ return true; }, special:"tb_mynotes" },
   { id:"tb_teamnotes", hidden:true, name:"Team Notes", fn:function(){ return true; }, special:"tb_teamnotes" },
   { id:"tb_focus", hidden:true, name:"Today's Focus", fn:function(){ return true; }, special:"tb_focus" },
-  { id:"reqs", collapsible:true, name:"Open Requisitions", fn:function(){ return true; }, special:"reqs", section:"Open Requisitions" },
-  { id:"talentbench", collapsible:true, name:"TalentBench", fn:function(){ return true; }, special:"talentbench", section:"Open Requisitions" },
+  { id:"reqs", collapsible:true, name:"TSS RPO Jobs", fn:function(){ return true; }, special:"reqs", section:"Open Requisitions" },
+  { id:"talentbench", collapsible:true, name:"TalentBench Jobs", fn:function(){ return true; }, special:"talentbench", section:"Open Requisitions" },
   { id:"all", collapsible:true, name:"Candidate Library", fn:function(){ return true; }, section:"Candidates" },
   { id:"board", collapsible:true, name:"TalentFit", fn:function(){ return true; }, special:"board", section:"Candidates" },
   { id:"autoslate", collapsible:true, name:"AutoSlate", fn:function(){ return true; }, special:"autoslate", section:"Candidates" },
@@ -1257,6 +1257,15 @@ function renderTabs(){
     var fu = (v.id === "followup") ? fuState() : "";
     var b = el("button","vtab" + (v.id===ui.view ? " active" : "") + (fu ? " fu-" + fu : ""));
     b.appendChild(el("span", null, v.name));
+    /* RC2.0 navigation copy release: info tooltips beside renamed nav items — display only, no behavior change */
+    if(v.id === "reqs" || v.id === "talentbench" || v.id === "board"){
+      var nfo = el("span", null, "\u24D8");
+      nfo.style.cssText = "margin-left:6px;opacity:.45;cursor:help;font-size:11px;";
+      nfo.title = (v.id === "reqs") ? "Jobs actively managed by The Staffing Specialist from intake through hire."
+                : (v.id === "talentbench") ? "Jobs that begin with TalentBench's qualified candidate pipeline before external recruiting is required."
+                : "TalentFit\u2122 automatically ranks candidates based on role alignment, experience, skills, and hiring priorities to help recruiters focus on the strongest matches first.";
+      b.appendChild(nfo);
+    }
     if(count !== "" && count !== null){
       var cb = el("span","count", String(count));
       /* every badge explains itself (Monday-morning audit: no mystery numbers) */
@@ -1283,6 +1292,18 @@ function fillSelect(sel, opts, blank){ sel.innerHTML = ""; var o0 = el("option",
 /* ---------- list ---------- */
 function renderList(){
   document.getElementById("viewTitle").textContent = String(activeView().name || "").replace(/^[^A-Za-z0-9]+\s*/, "");
+  (function(){ /* RC2.0 navigation copy release: info icon beside renamed page headers — display only */
+    var _av = activeView() || {};
+    if(_av.special === "reqs" || _av.special === "talentbench" || _av.special === "board"){
+      var _vt = document.getElementById("viewTitle");
+      var _i = el("span", null, "\u24D8");
+      _i.style.cssText = "margin-left:6px;opacity:.45;cursor:help;font-size:12px;vertical-align:middle;";
+      _i.title = (_av.special === "reqs") ? "Jobs actively managed by The Staffing Specialist from intake through hire."
+               : (_av.special === "talentbench") ? "Jobs that begin with TalentBench's qualified candidate pipeline before external recruiting is required."
+               : "TalentFit\u2122 automatically ranks candidates based on role alignment, experience, skills, and hiring priorities to help recruiters focus on the strongest matches first.";
+      _vt.appendChild(_i);
+    }
+  })();
   document.getElementById("viewMeta").textContent = ""; /* each view sets its own meta — never inherit the last view's */
   var host = document.getElementById("list"); host.innerHTML = "";
   var v = activeView();
@@ -4028,7 +4049,7 @@ function renderGuide(host){
 
   var hBtns=d("display:flex;gap:10px;flex-wrap:wrap;");
   if(!VIEW_ONLY){ hBtns.appendChild(btn("+ New Candidate","all",true,false)); }
-  hBtns.appendChild(btn("Open Requisitions","reqs",VIEW_ONLY,false));
+  hBtns.appendChild(btn("TSS RPO Jobs","reqs",VIEW_ONLY,false));
   hL.appendChild(hBtns);
 
   /* right illustration */
@@ -4185,9 +4206,9 @@ function renderGuide(host){
   }
 
   [
-    [["M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"],"Manage Requisitions","Manage active requisitions, priorities, and hiring manager alignment.","Open Requisitions","reqs",false],
+    [["M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"],"Manage Requisitions","Manage active requisitions, priorities, and hiring manager alignment.","TSS RPO Jobs","reqs",false],
     [["M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"],"Candidate Pipeline","Manage every candidate from first contact through hire.","Open Candidates","all",false],
-    [isHiarc?["M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"]:["M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"],isHiarc?"Opportunity Hires":"TalentBench",isHiarc?"Review opportunity hire submissions and manage the sourcing pipeline.":"Review sourced candidates and track sourcing performance.",isHiarc?"Open Opportunities":"Open TalentBench Reqs",isHiarc?"opportunity":"talentbench",!isHiarc],
+    [isHiarc?["M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"]:["M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"],isHiarc?"Opportunity Hires":"TalentBench Jobs",isHiarc?"Review opportunity hire submissions and manage the sourcing pipeline.":"Review sourced candidates and track sourcing performance.",isHiarc?"Open Opportunities":"Open TalentBench Reqs",isHiarc?"opportunity":"talentbench",!isHiarc],
     [["M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"],"Interview Workflow","Track interview requests, scheduling, and candidate progress.","Open Interviews","interviewrequests",false],
     [["M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"],"Executive Dashboard","Monitor hiring activity, recruiter performance, and pipeline health.","Open Dashboard","dashboard",false],
     [["M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"],"Hiring Managers","Access manager profiles, contact info, and requisition ownership.","Open Managers","managers",false],
