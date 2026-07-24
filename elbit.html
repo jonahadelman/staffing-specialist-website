@@ -2738,8 +2738,16 @@ function tbReqHealth(qualified){
   if(qualified >= 1){ return { dot: "🟠", label: "1–4 qualified" }; }
   return { dot: "🔴", label: "0 qualified — needs sourcing" };
 }
+/* RC2.2 Integrity Release (UAT defect): the identity function lives in a later module,
+   so the bare reference below never resolved and "me" was always "" — the DB-ownership
+   clause of the book of business was dead code. Resolve through the exported handle. */
+function tbResolveMe(){
+  try{ if(typeof meOwnerName === "function"){ return meOwnerName() || ""; } }catch(e1){}
+  try{ if(typeof window !== "undefined" && typeof window.tbMeOwnerName === "function"){ return window.tbMeOwnerName() || ""; } }catch(e2){}
+  return "";
+}
 function tbMyReqSet(open){
-  var me = ""; try{ me = (typeof meOwnerName === "function" ? meOwnerName() : "") || ""; }catch(eMe){}
+  var me = tbResolveMe();
   var em = ""; try{ em = ((typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) || "").toLowerCase(); }catch(eEm){}
   var isRpo = !!TB_RPO_ENGAGEMENT.members[me] || TB_RPO_ENGAGEMENT.memberDomains.some(function(d){ return em.indexOf("@" + d) > 0; });
   var inEng = {};
@@ -2777,7 +2785,7 @@ function renderReqs(host){
   var totalAssigned = 0, totalQual = 0; scope.forEach(function(r){ totalAssigned += cov[r.id].total; totalQual += cov[r.id].qualified; });
   if(meta){ meta.textContent = (scopedToMe ? "Your book of business · " : "No personally assigned requisitions — showing all open · ") + scope.length + " open req" + (scope.length === 1 ? "" : "s") + " · " + totalQual + " TalentFit-qualified (70+) of " + totalAssigned + " attached · counts open to the exact records behind them"; }
   host.appendChild(bar);
-  if(scopedToMe && TB_RPO_ENGAGEMENT.members[(function(){ try{ return meOwnerName(); }catch(e){ return ""; } })()]){
+  if(scopedToMe && TB_RPO_ENGAGEMENT.members[tbResolveMe()]){
     var eng = el("div","hint", TB_RPO_ENGAGEMENT.label + " — " + scope.length + " requisitions kicked off to the RPO."); eng.style.marginBottom = "10px"; host.appendChild(eng);
   }
   var groups = {};
