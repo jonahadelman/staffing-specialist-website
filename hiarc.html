@@ -973,17 +973,24 @@ function tbNameLooksValid(n){
   var PART = /^(de|del|della|la|le|da|dos|das|van|von|der|den|di|al|bin|ibn|el|st\.?|mac|mc|te|ter|zu|y)$/i;
   var SUFF = /^(jr\.?|sr\.?|ii|iii|iv|v)$/i;
   var SECT = /^(summary|experience|education|skills|objective|profile|management|process|development|professional|references|projects|certifications|internal|resume|contact)$/i;
+  /* P0.3 (2026-07-24): employer lines are not people. Reproduced: "SOUTHWEST AIRLINES" and
+     "Ursa Technologies" imported as candidate names. Corporate suffixes never validate. */
+  var CORP = /^(airlines?|airways|technologies|solutions|systems|consulting|consultants|aerospace|industries|enterprises|dynamics|corp\.?|corporation|inc\.?|llc|ltd\.?|group|services|company|laboratories|labs|holdings|partners|international|motors)$/i;
   var VERB = /^(led|managed|developed|designed|delivered|created|built|implemented|responsible|oversaw|having)$/i;
   for (var i = 0; i < toks.length; i++){
     var t = toks[i].replace(/,/g, "");
     if (/^[("'][A-Za-z.'\-]{1,15}[)"']$/.test(t)) continue; /* RC1.1: parenthetical/quoted nicknames — William (Bill) Clark, Earl (EJ) Demaree */
-    if (SECT.test(t) || VERB.test(t)) return false;
+    if (SECT.test(t) || VERB.test(t) || CORP.test(t)) return false;
     if (/^[A-Z]\.?$/.test(t)) continue;
     if (SUFF.test(t) || PART.test(t)) continue;
     if (!/^[A-Z]/.test(t)) return false;
     if (t.length === 1) return false;
     if (t.length > 2 && /\.$/.test(t)) return false;
   }
+  /* P0.3: a name must contain at least one real word — bare initials ("E A") are not a person */
+  var real = 0;
+  for (var j = 0; j < toks.length; j++){ if (toks[j].replace(/[,.]/g, "").length >= 2) real++; }
+  if (!real) return false;
   return true;
 }
 /* RC1.1 — identity precedence step 3: derive a name from the email local part when the
@@ -7121,6 +7128,20 @@ function grabName(text, filename){
   };
   var head = _glyphFix((text || "").replace(/\r/g, "")).split("\n").slice(0, 8).join("\n");
   var lines = head.split(/\n|\s{2,}/).map(function(s){ return s.trim(); }).filter(Boolean);
+  /* P0.3 (2026-07-24): PDF headers often pad the name with wide spacing — "GLEN   GERBER,"
+     splits into single-word fragments and the real name never forms a candidate line, letting
+     an employer line win. Re-join runs of 1-word capitalized fragments into candidate lines,
+     tried FIRST, in order. */
+  var merged = [];
+  for(var mi = 0; mi < lines.length - 1 && mi < 6; mi++){
+    var w1 = lines[mi].replace(/,$/, ""), w2 = lines[mi + 1].replace(/,$/, "");
+    if(w1.length >= 2 && w2.length >= 2 && /^[A-Z][A-Za-z'.\-]*$/.test(w1) && /^[A-Z][A-Za-z'.\-]*$/.test(w2)){
+      var w3 = (mi + 2 < lines.length) ? lines[mi + 2].replace(/,$/, "") : "";
+      if(/^[A-Z][A-Za-z'.\-]*$/.test(w3)){ merged.push(w1 + " " + w2 + " " + w3); }
+      merged.push(w1 + " " + w2);
+    }
+  }
+  lines = merged.concat(lines);
   var bad = /resume|curriculum|vitae|\bcv\b|address|phone|e-?mail|linkedin|github|portfolio|profile|summary|objective|experience|education|http|www\.|@|\d/i;
   for(var i = 0; i < lines.length; i++){
     var ln = lines[i].replace(/[,|].*$/, "").trim();
@@ -7150,13 +7171,21 @@ function grabName(text, filename){
   else if(fw.length === 1){ res.first = fw[0]; } /* single token: the display guard renders Name Requires Review */
   return res;
 }
+/* P0.3: credentials and role words that PDF headers glue onto the city ("PMP  Northlake",
+   "Supervisor  Lake Worth") are stripped from the front of a location capture. */
+function tbCleanLocCapture(city){
+  var toks = String(city || "").trim().split(/\s+/);
+  var DROP = /^(PMP|MBA|MSc?|BSc?|BA|MA|PE|PhD|CSM|PgMP|PMI|CISSP|SPHR|CPA|EIT|CQE|CSSBB|LSSBB|Supervisor|Manager|Director|Lead|Engineer|Analyst|Specialist|Coordinator|Technician|Officer|President|Consultant)$/i;
+  while(toks.length > 1 && DROP.test(toks[0])){ toks.shift(); }
+  return toks.join(" ");
+}
 function grabLocation(text){
   var t = text || "";
   var m = t.match(/([A-Z][A-Za-z.\-]+(?:\s+[A-Z][A-Za-z.\-]+){0,2}),\s*([A-Z]{2})(?:\s+\d{5}(?:-\d{4})?)?\b/);
-  if(m){ return m[1].trim() + ", " + m[2]; }
+  if(m){ return tbCleanLocCapture(m[1]) + ", " + m[2]; }
   var states = "Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New Hampshire|New Jersey|New Mexico|New York|North Carolina|North Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode Island|South Carolina|South Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West Virginia|Wisconsin|Wyoming";
   var m2 = t.match(new RegExp("([A-Z][A-Za-z.\\-]+(?:\\s+[A-Z][A-Za-z.\\-]+){0,2}),\\s*(" + states + ")\\b"));
-  if(m2){ return m2[1].trim() + ", " + m2[2]; }
+  if(m2){ return tbCleanLocCapture(m2[1]) + ", " + m2[2]; }
   var m3 = t.match(/\b(Dallas[\s\/\-]+Fort Worth|DFW(?:\s+Metroplex)?|Greater\s+[A-Z][A-Za-z.\-]+(?:\s+[A-Z][A-Za-z.\-]+)?\s+Area|[A-Z][A-Za-z.\-]+(?:\s+[A-Z][A-Za-z.\-]+)?\s+Metro(?:plex)?(?:\s+Area)?)\b/);
   if(m3){ return m3[1].replace(/\s+/g, " ").trim(); }
   return "";
@@ -7164,6 +7193,8 @@ function grabLocation(text){
 
 /* Best-effort current title: first plausible job-title line near the top. */
 function grabTitle(text){
+  /* P0.3: the current role's title from the employment section outranks a generic line scan */
+  try{ var cr0 = tbCurrentRole(text); if(cr0 && cr0.title){ return cr0.title; } }catch(eCR){}
   var TITLE_WORDS = /\b(engineer|engineering|manager|director|lead|analyst|architect|scientist|developer|specialist|technician|technologist|consultant|officer|president|principal|administrator|designer|programmer|supervisor|chief|integrator)\b/i;
   var lines = (text || "").replace(/\r/g, "").split("\n").map(function(s){ return s.trim(); }).filter(Boolean).slice(0, 30);
   for(var i = 0; i < lines.length; i++){
@@ -7178,11 +7209,35 @@ function grabTitle(text){
   return "";
 }
 /* Best-effort company: conservative - only fills on a confident match. */
+function tbTitleCaseIfShout(s){
+  if(!/[a-z]/.test(s)){ return s.toLowerCase().replace(/\b[a-z]/g, function(ch){ return ch.toUpperCase(); }); }
+  return s;
+}
+/* P0.3 (2026-07-24): company extraction is employment-section-aware and can no longer
+   (a) take a skills phrase ("Safety Management Systems") as the employer, or
+   (b) match across a date boundary ("12/2024 - Current  Firefly Aerospace" -> "Current Firefly Aerospace"). */
+function tbCurrentRole(text){
+  var t = (text || "").replace(/\r/g, "");
+  /* Format B: "Employer  -  Title  City, ST  MM/YYYY - Current" */
+  var m = t.match(/([A-Z][A-Za-z0-9&.,'\-]*(?: [A-Z0-9][A-Za-z0-9&.,'\-]*){0,5})\s+[-\u2013\u2014]\s+([A-Za-z][A-Za-z0-9\/&.,' \-]{3,70}?)\s{2,}[A-Za-z. ]+,\s*[A-Z]{2}\s+\d{1,2}\/\d{4}\s*[-\u2013]\s*(?:Current|Present)/);
+  if(m){ return { company: m[1].replace(/\s+/g, " ").trim(), title: m[2].replace(/\s+/g, " ").trim() }; }
+  /* Format A: "EXPERIENCE  COMPANY NAME, City, State  Title,  YYYY-YYYY" */
+  var m2 = t.match(/\b(?:EXPERIENCE|WORK HISTORY|EMPLOYMENT(?: HISTORY)?)\s{2,}([A-Z][A-Z0-9&.'\- ]{2,45}?),\s*[A-Za-z. ]+,\s*[A-Za-z. ]+\s{2,}([A-Za-z][A-Za-z0-9\/&.,' \-]{3,70}?),?\s+(?:19|20)\d{2}/i);
+  if(m2){ return { company: tbTitleCaseIfShout(m2[1].replace(/\s+/g, " ").trim()), title: m2[2].replace(/\s+/g, " ").trim() }; }
+  return null;
+}
 function grabCompany(text){
+  var cr = tbCurrentRole(text);
+  if(cr && cr.company){ return cr.company.replace(/^(?:Current|Present|Former)\s+/i, ""); }
   var lines = (text || "").replace(/\r/g, "").split("\n").map(function(s){ return s.trim(); }).filter(Boolean).slice(0, 40);
   for(var i = 0; i < lines.length; i++){
-    var m = lines[i].match(/\b([A-Z][A-Za-z0-9&.'\- ]{2,45}(?:Inc\.?|LLC|Corp\.?|Corporation|Company|Technologies|Systems|Solutions|Aerospace|Dynamics|Aeronautics|Defen[cs]e|Group))\b/);
-    if(m){ return m[1].replace(/\s+/g, " ").trim(); }
+    var m = lines[i].match(/\b([A-Z][A-Za-z0-9&.'\- ]{2,45}(?:Inc\.?|LLC|Corp\.?|Corporation|Company|Technologies|Systems|Solutions|Aerospace|Aeronautics|Airlines?|Airways|Dynamics|Industries|Enterprises|Defen[cs]e|Group))\b/);
+    if(m){
+      var hit = m[1].replace(/\s+/g, " ").trim().replace(/^(?:Current|Present|Former|At|With)\s+/i, "");
+      /* never take a company from the candidate's skills/headline pipe-list */
+      if(lines[i].indexOf("|") !== -1 && lines[i].split("|").length >= 3){ continue; }
+      return hit;
+    }
   }
   return "";
 }
