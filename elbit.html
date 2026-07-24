@@ -1598,7 +1598,7 @@ function renderStartMyDay(host){
   }
   /* never score on the landing render: use the warm cache instantly, otherwise
      show a quiet placeholder and fill it in when background scoring finishes */
-  var readyN = window.__TB_SCORES_WARM ? tbCountReady() : -2;
+  var readyN = (window.tbScoresWarmNow ? tbScoresWarmNow() : window.__TB_SCORES_WARM) ? tbCountReady() : -2;
 
   var hero = el("div"); hero.style.cssText = "position:relative;border-radius:18px;overflow:hidden;margin:2px 0 20px;border:1px solid var(--line);box-shadow:0 10px 34px rgba(10,18,30,.16)"; /* LAUNCH POLISH v2: full width of the uncapped frame */
   var bg = el("div"); bg.style.cssText = "position:absolute;inset:-14px;background:url(\"data:image/svg+xml;utf8," + encodeURIComponent(window.TB_HERO_ART[(typeof ORG !== "undefined" && ORG === "hiarc") ? "medical" : "defense"]) + "\") center/cover no-repeat;filter:blur(3px) saturate(1.05)";
@@ -1780,7 +1780,7 @@ function renderStartMyDay(host){
       body.appendChild(go);
     }catch(eTF){}
   }
-  if(window.__TB_SCORES_WARM){ fillTalentFitReady(); }
+  if(window.tbScoresWarmNow ? tbScoresWarmNow() : window.__TB_SCORES_WARM){ fillTalentFitReady(); }
   else {
     var ph = el("div"); ph.className = "tfr-body";
     ph.appendChild(el("div","hint","TalentFit is scoring your desk in the background\u2026"));
@@ -3620,8 +3620,26 @@ var BOARD = (function(){
   }
   var _scoreCache = {};
   function clearScoreCache(){ _scoreCache = {}; }
+  /* SCOPE ISOLATION (2026-07-24): scoreCandidate ranks against the CURRENT requisition
+     universe (enterprise, program, or department scope). The cache was keyed by candidate
+     only, so a scoped board could reuse scores computed under a DIFFERENT universe.
+     Cache keys now carry a content signature of the active REQS scope. */
+  var _scopeSigs = (typeof WeakMap !== "undefined") ? new WeakMap() : null;
+  function scopeSig(){
+    var arr = (typeof REQS !== "undefined" && REQS) ? REQS : [];
+    if(_scopeSigs){ var cached = _scopeSigs.get(arr); if(cached){ return cached; } }
+    var ids = [];
+    for(var i = 0; i < arr.length; i++){ ids.push(String(arr[i].id || arr[i].jobId || i)); }
+    ids.sort();
+    var str = arr.length + "|" + ids.join(",");
+    var h = 0; for(var j = 0; j < str.length; j++){ h = ((h << 5) - h + str.charCodeAt(j)) | 0; }
+    var sig = "sc" + arr.length + "_" + h;
+    if(_scopeSigs){ _scopeSigs.set(arr, sig); }
+    return sig;
+  }
   function scoreCandidate(c){
-    if(c && c.id && _scoreCache[c.id]){ return _scoreCache[c.id]; }
+    var __sk = c && c.id ? (scopeSig() + "|" + c.id) : null;
+    if(__sk && _scoreCache[__sk]){ return _scoreCache[__sk]; }
     var txt = scoreHaystack(c); /* TF-001: gap-stripped for scoring */
     var cc = {ref:c, txt:txt};
     var f = detectFn(txt);
@@ -3631,7 +3649,7 @@ var BOARD = (function(){
     var results = REQS.map(function(r){ return scoreReq(cc, r); });
     results.sort(function(a,b){ return b.score-a.score; });
     cc.results=results; cc.best=results[0]||{verdict:"not", score:0, req:{title:"(no open reqs)", loc:""}};
-    if(c && c.id){ _scoreCache[c.id] = cc; }
+    if(__sk){ _scoreCache[__sk] = cc; }
     return cc;
   }
   function vcolor(v){
@@ -3714,7 +3732,7 @@ var BOARD = (function(){
     cc.results=results; cc.best=results[0]||{verdict:"not", score:0, req:{title:"(no reqs in scope)", loc:""}};
     return cc;
   }
-  return {render:render, scoreCandidate:scoreCandidate, scoreCandidateAgainst:scoreCandidateAgainst, clearScoreCache:clearScoreCache, tier:tier, reqFn:reqFn};
+  return {render:render, scoreCandidate:scoreCandidate, scoreCandidateAgainst:scoreCandidateAgainst, clearScoreCache:clearScoreCache, tier:tier, reqFn:reqFn, scopeSig:scopeSig};
 })();
 
 /* ═══ AutoSlate™ v1 (Intelligence Layer) — ranked hiring-manager slates with
@@ -7213,7 +7231,7 @@ function grabName(text, filename){
     if(_en && tbNameLooksValid(_en.first + " " + _en.last)){ res.first = _en.first; res.last = _en.last; return res; }
   }catch(eEN){}
   var base = (filename || "").replace(/\.[^.]+$/, "");
-  base = base.replace(/\((\d+)\)/g, " ").replace(/[_\-]+/g, " ").replace(/\b(resume|cv|curriculum vitae|final|copy|updated?|new)\b/ig, " ")
+  base = base.replace(/\((\d+)\)/g, " ").replace(/[_\-]+/g, " ").replace(/\b(resume|cv|curriculum vitae|final|copy|updated?|new|rev(?:ision)?\s*[A-Z0-9]?|v\d+|draft|executive)\b/ig, " ") /* AUDIT FIX: "Resume_rev C" made "C" a surname; "(Executive)" made it a suffix */
              .replace(/\b(19|20)\d{2}\b/g, " ").replace(/\b\d+\b/g, " ").replace(/'s\b/ig, " ")
              .replace(/([a-z])([A-Z])/g, "$1 $2").replace(/\s+/g, " ").trim(); /* RC1.1: strip years/counters, split CamelCase */
   if(/,/.test(base)){
@@ -7229,6 +7247,9 @@ function grabName(text, filename){
    "Supervisor  Lake Worth") are stripped from the front of a location capture. */
 function tbCleanLocCapture(city){
   var toks = String(city || "").trim().split(/\s+/);
+  /* AUDIT FIX: a middle initial glues the candidate's own surname onto the city
+     ("TODD M. KOZEY  SUMMERVILLE, SC" -> "M. KOZEY SUMMERVILLE"). Drop initial+surname pairs. */
+  while(toks.length > 2 && /^[A-Z]\.$/.test(toks[0])){ toks.shift(); toks.shift(); }
   var DROP = /^(PMP|MBA|MSc?|BSc?|BA|MA|PE|PhD|CSM|PgMP|PMI|CISSP|SPHR|CPA|EIT|CQE|CSSBB|LSSBB|Supervisor|Manager|Director|Lead|Engineer|Analyst|Specialist|Coordinator|Technician|Officer|President|Consultant)$/i;
   while(toks.length > 1 && DROP.test(toks[0])){ toks.shift(); }
   return toks.join(" ");
@@ -7279,6 +7300,9 @@ function tbCurrentRole(text){
   /* Format B: "Employer  -  Title  City, ST  MM/YYYY - Current" */
   var m = t.match(/([A-Z][A-Za-z0-9&.,'\-]*(?: [A-Z0-9][A-Za-z0-9&.,'\-]*){0,5})\s+[-\u2013\u2014]\s+([A-Za-z][A-Za-z0-9\/&.,' \-]{3,70}?)\s{2,}[A-Za-z. ]+,\s*[A-Z]{2}\s+\d{1,2}\/\d{4}\s*[-\u2013]\s*(?:Current|Present)/);
   if(m){ return { company: m[1].replace(/\s+/g, " ").trim(), title: m[2].replace(/\s+/g, " ").trim() }; }
+  /* Format C: "EXPERIENCE  Title  MM/YYYY to Present  Company  City, ST" */
+  var mc = t.match(/(?:EXPERIENCE|WORK HISTORY|EMPLOYMENT(?: HISTORY)?)\s{2,}([A-Za-z][A-Za-z0-9\/&.,' \-]{3,70}?)\s{2,}\d{1,2}\/\d{4}\s+(?:to|[-\u2013])\s+(?:Present|Current)\s{2,}([A-Z][A-Za-z0-9&.,'\-]*(?: [A-Z0-9][A-Za-z0-9&.,'\-]*){0,5})/i);
+  if(mc){ return { company: mc[2].replace(/\s+/g, " ").trim().replace(/\s*\(.*$/, ""), title: mc[1].replace(/\s+/g, " ").trim() }; }
   /* Format A: "EXPERIENCE  COMPANY NAME, City, State  Title,  YYYY-YYYY" */
   var m2 = t.match(/\b(?:EXPERIENCE|WORK HISTORY|EMPLOYMENT(?: HISTORY)?)\s{2,}([A-Z][A-Z0-9&.'\- ]{2,45}?),\s*[A-Za-z. ]+,\s*[A-Za-z. ]+\s{2,}([A-Za-z][A-Za-z0-9\/&.,' \-]{3,70}?),?\s+(?:19|20)\d{2}/i);
   if(m2){ return { company: tbTitleCaseIfShout(m2[1].replace(/\s+/g, " ").trim()), title: m2[2].replace(/\s+/g, " ").trim() }; }
@@ -12627,25 +12651,37 @@ body.tb-overlay-open{ overflow:hidden; }
     var _csc = BOARD.clearScoreCache;
     BOARD.clearScoreCache = function(){ window.__TB_SCORES_WARM = false; _warmGen++; _csc(); };
   }catch(eW){}
+  /* SCOPE ISOLATION (2026-07-24): warm-for-scope. Chunks run async — the requisition scope
+     active at kick time is re-applied inside every chunk, so cache entries are computed and
+     keyed under the scope that asked for them. The warm flag carries the scope signature:
+     a board only trusts a warm that matches ITS universe. */
+  function tbScoresWarmNow(){
+    return !!window.__TB_SCORES_WARM && (typeof BOARD !== "undefined" && BOARD.scopeSig) && window.__TB_WARM_SIG === BOARD.scopeSig();
+  }
+  window.tbScoresWarmNow = tbScoresWarmNow;
   window.tbWarmScores = function(cb){
-    if(window.__TB_SCORES_WARM){ if(cb){ cb(); } return; }
+    if(tbScoresWarmNow()){ if(cb){ cb(); } return; }
     var gen = _warmGen;
+    var scopeReqs = (typeof REQS !== "undefined") ? REQS : [];
+    var sig0 = (typeof BOARD !== "undefined" && BOARD.scopeSig) ? BOARD.scopeSig() : "";
     var pool = (state.candidates || []).filter(function(c){ return c.status !== "Archived"; });
     if(window.TB_ENTERPRISE_LIBRARY_V1 && window.XORG && window.XORG.loaded && window.XORG.recruitable){ pool = pool.concat(window.XORG.recruitable()); }
     var i = 0;
     if(_warmRunning){ /* piggyback: poll for completion */
-      var wait = setInterval(function(){ if(window.__TB_SCORES_WARM || gen !== _warmGen){ clearInterval(wait); if(cb && window.__TB_SCORES_WARM){ cb(); } } }, 120);
+      var wait = setInterval(function(){ if(tbScoresWarmNow() || gen !== _warmGen){ clearInterval(wait); if(cb && tbScoresWarmNow()){ cb(); } } }, 120);
       return;
     }
     _warmRunning = true;
     (function chunk(){
       if(gen !== _warmGen){ _warmRunning = false; return; } /* cache cleared mid-warm: abort, a re-warm will follow */
-      /* P0.2: time-boxed chunks; AUDIT FIX: per-candidate try so a throwing record can never
-         re-run forever (the old whole-loop catch skipped i++ and wedged the warm state) */
+      /* P0.2: time-boxed chunks; per-candidate try so a throwing record can never wedge warm */
       var __t0 = performance.now();
-      for(; i < pool.length && (performance.now() - __t0) < 50; i++){ try{ BOARD.scoreCandidate(pool[i]); }catch(eS){} }
+      var __prevReqs = REQS; REQS = scopeReqs; /* score under the requesting scope */
+      try{
+        for(; i < pool.length && (performance.now() - __t0) < 50; i++){ try{ BOARD.scoreCandidate(pool[i]); }catch(eS){} }
+      } finally { REQS = __prevReqs; }
       if(i < pool.length){ setTimeout(chunk, 16); }
-      else { _warmRunning = false; window.__TB_SCORES_WARM = true; if(cb){ cb(); } }
+      else { _warmRunning = false; window.__TB_SCORES_WARM = true; window.__TB_WARM_SIG = sig0; if(cb){ cb(); } }
     })();
   };
   function tbSkeleton(host, label){
@@ -12668,7 +12704,7 @@ body.tb-overlay-open{ overflow:hidden; }
     var _orig = window[fn];
     if(typeof _orig !== "function"){ return; }
     window[fn] = function(host){
-      if(window.__TB_SCORES_WARM){ _orig(host); return; }
+      if(tbScoresWarmNow()){ _orig(host); return; } /* SCOPE ISOLATION: a warm from another scope is not warm for this board */
       var v = ui.view;
       tbSkeleton(host, "TalentFit is scoring every candidate against every open requisition\u2026");
       tbWarmScores(function(){ if(ui.view === v){ renderList(); } });
@@ -12681,7 +12717,7 @@ body.tb-overlay-open{ overflow:hidden; }
   if(typeof _rtReloadNow === "function"){ /* re-warm quietly after realtime reloads */
     var _rtOrig = _rtReloadNow; /* not reassignable safely; hook via stats polling instead */
   }
-  setInterval(function(){ if(typeof state !== "undefined" && state.candidates && state.candidates.length && !window.__TB_SCORES_WARM && !_warmRunning){ tbWarmScores(); } }, 5000);
+  setInterval(function(){ if(typeof state !== "undefined" && state.candidates && state.candidates.length && !tbScoresWarmNow() && !_warmRunning){ tbWarmScores(); } }, 5000);
 
   /* ---------- 3d. HIRING MANAGER FEEDBACK LOOP ----------
      The HM's two sanctioned actions — Request Interview / Pass — write a
@@ -12775,7 +12811,7 @@ body.tb-overlay-open{ overflow:hidden; }
   window.tbIntelligenceReport = function(){
     var out = { rediscovered: [], byRecruiter: {}, silver: [], multi: [], newReqs: 0 };
     try{
-      if(!window.__TB_SCORES_WARM){ return out; } /* never compute cold on a render path */
+      if(!(window.tbScoresWarmNow ? tbScoresWarmNow() : window.__TB_SCORES_WARM)){ return out; } /* never compute cold on a render path */
       var cutoff = Date.now() - 14 * 86400000;
       var canon = window.TB_METRICS ? TB_METRICS.canonicalReqEntries(REQS).map(function(e){ return e.req; }) : REQS;
       var openReqs = canon.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : !r.bench; });
