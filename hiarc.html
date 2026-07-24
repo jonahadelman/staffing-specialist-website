@@ -983,7 +983,7 @@ function tbNameLooksValid(n){
     if (SECT.test(t) || VERB.test(t) || CORP.test(t)) return false;
     if (/^[A-Z]\.?$/.test(t)) continue;
     if (SUFF.test(t) || PART.test(t)) continue;
-    if (!/^[A-Z]/.test(t)) return false;
+    if (!/^[A-Z\u00C0-\u00DE\u0100-\u017F]/.test(t)) return false; /* AUDIT FIX: "Jos\u00e9 \u00c1lvarez" rendered as Name Requires Review */
     if (t.length === 1) return false;
     if (t.length > 2 && /\.$/.test(t)) return false;
   }
@@ -1091,7 +1091,9 @@ function candHaystack(c){
    haystack (candHaystack) is intentionally left raw — search should still find any mentioned term. */
 function tfStripGaps(t){
   var GAP = /\bgaps?\s*:|\bdomain gap\b|disclosed[^.;\n]*gap|flagged transparently|vs\.?\s+defense\b|does not (have|appear)|no (direct )?experience (with|in)|limited exposure|would need to (learn|develop)|not evidenced/i;
-  return String(t||"").split(/(?<=[.;\n\u2022|])/).filter(function(seg){ return !GAP.test(seg); }).join(" ");
+  /* AUDIT FIX: lookbehind is a hard parse error on Safari <16.4 (blank app). Equivalent without it. */
+  var __segs = String(t||"").replace(/([.;\n\u2022|])/g, "$1\u0000").split("\u0000");
+  return __segs.filter(function(seg){ return !GAP.test(seg); }).join(" ");
 }
 function scoreHaystack(c){ return tfStripGaps(candHaystack(c)); }
 /* Boolean search: supports AND, OR, NOT (and -term), "quoted phrases", parentheses.
@@ -1165,7 +1167,7 @@ function matchesSearch(c){
 }
 function reqsForTags(tags){
   var out = [];
-  (tags || []).forEach(function(t){ REQS.forEach(function(r){ if((r.title + " – " + r.loc) === t){ out.push(r); } }); });
+  (tags || []).forEach(function(t){ REQS.forEach(function(r){ if((r.title + " – " + r.loc) === t || (r.title + " - " + r.loc) === t){ out.push(r); } }); }); /* AUDIT FIX: legacy hyphen tags were excluded from HM/Dept filters */
   return out;
 }
 function passFilters(c){
@@ -1192,7 +1194,7 @@ function currentList(){ var v = activeView(); return state.candidates.filter(fun
 
 /* ---------- helpers ---------- */
 function clearSearchFilters(){
-  ui.q = ""; ui.fStatus = ""; ui.fDiscipline = ""; ui.fReq = ""; ui.fOwner = ""; ui.fPriority = ""; ui.fDept = ""; ui.fHM = "";
+  ui.q = ""; ui.fStatus = ""; ui.fDiscipline = ""; ui.fReq = ""; ui.fOwner = ""; ui.fPriority = ""; ui.fDept = ""; ui.fHM = ""; ui.fLoc = ""; /* AUDIT FIX: location filter stayed active after Clear */
   ["q","fStatus","fDiscipline","fReq","fOwner","fPriority","fDept","fHM","fLoc"].forEach(function(id){ var elx = document.getElementById(id); if(elx){ elx.value = ""; } });
   renderList();
 }
@@ -1319,7 +1321,7 @@ function renderTabs(){
        action views (Follow-Up Due, Interview Requests), scoped to the current
        department/program so the number always equals the drill-down list. */
     var count = "";
-    if(v.id === "all"){ count = (state.candidates || []).length + ((window.TB_ENTERPRISE_LIBRARY_V1 && window.XORG && window.XORG.loaded) ? window.XORG.cands.length : 0); } /* Candidate Library size — enterprise pool when the flag is on */
+    if(v.id === "all"){ var __xn = 0; if(window.TB_ENTERPRISE_LIBRARY_V1 && window.XORG && window.XORG.loaded){ __xn = window.XORG.cands.filter(function(x){ return !(state.candidates || []).some(function(hc){ return hc.id === x.id; }); }).length; } count = (state.candidates || []).length + __xn; } /* Candidate Library size — AUDIT FIX: overlapping cross-org records were double-counted */
     else if(window.TB_METRICS && (v.id === "followup" || v.special === "interviewrequests")){
       if(!window.__TB_ACTION_COUNTS){ window.__TB_ACTION_COUNTS = TB_METRICS.counts(window.TB_PROGRAM || "", window.TB_SUBPROGRAM || ""); }
       count = (v.id === "followup") ? window.__TB_ACTION_COUNTS.followUpDue : window.__TB_ACTION_COUNTS.interviewRequests;
@@ -1413,7 +1415,7 @@ function renderList(){
   var fCtx = fParts.length ? " \u00b7 filtered \u2014 " + fParts.join(" \u00b7 ") : "";
   document.getElementById("viewMeta").textContent = ((ui.view === "all") ? (rows.length + " enterprise candidate" + (rows.length === 1 ? "" : "s") + " in the library") : (rows.length + (rows.length === 1 ? " unique candidate" : " unique candidates"))) + fCtx;
   if(rows.length === 0){
-    var filtersOn = !!(ui.q && ui.q.trim()) || !!ui.fStatus || !!ui.fDiscipline || !!ui.fReq || !!ui.fOwner || !!ui.fPriority || !!ui.fDept || !!ui.fHM;
+    var filtersOn = !!(ui.q && ui.q.trim()) || !!ui.fStatus || !!ui.fDiscipline || !!ui.fReq || !!ui.fOwner || !!ui.fPriority || !!ui.fDept || !!ui.fHM || !!ui.fLoc;
     var em = el("div","empty");
     if(filtersOn){
       em.appendChild(el("div","big","No matches"));
@@ -1566,7 +1568,7 @@ function renderStartMyDay(host){
      admin/manager/executive workstations keep the enterprise view. */
   var __wsKeyH = window.TB_WS || "recruiter";
   var __meH = "";
-  try{ __meH = (window.TB_IMPERSONATE && TB_IMPERSONATE.name) || (typeof meOwnerName === "function" ? meOwnerName() : "") || ""; }catch(eMe){}
+  try{ __meH = (window.TB_IMPERSONATE && TB_IMPERSONATE.name) || (tbResolveMe() || "") || ""; }catch(eMe){}
   var __scopeMine = (__wsKeyH === "recruiter") && __meH;
   function __mineH(c){ return !__scopeMine || (c.owner || "") === __meH; }
   var fuN = cands.filter(function(c){ return __mineH(c) && followUp(c).label !== ""; }).length;
@@ -2674,21 +2676,62 @@ var TB_INPROCESS_SET = { "Submitted": 1, "TA Interview": 1, "Interviewing Stage 
 /* RC1.14 count-sync (PO 2026-07-22): ONE definition of "needs candidates" — an open req with
    zero TalentFit-qualified (live 70+) candidates. Dashboard, Staffing Brief, and the executive
    block all call THIS; the number can no longer disagree with itself across surfaces. */
+/* AUDIT FIX (P0.2 completion): ONE shared coverage cache + warm for every consumer —
+   renderReqs, renderReqsAll, and tbStarvingReqs (Start My Day / Brief / Focus). Full open
+   scope, generation-safe (stale chunks abort by cov-object identity), guarded re-render. */
+function tbCovCache(){
+  var gen = (window._tbScoreGen || 0);
+  var CC = window.__TB_COVC;
+  if(!CC || CC.gen !== gen){ CC = window.__TB_COVC = { gen: gen, cov: {}, done: false, warming: false, cbs: [] }; }
+  return CC;
+}
+function tbWarmCoverage(onDone){
+  var CC = tbCovCache();
+  if(CC.done){ if(onDone){ try{ onDone(); }catch(eD){} } return; }
+  if(onDone){ CC.cbs.push(onDone); }
+  if(CC.warming){ return; }
+  CC.warming = true;
+  var myCov = CC.cov;
+  var canon = window.TB_METRICS ? TB_METRICS.canonicalReqEntries(REQS).map(function(e){ return e.req; }) : REQS;
+  var queue = canon.filter(function(r){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r) : !r.bench; });
+  var ledger = tbParseAssignLedger(); var pool = tbCoveragePool();
+  (function chunk(){
+    var cur = tbCovCache();
+    if(cur.cov !== myCov){ return; } /* a newer data generation superseded this warm */
+    var t0 = performance.now();
+    while(queue.length && (performance.now() - t0) < 60){
+      var r = queue.shift();
+      try{ myCov[r.id] = tbReqCoverage(r, ledger, pool); }catch(eCW){ myCov[r.id] = { list: [], total: 0, qualified: 0, imm: 0, call: 0, man: 0, inproc: 0 }; }
+    }
+    if(queue.length){ setTimeout(chunk, 16); return; }
+    cur.done = true; cur.warming = false;
+    var cbs = cur.cbs.slice(); cur.cbs = [];
+    cbs.forEach(function(cb){ try{ cb(); }catch(eCB){} });
+  })();
+}
 function tbStarvingReqs(openReqs){
+  var CC = tbCovCache();
+  if(!CC.done){
+    /* never cold-score on the main thread (that was the measured ~6.6s boot freeze):
+       kick the shared warm and re-render the CURRENT view when numbers are real */
+    var v0 = (typeof ui !== "undefined") ? ui.view : null;
+    tbWarmCoverage(function(){ try{ if(typeof ui !== "undefined" && ui.view === v0){ renderList(); } }catch(eRR){} });
+    return { pending: true, length: 0, slice: function(){ return []; }, filter: function(){ return []; }, forEach: function(){} };
+  }
   var led = tbParseAssignLedger(), pool = tbCoveragePool();
-  return (openReqs || []).filter(function(r){ return tbReqCoverage(r, led, pool).qualified === 0; });
+  return (openReqs || []).filter(function(r){ var cv = CC.cov[r.id]; if(!cv){ cv = CC.cov[r.id] = tbReqCoverage(r, led, pool); } return cv.qualified === 0; });
 }
 function tbReqCoverage(r, ledger, pool){
   ledger = ledger || tbParseAssignLedger();
   pool = pool || tbCoveragePool();
   var label = ((r && r.title) || "") + " – " + ((r && r.loc) || "");
-  var titlePrefix = ((r && r.title) || "") + " – ";
+  var labelHyphen = ((r && r.title) || "") + " - " + ((r && r.loc) || ""); /* AUDIT FIX: legacy hyphen tags count; title-prefix matching cross-attached same-title reqs at other locations */
   var list = [];
   pool.forEach(function(c){
     var led = ledger[c.id];
     var pair = null;
     if(led){ for(var i = 0; i < led.pairs.length; i++){ if(String(led.pairs[i].j) === String(r.jobId || "")){ pair = led.pairs[i]; break; } } }
-    var manual = (c.reqs || []).some(function(t){ return t === label || (r.title && String(t).indexOf(titlePrefix) === 0); });
+    var manual = (c.reqs || []).some(function(t){ return t === label || t === labelHyphen; });
     if(!pair && !manual){ return; }
     /* RC1.14/C1 (PO 2026-07-22): the ledger decides WHO is attached to a req; the RC1.10
        engine decides the NUMBER — recomputed live at render so no stale pre-rebuild score
@@ -2800,35 +2843,19 @@ function renderReqs(host){
      froze the main thread ~6.6s (~300 candidate-req scoring pairs at ~20-40ms each; the
      memo resets on every data load). Coverage now warms in time-boxed async chunks and the
      board renders once numbers are REAL — never zeros, never stale, nav usable throughout. */
-  var __gen = (window._tbScoreGen || 0);
-  window.__TB_COVC = window.__TB_COVC || { gen: -1, cov: {}, done: false, warming: false };
-  var CC = window.__TB_COVC;
-  if(CC.gen !== __gen){ CC.gen = __gen; CC.cov = {}; CC.done = false; CC.warming = false; }
+  var CC = tbCovCache();
   if(!CC.done){
     host.appendChild(bar);
     var skel = el("div");
     skel.appendChild(el("div","hint","TalentFit is scoring candidates against these requisitions\u2026 the board opens with live numbers in a few seconds."));
     for(var __i = 0; __i < 4; __i++){ var __row = el("div"); __row.style.cssText = "height:56px;border-radius:12px;background:var(--panel);border:1px solid var(--line);margin:0 0 10px;opacity:" + (0.9 - __i*0.18); skel.appendChild(__row); }
     host.appendChild(skel);
-    if(!CC.warming){
-      CC.warming = true;
-      var __queue = scope.slice();
-      (function __chunk(){
-        if(CC.gen !== (window._tbScoreGen || 0)){ CC.warming = false; return; } /* data reloaded mid-warm: restart on next render */
-        var __t0 = performance.now();
-        while(__queue.length && (performance.now() - __t0) < 60){
-          var __r = __queue.shift();
-          try{ CC.cov[__r.id] = tbReqCoverage(__r, ledger, pool); }catch(eCW){ CC.cov[__r.id] = { list: [], total: 0, qualified: 0, imm: 0, call: 0, man: 0, inproc: 0 }; }
-        }
-        if(__queue.length){ setTimeout(__chunk, 16); return; }
-        CC.done = true; CC.warming = false;
-        try{ renderList(); }catch(eRL){}
-      })();
-    }
-    if(!CC.done && meta){ meta.textContent = "Scoring in progress \u2014 live TalentFit numbers in a few seconds"; }
+    var __v0 = ui.view;
+    tbWarmCoverage(function(){ try{ if(ui.view === __v0){ renderList(); } }catch(eRL){} }); /* AUDIT FIX: guarded re-render */
+    if(!tbCovCache().done && meta){ meta.textContent = "Scoring in progress \u2014 live TalentFit numbers in a few seconds"; }
     return;
   }
-  var cov = {}; scope.forEach(function(r){ cov[r.id] = CC.cov[r.id] || tbReqCoverage(r, ledger, pool); });
+  var cov = {}; scope.forEach(function(r){ cov[r.id] = CC.cov[r.id] || (CC.cov[r.id] = tbReqCoverage(r, ledger, pool)); });
   var totalAssigned = 0, totalQual = 0; scope.forEach(function(r){ totalAssigned += cov[r.id].total; totalQual += cov[r.id].qualified; });
   if(meta){ meta.textContent = (scopedToMe ? "Your book of business · " : "No personally assigned requisitions — showing all open · ") + scope.length + " open req" + (scope.length === 1 ? "" : "s") + " · " + totalQual + " TalentFit-qualified (70+) of " + totalAssigned + " attached · counts open to the exact records behind them"; }
   host.appendChild(bar);
@@ -2891,6 +2918,17 @@ function renderReqs(host){
   if(!names.length){ var emp2 = el("div","empty"); emp2.appendChild(el("div","big","No open requisitions assigned to you")); emp2.appendChild(el("div", null, "Use All Requisitions for the full company view.")); host.appendChild(emp2); }
 }
 function renderReqsAll(host){
+  /* AUDIT FIX (P0.2): "All Requisitions" bypassed the warm gate and cold-scored every row
+     synchronously (recomputing ledger+pool per row). Same shared cache, same skeleton. */
+  var __ccAll = tbCovCache();
+  if(!__ccAll.done){
+    var __hint = el("div","hint","TalentFit is scoring candidates against these requisitions\u2026 the directory opens with live numbers in a few seconds.");
+    host.appendChild(__hint);
+    var __va = ui.view;
+    tbWarmCoverage(function(){ try{ if(ui.view === __va){ renderList(); } }catch(eRA){} });
+    return;
+  }
+  var __ledAll = tbParseAssignLedger(), __poolAll = tbCoveragePool();
   /* Central selector: Open Requisitions = not bench, not filled/closed/cancelled/archived */
   function isClosedReq(r){ return window.TB_METRICS ? TB_METRICS.isClosedReq(r) : /(filled|closed|cancell?ed|archived)/.test((r.reqStatus||'').toLowerCase()); }
   /* DEDUPE FIRST, then classify — a req whose duplicate rows disagree on
@@ -2923,7 +2961,7 @@ function renderReqsAll(host){
     var roletd = el("td"); var roleSpan = el("span","nm", r.role || r.title || "-"); roletd.appendChild(roleSpan); if(r.role && r.title && r.role !== r.title){ var titleSpan = el("div","sub2", r.title); roletd.appendChild(titleSpan); } tr.appendChild(roletd);
     var locTd = el("td","sub2", r.loc || "-"); locTd.style.whiteSpace = "nowrap"; tr.appendChild(locTd);
     tr.appendChild(el("td","sub2", r.hm || "-"));
-    var covP = tbReqCoverage(r); /* RC1.4: same derivation the grouped view and req detail use — one source of truth */
+    var covP = __ccAll.cov[r.id] || (__ccAll.cov[r.id] = tbReqCoverage(r, __ledAll, __poolAll)); /* AUDIT FIX: cached; was per-row full recompute */
     tr.appendChild(el("td", null, String(covP.total)));
     
     var jdt = el("td");
@@ -3192,7 +3230,15 @@ var BOARD = (function(){
     }
     var sw  = score(/software engineer|firmware engineer|embedded software|software developer|principal software/i, /software|firmware|\bc\+\+|\bc#|embedded|\brtos\b|application develop/i);
     var ee  = score(/electrical (hardware )?engineer|electronics engineer|hardware engineer|electrical design|dfx electrical/i, /electrical|electronic|\bpcb\b|schematic|\bfpga\b|\banalog\b|circuit/i);
-    var se  = score(/(?<!manufacturing )systems? engineer|system architect|requirements engineer/i, /(?<!manufacturing )systems engineering|requirements|system integration|\bv&v\b|verification and validation/i); /* TF-BENCH: an M.S. in Manufacturing Systems Engineering is manufacturing evidence, not a systems-engineering career */
+    /* AUDIT FIX: lookbehind is a parse error on Safari <16.4. Same semantics: neutralize
+       "manufacturing systems engineer(ing)" in scratch copies before the SE regexes run. */
+    var se = (function(){
+      var __neut = function(s){ return String(s).replace(/manufacturing\s+(systems?\s+engineer(?:ing)?)/gi, "manufacturing mfg-se"); };
+      var __head0 = head, __txt0 = txt;
+      head = __neut(head); txt = __neut(txt);
+      var r = score(/systems? engineer|system architect|requirements engineer/i, /systems engineering|requirements|system integration|\bv&v\b|verification and validation/i);
+      head = __head0; txt = __txt0; return r;
+    })(); /* TF-BENCH: an M.S. in Manufacturing Systems Engineering is manufacturing evidence, not a systems-engineering career */
     var mfg = score(/manufacturing engineer|npi engineer|process engineer|production engineer|industrial engineer|tooling engineer|automation engineer|manufacturing systems/i, /manufacturing|\bnpi\b|\bdfm\b|\bdfx\b|process capability|tooling|fixture|production|robotics|\bscada\b|\bfanuc\b|work cell/i);
     var sc  = score(/supply chain (manager|director|analyst|lead|specialist|management professional)|procurement|strategic sourcing|commodity manager|purchasing (manager|agent|specialist)|\bbuyer\b/i, /supply chain|sourcing|purchasing|commodity/i); /* CLASS-002 (PO 2026-07-22): "supplier quality" is a QUALITY discipline, not supply chain — removed from SC strong regex (it stays in QA), and bare "supplier" removed from SC weak so a quality engineer who manages suppliers is not pulled into supply chain. */ /* TF-BENCH: bare "supply chain" (taught a course, coordinated with the team) is WEAK evidence only — the strong form requires a procurement ROLE. A manufacturing leader must never classify SC off one phrase. */
     var mech= score(/mechanical engineer|mechanical design/i, /mechanical|solidworks|\bgd&t\b|tolerance/i);
@@ -3801,7 +3847,7 @@ function renderAutoSlate(host){
     selTop.addEventListener("click", function(){
       sec.querySelectorAll("[data-slsel]").forEach(function(ck){ ck.checked = false; });
       sec.querySelectorAll(".aslate-blk").forEach(function(blk){
-        Array.prototype.slice.call(blk.querySelectorAll("[data-slsel]"), 0, 3).forEach(function(ck){ if(ck.closest("[data-slrow]").style.display !== "none"){ ck.checked = true; } });
+        Array.prototype.filter.call(blk.querySelectorAll("[data-slsel]"), function(ck){ return ck.closest("[data-slrow]").style.display !== "none"; }).slice(0, 3).forEach(function(ck){ ck.checked = true; }); /* AUDIT FIX: hidden rows consumed top-3 slots */
       });
       toast("Top 3 per position selected");
     });
@@ -3915,7 +3961,8 @@ function buildSubmissionPackage(hm, sec){
   var sel = [];
   sec.querySelectorAll("[data-slsel]").forEach(function(ck){ if(ck.checked && ck.__sl && ck.closest("[data-slrow]").style.display !== "none"){ sel.push(ck.__sl); } });
   if(!sel.length){ toast("Check at least one candidate to build the package."); return; }
-  var mgr = (typeof MANAGERS !== "undefined" ? MANAGERS : []).filter(function(m){ return m.name === hm || (m.name||"").indexOf(hm.split(" ")[0]) === 0; })[0];
+  var __mgrs = (typeof MANAGERS !== "undefined" ? MANAGERS : []);
+  var mgr = __mgrs.filter(function(m){ return m.name === hm; })[0] || __mgrs.filter(function(m){ return (m.name||"").indexOf(hm.split(" ")[0] + " ") === 0; })[0]; /* AUDIT FIX: exact match first — prefix match could email the wrong HM */
   var first = hm.split(" ")[0];
   var lines = ["Hi " + first + ",", "", "Sending you " + sel.length + " ranked candidate" + (sel.length === 1 ? "" : "s") + " for your open position" + (sel.length === 1 ? "" : "s") + " — scored and slated by TalentFit. Highlights below; resumes available on request.", ""];
   sel.forEach(function(m, i){
@@ -3932,7 +3979,7 @@ function buildSubmissionPackage(hm, sec){
         else { lines.push("   CompIntel™: not on file — capture compensation before offer stage"); }
       }
     }catch(eCI){}
-    if(m.c.summary){ lines.push("   " + String(m.c.summary).split(/(?<=\.)\s/)[0]); }
+    if(m.c.summary){ var __s1 = String(m.c.summary); var __di = __s1.search(/\.\s/); lines.push("   " + (__di >= 0 ? __s1.slice(0, __di + 1) : __s1)); } /* AUDIT FIX: no lookbehind */
     lines.push("");
   });
   lines.push("Happy to set up time this week — just tell me who you want to meet.", "", "Best,", (typeof CURRENT_USER !== "undefined" && CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email.split("@")[0].replace(/^\w/, function(ch){ return ch.toUpperCase(); }) : "");
@@ -5086,8 +5133,9 @@ function renderDashboard(host){
   host.appendChild(c2);
 
   var c3 = card("Coverage by req   (active candidates tagged to each open role, thinnest first)");
+  var __openReqs = REQS.filter(function(r){ return !r.bench; }); /* AUDIT FIX: REQ_OPTIONS is the bench-filtered list — indexing raw REQS opened the WRONG req's modal */
   var reqCounts = REQ_OPTIONS.map(function(label, idx){
-    var reqObj = REQS[idx] || null;
+    var reqObj = __openReqs[idx] || null;
     var n = cs.filter(function(c){ return c.status !== "Archived" && (c.reqs || []).indexOf(label) !== -1; }).length;
     return { label:label, n:n, req:reqObj };
   }).sort(function(a, b){ return a.n - b.n; });
@@ -5276,7 +5324,7 @@ function tbrBenchCands(){
 }
 function tbrQueue(){
   var q = {}; TBR_STATE_ORDER.forEach(function(k){ q[k] = []; });
-  tbrBenchCands().forEach(function(c){ q[tbrStateOf(c)].push(c); }); /* every candidate lands in exactly one state */
+  tbrBenchCands().forEach(function(c){ var st = tbrStateOf(c); (q[st] || (q[st] = [])).push(c); }); /* every candidate lands in exactly one state · AUDIT FIX: a legacy tb_status value crashed the whole TalentBench view */
   return q;
 }
 /* Queue drill-down — same row pattern as the sourced-candidates modal */
@@ -5435,7 +5483,7 @@ async function tbrWriteReview(candidateId, candidateName, action, prevStatus, ne
     var cOwn = (cIdx !== -1) ? state.candidates[cIdx] : null;
     await sb.from("activities").insert({
       org: ORG, candidate_id: candidateId, type: "Note", date: todayISO(),
-      owner: (cOwn && cOwn.owner && cOwn.owner !== "Unassigned") ? cOwn.owner : (typeof meOwnerName === "function" ? meOwnerName() : ""),
+      owner: (cOwn && cOwn.owner && cOwn.owner !== "Unassigned") ? cOwn.owner : (tbResolveMe() || ""),
       notes: "[TB Review] status:" + newStatus + " by:" + CURRENT_USER.email + (reason ? " reason:" + reason : "")
     });
   }catch(eRt){}
@@ -6340,8 +6388,13 @@ function findDuplicate(cand, ignoreId){
     if(em && normEmail(x.email) === em){ return x; }
     if(ph && normPhone(x.phone) === ph){ return x; }
     if(li && normLinkedin(x.linkedin) === li){ return x; }
-    if(!em && nm !== "|" && normName(x.firstName, x.lastName) === nm){ return x; }
-    if(!em && fz && normNameFuzzy(x.firstName, x.lastName) === fz){ return x; }
+    var xem = normEmail(x.email);
+    if(nm !== "|" && normName(x.firstName, x.lastName) === nm && (!em || !xem)){ return x; } /* AUDIT FIX: an emailed import could never match an email-less existing record */
+    if(fz && normNameFuzzy(x.firstName, x.lastName) === fz && (!em || !xem)){
+      /* AUDIT FIX: fuzzy (first+last) alone silently MERGED different people — require corroboration */
+      if(ph && normPhone(x.phone) === ph){ return x; }
+      if(!em && !xem && !ph && !normPhone(x.phone) && normName(cand.firstName, cand.lastName) === normName(x.firstName, x.lastName)){ return x; }
+    }
   }
   return null;
 }
@@ -6678,7 +6731,7 @@ function openDetail(c){
             return canon.filter(function(r2){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r2) : !r2.bench; });
           }
           function myReqs(){
-            var me2 = (typeof meOwnerName === "function" ? meOwnerName() : "").toLowerCase();
+            var me2 = (tbResolveMe() || "").toLowerCase();
             var mine = {};
             (state.candidates || []).forEach(function(x){
               if((x.owner || "").toLowerCase() !== me2 || x.status === "Archived"){ return; }
@@ -6736,7 +6789,7 @@ function openDetail(c){
                     var xr = await sb.from("reqs").select("*").in("org", XORG.orgs);
                     ((xr && xr.data) || []).forEach(function(r3){
                       if(r3.bench_status === "bench" || /closed|filled|hold/i.test(r3.req_status || "")){ return; }
-                      pool.push({ id:r3.id, title:r3.title || "", loc:r3.loc || r3.location || "", jobId:r3.job_id || "", hm:r3.hiring_manager || "", bench:false, _xorg:true, orgName:(typeof orgLabel === "function" ? orgLabel(r3.org) : r3.org) });
+                      pool.push({ id:r3.id, title:r3.title || "", loc:r3.loc || r3.location || "", jobId:r3.job_id || "", hm:r3.hiring_manager || "", bench:false, _xorg:true, orgName:(typeof window.tbOrgLabel === "function" ? window.tbOrgLabel(r3.org) : r3.org) });
                     });
                   }
                 }catch(eXR){}
@@ -6869,8 +6922,8 @@ async function saveCandidate(){
     try{ if(n.email){ var qCA = await sb.from("candidates").select("id").eq("org", ORG).eq("email", n.email).limit(1);
       var cidCA = qCA && qCA.data && qCA.data[0] && qCA.data[0].id;
       if(cidCA){ await sb.from("activities").insert({ org:ORG, candidate_id:cidCA, type:"Note", date:todayISO(),
-        owner:(typeof meOwnerName === "function" ? meOwnerName() : ""),
-        notes:"[Created] Candidate record created by " + (typeof meOwnerName === "function" ? meOwnerName() : "user") + " · V1.0.1 audit" }); } } }catch(eCA){}
+        owner:(tbResolveMe() || ""),
+        notes:"[Created] Candidate record created by " + (tbResolveMe() || "user") + " · V1.0.1 audit" }); } } }catch(eCA){}
     /* item 9 + P0.6 trail parity (2026-07-21): single-file intake writes the same routing
        audit entry as bulk — Previous / New owner / Requisition / Score / uploader. */
     if(routedInfo && routedInfo.req && n.email){
@@ -6882,7 +6935,7 @@ async function saveCandidate(){
             owner: n.owner || "Unassigned",
             notes: "[TalentFit Routing] Previous: — (new record) → New owner: " + (n.owner || "Unassigned") +
                    " — best match: " + routedInfo.req + " (" + routedInfo.score + "%) · uploaded by " +
-                   (typeof meOwnerName === "function" ? meOwnerName() : "") });
+                   (tbResolveMe() || "") });
           try{
             var openLg = (typeof REQS !== "undefined" ? REQS : []).filter(function(r2){ return window.TB_METRICS ? TB_METRICS.isOpenReq(r2) : !r2.bench; });
             var scLg = BOARD.scoreCandidateAgainst(n, openLg);
@@ -6890,7 +6943,7 @@ async function saveCandidate(){
               .sort(function(a, b){ return b.score - a.score; })
               .map(function(x){ return (x.req.jobId || "") + ":" + x.score + ":" + x.verdict + ":" + (((x.reasons || []).some(function(z){ return /secondary discipline|adjacent discipline|over-leveled/.test(z); })) ? "v" : "-"); });
             if(qLg.length){ await sb.from("activities").insert({ org: ORG, candidate_id: newId, type: "Note", date: todayISO(), owner: "",
-              notes: "[Assignment] TalentFit evaluation " + todayISO() + " — qualifying requisitions: " + qLg.join(", ") + " · source: talentfit · by " + (typeof meOwnerName === "function" ? meOwnerName() : "") }); }
+              notes: "[Assignment] TalentFit evaluation " + todayISO() + " — qualifying requisitions: " + qLg.join(", ") + " · source: talentfit · by " + (tbResolveMe() || "") }); }
           }catch(eLG){}
           if(typeof reloadSoft === "function"){ await reloadSoft(); }
         }
@@ -6908,8 +6961,8 @@ async function deleteCandidate(btn){ if(!openId){ return; } var id = openId;
     toast("This permanently deletes " + (cD ? fullName(cD) : "this candidate") + ". Click again within 5 seconds to confirm.");
     return; }
   try{ await sb.from("activities").insert({ org:ORG, candidate_id:id, type:"Note", date:todayISO(),
-    owner:(typeof meOwnerName === "function" ? meOwnerName() : ""),
-    notes:"[Deleted] Candidate record permanently deleted by " + (typeof meOwnerName === "function" ? meOwnerName() : "user") +
+    owner:(tbResolveMe() || ""),
+    notes:"[Deleted] Candidate record permanently deleted by " + (tbResolveMe() || "user") +
       (cD ? " — " + fullName(cD) + " · " + (cD.email || "no email") : "") + " · V1.0.1 audit" }); }catch(eDA){}
   closeModal(); await run(sb.from("candidates").delete().eq("id", id), "Deleted"); }
 
@@ -7135,10 +7188,11 @@ function grabName(text, filename){
   var merged = [];
   for(var mi = 0; mi < lines.length - 1 && mi < 6; mi++){
     var w1 = lines[mi].replace(/,$/, ""), w2 = lines[mi + 1].replace(/,$/, "");
-    if(w1.length >= 2 && w2.length >= 2 && /^[A-Z][A-Za-z'.\-]*$/.test(w1) && /^[A-Z][A-Za-z'.\-]*$/.test(w2)){
+    var CRED = /^(PMP|MBA|MSc?|BSc?|BA|MA|PE|PhD|CSM|PgMP|PMI|CISSP|SPHR|CPA|EIT|CQE|CSSBB|LSSBB|JD|MD|RN|CEng)$/i;
+    if(w1.length >= 2 && w2.length >= 2 && !CRED.test(w1) && !CRED.test(w2) && /^[A-Z][A-Za-z'.\-]*$/.test(w1) && /^[A-Z][A-Za-z'.\-]*$/.test(w2)){
+      merged.push(w1 + " " + w2); /* AUDIT FIX: 2-word merge first, and credentials ("GERBER, PMP") can never join a name */
       var w3 = (mi + 2 < lines.length) ? lines[mi + 2].replace(/,$/, "") : "";
-      if(/^[A-Z][A-Za-z'.\-]*$/.test(w3)){ merged.push(w1 + " " + w2 + " " + w3); }
-      merged.push(w1 + " " + w2);
+      if(w3.length >= 2 && !CRED.test(w3) && /^[A-Z][A-Za-z'.\-]*$/.test(w3)){ merged.push(w1 + " " + w2 + " " + w3); }
     }
   }
   lines = merged.concat(lines);
@@ -7159,14 +7213,14 @@ function grabName(text, filename){
     if(_en && tbNameLooksValid(_en.first + " " + _en.last)){ res.first = _en.first; res.last = _en.last; return res; }
   }catch(eEN){}
   var base = (filename || "").replace(/\.[^.]+$/, "");
-  base = base.replace(/[_\-]+/g, " ").replace(/\b(resume|cv|curriculum vitae|final|copy|updated?|new)\b/ig, " ")
+  base = base.replace(/\((\d+)\)/g, " ").replace(/[_\-]+/g, " ").replace(/\b(resume|cv|curriculum vitae|final|copy|updated?|new)\b/ig, " ")
              .replace(/\b(19|20)\d{2}\b/g, " ").replace(/\b\d+\b/g, " ").replace(/'s\b/ig, " ")
              .replace(/([a-z])([A-Z])/g, "$1 $2").replace(/\s+/g, " ").trim(); /* RC1.1: strip years/counters, split CamelCase */
   if(/,/.test(base)){
     var parts = base.split(",");
     if(parts.length >= 2 && parts[0].trim() && parts[1].trim()){ res.last = parts[0].trim().split(/\s+/)[0]; res.first = parts[1].trim().split(/\s+/)[0]; return res; }
   }
-  var fw = base.split(/\s+/).filter(Boolean);
+  var fw = base.split(/\s+/).filter(Boolean).filter(function(w){ return /^[A-Za-z][A-Za-z'.\-]*$/.test(w); }); /* P0.3: "(1)" download suffixes and stray symbols can never become a surname */
   if(fw.length >= 2 && tbNameLooksValid(fw[0] + " " + fw[fw.length - 1])){ res.first = fw[0]; res.last = fw[fw.length - 1]; }
   else if(fw.length === 1){ res.first = fw[0]; } /* single token: the display guard renders Name Requires Review */
   return res;
@@ -7181,10 +7235,14 @@ function tbCleanLocCapture(city){
 }
 function grabLocation(text){
   var t = text || "";
-  var m = t.match(/([A-Z][A-Za-z.\-]+(?:\s+[A-Z][A-Za-z.\-]+){0,2}),\s*([A-Z]{2})(?:\s+\d{5}(?:-\d{4})?)?\b/);
+  var ST = "AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC";
+  /* AUDIT FIX: \s+ crossed newlines (the line ABOVE the city bled into the capture) and
+     [A-Z]{2} accepted credentials/suffixes ("JANE DOE, PE") as states. Spaces-only joins,
+     real state codes only. */
+  var m = t.match(new RegExp("([A-Z][A-Za-z.\\-]+(?:[ \\t]+[A-Z][A-Za-z.\\-]+){0,2}),\\s*(" + ST + ")(?:\\s+\\d{5}(?:-\\d{4})?)?\\b"));
   if(m){ return tbCleanLocCapture(m[1]) + ", " + m[2]; }
   var states = "Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New Hampshire|New Jersey|New Mexico|New York|North Carolina|North Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode Island|South Carolina|South Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West Virginia|Wisconsin|Wyoming";
-  var m2 = t.match(new RegExp("([A-Z][A-Za-z.\\-]+(?:\\s+[A-Z][A-Za-z.\\-]+){0,2}),\\s*(" + states + ")\\b"));
+  var m2 = t.match(new RegExp("([A-Z][A-Za-z.\\-]+(?:[ \\t]+[A-Z][A-Za-z.\\-]+){0,2}),\\s*(" + states + ")\\b"));
   if(m2){ return tbCleanLocCapture(m2[1]) + ", " + m2[2]; }
   var m3 = t.match(/\b(Dallas[\s\/\-]+Fort Worth|DFW(?:\s+Metroplex)?|Greater\s+[A-Z][A-Za-z.\-]+(?:\s+[A-Z][A-Za-z.\-]+)?\s+Area|[A-Z][A-Za-z.\-]+(?:\s+[A-Z][A-Za-z.\-]+)?\s+Metro(?:plex)?(?:\s+Area)?)\b/);
   if(m3){ return m3[1].replace(/\s+/g, " ").trim(); }
@@ -7534,7 +7592,7 @@ async function ingestResumes(files, opts){
       }
       if(opts.disc && (!c.discipline || c.discipline === "Other")){ c.discipline = opts.disc; }
       /* P0 B2: TalentFit routes ownership; uploader is recorded in the activity, not as owner */
-      c.owner = routeIntakeOwner(c) || "Unassigned";
+      c.owner = (opts && opts.owner) || routeIntakeOwner(c) || "Unassigned"; /* AUDIT FIX: the Bulk Add "Default Owner" picker was ignored on the file-drop path */
       /* LAUNCH item 9 (PO 2026-07-21): a ≥70 match is a persistent, visible relationship —
          the matched requisition becomes a target-req tag, never just a log line. Sub-70 never tags. */
       if(c._routedReqTag && (c.reqs || []).indexOf(c._routedReqTag) < 0){ c.reqs = (c.reqs || []).concat([c._routedReqTag]); }
@@ -7567,7 +7625,7 @@ async function ingestResumes(files, opts){
           if(Object.keys(patch).length){ await run(sb.from("candidates").update(patch).eq("id", dup.id), null); }
           try{
             await sb.from("activities").insert({ org: ORG, candidate_id: dup.id, type: "Note", date: todayISO(),
-              owner: (dup.owner && dup.owner !== "Unassigned") ? dup.owner : (typeof meOwnerName === "function" ? meOwnerName() : ""),
+              owner: (dup.owner && dup.owner !== "Unassigned") ? dup.owner : (tbResolveMe() || ""),
               notes: "Resume " + (becameCurrent ? "attached" : "version stored") + " via Bulk Add (duplicate detected — merged): " + file.name + (vok ? " [" + vpath + "]" : " (file store failed)") + (becameCurrent ? "" : " · current resume unchanged") });
           }catch(eA){}
           var enr = Object.keys(patch).filter(function(k){ return k !== "resume_path" && k !== "resume_file_name"; }).length;
@@ -7634,7 +7692,11 @@ async function ingestResumes(files, opts){
     var actRows = [];
     ((insRes && insRes.data) || []).forEach(function(rw){
       if(!rw || !rw.id){ return; }
-      var rec2 = results.filter(function(x){ return x.status === "created" && x._cand && normEmail(x._cand.email) === normEmail(rw.email) ; })[0];
+      var rec2 = results.filter(function(x){ if(x.status !== "created" || !x._cand){ return false; }
+        var e1 = normEmail(x._cand.email), e2 = normEmail(rw.email);
+        if(e1 || e2){ return e1 === e2; }
+        return (x._cand.resumeFileName || "") === (rw.resume_file_name || ""); /* AUDIT FIX: two no-email resumes both matched the first record */
+      })[0];
       var routed = rec2 && rec2._cand && rec2._cand._routedReq ? (rec2._cand._routedReq + " (" + rec2._cand._routedScore + "%)") : "";
       if(rec2 && rec2._cand && rec2._cand._assignAll){
         actRows.push({ org: ORG, candidate_id: rw.id, type: "Note", date: todayISO(), owner: "",
@@ -7687,7 +7749,7 @@ async function handleResumeFile(file){
         /* RC1.14/DATA: certified name parser (glyph-fix + RC1.1 email precedence) now feeds manual
            From-Resume intake too — no more blank-name half-ghosts. ALLCAPS headers are normalized
            for display; suffixes (Jr/III) keep their form. */
-        var nm2 = grabName(text, (m.getAttribute("data-resumefilename") || ""));
+        var nm2 = grabName(text, ((typeof file !== "undefined" && file && file.name) || m.getAttribute("data-resumefilename") || "")); /* AUDIT FIX: attribute is set AFTER this block — first upload had no filename, replace used the previous one */
         var __tcN = function(w){ return (/^[A-Z0-9.&'-]+$/.test(w) && w.length > 1 && !/^(JR\.?|SR\.?|II|III|IV|V)$/.test(w)) ? (w.charAt(0) + w.slice(1).toLowerCase()) : w; };
         if(nm2 && (nm2.first || nm2.last)){ fnI.value = __tcN(nm2.first || ""); lnI.value = __tcN(nm2.last || ""); }
       }
@@ -8217,9 +8279,18 @@ async function saveInterviewRequest(){
     return;
   }
   var candId = null; var key = cand.toLowerCase();
-  (state.candidates || []).forEach(function(c){ if(fullName(c).toLowerCase() === key){ candId = c.id; } });
+  (state.candidates || []).forEach(function(c){ if(fullName(c).toLowerCase() === key || (((c.firstName||"") + " " + (c.lastName||"")).trim().toLowerCase() === key)){ candId = c.id; } });
   var roleVal = v("irRole").trim(); var reqIdVal = null;
   var ri = ALL_REQ_OPTIONS.indexOf(roleVal); if(ri !== -1 && REQS[ri]){ reqIdVal = REQS[ri].id; } /* RC1.19/D1: REQ_OPTIONS is bench-filtered; ALL_REQ_OPTIONS is REQS-aligned */
+  /* AUDIT FIX: on EDIT, a failed re-derivation must preserve the existing links — editing a
+     date used to silently null candidate_id/req_id (killing navigation + dedupe checks) */
+  if(editIrId){
+    var __prevIr = (state.interviewRequests || []).filter(function(x){ return x.id === editIrId; })[0];
+    if(__prevIr){
+      if(!candId && __prevIr.candidateId && cand === __prevIr.candidateName){ candId = __prevIr.candidateId; }
+      if(!reqIdVal && __prevIr.reqId && roleVal === __prevIr.role){ reqIdVal = __prevIr.reqId; }
+    }
+  }
   var lenRaw = v("irLength").trim(); var lenVal = (lenRaw === "" ? null : parseInt(lenRaw, 10)); if(lenVal != null && isNaN(lenVal)){ lenVal = null; }
   var tz = v("irTz") || "Eastern (ET)"; var dtRaw = v("irDate"); var dtVal = null; if(dtRaw){ var du = wallToUtc(dtRaw, tzIana(tz)); if(du){ dtVal = du.toISOString(); } }
   var row = { org:ORG, candidate_name:cand, candidate_id:candId, hiring_manager:v("irHM").trim(), role:roleVal, req_id:reqIdVal, format:v("irFormat"), panel_members:v("irPanel").trim(), length_minutes:lenVal, presentation_required:ck("irPresReq"), presentation_notes:v("irPresNotes").trim(), notes:v("irNotes").trim(), interview_date:dtVal, time_zone:tz, status:v("irStatus") || "Requested" };
@@ -8522,6 +8593,7 @@ function viewReq(r){
   document.getElementById("scrim").classList.add("open");
 }
 async function saveReq(){
+  if(typeof VIEW_ONLY !== "undefined" && VIEW_ONLY){ toast("View-only access \u2014 positions cannot be changed."); return; } /* AUDIT FIX */
   var m = document.getElementById("modal");
   function v(k){ var e = m.querySelector("[data-field='" + k + "']"); return e ? e.value : ""; }
   var title = v("reqTitle").trim(); if(!title){ toast("Title required"); return; }
@@ -8569,7 +8641,7 @@ function tbNewReqScan(row){
       var nm = el("b", null, fullName(h.c)); nm.style.cssText = "cursor:pointer"; nm.title = "Open " + fullName(h.c) + "’s full record";
       nm.addEventListener("click", function(){ openDetail(h.c); }); /* the openDetail wrapper renders cross-workspace candidates read-only automatically */
       tx.appendChild(nm);
-      var mt = el("div", null, (h.c.title || "") + (h.c.location ? " · " + h.c.location : "") + (h.c._xorg ? " · " + (typeof orgLabel === "function" ? orgLabel(h.c._xorg) : "partner workspace") : "") + (h.r.reasons.length ? " — " + h.r.reasons.slice(0,3).join(", ") : ""));
+      var mt = el("div", null, (h.c.title || "") + (h.c.location ? " · " + h.c.location : "") + (h.c._xorg ? " · " + (typeof window.tbOrgLabel === "function" ? window.tbOrgLabel(h.c._xorg) : "partner workspace") : "") + (h.r.reasons.length ? " — " + h.r.reasons.slice(0,3).join(", ") : ""));
       mt.style.cssText = "font-size:11.5px;color:var(--muted)"; tx.appendChild(mt); rrow.appendChild(tx);
       var sc2 = el("span", null, h.r.score + " · " + (h.r.verdict === "strong" ? "Strong" : "Moderate"));
       sc2.style.cssText = "margin-left:auto;font-weight:800;font-size:12px;white-space:nowrap;color:" + (h.r.verdict === "strong" ? "var(--gold)" : "var(--cyan)");
@@ -8636,7 +8708,7 @@ async function bulkFromText(){
   var ta = document.getElementById("bulkText"); var d = bulkDefaults();
   var lines = (ta ? ta.value : "").split("\n").map(function(s){ return s.trim(); }).filter(Boolean); var rows = [];
   lines.forEach(function(line){ var cols = line.split(",").map(function(s){ return s.trim(); }); var np = (cols[0] || "").split(/\s+/);
-    var c = newBlank(); c.firstName = np[0] || ""; c.lastName = np.slice(1).join(" "); c.title = cols[1] || ""; c.location = cols[2] || ""; c.source = d.source; c.owner = d.owner; c.discipline = d.disc; rows.push(candToRow(c)); });
+    var c = newBlank(); c.firstName = np[0] || ""; c.lastName = np.slice(1).join(" "); c.title = cols[1] || ""; c.location = cols.slice(2).join(", ") || ""; c.source = d.source; c.owner = d.owner; /* AUDIT FIX: "City, ST" was truncated */ c.discipline = d.disc; rows.push(candToRow(c)); });
   if(rows.length === 0){ closeModal(); return; }
   var seen = {}; var dedup = []; var dropped = 0;
   rows.forEach(function(row){
@@ -8651,6 +8723,7 @@ async function bulkFromText(){
 
 /* ---------- CSV ---------- */
 function parseCSV(text){
+  text = String(text || "").replace(/^\uFEFF/, ""); /* AUDIT FIX: Excel "CSV UTF-8" BOM broke the first header column */
   var rows = []; var row = []; var cur = ""; var q = false;
   for(var i=0;i<text.length;i++){ var ch = text[i];
     if(q){ if(ch === '"'){ if(text[i+1] === '"'){ cur += '"'; i++; } else{ q = false; } } else{ cur += ch; } }
@@ -8671,6 +8744,7 @@ async function importCSV(text){
   if(map.status < 0){ map.status = idx("candidate status"); }
   if(map.recv < 0){ map.recv = idx("date applied"); }
   map.reqTitles = idx("requisition title");
+  map.targetReqs = idx("target reqs"); /* AUDIT FIX: our own export writes "Target Reqs" — round-trip lost every assignment */
   map.city = idx("city"); map.stt = idx("state");
   var isDayforce = map.city >= 0 || map.reqTitles >= 0 || idx("mobile phone") >= 0;
   var out = []; var skipped = 0; var seenEmail = {}; var seenName = {};
@@ -8680,6 +8754,12 @@ async function importCSV(text){
     if(!fn && !ln && map.full >= 0){ var sp = g(map.full).split(/\s+/); fn = sp[0] || ""; ln = sp.slice(1).join(" "); }
     var c = newBlank(); c.firstName = fn; c.lastName = ln; c.email = g(map.email); c.phone = g(map.phone); c.location = g(map.location); c.title = g(map.title); c.company = g(map.company); c.discipline = g(map.disc);
     if(!c.location && (map.city >= 0 || map.stt >= 0)){ c.location = [g(map.city), g(map.stt)].filter(Boolean).join(", "); }
+    if(map.targetReqs >= 0 && g(map.targetReqs)){
+      g(map.targetReqs).split("|").map(function(s){ return s.trim(); }).filter(Boolean).forEach(function(w){
+        var hit2 = REQS.filter(function(r2){ var tg = r2.title + " – " + r2.loc; return tg === w || tg.replace(" – ", " - ") === w; })[0];
+        if(hit2){ var tgv = hit2.title + " – " + hit2.loc; if(c.reqs.indexOf(tgv) < 0){ c.reqs.push(tgv); } }
+      });
+    }
     if(map.reqTitles >= 0 && g(map.reqTitles)){
       var wantTags = g(map.reqTitles).split("|").map(function(s){ return s.trim(); }).filter(Boolean);
       c.reqs = []; wantTags.forEach(function(w){
@@ -8688,13 +8768,13 @@ async function importCSV(text){
       });
     }
     if(isDayforce){ c.dayforceBadge = true; }
-    c.skills = g(map.skills) ? g(map.skills).split(",").map(function(s){ return s.trim(); }).filter(Boolean) : [];
+    c.skills = g(map.skills) ? g(map.skills).split(/[;,]/).map(function(s){ return s.trim(); }).filter(Boolean) : []; /* AUDIT FIX: our own Dayforce export joins with "; " */
     c.source = g(map.source) || (isDayforce ? "Dayforce Auto-Import" : "Other"); c.status = (STATUS.indexOf(g(map.status)) >= 0 ? g(map.status) : "New"); c.priority = g(map.priority) || "Medium"; var owRaw = g(map.owner); c.owner = owRaw ? ((typeof reqOwnerToCandOwner === "function" ? reqOwnerToCandOwner(owRaw) : owRaw) || owRaw) : "Unassigned"; /* P0.7: canonical identities; never default a person (PO rule) */
     c.dateReceived = g(map.recv) || todayISO(); c.lastContacted = g(map.last); c.nextFollowUp = g(map.next); c.resumeLink = g(map.link); c.linkedin = g(map.linkedin); c.summary = g(map.summary); c.notes = g(map.notes);
     var em = normEmail(c.email); var nm = normName(c.firstName, c.lastName);
     // skip if duplicates an existing record, or an earlier row in this same file
-    if(findDuplicate(c, null) || (em && seenEmail[em]) || (!em && nm !== "|" && seenName[nm])){ skipped++; continue; }
-    if(em){ seenEmail[em] = 1; } else if(nm !== "|"){ seenName[nm] = 1; }
+    if(findDuplicate(c, null) || (em && seenEmail[em]) || (nm !== "|" && seenName[nm])){ skipped++; continue; }
+    if(em){ seenEmail[em] = 1; } if(nm !== "|"){ seenName[nm] = 1; } /* AUDIT FIX: was else-if — same person with and without email imported twice */
     out.push(candToRow(c));
   }
   if(out.length === 0){ toast(skipped ? ("All " + skipped + " row(s) were duplicates - nothing imported") : "No rows found"); return; }
@@ -9128,6 +9208,8 @@ var _draftType = null; var _draftId = null;
 function draftWireModal(type, id){
   _draftType = type; _draftId = id;
   var m = document.getElementById("modal"); if(!m){ return; }
+  if(m.__tbDraftWired){ return; } /* AUDIT FIX: a fresh listener pair per modal open accumulated for the whole session (N-times draftSave per keystroke) */
+  m.__tbDraftWired = true;
   m.addEventListener("input", function(){ draftSave(_draftType, _draftId); });
   m.addEventListener("change", function(){ draftSave(_draftType, _draftId); });
 }
@@ -9240,7 +9322,7 @@ function renderQDrop(){
     var row=el("div","qi");
     row.appendChild(el("div","qt",(r.jobId?"["+r.jobId+"]  ":"")+(r.title||"")));
     row.appendChild(el("div","qs",[r.loc,(r.hm?"HM: "+r.hm:"")].filter(Boolean).join(" · ")));
-    row.addEventListener("click",function(){ closeQDrop(); openReqModal(r); });
+    row.addEventListener("click",function(){ closeQDrop(); if(typeof VIEW_ONLY !== "undefined" && VIEW_ONLY){ viewReq(r); } else { openReqModal(r); } }); /* AUDIT FIX: QuickFind gave viewers the editable form */
     return row;
   }
   if(open.length){
@@ -10876,7 +10958,10 @@ table.tb-plain .nm{ font-weight:700 }
     var grid = el("div","ppl-grid");
     Object.keys(byRec).sort().forEach(function(name){
       var b = byRec[name];
-      var ownedLive = ((state && state.candidates)||[]).filter(function(c){ return (c.owner||"") === name || (c.owner||"") === name.split(" ")[0]; }).length;
+      var ownedLive = ((state && state.candidates)||[]).filter(function(c){
+        if((c.owner||"") !== name && (c.owner||"") !== name.split(" ")[0]){ return false; }
+        return window.TB_METRICS ? TB_METRICS.isActiveCand(c) : (c.status !== "Archived" && c.status !== "Offer Accepted - Hired"); /* AUDIT FIX: chip said "active" but counted archived+hired */
+      }).length;
       var card = personCardBase(name, Object.keys(b.depts).map(function(d){ return d + " (" + b.depts[d] + ")"; }).join(" · "));
       var st = el("div","ppl-stats");
       st.appendChild(el("span","ppl-stat", b.open + " open reqs"));
@@ -10887,7 +10972,7 @@ table.tb-plain .nm{ font-weight:700 }
       /* Universal card rule: the grid NEVER resizes. Details open in the
          workspace modal; close returns to the exact same scroll position. */
       card.addEventListener("click", function(){
-        var mo = document.getElementById("modal"); mo.innerHTML = "";
+        var mo = document.getElementById("modal"); mo.innerHTML = ""; mo.className = "modal"; /* AUDIT FIX: inherited "wide" class from prior modal */
         var mhead = el("div","mhead");
         mhead.appendChild(el("h2", null, name));
         var mx = el("button","x","\u00d7"); mx.setAttribute("data-close","1"); mhead.appendChild(mx); mo.appendChild(mhead);
@@ -11780,7 +11865,7 @@ body.tb-overlay-open{ overflow:hidden; }
     });
     /* 3b. workbook reqs not found live (RPO/TalentBench only) */
     var liveJ = {}; reqs.forEach(function(r){ var j = String(r.jobId || "").trim(); if(j){ liveJ[j] = 1; } });
-    Object.keys(META2).forEach(function(j){ var m = META2[j]; if((m.m === "RPO" || m.m === "TalentBench") && !liveJ[j]){ add("Workbook req missing from database", "Req " + j, m.m + " · " + m.t + " (" + m.d + ") — in the 07/14 workbook but not in this database."); } });
+    Object.keys(META2).forEach(function(j){ var m = META2[j]; if((m.m === "RPO" || m.m === "TalentBench") && !liveJ[j]){ add("Workbook req missing from database", "Req " + j, m.m + " (" + m.d + ") — in the 07/14 workbook but not in this database."); } });
     /* 4. status-signal conflicts: bench lifecycle says filled, req status still active */
     reqs.forEach(function(r){ if(r.bench === true && isActiveReq(r) && (r.benchStatus === "filled")){ add("Inactive appearing as active", "Req " + (r.jobId || r.id), "TalentBench lifecycle is 'filled' but requisition status ('" + (r.reqStatus || "—") + "') still counts as Active. Human review needed."); } });
     /* 5. active reqs with no department */
@@ -11826,7 +11911,7 @@ body.tb-overlay-open{ overflow:hidden; }
     /* 7f. notes with unknown context */
     (((typeof state !== "undefined" && state.notes) || [])).forEach(function(n){
       var cx = n.context || "";
-      if(cx !== "priolist" && cx !== "talentbench" && cx.indexOf("req:") !== 0){ add("Note with unknown context", "Note " + n.id, "context '" + cx + "' is not a recognized notes context (priolist / talentbench / req:<id>)."); }
+      if(cx !== "priolist" && cx !== "talentbench" && cx !== "admin_audit" && cx.indexOf("req:") !== 0 && cx.indexOf("bp:") !== 0 && cx.indexOf("ci:") !== 0){ /* AUDIT FIX: platform-written contexts flooded the QA report */ add("Note with unknown context", "Note " + n.id, "context '" + cx + "' is not a recognized notes context (priolist / talentbench / req:<id>)."); }
     });
     /* 7g. self-test: closed requisitions must never appear in active selectors */
     activeReqs("", "", "").forEach(function(e){ if(!isActiveReq(e.req)){ add("Closed req in active selector (SELF-TEST FAILURE)", "Req " + (normalizedJobId(e.req) || e.req.id), "Report this — the active selector returned a closed requisition."); } });
@@ -11887,6 +11972,7 @@ body.tb-overlay-open{ overflow:hidden; }
   var LIB_PAINT = false;         /* true while the library view is building rows (enables Elbit origin badge) */
   function flagOn(){ return window.TB_ENTERPRISE_LIBRARY_V1 === true; }
   function orgLabel(o){ return o === "hiarc" ? "HiArc" : o === "elbit" ? "Elbit" : (o || "").replace(/^\w/, function(c){ return c.toUpperCase(); }); }
+  window.tbOrgLabel = orgLabel; /* AUDIT FIX: external callers guarded on a module-scoped name and always fell back */
   var ACTIVE_PROCESS = { "Submitted":1, "Interviewing Stage 1":1, "Interviewing Stage 2":1, "Interviewing Stage 3":1, "Panel / Final Interview":1, "Interviewing":1, "Offer Pending":1, "TA Interview":1 };
 
   /* ---------- availability model (founder-approved tiers) ----------
@@ -12554,9 +12640,10 @@ body.tb-overlay-open{ overflow:hidden; }
     _warmRunning = true;
     (function chunk(){
       if(gen !== _warmGen){ _warmRunning = false; return; } /* cache cleared mid-warm: abort, a re-warm will follow */
-      /* P0.2: time-boxed chunks (was 15 candidates = ~600ms tasks); stay under ~50ms per slice */
+      /* P0.2: time-boxed chunks; AUDIT FIX: per-candidate try so a throwing record can never
+         re-run forever (the old whole-loop catch skipped i++ and wedged the warm state) */
       var __t0 = performance.now();
-      try{ for(; i < pool.length && (performance.now() - __t0) < 50; i++){ BOARD.scoreCandidate(pool[i]); } }catch(eS){}
+      for(; i < pool.length && (performance.now() - __t0) < 50; i++){ try{ BOARD.scoreCandidate(pool[i]); }catch(eS){} }
       if(i < pool.length){ setTimeout(chunk, 16); }
       else { _warmRunning = false; window.__TB_SCORES_WARM = true; if(cb){ cb(); } }
     })();
@@ -13312,7 +13399,7 @@ window.TB_SRC_LIB = {"SE_MER":{"label":"Systems Engineering — GNC / Environmen
   function fmt$(n){ if(!n) return "—"; return "$" + Math.round(n).toLocaleString("en-US"); }
   function esc(s){ var d = document.createElement("div"); d.textContent = String(s == null ? "" : s); return d.innerHTML; }
   function today(){ return (typeof todayISO === "function") ? todayISO() : new Date().toISOString().slice(0, 10); }
-  function me(){ return (typeof meOwnerName === "function" ? meOwnerName() : (window.CURRENT_USER && CURRENT_USER.email) || "recruiter"); }
+  function me(){ return (tbResolveMe() || (window.CURRENT_USER && CURRENT_USER.email) || "recruiter"); }
 
   /* ---------- family mapping (engine classification → sourcing family) ---------- */
   var FN2FAM = { SW:"SW_GEN", SE:"SE_ROA", EE:"EE_ROA", MECH:"MECH", MFG:"MFG_ROA", SC:"SUPPLY", PM:"PM",
